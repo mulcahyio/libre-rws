@@ -19,7 +19,8 @@ modules/dicom/       rws-dicom (DIMSE gateway)
   internal/events/   event bus (NATS JetStream)
   internal/dcm/      Part 10 wrapping, transfer-syntax policy, value helpers
 third_party/gonetdicom/  RWS fork of the DICOM networking library (see RWS_FORK.md)
-deploy/              Dockerfile, compose (single node + cluster), HAProxy
+deploy/              Dockerfile, compose (single node + cluster), HAProxy,
+  workstation/       one-step local install (Windows/macOS/Linux)
 scripts/conformance.sh   DCMTK-based conformance smoke test
 ```
 
@@ -37,7 +38,7 @@ shared storage and NATS, any number of gateway nodes can run behind a TCP load
 balancer. Nodes can be added, removed or killed at will. Schema migrations are
 cluster-safe (advisory lock).
 
-**Containers.** Static binary (~30 MB, no CGO), distroless non-root image,
+**Containers.** Single binary (~30 MB, no CGO), distroless non-root image,
 built-in health check, Docker Compose for single node and cluster. Kubernetes
 uses the same image.
 
@@ -47,6 +48,7 @@ uses the same image.
 make test                 # unit + end-to-end DIMSE tests
 make build && ./bin/rws-dicom -config modules/dicom/config.example.yaml
 make up                   # single node in Docker
+make workstation          # workstation install with checks (see deploy/workstation/INSTALL.md)
 make cluster              # PostgreSQL + NATS + 3 gateways behind HAProxy
 make conformance DIR=path/to/dicom/files   # DCMTK check against a running node
 ```

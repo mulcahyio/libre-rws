@@ -1,7 +1,7 @@
 VERSION ?= $(shell git describe --tags --always 2>/dev/null || echo dev)
 export CGO_ENABLED=0
 
-.PHONY: build test vet image up cluster down conformance
+.PHONY: build test vet image up cluster down conformance workstation
 build:        ## static binary in ./bin
 	go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o bin/rws-dicom ./modules/dicom/cmd/rws-dicom
 test:         ## unit + end-to-end DIMSE tests
@@ -18,3 +18,5 @@ down:
 	docker compose -f deploy/compose/docker-compose.yml down; docker compose -f deploy/compose/docker-compose.cluster.yml down
 conformance:  ## DCMTK smoke test against a running node: make conformance DIR=path/to/dcm
 	scripts/conformance.sh $(DIR)
+workstation:  ## local workstation install with verification
+	deploy/workstation/rws-dicom.sh install

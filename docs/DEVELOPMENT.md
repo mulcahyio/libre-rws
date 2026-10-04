@@ -6,7 +6,7 @@
 | **Contact** | dev@mulcahy.io |
 | **Module** | rws-dicom 0.1.0 (first RWS module) |
 | **Language** | Go 1.26+ |
-| **Status** | Working prototype. Tested in a development environment; container images not yet built. |
+| **Status** | Working prototype. Workstation container package added in 0.1.1; first image build happens on the target machine. |
 | **Date** | October 2026 |
 
 ---
@@ -49,7 +49,7 @@ routing, DICOMweb, viewers, reporting and AI.
 | Index (cluster) | PostgreSQL via pgx | Shared state for many gateway nodes. |
 | Event bus | NATS JetStream | Lightweight, durable streams, built-in de-duplication, clusters easily. |
 | Metrics | Prometheus client | Industry standard. |
-| Container base | Distroless static, non-root | Minimal attack surface, no shell. |
+| Container base | Distroless base (glibc), non-root | Minimal attack surface, no shell. Not `static`: the JPEG codec (golibjpeg) loads native libraries through purego, so the binary needs the glibc loader even with CGO off. |
 
 Alternatives evaluated during discovery: Orthanc (C++, GPL, proven, less
 control), dicom-rs (Rust, fast, networking too low-level), dcm4che (Java,
@@ -99,7 +99,7 @@ modules/dicom/internal/index/     metadata index
 modules/dicom/internal/events/    event publishing
 modules/dicom/internal/dcm/       Part 10 wrapping, transfer-syntax policy
 third_party/gonetdicom/           RWS fork of the networking library
-deploy/                           Dockerfile, compose files, HAProxy config
+deploy/                           Dockerfile, compose files, HAProxy config, workstation installer
 scripts/conformance.sh            DCMTK conformance test
 docs/                             this document
 ```
@@ -282,6 +282,7 @@ the file.
 | Topology | How |
 |---|---|
 | Bare metal / VM | `make build`, run `bin/rws-dicom -config …` |
+| Workstation | `deploy/workstation/` installer (gateway only, SQLite, Docker volume; NATS optional) |
 | Single container | `make up` (gateway + NATS, SQLite, local volume) |
 | HA on one host | `make cluster` (PostgreSQL + NATS + 3 gateways behind HAProxy) |
 | Kubernetes | Same image; Helm chart planned |
@@ -308,7 +309,7 @@ All results below come from the development sandbox.
 | Bus outage | `/readyz` returns 503; stores still succeed; failure counted |
 | Concurrent node start (migration race) | Found and fixed (advisory lock) |
 | Load: 1,000 instances, 10 parallel associations, 2 nodes | 0 failures, about 190 images/s, about 30 MB RAM per node, all indexed, 1,000 events |
-| Docker images / compose files | **Not yet built.** Docker was unavailable in the dev environment. |
+| Docker images / compose files | Dockerfile added in 0.1.1 (it was missing from 0.1.0). The binary was built and run exactly as the image runs it (uid 65532, image environment, no config file) with C-ECHO, C-STORE and C-FIND passing. **The image itself is not yet built**; Docker was unavailable in the dev environment. |
 
 ---
 
@@ -337,3 +338,24 @@ for RWS itself is to be determined.
 Third-party components keep their own licenses. gonetdicom (fork) and godicom
 are MIT, Copyright (c) 2026 godicom-dev. Other dependencies are listed in
 `go.mod`.
+
+## Change log
+
+### 0.1.1 — Workstation container package (October 2026)
+
+Developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
+
+- **Added `deploy/docker/Dockerfile.dicom`.** The Makefile and both compose files
+  referenced it, but it was missing from the 0.1.0 commit, so `make image`,
+  `make up` and `make cluster` could not have worked.
+- **Runtime base changed to `distroless/base-debian12:nonroot`.** The binary is
+  dynamically linked (purego, via the JPEG codec), so `distroless/static` would
+  fail to start it.
+- **`deploy/workstation/`:** single-node compose, `.env` as the only settings
+  file, `rws-dicom.ps1` / `rws-dicom.sh` (install, upgrade with index backup,
+  verify, status, logs, backup, uninstall), `install.cmd`, and `INSTALL.md`.
+- **`-echo HOST:PORT` flag:** built-in C-ECHO for install verification, with no
+  DCMTK needed.
+- **`RWS_DICOM_REMOTE_AES`:** C-MOVE destinations from one environment variable
+  (`NAME=HOST:PORT[:AE]`, comma-separated). This removes the need to bind-mount
+  a config file, which fails when the repository sits on a network drive.

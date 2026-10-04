@@ -1,0 +1,54 @@
+# RWS DICOM - workstation install (single node)
+# RWS (Radiology Workflow System) - developed by Patrick Mulcahy, Mulcahy.io <dev@mulcahy.io>
+#
+# Settings live in .env (copied from .env.example by the installer).
+# Optional event bus:  set RWS_EVENTS_DRIVER=nats in .env and add  --profile events
+
+name: rws-dicom
+
+services:
+  dicom:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.dicom
+      args:
+        VERSION: ${RWS_VERSION:-0.1.1}
+    image: rws/dicom:${RWS_VERSION:-0.1.1}
+    container_name: rws-dicom
+    restart: unless-stopped
+    environment:
+      RWS_NODE_ID: ${RWS_NODE_ID:-workstation}
+      RWS_DICOM_AE_TITLE: ${RWS_DICOM_AE_TITLE:-RWS_DICOM}
+      RWS_DICOM_ALLOW_ANY_CALLED_AE: ${RWS_DICOM_ALLOW_ANY_CALLED_AE:-false}
+      RWS_DICOM_ACCEPT_ANY_SOP_CLASS: ${RWS_DICOM_ACCEPT_ANY_SOP_CLASS:-false}
+      RWS_DICOM_REMOTE_AES: ${RWS_DICOM_REMOTE_AES:-}
+      RWS_DICOM_MAX_ASSOCIATIONS: ${RWS_DICOM_MAX_ASSOCIATIONS:-16}
+      RWS_LOG_LEVEL: ${RWS_LOG_LEVEL:-info}
+      RWS_LOG_FORMAT: ${RWS_LOG_FORMAT:-text}
+      RWS_EVENTS_DRIVER: ${RWS_EVENTS_DRIVER:-log}
+      RWS_EVENTS_URL: nats://nats:4222
+      TZ: ${TZ:-UTC}
+    ports:
+      - "${RWS_BIND_IP:-0.0.0.0}:${RWS_DICOM_PORT:-11112}:11112"   # DICOM (modalities, viewers)
+      - "127.0.0.1:${RWS_ADMIN_PORT:-8081}:8081"                   # health/metrics - this PC only
+    volumes:
+      # Named volume by default; set RWS_DATA to a local folder to bind-mount instead.
+      - ${RWS_DATA:-rws-dicom-data}:/var/lib/rws
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # lets C-MOVE reach viewers on this PC (Linux too)
+    stop_grace_period: 35s
+    logging:
+      driver: local
+      options: {max-size: "20m", max-file: "5"}
+
+  nats:
+    profiles: [events]
+    image: nats:2.11-alpine
+    container_name: rws-dicom-nats
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    restart: unless-stopped
+    volumes: [rws-dicom-nats:/data]
+
+volumes:
+  rws-dicom-data:
+  rws-dicom-nats:

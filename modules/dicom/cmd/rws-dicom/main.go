@@ -52,6 +52,8 @@ func main() {
 	cfgPath := flag.String("config", envOr("RWS_CONFIG", "config.yaml"), "path to YAML config")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	healthcheck := flag.String("healthcheck", "", "probe http://ADDR/readyz and exit 0/1 (for container HEALTHCHECK)")
+	echoAddr := flag.String("echo", "", "send a DICOM C-ECHO to HOST:PORT and exit 0/1 (install verification)")
+	echoAE := flag.String("echo-ae", envOr("RWS_DICOM_AE_TITLE", "RWS_DICOM"), "called AE title for -echo")
 	flag.Parse()
 	if *showVersion {
 		fmt.Println(version)
@@ -59,6 +61,9 @@ func main() {
 	}
 	if *healthcheck != "" {
 		os.Exit(probe(*healthcheck))
+	}
+	if *echoAddr != "" {
+		os.Exit(echo(*echoAddr, *echoAE))
 	}
 	if err := run(*cfgPath); err != nil {
 		fmt.Fprintln(os.Stderr, "rws-dicom:", err)
@@ -70,6 +75,18 @@ func run(cfgPath string) error {
 	cfg := defaults()
 	if err := config.Load(cfgPath, &cfg); err != nil {
 		return err
+	}
+	if v := os.Getenv("RWS_DICOM_REMOTE_AES"); v != "" {
+		aes, err := parseRemoteAEs(v)
+		if err != nil {
+			return err
+		}
+		if cfg.DICOM.RemoteAEs == nil {
+			cfg.DICOM.RemoteAEs = map[string]gateway.RemoteAE{}
+		}
+		for k, a := range aes { // environment wins over the file, per entry
+			cfg.DICOM.RemoteAEs[k] = a
+		}
 	}
 	rt := runtime.New("rws-dicom", version, cfg.Admin)
 	log := rt.Logger

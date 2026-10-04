@@ -1,0 +1,60 @@
+# syntax=docker/dockerfile:1
+# rws-dicom container image
+# RWS (Radiology Workflow System) - developed by Patrick Mulcahy, Mulcahy.io
+# Contact: dev@mulcahy.io
+#
+# Build from the repository root:
+#   docker build -f deploy/docker/Dockerfile.dicom --build-arg VERSION=0.1.0 -t rws/dicom:0.1.0 .
+
+ARG GO_VERSION=1.26
+
+# ---- build stage ------------------------------------------------------------
+FROM golang:${GO_VERSION}-bookworm AS build
+WORKDIR /src
+ENV CGO_ENABLED=0 GOFLAGS=-trimpath GOTOOLCHAIN=auto
+
+# Dependencies first (cached layer). The gonetdicom fork is a local replace,
+# so it has to be present before `go mod download`.
+COPY go.mod go.sum ./
+COPY third_party/ third_party/
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
+
+COPY platform/ platform/
+COPY modules/ modules/
+ARG VERSION=dev
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
+    go build -ldflags "-s -w -X main.version=${VERSION}" -o /out/rws-dicom ./modules/dicom/cmd/rws-dicom
+
+# Data directory owned by the distroless "nonroot" user (65532). Distroless has
+# no shell, so it is prepared here and copied across with ownership.
+RUN mkdir -p /out/var/lib/rws/blobs /out/etc/rws
+
+# ---- runtime stage ----------------------------------------------------------
+# distroless/base (not /static): the JPEG codec loads native libraries through
+# purego, so the binary needs the glibc loader even though CGO is off.
+FROM gcr.io/distroless/base-debian12:nonroot
+ARG VERSION=dev
+LABEL org.opencontainers.image.title="rws-dicom" \
+      org.opencontainers.image.description="RWS DICOM module - DIMSE gateway (C-ECHO, C-STORE, C-FIND, C-MOVE, C-GET)" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.authors="Patrick Mulcahy, Mulcahy.io <dev@mulcahy.io>" \
+      org.opencontainers.image.vendor="Mulcahy.io"
+
+COPY --from=build /out/rws-dicom /rws-dicom
+COPY --from=build --chown=65532:65532 /out/var/lib/rws /var/lib/rws
+COPY --from=build --chown=65532:65532 /out/etc/rws /etc/rws
+
+# Container defaults. A config file is optional; environment overrides it.
+ENV RWS_CONFIG=/etc/rws/config.yaml \
+    RWS_ADMIN_ADDR=:8081 \
+    RWS_DICOM_LISTEN=:11112 \
+    RWS_STORAGE_PATH=/var/lib/rws/blobs \
+    RWS_INDEX_DSN=file:/var/lib/rws/index.db \
+    RWS_LOG_FORMAT=json
+
+USER 65532:65532
+EXPOSE 11112 8081
+VOLUME ["/var/lib/rws"]
+HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=3 \
+    CMD ["/rws-dicom", "-healthcheck", "127.0.0.1:8081"]
+ENTRYPOINT ["/rws-dicom"]
