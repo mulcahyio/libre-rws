@@ -1,0 +1,274 @@
+// Package pdu implements DICOM Upper Layer Protocol Data Units (PS3.8).
+//
+// Encoding is big-endian. Behaviour aligns with pynetdicom's pdu module;
+// golden fixtures live in fixtures_test.go (from pynetdicom tests).
+package pdu
+
+import (
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"io"
+	"math"
+	"strings"
+)
+
+// PDU type values (PS3.8 Table 9-1).
+const (
+	TypeAAssociateRQ = 0x01
+	TypeAAssociateAC = 0x02
+	TypeAAssociateRJ = 0x03
+	TypePDataTF      = 0x04
+	TypeAReleaseRQ   = 0x05
+	TypeAReleaseRP   = 0x06
+	TypeAAbort       = 0x07
+)
+
+// Item type values for A-ASSOCIATE variable items.
+const (
+	ItemApplicationContext     = 0x10
+	ItemPresentationContextRQ  = 0x20
+	ItemPresentationContextAC  = 0x21
+	ItemAbstractSyntax         = 0x30
+	ItemTransferSyntax         = 0x40
+	ItemUserInformation        = 0x50
+	ItemMaxLength              = 0x51
+	ItemImplementationClassUID = 0x52
+	ItemRoleSelection          = 0x54
+	ItemImplementationVersion  = 0x55
+	ItemUserIdentityRQ         = 0x58
+	ItemUserIdentityAC         = 0x59
+)
+
+// User Identity Type values (PS3.7 Annex D.3.3.7).
+const (
+	UserIdentityUsername         = 1
+	UserIdentityUsernamePasscode = 2
+	UserIdentityKerberos         = 3
+	UserIdentitySAML             = 4
+	UserIdentityJWT              = 5
+)
+
+// Standard UIDs used during association.
+const (
+	ApplicationContextName = "1.2.840.10008.3.1.1.1"
+	VerificationSOPClass   = "1.2.840.10008.1.1"
+	ImplicitVRLittleEndian = "1.2.840.10008.1.2"
+)
+
+// DefaultMaxPDULength is a common Maximum Length Received default (16382).
+const DefaultMaxPDULength = 16382
+
+// MaxPDUReadLength is the largest PDU body Read accepts.
+//
+// The PDU length field is 4 bytes, so an unauthenticated peer can claim up to
+// 4 GiB. Real PDUs are bounded by the negotiated Maximum Length Received, which
+// is orders of magnitude smaller; this is a hard backstop, not a substitute for
+// the negotiated value. Use ReadLimit to enforce a tighter bound.
+const MaxPDUReadLength = 16 << 20 // 16 MiB
+
+// pduReadChunk bounds how much is allocated per read pass, so the memory a peer
+// can make us reserve is proportional to what it actually sends.
+const pduReadChunk = 64 << 10
+
+// ErrUnexpectedType is returned when a PDU type does not match expectations.
+var ErrUnexpectedType = errors.New("pdu: unexpected type")
+
+// ErrPDUTooLarge is returned when a PDU's declared length exceeds the read limit.
+var ErrPDUTooLarge = errors.New("pdu: declared length exceeds limit")
+
+// PDU is a DICOM Upper Layer Protocol Data Unit.
+type PDU interface {
+	Type() byte
+	Encode() ([]byte, error)
+}
+
+// Read reads one PDU from r (6-byte header + body), rejecting bodies larger
+// than MaxPDUReadLength.
+func Read(r io.Reader) (PDU, error) {
+	return ReadLimit(r, MaxPDUReadLength)
+}
+
+// ReadLimit reads one PDU from r, rejecting a declared body length above limit
+// (0 or an over-large limit falls back to MaxPDUReadLength).
+//
+// The body buffer grows as bytes arrive rather than being sized from the
+// declared length, so a peer that lies about its PDU length cannot force a
+// large allocation up front.
+func ReadLimit(r io.Reader, limit uint32) (PDU, error) {
+	if limit == 0 || limit > MaxPDUReadLength {
+		limit = MaxPDUReadLength
+	}
+	var hdr [6]byte
+	if _, err := io.ReadFull(r, hdr[:]); err != nil {
+		return nil, err
+	}
+	typ := hdr[0]
+	length := binary.BigEndian.Uint32(hdr[2:6])
+	if length > limit {
+		return nil, fmt.Errorf("%w: type=0x%02x length=%d limit=%d", ErrPDUTooLarge, typ, length, limit)
+	}
+	raw := make([]byte, 6, 6+min(int(length), pduReadChunk))
+	copy(raw, hdr[:])
+	for uint32(len(raw)-6) < length {
+		want := min(length-uint32(len(raw)-6), pduReadChunk)
+		at := len(raw)
+		raw = append(raw, make([]byte, want)...)
+		if _, err := io.ReadFull(r, raw[at:]); err != nil {
+			return nil, fmt.Errorf("pdu: read body type=0x%02x: %w", typ, err)
+		}
+	}
+	switch typ {
+	case TypeAAssociateRQ:
+		return DecodeAAssociateRQ(raw)
+	case TypeAAssociateAC:
+		return DecodeAAssociateAC(raw)
+	case TypeAAssociateRJ:
+		return DecodeAAssociateRJ(raw)
+	case TypePDataTF:
+		return DecodePDataTF(raw)
+	case TypeAReleaseRQ:
+		return DecodeAReleaseRQ(raw)
+	case TypeAReleaseRP:
+		return DecodeAReleaseRP(raw)
+	case TypeAAbort:
+		return DecodeAAbort(raw)
+	default:
+		return nil, fmt.Errorf("pdu: unknown type 0x%02x", typ)
+	}
+}
+
+// Write encodes p and writes it to w.
+func Write(w io.Writer, p PDU) error {
+	b, err := p.Encode()
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(b)
+	return err
+}
+
+// maxItemLength is the largest body a 16-bit Item-length field — or any of the
+// 16-bit length-prefixed sub-fields inside an item — can describe.
+const maxItemLength = math.MaxUint16
+
+// ErrTooLong reports a value that the protocol's own length field cannot
+// describe. Encoding it regardless truncated the length modulo the field width,
+// and the peer then read the overflow as whatever structure came next: a
+// 70 KiB SAML assertion in a User Identity item arrived as a ~4 KiB one followed
+// by garbage, with no error on either side.
+var ErrTooLong = errors.New("pdu: value too long to encode")
+
+// limit is uint64 because one of these length fields is 32 bits wide, and
+// math.MaxUint32 does not fit an int where int is 32 bits.
+func errTooLong(what string, n int, limit uint64) error {
+	return fmt.Errorf("%w: %s is %d bytes, its length field holds at most %d",
+		ErrTooLong, what, n, limit)
+}
+
+func encodeHeader(typ byte, body []byte) ([]byte, error) {
+	if uint64(len(body)) > math.MaxUint32 {
+		return nil, errTooLong(TypeName(typ)+" body", len(body), math.MaxUint32)
+	}
+	out := make([]byte, 6+len(body))
+	out[0] = typ
+	binary.BigEndian.PutUint32(out[2:6], uint32(len(body)))
+	copy(out[6:], body)
+	return out, nil
+}
+
+// PadAETitle returns a 16-byte AE title (trailing spaces).
+func PadAETitle(ae string) ([16]byte, error) {
+	ae = strings.TrimSpace(ae)
+	if ae == "" {
+		return [16]byte{}, fmt.Errorf("pdu: empty AE title")
+	}
+	if len(ae) > 16 {
+		return [16]byte{}, fmt.Errorf("pdu: AE title longer than 16 characters: %q", ae)
+	}
+	var out [16]byte
+	for i := range out {
+		out[i] = ' '
+	}
+	copy(out[:], ae)
+	return out, nil
+}
+
+// TrimAETitle strips trailing spaces from a 16-byte AE title field.
+func TrimAETitle(b []byte) string {
+	return strings.TrimRight(string(b), " ")
+}
+
+// trimUIDPadding returns b as a string with trailing NULs removed.
+//
+// PS3.5 9.1 pads a UID to an even length with a NUL, and the A-ASSOCIATE items
+// carrying UIDs inherit that: Application Context, Abstract Syntax, Transfer
+// Syntax, Implementation Class UID, Role Selection SOP Class. Most UIDs in play
+// are odd-length — "1.2.840.10008.3.1.1.1" is 21, "1.2.840.10008.1.1" and
+// "1.2.840.10008.1.2" are 17 — so a peer that pads really does send the extra
+// byte. Keeping it in the string makes the UID compare unequal to the same UID
+// written in Go source, which is how the abstract and transfer syntaxes are
+// matched during negotiation: the SCP would answer "abstract syntax not
+// supported" for a SOP class it supports.
+//
+// Every trailing NUL comes off, not just the one PS3.5 asks for. A UID cannot
+// contain a NUL, so there is nothing to lose by it, and trimming exactly one is
+// not stable under re-encoding: a peer sending two left the second in the
+// string, Encode wrote it back out, and decoding that took off one more. The
+// association code echoes negotiated items to the peer, so a decode that shifts
+// by a byte each pass puts a different item on the wire than the one that
+// arrived (FuzzRead corpus entry 67a2b7e903f84363).
+//
+// Encode does not pad, which is what pynetdicom does too — its golden
+// A-ASSOCIATE-RQ carries all three UIDs at their odd lengths, and it strips on
+// the way in. Padding is what a peer may send, not what it must receive.
+func trimUIDPadding(b []byte) string {
+	return strings.TrimRight(string(b), "\x00")
+}
+
+func encodeItem(itemType byte, data []byte) ([]byte, error) {
+	if len(data) > maxItemLength {
+		return nil, errTooLong(fmt.Sprintf("item type 0x%02x", itemType), len(data), maxItemLength)
+	}
+	out := make([]byte, 4+len(data))
+	out[0] = itemType
+	binary.BigEndian.PutUint16(out[2:4], uint16(len(data)))
+	copy(out[4:], data)
+	return out, nil
+}
+
+// appendItem appends one encoded item to dst, the shape most callers need since
+// items nest.
+func appendItem(dst []byte, itemType byte, data []byte) ([]byte, error) {
+	item, err := encodeItem(itemType, data)
+	if err != nil {
+		return nil, err
+	}
+	return append(dst, item...), nil
+}
+
+func decodeItems(b []byte) ([]rawItem, error) {
+	var items []rawItem
+	off := 0
+	for off < len(b) {
+		if off+4 > len(b) {
+			return nil, fmt.Errorf("pdu: truncated item header at offset %d", off)
+		}
+		itemType := b[off]
+		itemLen := int(binary.BigEndian.Uint16(b[off+2 : off+4]))
+		if off+4+itemLen > len(b) {
+			return nil, fmt.Errorf("pdu: truncated item type=0x%02x", itemType)
+		}
+		items = append(items, rawItem{
+			Type: itemType,
+			Data: append([]byte(nil), b[off+4:off+4+itemLen]...),
+		})
+		off += 4 + itemLen
+	}
+	return items, nil
+}
+
+type rawItem struct {
+	Type byte
+	Data []byte
+}

@@ -1,0 +1,47 @@
+# Cluster on one host (for testing the HA topology): PostgreSQL index, shared
+# blob volume, NATS JetStream, N gateway replicas behind an HAProxy TCP
+# balancer. Kill any gateway container and the others keep serving.
+#   docker compose -f deploy/compose/docker-compose.cluster.yml up -d --build --scale dicom=3
+# Production: run the same images on Kubernetes (Helm chart is a next step),
+# with S3/MinIO instead of a shared volume and a 3-node NATS cluster.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment: {POSTGRES_USER: rws, POSTGRES_PASSWORD: rws, POSTGRES_DB: rws}
+    volumes: [pg-data:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U rws"], interval: 5s, retries: 10}
+    restart: unless-stopped
+
+  nats:
+    image: nats:2.11-alpine
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    volumes: [nats-data:/data]
+    restart: unless-stopped
+
+  dicom:
+    build: {context: ../.., dockerfile: deploy/docker/Dockerfile.dicom}
+    image: rws/dicom:dev
+    environment:
+      RWS_INDEX_DRIVER: postgres
+      RWS_INDEX_DSN: postgres://rws:rws@postgres:5432/rws?sslmode=disable
+      RWS_EVENTS_DRIVER: nats
+      RWS_EVENTS_URL: nats://nats:4222
+      RWS_STORAGE_PATH: /var/lib/rws/blobs
+    volumes: [blobs:/var/lib/rws/blobs]
+    depends_on:
+      postgres: {condition: service_healthy}
+      nats: {condition: service_started}
+    deploy: {replicas: 2}
+    restart: unless-stopped
+
+  lb:
+    image: haproxy:3.0-alpine
+    volumes: ["../haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro"]
+    ports: ["11112:11112", "8404:8404"]
+    depends_on: [dicom]
+    restart: unless-stopped
+
+volumes:
+  pg-data:
+  nats-data:
+  blobs:

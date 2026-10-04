@@ -1,0 +1,522 @@
+// Package ae provides DICOM Application Entity association (SCU) helpers.
+package ae
+
+import (
+	"context"
+	"crypto/tls"
+	"errors"
+	"fmt"
+	"io"
+	"log/slog"
+	"net"
+	"sync/atomic"
+	"time"
+
+	"github.com/godicom-dev/gonetdicom"
+	"github.com/godicom-dev/gonetdicom/dimse"
+	"github.com/godicom-dev/gonetdicom/pdu"
+)
+
+// Implementation identification for gonetdicom.
+const (
+	ImplementationClassUID    = "1.2.826.0.1.3680043.10.541.1"
+	ImplementationVersionName = "GONETDICOM_001"
+)
+
+// ErrRejected is returned when the peer rejects the association.
+var ErrRejected = errors.New("ae: association rejected")
+
+// ErrAborted is returned when the peer aborts the association.
+var ErrAborted = errors.New("ae: association aborted")
+
+// ErrNoContext is returned when no accepted presentation context is available.
+var ErrNoContext = errors.New("ae: no accepted presentation context")
+
+// PresentationContext proposes an abstract syntax and transfer syntaxes.
+type PresentationContext struct {
+	ID               byte
+	AbstractSyntax   string
+	TransferSyntaxes []string
+}
+
+// Config configures an Application Entity for outbound associations.
+type Config struct {
+	AETitle                   string
+	MaxPDULength              uint32
+	ImplementationClassUID    string
+	ImplementationVersionName string
+	DialTimeout               time.Duration
+	// IdleTimeout bounds each PDU read/write when the context has no deadline.
+	// Zero means no extra idle deadline (context-only).
+	IdleTimeout time.Duration
+	// TLS, when non-nil, dials with TLS (DICOM over TLS). ServerName should be set
+	// when verifying certificates.
+	TLS *tls.Config
+	// Logger receives association lifecycle and debug events.
+	// Nil falls back to context (WithLogger) then DiscardHandler (quiet).
+	Logger *slog.Logger
+	// PresentationContexts to propose. If empty, Verification only is proposed.
+	PresentationContexts []PresentationContext
+	// RoleSelections are SCP/SCU Role Selection items proposed in A-ASSOCIATE-RQ
+	// (pynetdicom build_role). Empty means default roles (requestor=SCU, acceptor=SCP).
+	RoleSelections []pdu.RoleSelection
+	// UserIdentity, when non-nil, is proposed as a User Identity Negotiation RQ item.
+	UserIdentity *pdu.UserIdentityRQ
+}
+
+func (c Config) withDefaults() Config {
+	if c.AETitle == "" {
+		c.AETitle = "GONETSCU"
+	}
+	if c.MaxPDULength == 0 {
+		c.MaxPDULength = pdu.DefaultMaxPDULength
+	}
+	if c.ImplementationClassUID == "" {
+		c.ImplementationClassUID = ImplementationClassUID
+	}
+	if c.ImplementationVersionName == "" {
+		c.ImplementationVersionName = ImplementationVersionName
+	}
+	if c.DialTimeout == 0 {
+		c.DialTimeout = 30 * time.Second
+	}
+	if len(c.PresentationContexts) == 0 {
+		c.PresentationContexts = []PresentationContext{{
+			ID:               1,
+			AbstractSyntax:   pdu.VerificationSOPClass,
+			TransferSyntaxes: []string{pdu.ImplicitVRLittleEndian},
+		}}
+	}
+	return c
+}
+
+func (c Config) logger(ctx context.Context) *slog.Logger {
+	return resolveAELogger(ctx, c.Logger)
+}
+
+// AcceptedContext is a presentation context accepted by the peer.
+type AcceptedContext struct {
+	ID             byte
+	AbstractSyntax string
+	TransferSyntax string
+	// AsSCU / AsSCP are the negotiated roles for the local AE (requestor) on this context.
+	// Defaults: AsSCU=true, AsSCP=false when no role selection was negotiated.
+	AsSCU bool
+	AsSCP bool
+}
+
+// Association is an established DIMSE association (SCU role).
+//
+// It carries one DIMSE operation at a time: each method sends its request and
+// then reads responses until the final one, so two of them running at once
+// interleave PDUs on the same connection and neither peer can make sense of the
+// result. Parallel work needs parallel associations.
+//
+// CCancel, Abort and Close are the deliberate exceptions. All three exist to
+// reach an operation that is already blocked, so all three are safe to call from
+// another goroutine.
+type Association struct {
+	conn net.Conn
+	cfg  Config
+	// called, peerMax, contexts and userIdentityResponse are written by negotiate
+	// before the Association is handed to the caller, and only read afterwards.
+	called               string
+	peerMax              uint32
+	contexts             []AcceptedContext
+	userIdentityResponse []byte
+	// nextID is atomic so Message IDs stay unique even when a caller ignores the
+	// contract above: a lost increment puts two outstanding requests under one ID,
+	// and the responses to them can no longer be told apart.
+	nextID atomic.Uint32
+	// closed makes the teardown methods idempotent. conn itself is never cleared —
+	// a goroutine unwinding out of readPDU still clears its deadline through it,
+	// and clearing the field turned a concurrent Abort into a nil-pointer panic
+	// instead of the interruption it was asked for.
+	closed atomic.Bool
+}
+
+// Dial associates with addr (host:port) as an SCU.
+// When cfg.TLS is set, the connection is established with TLS.
+func Dial(ctx context.Context, cfg Config, addr, calledAE string) (*Association, error) {
+	cfg = cfg.withDefaults()
+	ctx = gonetdicom.LoggerContext(ctx, cfg.Logger, gonetdicom.ComponentAE)
+	if calledAE == "" {
+		return nil, fmt.Errorf("ae: empty called AE title")
+	}
+
+	var (
+		conn net.Conn
+		err  error
+	)
+	if cfg.TLS != nil {
+		d := &tls.Dialer{
+			NetDialer: &net.Dialer{Timeout: cfg.DialTimeout},
+			Config:    cfg.TLS,
+		}
+		conn, err = d.DialContext(ctx, "tcp", addr)
+	} else {
+		d := net.Dialer{Timeout: cfg.DialTimeout}
+		conn, err = d.DialContext(ctx, "tcp", addr)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("ae: dial %s: %w", addr, err)
+	}
+
+	assoc := &Association{conn: conn, cfg: cfg, called: calledAE}
+	if err := assoc.negotiate(ctx); err != nil {
+		_ = conn.Close()
+		return nil, err
+	}
+	cfg.logger(ctx).Info("association established",
+		gonetdicom.AttrCallingAE, cfg.AETitle,
+		gonetdicom.AttrCalledAE, calledAE,
+		gonetdicom.AttrAddr, addr,
+		gonetdicom.AttrTLS, cfg.TLS != nil,
+		gonetdicom.AttrContexts, len(assoc.contexts),
+	)
+	return assoc, nil
+}
+
+// AcceptFromConn completes association as SCU using an already-connected conn.
+func AcceptFromConn(ctx context.Context, cfg Config, conn net.Conn, calledAE string) (*Association, error) {
+	cfg = cfg.withDefaults()
+	ctx = gonetdicom.LoggerContext(ctx, cfg.Logger, gonetdicom.ComponentAE)
+	if calledAE == "" {
+		return nil, fmt.Errorf("ae: empty called AE title")
+	}
+	assoc := &Association{conn: conn, cfg: cfg, called: calledAE}
+	if err := assoc.negotiate(ctx); err != nil {
+		return nil, err
+	}
+	return assoc, nil
+}
+
+func (a *Association) negotiate(ctx context.Context) error {
+	proposed, err := buildPresentationContexts(a.cfg.PresentationContexts)
+	if err != nil {
+		return err
+	}
+	pcs := make([]pdu.PresentationContextRQ, 0, len(proposed))
+	byID := make(map[byte]PresentationContext, len(proposed))
+	for _, pc := range proposed {
+		byID[pc.ID] = pc
+		pcs = append(pcs, pdu.PresentationContextRQ{
+			ID:               pc.ID,
+			AbstractSyntax:   pc.AbstractSyntax,
+			TransferSyntaxes: pc.TransferSyntaxes,
+		})
+	}
+
+	rq := &pdu.AAssociateRQ{
+		CalledAETitle:          a.called,
+		CallingAETitle:         a.cfg.AETitle,
+		ApplicationContextName: pdu.ApplicationContextName,
+		PresentationContexts:   pcs,
+		UserInformation: pdu.UserInformation{
+			MaxLength:                 a.cfg.MaxPDULength,
+			ImplementationClassUID:    a.cfg.ImplementationClassUID,
+			ImplementationVersionName: a.cfg.ImplementationVersionName,
+			RoleSelections:            a.cfg.RoleSelections,
+			UserIdentityRQ:            a.cfg.UserIdentity,
+		},
+	}
+	if err := a.writePDU(ctx, rq); err != nil {
+		return err
+	}
+	raw, err := a.readPDU(ctx)
+	if err != nil {
+		return err
+	}
+	switch p := raw.(type) {
+	case *pdu.AAssociateAC:
+		a.peerMax = p.UserInformation.MaxLength
+		if p.UserInformation.UserIdentityAC != nil {
+			a.userIdentityResponse = append([]byte(nil), p.UserInformation.UserIdentityAC.ServerResponse...)
+		}
+		acRoles := roleMap(p.UserInformation.RoleSelections)
+		rqRoles := roleMap(a.cfg.RoleSelections)
+		for _, ac := range p.PresentationContexts {
+			if ac.Result != 0 {
+				continue
+			}
+			prop, ok := byID[ac.ID]
+			if !ok {
+				continue
+			}
+			ctxAcc := AcceptedContext{
+				ID:             ac.ID,
+				AbstractSyntax: prop.AbstractSyntax,
+				TransferSyntax: ac.TransferSyntax,
+				AsSCU:          true,
+				AsSCP:          false,
+			}
+			rqRole, rqOK := rqRoles[prop.AbstractSyntax]
+			acRole, acOK := acRoles[prop.AbstractSyntax]
+			if rqOK && acOK {
+				out := negotiateRoles(rqRole.SCURole, rqRole.SCPRole, true, acRole.SCURole, acRole.SCPRole, true)
+				ctxAcc.AsSCU = out.ReqSCU
+				ctxAcc.AsSCP = out.ReqSCP
+			} else if rqOK {
+				// Proposed but acceptor omitted reply → default requestor roles.
+				ctxAcc.AsSCU = true
+				ctxAcc.AsSCP = false
+			}
+			a.contexts = append(a.contexts, ctxAcc)
+		}
+		if len(a.contexts) == 0 {
+			return fmt.Errorf("%w: no presentation context accepted", ErrNoContext)
+		}
+		return nil
+	case *pdu.AAssociateRJ:
+		return fmt.Errorf("%w: result=%d source=%d reason=%d", ErrRejected, p.Result, p.Source, p.ReasonDiagnostic)
+	case *pdu.AAbort:
+		return fmt.Errorf("%w: source=%d reason=%d", ErrAborted, p.Source, p.ReasonDiagnostic)
+	default:
+		return fmt.Errorf("ae: unexpected PDU %T during associate", p)
+	}
+}
+
+// Contexts returns accepted presentation contexts.
+func (a *Association) Contexts() []AcceptedContext {
+	return append([]AcceptedContext(nil), a.contexts...)
+}
+
+// UserIdentityResponse returns the Server Response from a User Identity AC item,
+// if the peer included one. Nil means no response item.
+func (a *Association) UserIdentityResponse() []byte {
+	if a.userIdentityResponse == nil {
+		return nil
+	}
+	return append([]byte(nil), a.userIdentityResponse...)
+}
+
+func (a *Association) contextByAbstract(uid string) (AcceptedContext, bool) {
+	for _, c := range a.contexts {
+		if c.AbstractSyntax == uid {
+			return c, true
+		}
+	}
+	return AcceptedContext{}, false
+}
+
+// nextMessageID hands out the Message ID for one request. IDs start at 1 and
+// skip 0 on wrap, as pynetdicom does.
+func (a *Association) nextMessageID() uint16 {
+	for {
+		if id := uint16(a.nextID.Add(1)); id != 0 {
+			return id
+		}
+	}
+}
+
+// CEcho sends a C-ECHO-RQ and waits for a successful C-ECHO-RSP.
+func (a *Association) CEcho(ctx context.Context) error {
+	pc, ok := a.contextByAbstract(pdu.VerificationSOPClass)
+	if !ok {
+		return fmt.Errorf("%w: verification", ErrNoContext)
+	}
+	msgID := a.nextMessageID()
+	cmd, err := (&dimse.CEchoRQ{MessageID: msgID}).Encode()
+	if err != nil {
+		return err
+	}
+	if err := a.sendMessage(ctx, pc.ID, cmd, nil); err != nil {
+		return err
+	}
+	rspCmd, _, err := a.recvMessage(ctx)
+	if err != nil {
+		return err
+	}
+	rsp, err := dimse.DecodeCEchoRSP(rspCmd)
+	if err != nil {
+		return fmt.Errorf("ae: decode C-ECHO-RSP: %w", err)
+	}
+	if rsp.MessageIDBeingRespondedTo != msgID {
+		return fmt.Errorf("ae: C-ECHO message id mismatch: got %d want %d", rsp.MessageIDBeingRespondedTo, msgID)
+	}
+	if rsp.Status != dimse.StatusSuccess {
+		return fmt.Errorf("ae: C-ECHO status 0x%04x", rsp.Status)
+	}
+	return nil
+}
+
+func (a *Association) logCtx(ctx context.Context) context.Context {
+	return gonetdicom.LoggerContext(ctx, a.cfg.Logger, gonetdicom.ComponentAE)
+}
+
+func (a *Association) sendMessage(ctx context.Context, pcid byte, command, dataset []byte) error {
+	ctx = a.logCtx(ctx)
+	logDIMSE(ctx, "send", pcid, command)
+	pdus, err := pdu.FragmentMessage(pcid, command, dataset, a.peerMax)
+	if err != nil {
+		return err
+	}
+	for _, p := range pdus {
+		if err := a.writePDU(ctx, p); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *Association) recvMessage(ctx context.Context) (command, dataset []byte, err error) {
+	_, command, dataset, err = a.recvMessagePC(ctx)
+	return command, dataset, err
+}
+
+func (a *Association) recvMessagePC(ctx context.Context) (pcid byte, command, dataset []byte, err error) {
+	ctx = a.logCtx(ctx)
+	var (
+		cmdBuf   []byte
+		dsBuf    []byte
+		gotCmd   bool
+		cmdDone  bool
+		dsDone   bool
+		expectDS bool
+	)
+	for {
+		raw, err := a.readPDU(ctx)
+		if err != nil {
+			return 0, nil, nil, err
+		}
+		switch p := raw.(type) {
+		case *pdu.PDataTF:
+			for _, pdv := range p.PDVs {
+				if pcid == 0 {
+					pcid = pdv.ContextID
+				}
+				frag := pdv.Fragment()
+				if pdv.IsCommand() {
+					cmdBuf = append(cmdBuf, frag...)
+					gotCmd = true
+					if pdv.IsLast() {
+						cmdDone = true
+						hasDS, err := dimse.CommandHasDataset(cmdBuf)
+						if err != nil {
+							return 0, nil, nil, fmt.Errorf("ae: command set: %w", err)
+						}
+						expectDS = hasDS
+						if !expectDS {
+							dsDone = true
+						}
+					}
+				} else {
+					dsBuf = append(dsBuf, frag...)
+					if pdv.IsLast() {
+						dsDone = true
+					}
+				}
+			}
+			if gotCmd && cmdDone && dsDone {
+				logDIMSE(ctx, "recv", pcid, cmdBuf)
+				return pcid, cmdBuf, dsBuf, nil
+			}
+		case *pdu.AAbort:
+			return 0, nil, nil, fmt.Errorf("%w: source=%d reason=%d", ErrAborted, p.Source, p.ReasonDiagnostic)
+		default:
+			return 0, nil, nil, fmt.Errorf("ae: unexpected PDU %T while receiving message", p)
+		}
+	}
+}
+
+// Release performs association release and closes the connection.
+func (a *Association) Release(ctx context.Context) error {
+	if a.closed.Load() {
+		return nil
+	}
+	ctx = a.logCtx(ctx)
+	defer func() { _ = a.closeConn() }()
+	if err := a.writePDU(ctx, &pdu.AReleaseRQ{}); err != nil {
+		return err
+	}
+	raw, err := a.readPDU(ctx)
+	if err != nil {
+		return err
+	}
+	switch raw.(type) {
+	case *pdu.AReleaseRP:
+		a.cfg.logger(ctx).Info("association released",
+			gonetdicom.AttrCallingAE, a.cfg.AETitle,
+			gonetdicom.AttrCalledAE, a.called,
+		)
+		return nil
+	case *pdu.AAbort:
+		return ErrAborted
+	default:
+		return fmt.Errorf("ae: unexpected PDU %T for release", raw)
+	}
+}
+
+// Abort sends A-ABORT and closes the connection.
+func (a *Association) Abort() error {
+	if a.closed.Load() {
+		return nil
+	}
+	defer func() { _ = a.closeConn() }()
+	_ = pdu.Write(a.conn, &pdu.AAbort{Source: 0x00, ReasonDiagnostic: 0x00})
+	a.cfg.logger(context.Background()).Warn("association aborted",
+		gonetdicom.AttrCallingAE, a.cfg.AETitle,
+		gonetdicom.AttrCalledAE, a.called,
+	)
+	return nil
+}
+
+// Close closes the underlying connection without release negotiation.
+func (a *Association) Close() error {
+	return a.closeConn()
+}
+
+func (a *Association) closeConn() error {
+	if !a.closed.CompareAndSwap(false, true) {
+		return nil
+	}
+	return a.conn.Close()
+}
+
+func (a *Association) writePDU(ctx context.Context, p pdu.PDU) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	ctx = a.logCtx(ctx)
+	deadline, ok := a.pduDeadline(ctx)
+	if ok {
+		_ = a.conn.SetWriteDeadline(deadline)
+		defer func() { _ = a.conn.SetWriteDeadline(time.Time{}) }()
+	}
+	logPDU(ctx, "send", p)
+	if err := pdu.Write(a.conn, p); err != nil {
+		return fmt.Errorf("ae: write PDU: %w", err)
+	}
+	return nil
+}
+
+func (a *Association) readPDU(ctx context.Context) (pdu.PDU, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	ctx = a.logCtx(ctx)
+	deadline, ok := a.pduDeadline(ctx)
+	if ok {
+		_ = a.conn.SetReadDeadline(deadline)
+		defer func() { _ = a.conn.SetReadDeadline(time.Time{}) }()
+	}
+	p, err := pdu.Read(a.conn)
+	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return nil, fmt.Errorf("ae: connection closed: %w", err)
+		}
+		return nil, fmt.Errorf("ae: read PDU: %w", err)
+	}
+	logPDU(ctx, "recv", p)
+	return p, nil
+}
+
+func (a *Association) pduDeadline(ctx context.Context) (time.Time, bool) {
+	if deadline, ok := ctx.Deadline(); ok {
+		return deadline, true
+	}
+	if a.cfg.IdleTimeout > 0 {
+		return time.Now().Add(a.cfg.IdleTimeout), true
+	}
+	return time.Time{}, false
+}

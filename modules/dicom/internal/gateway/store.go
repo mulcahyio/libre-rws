@@ -1,0 +1,106 @@
+package gateway
+
+import (
+	"bytes"
+	"context"
+	"time"
+
+	"github.com/godicom-dev/gonetdicom/ae"
+	"github.com/godicom-dev/gonetdicom/status"
+
+	"rws/modules/dicom/internal/dcm"
+	"rws/modules/dicom/internal/events"
+	"rws/modules/dicom/internal/index"
+)
+
+// blobKey is the storage layout: one folder per study, one per series.
+func blobKey(study, series, sop string) string {
+	return study + "/" + series + "/" + sop + ".dcm"
+}
+
+// onCStore archives the instance exactly as received, indexes it, then
+// publishes an event. The order matters: the instance is durable on disk
+// before it is visible to queries, and visible to queries before anyone is
+// told it exists.
+func (g *Gateway) onCStore(ctx context.Context, req ae.StoreRequest) uint16 {
+	start := time.Now()
+	result := func(code uint16, label string) uint16 {
+		g.m.stores.WithLabelValues(label).Inc()
+		g.m.storeSeconds.Observe(time.Since(start).Seconds())
+		return code
+	}
+	log := g.log.With("sop_instance_uid", req.AffectedSOPInstanceUID)
+
+	if len(req.Dataset) == 0 || req.TransferSyntax == "" {
+		log.Warn("C-STORE without dataset")
+		return result(status.CannotUnderstand, "invalid")
+	}
+	if req.Data == nil {
+		log.Warn("C-STORE dataset could not be decoded", "transfer_syntax", req.TransferSyntax)
+		return result(status.CannotUnderstand, "invalid")
+	}
+
+	inst := dcm.ExtractInstance(req.Data)
+	if inst.SOPInstanceUID == "" {
+		inst.SOPInstanceUID = req.AffectedSOPInstanceUID
+	}
+	if inst.SOPClassUID == "" {
+		inst.SOPClassUID = req.AffectedSOPClassUID
+	}
+	if inst.SOPInstanceUID != req.AffectedSOPInstanceUID || inst.StudyInstanceUID == "" || inst.SeriesInstanceUID == "" {
+		log.Warn("C-STORE dataset missing or mismatched identifiers",
+			"study", inst.StudyInstanceUID, "series", inst.SeriesInstanceUID, "dataset_sop", inst.SOPInstanceUID)
+		return result(status.DataSetDoesNotMatchSOPClassError, "invalid")
+	}
+
+	file, err := dcm.Part10(req.AffectedSOPClassUID, req.AffectedSOPInstanceUID, req.TransferSyntax, "", req.Dataset)
+	if err != nil {
+		log.Error("build Part 10 file", "err", err)
+		return result(status.OutOfResources, "error")
+	}
+
+	key := blobKey(inst.StudyInstanceUID, inst.SeriesInstanceUID, inst.SOPInstanceUID)
+	n, err := g.blobs.Put(ctx, key, bytes.NewReader(file))
+	if err != nil {
+		log.Error("archive instance", "key", key, "err", err)
+		return result(status.OutOfResources, "error")
+	}
+
+	receivedAt := time.Now().UTC()
+	rec := index.Record{
+		PatientID: inst.PatientID, PatientName: inst.PatientName,
+		PatientBirthDate: inst.PatientBirthDate, PatientSex: inst.PatientSex,
+		StudyUID: inst.StudyInstanceUID, StudyDate: inst.StudyDate, StudyTime: inst.StudyTime,
+		AccessionNumber: inst.AccessionNumber, StudyID: inst.StudyID,
+		StudyDescription: inst.StudyDescription, ReferringPhysician: inst.ReferringPhysicianName,
+		SeriesUID: inst.SeriesInstanceUID, Modality: inst.Modality,
+		SeriesNumber: inst.SeriesNumber, SeriesDescription: inst.SeriesDescription,
+		SOPInstanceUID: inst.SOPInstanceUID, SOPClassUID: inst.SOPClassUID,
+		InstanceNumber: inst.InstanceNumber, TransferSyntaxUID: req.TransferSyntax,
+		BlobKey: key, SizeBytes: n, ReceivedAt: receivedAt,
+	}
+	if err := g.idx.Upsert(ctx, rec); err != nil {
+		log.Error("index instance", "err", err)
+		return result(status.OutOfResources, "error")
+	}
+
+	ev := events.InstanceStored{
+		EventID:    inst.SOPInstanceUID + "@" + receivedAt.Format(time.RFC3339Nano),
+		OccurredAt: receivedAt, Node: g.node,
+		PatientID: inst.PatientID, StudyUID: inst.StudyInstanceUID, SeriesUID: inst.SeriesInstanceUID,
+		SOPInstanceUID: inst.SOPInstanceUID, SOPClassUID: inst.SOPClassUID, Modality: inst.Modality,
+		AccessionNum: inst.AccessionNumber, TransferSyntax: req.TransferSyntax, BlobKey: key, SizeBytes: n,
+	}
+	pctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if err := g.events.Publish(pctx, events.SubjectInstanceStored, ev.EventID, ev); err != nil {
+		// The instance is safely archived and indexed; a missed event must not
+		// make the modality resend. Tracked by metric; see README "outbox".
+		g.m.eventFailures.Inc()
+		log.Warn("publish instance.stored failed", "err", err)
+	}
+
+	g.m.storeBytes.Add(float64(n))
+	log.Debug("instance stored", "study", inst.StudyInstanceUID, "bytes", n, "ms", time.Since(start).Milliseconds())
+	return result(status.Success, "success")
+}
