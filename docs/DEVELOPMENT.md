@@ -4,9 +4,9 @@
 |---|---|
 | **Developed by** | Patrick Mulcahy, Mulcahy.io |
 | **Contact** | dev@mulcahy.io |
-| **Module** | rws-dicom 0.1.0 (first RWS module) |
+| **Module** | rws-dicom 0.1.1-beta.1 (first RWS module) |
 | **Language** | Go 1.26+ |
-| **Status** | Working prototype. Workstation container package added in 0.1.1; first image build happens on the target machine. |
+| **Status** | Beta. Not for clinical use. Workstation container package added in 0.1.1-beta.1. See [CHANGELOG.md](../CHANGELOG.md) and [release notes](releases/v0.1.1-beta.1.md). |
 | **Date** | October 2026 |
 
 ---
@@ -309,7 +309,7 @@ All results below come from the development sandbox.
 | Bus outage | `/readyz` returns 503; stores still succeed; failure counted |
 | Concurrent node start (migration race) | Found and fixed (advisory lock) |
 | Load: 1,000 instances, 10 parallel associations, 2 nodes | 0 failures, about 190 images/s, about 30 MB RAM per node, all indexed, 1,000 events |
-| Docker images / compose files | Dockerfile added in 0.1.1 (it was missing from 0.1.0). The binary was built and run exactly as the image runs it (uid 65532, image environment, no config file) with C-ECHO, C-STORE and C-FIND passing. **The image itself is not yet built**; Docker was unavailable in the dev environment. |
+| Docker images / compose files | Dockerfile added in 0.1.1-beta.1 (it was missing from 0.1.0). Release check, 2026-10-11 (Docker 29.7.2, Linux): image `rws/dicom:0.1.1-beta.1` built (74 MB); container reports healthy; `/version` returns `0.1.1-beta.1`; `/readyz` returns 200; C-ECHO succeeds inside the container and through the published port; all three compose files pass `docker compose config`. **Not yet run:** the compose topologies themselves (single, cluster, workstation install scripts). |
 
 ---
 
@@ -317,7 +317,7 @@ All results below come from the development sandbox.
 
 | # | Item | Priority |
 |---|---|---|
-| 1 | Build and test the Docker images and both compose topologies | High |
+| 1 | Run the compose topologies and the workstation installer end to end (image build verified in 0.1.1-beta.1) | High |
 | 2 | Transactional event outbox, so no event is lost during a bus outage | High |
 | 3 | S3/MinIO storage backend, replacing the shared volume for clusters | High |
 | 4 | Fork changes 2–5 (streaming retrieve, C-GET fixes, calling AE, lazy decode) and upstream PRs | High |
@@ -341,7 +341,7 @@ are MIT, Copyright (c) 2026 godicom-dev. Other dependencies are listed in
 
 ## Change log
 
-### 0.1.1 — Workstation container package (October 2026)
+### 0.1.1-beta.1 — Workstation container package (October 2026)
 
 Developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 

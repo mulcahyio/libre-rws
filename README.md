@@ -3,6 +3,8 @@
 **Developed by Patrick Mulcahy, Mulcahy.io** · dev@mulcahy.io
 Full design and developer documentation: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 
+**Current release:** rws-dicom **0.1.1-beta.1** (beta, not for clinical use). See the [release notes](docs/releases/v0.1.1-beta.1.md) and [CHANGELOG.md](CHANGELOG.md).
+
 Modular, container-native platform, written in Go. Each module is an
 independent binary and container image that can run on its own or as part of
 the whole system. The first module is **rws-dicom**.
@@ -83,8 +85,11 @@ so keep the bus on a private network with TLS in production.
   failures, about 30 MB RAM per node. This was measured in a dev sandbox, not
   a benchmark.
 
-Not yet run: the Docker images and compose files. They were written but not
-built in the dev environment, so build and test them first.
+- Container image (0.1.1-beta.1): built and started; healthy, `/readyz` 200,
+  C-ECHO through the published port.
+
+Not yet run: the compose topologies (single node, cluster) and the
+workstation installer end to end.
 
 ## Known gaps / next work
 
@@ -102,6 +107,21 @@ built in the dev environment, so build and test them first.
    PatientName matching, StudyTime range matching.
 6. Replace `ImplementationClassUID` (currently gonetdicom's root) with an
    RWS-owned UID root.
+
+## Versioning
+
+Releases use [Semantic Versioning](https://semver.org) with a beta
+pre-release label while RWS is not ready for clinical use:
+
+- Git tag: `vMAJOR.MINOR.PATCH-beta.N`, e.g. `v0.1.1-beta.1`.
+- Binary (`-version`, `/version`) and image tag: the same without the `v`,
+  e.g. `rws/dicom:0.1.1-beta.1`. `make build` and `make image` take it from
+  the tag.
+- `N` goes up for each beta of the same version. The `-beta.N` label is
+  dropped only for a release approved for production use.
+
+Every release has an entry in [CHANGELOG.md](CHANGELOG.md) and release notes
+in [docs/releases/](docs/releases/).
 
 ## Attribution
 

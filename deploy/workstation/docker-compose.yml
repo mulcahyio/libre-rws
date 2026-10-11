@@ -12,8 +12,8 @@ services:
       context: ../..
       dockerfile: deploy/docker/Dockerfile.dicom
       args:
-        VERSION: ${RWS_VERSION:-0.1.1}
-    image: rws/dicom:${RWS_VERSION:-0.1.1}
+        VERSION: ${RWS_VERSION:-0.1.1-beta.1}
+    image: rws/dicom:${RWS_VERSION:-0.1.1-beta.1}
     container_name: rws-dicom
     restart: unless-stopped
     environment:

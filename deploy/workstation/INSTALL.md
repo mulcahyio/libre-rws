@@ -5,7 +5,7 @@
 | **Product** | RWS (Radiology Workflow System) — DICOM module (rws-dicom) |
 | **Developed by** | Patrick Mulcahy, Mulcahy.io |
 | **Contact** | dev@mulcahy.io |
-| **Applies to** | rws-dicom 0.1.1, single node on one PC |
+| **Applies to** | rws-dicom 0.1.1-beta.1, single node on one PC |
 
 This folder installs the DICOM module as a Docker container on a local
 workstation. It runs one node with an embedded SQLite index and local

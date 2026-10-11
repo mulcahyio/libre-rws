@@ -1,4 +1,5 @@
-VERSION ?= $(shell git describe --tags --always 2>/dev/null || echo dev)
+# Tags are vMAJOR.MINOR.PATCH[-beta.N]; the leading "v" is dropped for binaries and images.
+VERSION ?= $(patsubst v%,%,$(shell git describe --tags --always 2>/dev/null || echo dev))
 export CGO_ENABLED=0
 
 .PHONY: build test vet image up cluster down conformance workstation

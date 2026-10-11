@@ -4,7 +4,7 @@
 # Contact: dev@mulcahy.io
 #
 # Build from the repository root:
-#   docker build -f deploy/docker/Dockerfile.dicom --build-arg VERSION=0.1.0 -t rws/dicom:0.1.0 .
+#   docker build -f deploy/docker/Dockerfile.dicom --build-arg VERSION=0.1.1-beta.1 -t rws/dicom:0.1.1-beta.1 .
 
 ARG GO_VERSION=1.26
 
