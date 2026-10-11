@@ -68,6 +68,10 @@ The only settings file is **`.env`**. The installer creates it from
 
 **C-MOVE to a viewer on the same PC:** use `host.docker.internal` as the host,
 for example `RWS_DICOM_REMOTE_AES=VIEWER1=host.docker.internal:11113`.
+On Linux with a host firewall (ufw, firewalld), traffic from containers to
+the host is often blocked, so the C-MOVE times out. Allow the viewer's port
+from the Docker networks, for example
+`sudo ufw allow from 172.16.0.0/12 to any port 11113 proto tcp`.
 
 **Data location:** keep data on a local disk. The installer refuses network
 paths and mapped network drives, because the SQLite index is not safe on them.
@@ -85,6 +89,11 @@ Windows Defender Firewall (inbound TCP).
 .\rws-dicom.ps1 restart
 .\rws-dicom.ps1 backup      # copy images + index to .\backups\<timestamp>
 ```
+
+**Backups:** `backup` copies the data while the module is running. If images
+may be arriving, stop the module first so the copy is consistent
+(`.\rws-dicom.ps1 stop`, then `backup`, then `start`). See
+[issue #1](https://github.com/StoreHouseAdmin/RWS/issues/1).
 
 Health endpoints: `http://127.0.0.1:8081/readyz`, `/healthz`, `/metrics`,
 `/version`. The container restarts on its own after a crash or a reboot

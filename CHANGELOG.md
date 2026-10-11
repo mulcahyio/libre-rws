@@ -7,6 +7,26 @@ until a release is approved for production use (see "Versioning" in
 
 RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 
+## Unreleased
+
+### Fixed
+- `install.cmd` no longer shows as modified in a fresh clone (`.gitattributes`
+  now leaves it as stored, with CRLF line endings).
+- The workstation `.env` and `backups/` folder are git-ignored, so local
+  settings and backups can't be committed by mistake.
+
+### Documentation
+- `INSTALL.md`: Linux host firewalls can block C-MOVE to a viewer on the same
+  PC (`host.docker.internal`); how to allow it.
+- `INSTALL.md`: how to take a consistent backup (see Known issues).
+
+### Known issues
+- `backup` copies the SQLite index and images while the module is running.
+  Under write load the copy can be inconsistent. Workaround: stop the module,
+  run `backup`, start it again. Tracked in
+  [#1](https://github.com/StoreHouseAdmin/RWS/issues/1). Also affects
+  0.1.1-beta.1.
+
 ## rws-dicom 0.1.1-beta.1 (2026-10-11)
 
 First published release. Workstation container package.
