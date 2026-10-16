@@ -1,4 +1,4 @@
-# rws-dicom configuration. Every value can also be set by environment
+# Libre DCM (rws-dicom) configuration. Every value can also be set by environment
 # variable (shown on the right); environment wins over this file.
 
 admin:

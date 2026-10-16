@@ -1,10 +1,13 @@
-# RWS — DICOM Module (rws-dicom) Development Document
+# Libre DCM — DICOM Module Development Document
+
+Libre DCM (DCM = DICOM, binary `rws-dicom`) is the DICOM module of **Libre RWS**
+(Radiology Workflow System), formerly RWS DICOM. Open and extensible.
 
 | | |
 |---|---|
 | **Developed by** | Patrick Mulcahy, Mulcahy.io |
 | **Contact** | dev@mulcahy.io |
-| **Module** | rws-dicom 0.1.1-beta.1 (first RWS module) |
+| **Module** | Libre DCM (`rws-dicom`) 0.1.1-beta.1 (first Libre RWS module) |
 | **Language** | Go 1.26+ |
 | **Status** | Beta. Not for clinical use. Workstation container package added in 0.1.1-beta.1. See [CHANGELOG.md](../CHANGELOG.md) and [release notes](releases/v0.1.1-beta.1.md). |
 | **Date** | October 2026 |
@@ -13,7 +16,7 @@
 
 ## 1. Purpose
 
-RWS is being built as a set of independent, container-native modules. The
+Libre RWS is being built as a set of independent, container-native modules. The
 DICOM module is the foundation. It receives, archives, indexes, queries and
 retrieves medical images over the DICOM network protocol (DIMSE). It also
 publishes an event for every image it stores, so later modules can build on
@@ -43,7 +46,7 @@ routing, DICOMweb, viewers, reporting and AI.
 | Decision | Choice | Reason |
 |---|---|---|
 | Language | Go | Single static binary, low memory, strong concurrency, first-class container and cloud tooling. |
-| DICOM networking | gonetdicom (MIT), maintained as an RWS fork | The only Go library covering all DIMSE-C/N services as SCU and SCP. It is pre-1.0, so RWS carries its own fixes (section 7). |
+| DICOM networking | gonetdicom (MIT), maintained as a Libre RWS fork | The only Go library covering all DIMSE-C/N services as SCU and SCP. It is pre-1.0, so Libre RWS carries its own fixes (section 7). |
 | DICOM data handling | godicom | Companion parser and encoder for gonetdicom. |
 | Index (single node) | SQLite via modernc.org/sqlite | Pure Go, no CGO, zero external dependencies. |
 | Index (cluster) | PostgreSQL via pgx | Shared state for many gateway nodes. |
@@ -73,7 +76,7 @@ stack and for resource efficiency.
            │  │  │         │  │  │
    archive │  │  │ index   │  │  │ events
    storage ▼  │  ▼         ▼  │  ▼
-   (fs / S3)  │ SQLite | PostgreSQL     NATS JetStream ──► other RWS modules
+   (fs / S3)  │ SQLite | PostgreSQL     NATS JetStream ──► other Libre RWS modules
               ▼
      admin: /healthz /readyz /metrics /version  (:8081)
 ```
@@ -98,7 +101,7 @@ modules/dicom/internal/blob/      archive storage
 modules/dicom/internal/index/     metadata index
 modules/dicom/internal/events/    event publishing
 modules/dicom/internal/dcm/       Part 10 wrapping, transfer-syntax policy
-third_party/gonetdicom/           RWS fork of the networking library
+third_party/gonetdicom/           Libre RWS fork of the networking library
 deploy/                           Dockerfile, compose files, HAProxy config, workstation installer
 scripts/conformance.sh            DCMTK conformance test
 docs/                             this document
@@ -106,7 +109,7 @@ docs/                             this document
 
 ### Shared platform chassis
 
-Every RWS module uses `platform/runtime`, which gives each module the same
+Every Libre RWS module uses `platform/runtime`, which gives each module the same
 operational surface:
 
 | Endpoint | Purpose |
@@ -154,7 +157,7 @@ queryable before anyone is notified. Re-sent instances replace earlier ones.
 
 ### C-MOVE
 
-The library's built-in C-MOVE path was bypassed (section 7). RWS opens its
+The library's built-in C-MOVE path was bypassed (section 7). Libre RWS opens its
 own association to the destination and proposes each instance's stored
 transfer syntax. It then streams one instance at a time from storage, so
 memory use stays flat regardless of study size. Compressed data is forwarded
@@ -207,7 +210,7 @@ de-duplication window.
 
 | Context | Policy |
 |---|---|
-| Storage SOP classes | Accept the first syntax the sender proposed that RWS can store as-is. Supported: Explicit and Implicit VR LE; JPEG Baseline, Extended and Lossless (both); JPEG-LS (both); JPEG 2000 (both); HTJ2K (three variants); RLE Lossless. Others are rejected per context. |
+| Storage SOP classes | Accept the first syntax the sender proposed that Libre RWS can store as-is. Supported: Explicit and Implicit VR LE; JPEG Baseline, Extended and Lossless (both); JPEG-LS (both); JPEG 2000 (both); HTJ2K (three variants); RLE Lossless. Others are rejected per context. |
 | Verification, query/retrieve | Explicit VR LE, otherwise Implicit VR LE. |
 
 ---
@@ -238,7 +241,7 @@ upstream license and notice are retained in `third_party/gonetdicom/LICENSE`.
 
 ### Library limitations found by testing (v0.17)
 
-| Issue | Impact | RWS handling |
+| Issue | Impact | Libre RWS handling |
 |---|---|---|
 | C-MOVE holds every instance in memory and proposes only Implicit VR LE | Memory blow-up; compressed data breaks | Own streaming sender |
 | C-GET picks the first accepted syntax silently and ignores sub-op results | Possible mismatched data; inaccurate counts | Uncompressed only, byte cap |
@@ -331,9 +334,9 @@ All results below come from the development sandbox.
 
 ## 12. Attribution and licensing
 
-RWS and the rws-dicom module were developed by **Patrick Mulcahy, Mulcahy.io**
+Libre RWS and the Libre DCM module (`rws-dicom`) were developed by **Patrick Mulcahy, Mulcahy.io**
 (dev@mulcahy.io). Copyright (c) 2026 Patrick Mulcahy, Mulcahy.io. The license
-for RWS itself is to be determined.
+for Libre RWS itself is to be determined.
 
 Third-party components keep their own licenses. gonetdicom (fork) and godicom
 are MIT, Copyright (c) 2026 godicom-dev. Other dependencies are listed in

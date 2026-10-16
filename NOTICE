@@ -1,13 +1,13 @@
-RWS
+Libre RWS (formerly RWS)
 Developed by Patrick Mulcahy, Mulcahy.io
 Contact: dev@mulcahy.io
-Copyright (c) 2026 Patrick Mulcahy, Mulcahy.io. License for RWS: to be determined.
+Copyright (c) 2026 Patrick Mulcahy, Mulcahy.io. License for Libre RWS: to be determined.
 
 This product includes third-party software:
 
   gonetdicom (forked in third_party/gonetdicom) - MIT License
   Copyright (c) 2026 godicom-dev
-  RWS fork modifications by Patrick Mulcahy, Mulcahy.io (see third_party/gonetdicom/RWS_FORK.md)
+  Libre RWS fork modifications by Patrick Mulcahy, Mulcahy.io (see third_party/gonetdicom/RWS_FORK.md)
 
   godicom - MIT License, Copyright (c) 2026 godicom-dev
 
