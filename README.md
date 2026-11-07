@@ -6,6 +6,7 @@
 
 **Developed by Patrick Mulcahy, Mulcahy.io** · dev@mulcahy.io
 Full design and developer documentation: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+Planned changes for clustering and storage: [BACKLOG.md](BACKLOG.md)
 
 **Current release:** Libre DCM (`rws-dicom`) **0.1.1-beta.1** (beta, not for clinical use). See the [release notes](docs/releases/v0.1.1-beta.1.md) and [CHANGELOG.md](CHANGELOG.md).
 
