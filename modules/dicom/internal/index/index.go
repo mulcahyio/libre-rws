@@ -12,6 +12,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -431,6 +433,34 @@ func (s *SQL) ModalitiesForStudies(ctx context.Context, studyUIDs []string) (map
 		out[st] = append(out[st], mod)
 	}
 	return out, rows.Err()
+}
+
+// Backup writes a consistent copy of a SQLite index to dest while the module
+// keeps running (VACUUM INTO takes a read transaction, so concurrent writers
+// are not blocked and the copy is a single point-in-time snapshot). An
+// existing file at dest is replaced. PostgreSQL indexes are backed up with the
+// database's own tools (pg_dump), so this returns an error for them.
+func (s *SQL) Backup(ctx context.Context, dest string) error {
+	if s.postgres {
+		return fmt.Errorf("index: backup of a PostgreSQL index uses pg_dump, not -backup")
+	}
+	if dest == "" {
+		return fmt.Errorf("index: backup destination is empty")
+	}
+	if err := os.MkdirAll(filepath.Dir(dest), 0o750); err != nil {
+		return fmt.Errorf("index: backup: %w", err)
+	}
+	tmp := dest + ".partial"
+	_ = os.Remove(tmp)
+	if _, err := s.db.ExecContext(ctx, `VACUUM INTO ?`, tmp); err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("index: backup: %w", err)
+	}
+	if err := os.Rename(tmp, dest); err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("index: backup: %w", err)
+	}
+	return nil
 }
 
 func (s *SQL) Ping(ctx context.Context) error { return s.db.PingContext(ctx) }

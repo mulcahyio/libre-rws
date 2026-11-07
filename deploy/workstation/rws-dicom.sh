@@ -80,7 +80,14 @@ case "$CMD" in
   start)   compose up -d; verify ;;
   stop)    compose stop ;;
   restart) compose restart dicom; verify ;;
-  backup)  d=backups/$(date +%Y%m%d-%H%M%S); mkdir -p "$d"; docker cp $CONTAINER:/var/lib/rws/. "$d" && ok "Backed up to $d" ;;
+  backup)
+    # Snapshot the index first (consistent while running), then copy images.
+    # Images are write-once, so every indexed image is in the copy.
+    d=backups/$(date +%Y%m%d-%H%M%S); mkdir -p "$d"
+    docker exec $CONTAINER /rws-dicom -backup /var/lib/rws/backup/index.db >/dev/null || fail "Index snapshot failed"
+    docker cp $CONTAINER:/var/lib/rws/backup/index.db "$d/index.db" || fail "Copying the index snapshot failed"
+    docker cp $CONTAINER:/var/lib/rws/blobs "$d/blobs" || fail "Copying images failed"
+    ok "Backed up to $d (index snapshot + images)" ;;
   uninstall)
     if [ "${2:-}" = --remove-data ]; then
       read -rp "  This permanently deletes all stored images and the index. Type DELETE to confirm: " c

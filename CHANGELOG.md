@@ -22,7 +22,17 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   `rws.dicom.*` event subjects and `rws_*` metrics. Existing installs keep
   working without changes.
 
+### Added
+- `-backup PATH` flag: writes a consistent snapshot of the SQLite index while
+  the module keeps running (`VACUUM INTO`). PostgreSQL indexes use `pg_dump`.
+- `BACKLOG.md`: the clustering change backlog (storage abstraction, shared
+  catalog, eviction, replication, role-based nodes).
+
 ### Fixed
+- Workstation `backup` is now consistent while the module runs: it snapshots
+  the index with `-backup`, then copies the snapshot and the images
+  ([#1](https://github.com/mulcahyio/libre-rws/issues/1)). The stop/backup/start
+  workaround is no longer needed.
 - `install.cmd` no longer shows as modified in a fresh clone (`.gitattributes`
   now leaves it as stored, with CRLF line endings).
 - The workstation `.env` and `backups/` folder are git-ignored, so local
@@ -32,13 +42,6 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 - `INSTALL.md`: Linux host firewalls can block C-MOVE to a viewer on the same
   PC (`host.docker.internal`); how to allow it.
 - `INSTALL.md`: how to take a consistent backup (see Known issues).
-
-### Known issues
-- `backup` copies the SQLite index and images while the module is running.
-  Under write load the copy can be inconsistent. Workaround: stop the module,
-  run `backup`, start it again. Tracked in
-  [#1](https://github.com/mulcahyio/libre-rws/issues/1). Also affects
-  0.1.1-beta.1.
 
 ## rws-dicom 0.1.1-beta.1 (2026-10-11)
 

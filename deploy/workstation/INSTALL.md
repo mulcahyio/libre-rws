@@ -90,10 +90,12 @@ Windows Defender Firewall (inbound TCP).
 .\rws-dicom.ps1 backup      # copy images + index to .\backups\<timestamp>
 ```
 
-**Backups:** `backup` copies the data while the module is running. If images
-may be arriving, stop the module first so the copy is consistent
-(`.\rws-dicom.ps1 stop`, then `backup`, then `start`). See
-[issue #1](https://github.com/mulcahyio/libre-rws/issues/1).
+**Backups:** `backup` is safe while the module is running. It first takes a
+point-in-time snapshot of the index inside the container (`rws-dicom -backup`),
+then copies the snapshot and the stored images. Images are written once and
+never changed, so every image the snapshot lists is in the copy. The latest
+snapshot is kept in the data area at `backup/index.db` (about the size of the
+index).
 
 Health endpoints: `http://127.0.0.1:8081/readyz`, `/healthz`, `/metrics`,
 `/version`. The container restarts on its own after a crash or a reboot

@@ -54,6 +54,7 @@ func main() {
 	healthcheck := flag.String("healthcheck", "", "probe http://ADDR/readyz and exit 0/1 (for container HEALTHCHECK)")
 	echoAddr := flag.String("echo", "", "send a DICOM C-ECHO to HOST:PORT and exit 0/1 (install verification)")
 	echoAE := flag.String("echo-ae", envOr("RWS_DICOM_AE_TITLE", "RWS_DICOM"), "called AE title for -echo")
+	backupTo := flag.String("backup", "", "write a consistent snapshot of the SQLite index to PATH and exit (safe while the module runs)")
 	flag.Parse()
 	if *showVersion {
 		fmt.Println(version)
@@ -65,15 +66,49 @@ func main() {
 	if *echoAddr != "" {
 		os.Exit(echo(*echoAddr, *echoAE))
 	}
+	if *backupTo != "" {
+		if err := backup(*cfgPath, *backupTo); err != nil {
+			fmt.Fprintln(os.Stderr, "rws-dicom: backup:", err)
+			os.Exit(1)
+		}
+		fmt.Println("index snapshot written to", *backupTo)
+		return
+	}
 	if err := run(*cfgPath); err != nil {
 		fmt.Fprintln(os.Stderr, "rws-dicom:", err)
 		os.Exit(1)
 	}
 }
 
-func run(cfgPath string) error {
+func loadConfig(cfgPath string) (Config, error) {
 	cfg := defaults()
-	if err := config.Load(cfgPath, &cfg); err != nil {
+	err := config.Load(cfgPath, &cfg)
+	return cfg, err
+}
+
+// backup snapshots the index without stopping a running module. Images are
+// write-once files, so copying the blob folder after the snapshot gives a
+// backup in which every indexed image is present.
+func backup(cfgPath, dest string) error {
+	cfg, err := loadConfig(cfgPath)
+	if err != nil {
+		return err
+	}
+	if cfg.Index.Driver != "sqlite" {
+		return fmt.Errorf("index driver %q: use the database's own backup tools (pg_dump)", cfg.Index.Driver)
+	}
+	ctx := context.Background()
+	idx, err := index.Open(ctx, cfg.Index.Driver, cfg.Index.DSN)
+	if err != nil {
+		return err
+	}
+	defer idx.Close()
+	return idx.Backup(ctx, dest)
+}
+
+func run(cfgPath string) error {
+	cfg, err := loadConfig(cfgPath)
+	if err != nil {
 		return err
 	}
 	if v := os.Getenv("RWS_DICOM_REMOTE_AES"); v != "" {

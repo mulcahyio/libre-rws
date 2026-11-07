@@ -174,9 +174,15 @@ function Show-Summary {
 function Invoke-Backup {
     $dest = Join-Path 'backups' (Get-Date -Format 'yyyyMMdd-HHmmss')
     New-Item -ItemType Directory -Path $dest -Force | Out-Null
-    & docker cp "${Container}:/var/lib/rws/." $dest
-    if ($LASTEXITCODE -ne 0) { Fail 'Backup failed' }
-    Ok "Backed up data to $dest"
+    # Snapshot the index first (consistent while running), then copy images.
+    # Images are write-once, so every indexed image is in the copy.
+    & docker exec $Container /rws-dicom -backup /var/lib/rws/backup/index.db | Out-Null
+    if ($LASTEXITCODE -ne 0) { Fail 'Index snapshot failed' }
+    & docker cp "${Container}:/var/lib/rws/backup/index.db" (Join-Path $dest 'index.db')
+    if ($LASTEXITCODE -ne 0) { Fail 'Copying the index snapshot failed' }
+    & docker cp "${Container}:/var/lib/rws/blobs" (Join-Path $dest 'blobs')
+    if ($LASTEXITCODE -ne 0) { Fail 'Copying images failed' }
+    Ok "Backed up to $dest (index snapshot + images)"
 }
 
 function Backup-Index {
