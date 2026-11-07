@@ -1,5 +1,5 @@
-# RWS DICOM - workstation install (single node)
-# RWS (Radiology Workflow System) - developed by Patrick Mulcahy, Mulcahy.io <dev@mulcahy.io>
+# Libre DCM - workstation install (single node)
+# Libre RWS (Radiology Workflow System) - developed by Patrick Mulcahy, Mulcahy.io <dev@mulcahy.io>
 #
 # Settings live in .env (copied from .env.example by the installer).
 # Optional event bus:  set RWS_EVENTS_DRIVER=nats in .env and add  --profile events

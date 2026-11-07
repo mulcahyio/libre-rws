@@ -1,26 +1,31 @@
-# RWS
+# Libre RWS
+
+*Open and extensible.*
+
+**Libre RWS** (Radiology Workflow System) by Patrick Mulcahy, Mulcahy.io.
 
 **Developed by Patrick Mulcahy, Mulcahy.io** · dev@mulcahy.io
 Full design and developer documentation: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 
-**Current release:** rws-dicom **0.1.1-beta.1** (beta, not for clinical use). See the [release notes](docs/releases/v0.1.1-beta.1.md) and [CHANGELOG.md](CHANGELOG.md).
+**Current release:** Libre DCM (`rws-dicom`) **0.1.1-beta.1** (beta, not for clinical use). See the [release notes](docs/releases/v0.1.1-beta.1.md) and [CHANGELOG.md](CHANGELOG.md).
 
 Modular, container-native platform, written in Go. Each module is an
 independent binary and container image that can run on its own or as part of
-the whole system. The first module is **rws-dicom**.
+the whole system. The first module is **Libre DCM** (the DICOM module, binary
+`rws-dicom`).
 
 ```
 platform/            shared chassis every module uses
   config/            YAML file + environment overrides
   runtime/           logging, /healthz /readyz /metrics /version, graceful shutdown
-modules/dicom/       rws-dicom (DIMSE gateway)
+modules/dicom/       Libre DCM (DIMSE gateway, binary rws-dicom)
   cmd/rws-dicom/     entrypoint
   internal/gateway/  C-ECHO, C-STORE, C-FIND, C-MOVE, C-GET
   internal/blob/     archive storage (filesystem; S3 planned)
   internal/index/    metadata index (SQLite or PostgreSQL)
   internal/events/   event bus (NATS JetStream)
   internal/dcm/      Part 10 wrapping, transfer-syntax policy, value helpers
-third_party/gonetdicom/  RWS fork of the DICOM networking library (see RWS_FORK.md)
+third_party/gonetdicom/  Libre RWS fork of the DICOM networking library (see RWS_FORK.md)
 deploy/              Dockerfile, compose (single node + cluster), HAProxy,
   workstation/       one-step local install (Windows/macOS/Linux)
 scripts/conformance.sh   DCMTK-based conformance smoke test
@@ -32,7 +37,7 @@ scripts/conformance.sh   DCMTK-based conformance smoke test
 surface. Each module can be installed, configured, monitored and upgraded on
 its own. Modules talk through the event bus, not through each other's code,
 so the worklist, routing, viewer and reporting modules can be added without
-touching rws-dicom.
+touching Libre DCM.
 
 **Dynamic.** The gateway is stateless. Durable state sits behind three
 interfaces: archive storage, metadata index and event bus. With PostgreSQL,
@@ -106,12 +111,28 @@ workstation installer end to end.
 5. Helm chart, config hot-reload for `remote_aes`, case-insensitive
    PatientName matching, StudyTime range matching.
 6. Replace `ImplementationClassUID` (currently gonetdicom's root) with an
-   RWS-owned UID root.
+   Libre RWS-owned UID root.
+
+## Naming
+
+The product family is **Libre**: "Libre" plus a short code for each module.
+
+| Name | What it is | Formerly |
+|---|---|---|
+| **Libre RWS** | The platform. RWS = Radiology Workflow System. | RWS |
+| **Libre DCM** | The DICOM module. DCM = DICOM. | RWS DICOM (`rws-dicom`) |
+| **Libre WT** | Libre Watch Tower, the web management console (planned). WT = Watch Tower. | RWS DICOM management console |
+
+New modules follow the same pattern, e.g. Libre MWL for the modality
+worklist. The code identifiers (the `rws-dicom` binary, the `rws/dicom`
+image, `RWS_*` environment variables, `rws.dicom.*` event subjects and
+`rws_*` metrics) keep their current names for now; renaming them would break
+existing installs.
 
 ## Versioning
 
 Releases use [Semantic Versioning](https://semver.org) with a beta
-pre-release label while RWS is not ready for clinical use:
+pre-release label while Libre RWS is not ready for clinical use:
 
 - Git tag: `vMAJOR.MINOR.PATCH-beta.N`, e.g. `v0.1.1-beta.1`.
 - Binary (`-version`, `/version`) and image tag: the same without the `v`,
@@ -125,6 +146,6 @@ in [docs/releases/](docs/releases/).
 
 ## Attribution
 
-RWS was developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
+Libre RWS was developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 Copyright (c) 2026 Patrick Mulcahy, Mulcahy.io. See NOTICE for third-party
 licenses (gonetdicom and godicom are MIT, Copyright (c) 2026 godicom-dev).

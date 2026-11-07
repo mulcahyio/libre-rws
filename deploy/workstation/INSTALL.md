@@ -1,11 +1,11 @@
-# RWS DICOM — Workstation Install
+# Libre DCM — Workstation Install
 
 | | |
 |---|---|
-| **Product** | RWS (Radiology Workflow System) — DICOM module (rws-dicom) |
+| **Product** | Libre RWS (Radiology Workflow System) — Libre DCM, the DICOM module (binary `rws-dicom`, formerly RWS DICOM) |
 | **Developed by** | Patrick Mulcahy, Mulcahy.io |
 | **Contact** | dev@mulcahy.io |
-| **Applies to** | rws-dicom 0.1.1-beta.1, single node on one PC |
+| **Applies to** | Libre DCM (`rws-dicom`) 0.1.1-beta.1, single node on one PC |
 
 This folder installs the DICOM module as a Docker container on a local
 workstation. It runs one node with an embedded SQLite index and local
@@ -23,7 +23,7 @@ C-ECHO, C-STORE, C-FIND, C-MOVE and C-GET.
 ## Install (Windows)
 
 1. Start Docker Desktop and wait for *Engine running*.
-2. Open this folder (`deploy\workstation` in the RWS repository) and
+2. Open this folder (`deploy\workstation` in the libre-rws repository) and
    double-click **`install.cmd`**, or run it from PowerShell:
 
    ```powershell
@@ -93,7 +93,7 @@ Windows Defender Firewall (inbound TCP).
 **Backups:** `backup` copies the data while the module is running. If images
 may be arriving, stop the module first so the copy is consistent
 (`.\rws-dicom.ps1 stop`, then `backup`, then `start`). See
-[issue #1](https://github.com/StoreHouseAdmin/RWS/issues/1).
+[issue #1](https://github.com/mulcahyio/libre-rws/issues/1).
 
 Health endpoints: `http://127.0.0.1:8081/readyz`, `/healthz`, `/metrics`,
 `/version`. The container restarts on its own after a crash or a reboot
@@ -138,4 +138,4 @@ beyond a trusted network until AE allow-listing and TLS land (see the roadmap
 in `docs/DEVELOPMENT.md`).
 
 ---
-RWS — developed by Patrick Mulcahy, Mulcahy.io · dev@mulcahy.io
+Libre RWS — developed by Patrick Mulcahy, Mulcahy.io · dev@mulcahy.io

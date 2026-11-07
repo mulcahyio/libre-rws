@@ -1,13 +1,26 @@
 # Changelog
 
-All notable changes to RWS are recorded here. Versions follow
+All notable changes to Libre RWS (formerly RWS) are recorded here. Versions follow
 [Semantic Versioning](https://semver.org) with a `-beta.N` pre-release label
 until a release is approved for production use (see "Versioning" in
 [README.md](README.md)).
 
-RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
+Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 
 ## Unreleased
+
+### Changed
+- Product renamed: RWS is now **Libre RWS**, the DICOM module (rws-dicom) is
+  **Libre DCM**, and the planned management console is **Libre WT** (Libre
+  Watch Tower). Tagline: "Open and extensible." The documentation uses the
+  new names; see "Naming" in [README.md](README.md).
+- The GitHub repository moved from `StoreHouseAdmin/RWS` to
+  [`mulcahyio/libre-rws`](https://github.com/mulcahyio/libre-rws). GitHub
+  redirects the old URLs; update your `git remote` to the new one.
+- Code identifiers are unchanged in this release: the `rws-dicom` binary and
+  installer scripts, the `rws/dicom` image, `RWS_*` environment variables,
+  `rws.dicom.*` event subjects and `rws_*` metrics. Existing installs keep
+  working without changes.
 
 ### Fixed
 - `install.cmd` no longer shows as modified in a fresh clone (`.gitattributes`
@@ -24,7 +37,7 @@ RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 - `backup` copies the SQLite index and images while the module is running.
   Under write load the copy can be inconsistent. Workaround: stop the module,
   run `backup`, start it again. Tracked in
-  [#1](https://github.com/StoreHouseAdmin/RWS/issues/1). Also affects
+  [#1](https://github.com/mulcahyio/libre-rws/issues/1). Also affects
   0.1.1-beta.1.
 
 ## rws-dicom 0.1.1-beta.1 (2026-10-11)

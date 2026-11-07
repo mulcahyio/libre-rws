@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
-# rws-dicom container image
-# RWS (Radiology Workflow System) - developed by Patrick Mulcahy, Mulcahy.io
+# Libre DCM (rws-dicom) container image
+# Libre RWS (Radiology Workflow System) - developed by Patrick Mulcahy, Mulcahy.io
 # Contact: dev@mulcahy.io
 #
 # Build from the repository root:
@@ -35,7 +35,7 @@ RUN mkdir -p /out/var/lib/rws/blobs /out/etc/rws
 FROM gcr.io/distroless/base-debian12:nonroot
 ARG VERSION=dev
 LABEL org.opencontainers.image.title="rws-dicom" \
-      org.opencontainers.image.description="RWS DICOM module - DIMSE gateway (C-ECHO, C-STORE, C-FIND, C-MOVE, C-GET)" \
+      org.opencontainers.image.description="Libre DCM - DIMSE gateway (C-ECHO, C-STORE, C-FIND, C-MOVE, C-GET)" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.authors="Patrick Mulcahy, Mulcahy.io <dev@mulcahy.io>" \
       org.opencontainers.image.vendor="Mulcahy.io"
