@@ -131,7 +131,7 @@ the new version and verifies it. Stored images and the index carry over.
 **Upgrading from 0.1.x (`rws-dicom`):** copy your old `.env` into this folder
 and run `upgrade`. The installer renames the `RWS_*` settings (the old file
 is kept as `.env.bak-<timestamp>`), removes the old `rws-dicom` container and
-keeps using your existing `rws-dicom-data` volume. The installer asks the
+keeps using your existing data volume (`rws-dicom_rws-dicom-data`). The installer asks the
 install-time questions once. LibreDCM still reads `RWS_*` settings (with a
 warning in the log) and still publishes the old `rws.dicom.*` event subjects
 (`LIBRE_DCM_EVENTS_LEGACY_SUBJECTS=false` turns that off).

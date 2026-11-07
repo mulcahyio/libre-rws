@@ -125,11 +125,20 @@ function Move-Legacy {
         & docker container inspect $old *> $null
         if ($LASTEXITCODE -eq 0) { & docker rm -f $old *> $null; Ok "Removed old container $old (its data volume is kept)" }
     }
+    # 0.1.x compose prefixed volume names with its project name (rws-dicom_...).
     $e = Read-Env
-    & docker volume inspect rws-dicom-data *> $null
-    if ($LASTEXITCODE -eq 0 -and -not $e['LIBRE_DCM_VOLUME']) { Set-EnvValue 'LIBRE_DCM_VOLUME' 'rws-dicom-data'; Ok 'Keeping your existing data volume rws-dicom-data' }
-    & docker volume inspect rws-dicom-nats *> $null
-    if ($LASTEXITCODE -eq 0 -and -not $e['LIBRE_DCM_NATS_VOLUME']) { Set-EnvValue 'LIBRE_DCM_NATS_VOLUME' 'rws-dicom-nats' }
+    if (-not $e['LIBRE_DCM_VOLUME']) {
+        foreach ($v in @('rws-dicom_rws-dicom-data', 'rws-dicom-data')) {
+            & docker volume inspect $v *> $null
+            if ($LASTEXITCODE -eq 0) { Set-EnvValue 'LIBRE_DCM_VOLUME' $v; Ok "Keeping your existing data volume $v"; break }
+        }
+    }
+    if (-not $e['LIBRE_DCM_NATS_VOLUME']) {
+        foreach ($v in @('rws-dicom_rws-dicom-nats', 'rws-dicom-nats')) {
+            & docker volume inspect $v *> $null
+            if ($LASTEXITCODE -eq 0) { Set-EnvValue 'LIBRE_DCM_NATS_VOLUME' $v; break }
+        }
+    }
 }
 
 # Add settings new in this version; move the image version to this package's.

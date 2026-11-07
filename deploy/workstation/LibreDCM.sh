@@ -63,11 +63,19 @@ migrate_legacy() {
       docker rm -f "$old" >/dev/null && ok "Removed old container $old (its data volume is kept)"
     fi
   done
-  if [ -z "$(envval LIBRE_DCM_VOLUME)" ] && docker volume inspect rws-dicom-data >/dev/null 2>&1; then
-    setenv LIBRE_DCM_VOLUME rws-dicom-data; ok "Keeping your existing data volume rws-dicom-data"
+  # 0.1.x compose prefixed volume names with its project name (rws-dicom_...).
+  local v
+  if [ -z "$(envval LIBRE_DCM_VOLUME)" ]; then
+    for v in rws-dicom_rws-dicom-data rws-dicom-data; do
+      if docker volume inspect "$v" >/dev/null 2>&1; then
+        setenv LIBRE_DCM_VOLUME "$v"; ok "Keeping your existing data volume $v"; break
+      fi
+    done
   fi
-  if [ -z "$(envval LIBRE_DCM_NATS_VOLUME)" ] && docker volume inspect rws-dicom-nats >/dev/null 2>&1; then
-    setenv LIBRE_DCM_NATS_VOLUME rws-dicom-nats
+  if [ -z "$(envval LIBRE_DCM_NATS_VOLUME)" ]; then
+    for v in rws-dicom_rws-dicom-nats rws-dicom-nats; do
+      docker volume inspect "$v" >/dev/null 2>&1 && { setenv LIBRE_DCM_NATS_VOLUME "$v"; break; }
+    done
   fi
 }
 

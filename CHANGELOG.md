@@ -129,7 +129,17 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   nodes; with one node killed and NATS stopped, 15 stores succeeded, both
   surviving nodes drained the shared outbox after recovery and the stream
   held exactly one event per store (52 of 52).
-- Not tested: the Windows PowerShell installer.
+- Windows (Surface Pro 7, Windows 11 Home, Docker Desktop 4.96, PowerShell
+  5.1): installed 0.1.1-beta.1, stored studies, then upgraded with
+  `LibreDCM.ps1 upgrade -Yes`: settings renamed, old container removed, old
+  data volume kept, index upgraded v1 to v3, studies still found. Self-signed
+  and own-file TLS (DICOM TLS store/find, plain DICOM refused, admin over
+  HTTPS), `backup` and `status` passed.
+- Linux: interactive `install` (self-signed TLS, patient IDs left out of
+  events), then S3 storage (SeaweedFS) with TLS; events carried an empty
+  patient ID and were also published under the legacy subject.
+- Not tested: the Windows question prompts (needs a signed-in desktop
+  session) and S3 on Windows.
 
 ## rws-dicom 0.1.1-beta.1 (2026-10-11)
 
