@@ -48,6 +48,9 @@ type Config struct {
 	TLSCertFile           string              `yaml:"tls_cert_file" env:"RWS_DICOM_TLS_CERT"`
 	TLSKeyFile            string              `yaml:"tls_key_file" env:"RWS_DICOM_TLS_KEY"`
 	RemoteAEs             map[string]RemoteAE `yaml:"remote_aes"`
+	// AllowedAEs restricts which peers may associate: entries are "AE" (any
+	// address) or "AE@IP" / "AE@CIDR". Empty allows any calling AE.
+	AllowedAEs []string `yaml:"allowed_aes" env:"RWS_DICOM_ALLOWED_AES"`
 }
 
 // DefaultConfig returns production-sane defaults.
@@ -78,6 +81,8 @@ type Gateway struct {
 	mu        sync.RWMutex
 	remoteAEs map[string]RemoteAE
 
+	allowed []allowRule // empty: any calling AE may associate (guarded by mu)
+
 	outbox interface{ Nudge() } // nil: events are published directly (no outbox)
 }
 
@@ -97,6 +102,11 @@ func New(cfg Config, node string, log *slog.Logger, reg prometheus.Registerer,
 		remoteAEs: map[string]RemoteAE{},
 	}
 	g.SetRemoteAEs(cfg.RemoteAEs)
+	if err := g.SetAllowedAEs(cfg.AllowedAEs); err != nil {
+		// Fail closed: a typo in the allow-list must not open the gateway.
+		g.log.Error("invalid allowed_aes; rejecting all associations until fixed", "err", err)
+		g.allowed = []allowRule{{ae: ""}} // matches nothing: empty calling AEs are refused earlier
+	}
 	return g
 }
 
@@ -183,6 +193,7 @@ func (g *Gateway) serverConfig() ae.ServerConfig {
 		HandshakeTimeout:          g.cfg.HandshakeTimeout,
 		IdleTimeout:               g.cfg.IdleTimeout,
 		RoleSelections:            roles,
+		AcceptCallingAE:           g.callingAEAllowed,
 		SelectTransferSyntax:      selectSyntax(storageSet),
 		OnCStore:                  g.onCStore,
 		OnCFind:                   g.onCFind,

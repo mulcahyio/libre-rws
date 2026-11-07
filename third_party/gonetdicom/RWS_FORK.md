@@ -11,11 +11,15 @@ Changes carried in this fork (each should be offered upstream as a PR):
    Endian when it is proposed, which forces modalities to decompress (and makes
    lossy-JPEG senders fail).
 
+2. `ServerConfig.AcceptCallingAE` - accept or reject an association by
+   Calling AE Title and peer address (A-ASSOCIATE-RJ "calling AE not
+   recognized"). `AssociationFromContext` gives handlers the calling AE,
+   called AE and peer address. (Was planned item 4.)
+
 Planned:
 
 2. Streaming C-MOVE/C-GET plans (iterator instead of `[]StoreRequest`) with
    Pending responses and C-CANCEL support.
 3. C-GET: pass the negotiated transfer syntax to the handler; count failed
    C-STORE sub-operations.
-4. Expose the calling AE title and peer address to handlers via context.
 5. Optional lazy decode of inbound C-STORE datasets (avoid holding raw + decoded).

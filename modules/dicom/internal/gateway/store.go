@@ -68,6 +68,10 @@ func (g *Gateway) onCStore(ctx context.Context, req ae.StoreRequest) uint16 {
 	}
 
 	receivedAt := time.Now().UTC()
+	var sourceAE string
+	if a, ok := ae.AssociationFromContext(ctx); ok {
+		sourceAE = a.CallingAE
+	}
 	rec := index.Record{
 		PatientID: inst.PatientID, PatientName: inst.PatientName,
 		PatientBirthDate: inst.PatientBirthDate, PatientSex: inst.PatientSex,
@@ -78,11 +82,11 @@ func (g *Gateway) onCStore(ctx context.Context, req ae.StoreRequest) uint16 {
 		SeriesNumber: inst.SeriesNumber, SeriesDescription: inst.SeriesDescription,
 		SOPInstanceUID: inst.SOPInstanceUID, SOPClassUID: inst.SOPClassUID,
 		InstanceNumber: inst.InstanceNumber, TransferSyntaxUID: req.TransferSyntax,
-		BlobKey: key, SizeBytes: n, ReceivedAt: receivedAt,
+		BlobKey: key, SourceAE: sourceAE, SizeBytes: n, ReceivedAt: receivedAt,
 	}
 	ev := events.InstanceStored{
 		EventID:    inst.SOPInstanceUID + "@" + receivedAt.Format(time.RFC3339Nano),
-		OccurredAt: receivedAt, Node: g.node,
+		OccurredAt: receivedAt, Node: g.node, SourceAE: sourceAE,
 		PatientID: inst.PatientID, StudyUID: inst.StudyInstanceUID, SeriesUID: inst.SeriesInstanceUID,
 		SOPInstanceUID: inst.SOPInstanceUID, SOPClassUID: inst.SOPClassUID, Modality: inst.Modality,
 		AccessionNum: inst.AccessionNumber, TransferSyntax: req.TransferSyntax, BlobKey: key, SizeBytes: n,

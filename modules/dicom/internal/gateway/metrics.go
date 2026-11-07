@@ -12,6 +12,7 @@ type metrics struct {
 	findSeconds    prometheus.Histogram
 	retrieveSubOps *prometheus.CounterVec // by op (move|get), result
 	eventFailures  prometheus.Counter
+	rejected       prometheus.Counter
 }
 
 func newMetrics(reg prometheus.Registerer) *metrics {
@@ -45,8 +46,11 @@ func newMetrics(reg prometheus.Registerer) *metrics {
 		eventFailures: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "rws_dicom_event_publish_failures_total", Help: "Events that failed to publish.",
 		}),
+		rejected: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "rws_dicom_associations_rejected_total", Help: "Associations refused because the calling AE is not in allowed_aes.",
+		}),
 	}
 	reg.MustRegister(m.connsTotal, m.connsActive, m.stores, m.storeBytes, m.storeSeconds,
-		m.finds, m.findSeconds, m.retrieveSubOps, m.eventFailures)
+		m.finds, m.findSeconds, m.retrieveSubOps, m.eventFailures, m.rejected)
 	return m
 }

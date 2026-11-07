@@ -259,7 +259,7 @@ the file.
 | Area | Key settings (env var) |
 |---|---|
 | Admin | `RWS_ADMIN_ADDR`, `RWS_LOG_LEVEL`, `RWS_LOG_FORMAT`, `RWS_SHUTDOWN_TIMEOUT`, `RWS_NODE_ID` |
-| DICOM | `RWS_DICOM_AE_TITLE`, `RWS_DICOM_LISTEN`, `RWS_DICOM_MAX_ASSOCIATIONS`, `RWS_DICOM_MAX_PDU`, `RWS_DICOM_HANDSHAKE_TIMEOUT`, `RWS_DICOM_IDLE_TIMEOUT`, `RWS_DICOM_FIND_LIMIT`, `RWS_DICOM_GET_MAX_BYTES`, `RWS_DICOM_TLS_CERT`, `RWS_DICOM_TLS_KEY`, `RWS_DICOM_ALLOW_ANY_CALLED_AE`, `RWS_DICOM_ACCEPT_ANY_SOP_CLASS` |
+| DICOM | `RWS_DICOM_AE_TITLE`, `RWS_DICOM_LISTEN`, `RWS_DICOM_MAX_ASSOCIATIONS`, `RWS_DICOM_MAX_PDU`, `RWS_DICOM_HANDSHAKE_TIMEOUT`, `RWS_DICOM_IDLE_TIMEOUT`, `RWS_DICOM_FIND_LIMIT`, `RWS_DICOM_GET_MAX_BYTES`, `RWS_DICOM_TLS_CERT`, `RWS_DICOM_TLS_KEY`, `RWS_DICOM_ALLOW_ANY_CALLED_AE`, `RWS_DICOM_ACCEPT_ANY_SOP_CLASS`, `RWS_DICOM_ALLOWED_AES` (`AE`, `AE@IP`, `AE@CIDR`; empty = any) |
 | C-MOVE destinations | `remote_aes` map (file only) |
 | Storage | `RWS_STORAGE_DRIVER` (fs), `RWS_STORAGE_PATH` |
 | Index | `RWS_INDEX_DRIVER` (sqlite \| postgres), `RWS_INDEX_DSN` |
@@ -338,7 +338,7 @@ All results below come from the development sandbox.
 | 2 | ~~Transactional event outbox~~ (done in 0.2.0) | Done |
 | 3 | S3/MinIO storage backend, replacing the shared volume for clusters | High |
 | 4 | Fork changes 2–5 (streaming retrieve, C-GET fixes, calling AE, lazy decode) and upstream PRs | High |
-| 5 | Security: AE allow-listing, admin endpoint authentication, audit trail (ATNA), TLS by default | High |
+| 5 | Security: ~~AE allow-listing~~ (0.2.0), admin endpoint authentication, audit trail (ATNA), TLS by default | High |
 | 6 | RWS-owned DICOM UID root (replace the borrowed Implementation Class UID) | Medium |
 | 7 | Helm chart; config hot-reload for `remote_aes` | Medium |
 | 8 | C-FIND refinements: case-insensitive names, time ranges, character sets | Medium |

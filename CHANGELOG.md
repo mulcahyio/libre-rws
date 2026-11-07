@@ -29,6 +29,13 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   and published by a relay with retries, so a NATS outage delays events
   instead of losing them. New metric `rws_dicom_outbox_pending`. Index schema
   version 2 (adds `event_outbox`; applied automatically on start).
+- Calling-AE allow-list: `allowed_aes` / `RWS_DICOM_ALLOWED_AES` accepts
+  `AE`, `AE@IP` or `AE@CIDR` entries. Other peers get A-ASSOCIATE-RJ
+  ("calling AE not recognized"), counted in
+  `rws_dicom_associations_rejected_total`. Empty (the default) keeps the old
+  behaviour. An invalid list rejects everything rather than allowing all.
+- Stored instances and `instance.stored` events now record the sending AE
+  title (`source_ae`), which was always empty before.
 - `BACKLOG.md`: the clustering change backlog (storage abstraction, shared
   catalog, eviction, replication, role-based nodes).
 

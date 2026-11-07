@@ -27,12 +27,14 @@ import (
 type recPub struct {
 	mu   sync.Mutex
 	msgs []string
+	evs  []any
 }
 
-func (r *recPub) Publish(_ context.Context, subject, id string, _ any) error {
+func (r *recPub) Publish(_ context.Context, subject, id string, payload any) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.msgs = append(r.msgs, subject+" "+id)
+	r.evs = append(r.evs, payload)
 	return nil
 }
 func (r *recPub) Check(context.Context) error { return nil }

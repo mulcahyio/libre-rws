@@ -40,6 +40,11 @@ func checkAETitles(ctx context.Context, conn net.Conn, cfg ServerConfig, rq *pdu
 			pdu.RejectSourceServiceUser, pdu.RejectReasonCallingAENotRecognized,
 			"empty Calling AE Title")
 	}
+	if cfg.AcceptCallingAE != nil && !cfg.AcceptCallingAE(normalizeAETitle(rq.CallingAETitle), conn.RemoteAddr()) {
+		return reject(ctx, conn, cfg, rq,
+			pdu.RejectSourceServiceUser, pdu.RejectReasonCallingAENotRecognized,
+			fmt.Sprintf("Calling AE Title %q is not allowed", normalizeAETitle(rq.CallingAETitle)))
+	}
 	if !cfg.acceptsCalledAETitle(rq.CalledAETitle) {
 		return reject(ctx, conn, cfg, rq,
 			pdu.RejectSourceServiceUser, pdu.RejectReasonCalledAENotRecognized,
