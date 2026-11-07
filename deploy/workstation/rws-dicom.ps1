@@ -138,7 +138,7 @@ function Invoke-Verify {
     $e = Read-Env
     Wait-Healthy
     try {
-        $v = Invoke-RestMethod -Uri "http://127.0.0.1:$($e['RWS_ADMIN_PORT'])/version" -TimeoutSec 5 -ErrorAction Stop
+        $v = Invoke-RestMethod -Uri "http://127.0.0.1:$($e['RWS_ADMIN_PORT'])/version" -Headers (Get-AdminHeaders $e) -TimeoutSec 5 -ErrorAction Stop
         Ok "Admin endpoint answering: $($v | ConvertTo-Json -Compress)"
     } catch { Fail "Admin endpoint http://127.0.0.1:$($e['RWS_ADMIN_PORT']) not reachable: $_" }
 
@@ -169,6 +169,12 @@ function Show-Summary {
     Info 'Configure modalities/viewers to send to the AE title, IP and port above.'
     Info 'If other machines cannot connect, allow the DICOM port through Windows Defender Firewall.'
     Write-Host ''
+}
+
+# Authorization header for the admin endpoint when RWS_ADMIN_TOKEN is set.
+function Get-AdminHeaders($e) {
+    if ($e['RWS_ADMIN_TOKEN']) { return @{ Authorization = "Bearer $($e['RWS_ADMIN_TOKEN'])" } }
+    return @{}
 }
 
 function Invoke-Backup {
@@ -215,7 +221,7 @@ switch ($Command) {
     'status'  {
         Invoke-Compose ps
         $e = Read-Env
-        try { Invoke-RestMethod "http://127.0.0.1:$($e['RWS_ADMIN_PORT'])/version" -TimeoutSec 3 -ErrorAction Stop | Format-List } catch { Warn 'Admin endpoint not answering' }
+        try { Invoke-RestMethod "http://127.0.0.1:$($e['RWS_ADMIN_PORT'])/version" -Headers (Get-AdminHeaders $e) -TimeoutSec 3 -ErrorAction Stop | Format-List } catch { Warn 'Admin endpoint not answering' }
     }
     'logs'    { Invoke-Compose logs -f --tail 200 dicom }
     'start'   { Invoke-Compose up -d; Invoke-Verify }

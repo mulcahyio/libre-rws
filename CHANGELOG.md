@@ -34,6 +34,12 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   ("calling AE not recognized"), counted in
   `rws_dicom_associations_rejected_total`. Empty (the default) keeps the old
   behaviour. An invalid list rejects everything rather than allowing all.
+- Admin endpoint token: with `RWS_ADMIN_TOKEN` (or `RWS_ADMIN_TOKEN_FILE`
+  for Docker secrets) set, `/metrics` and `/version` need
+  `Authorization: Bearer <token>`. `/healthz` and `/readyz` stay open for
+  probes, but `/readyz` hides check details without the token. An unreadable
+  token file refuses requests rather than serving them. The workstation
+  scripts send the token from `.env`.
 - Stored instances and `instance.stored` events now record the sending AE
   title (`source_ae`), which was always empty before.
 - `BACKLOG.md`: the clustering change backlog (storage abstraction, shared
