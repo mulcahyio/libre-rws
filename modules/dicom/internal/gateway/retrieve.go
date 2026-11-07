@@ -133,6 +133,14 @@ func (g *Gateway) onCMove(ctx context.Context, req ae.MoveRequest) ae.MovePlan {
 	}
 	start := time.Now()
 	tally := g.sendInstances(ctx, dest, rows)
+	studies, patients := studiesAndPatients(rows)
+	outcome := "success"
+	if tally.failed > 0 {
+		outcome = "minor-failure"
+	}
+	g.audit(ctx, auditInstancesExported, outcome, "op", "C-MOVE", "destination", req.MoveDestination,
+		"destination_host", dest.Host, "studies", studies, "patient_ids", patients,
+		"instances", len(rows), "failed", tally.failed)
 	g.log.Info("C-MOVE finished", "destination", req.MoveDestination, "instances", len(rows),
 		"completed", tally.completed, "failed", tally.failed, "warning", tally.warning,
 		"seconds", time.Since(start).Seconds())
@@ -333,5 +341,12 @@ func (g *Gateway) onCGet(ctx context.Context, req ae.GetRequest) ae.GetPlan {
 	// Completed counts what was sent.
 	tally.completed = len(stores)
 	g.m.retrieveSubOps.WithLabelValues("get", "completed").Add(float64(len(stores)))
+	studies, patients := studiesAndPatients(rows)
+	outcome := "success"
+	if tally.failed > 0 {
+		outcome = "minor-failure"
+	}
+	g.audit(ctx, auditInstancesExported, outcome, "op", "C-GET", "studies", studies, "patient_ids", patients,
+		"instances", len(stores), "failed", tally.failed)
 	return ae.GetPlan{Stores: stores, Responses: []ae.RetrieveMatch{tally.final()}}
 }

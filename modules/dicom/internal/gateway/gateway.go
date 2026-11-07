@@ -54,6 +54,9 @@ type Config struct {
 	// FindCaseSensitiveNames turns off case-insensitive PatientName matching
 	// in C-FIND (on by default: "doe*" finds "DOE^JOHN").
 	FindCaseSensitiveNames bool `yaml:"find_case_sensitive_names" env:"RWS_DICOM_FIND_CASE_SENSITIVE_NAMES"`
+	// AuditLogOff stops the audit=true log records (stores, queries, exports,
+	// rejected associations). On by default.
+	AuditLogOff bool `yaml:"audit_log_off" env:"RWS_DICOM_AUDIT_LOG_OFF"`
 }
 
 func (g *Gateway) queryOptions() queryOptions {

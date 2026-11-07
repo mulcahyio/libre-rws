@@ -2,6 +2,8 @@ package gateway
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	"net"
 	"testing"
 	"time"
@@ -21,7 +23,7 @@ func TestParseAllowRule(t *testing.T) {
 			t.Errorf("parseAllowRule(%q) accepted", bad)
 		}
 	}
-	g := &Gateway{m: newMetrics(prometheus.NewRegistry())}
+	g := &Gateway{m: newMetrics(prometheus.NewRegistry()), log: slog.New(slog.NewTextHandler(io.Discard, nil))}
 	if err := g.SetAllowedAEs([]string{"CT1", " MR1@192.168.1.20 ", "US@10.1.0.0/16", ""}); err != nil {
 		t.Fatal(err)
 	}

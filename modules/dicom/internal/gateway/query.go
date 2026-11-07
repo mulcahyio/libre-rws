@@ -247,6 +247,7 @@ func (g *Gateway) onCFind(ctx context.Context, req ae.FindRequest) []ae.FindMatc
 		matches = append(matches, ae.FindMatch{Status: status.Pending, Identifier: buildResponse(req.IdentifierData, lvl, r)})
 	}
 	g.m.finds.WithLabelValues(lvl, "success").Inc()
+	g.audit(ctx, auditQuery, "success", "level", lvl, "filters", len(q.filters), "matches", len(rows))
 	return append(matches, ae.FindMatch{Status: status.Success})
 }
 

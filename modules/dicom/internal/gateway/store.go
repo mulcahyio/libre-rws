@@ -122,6 +122,8 @@ func (g *Gateway) onCStore(ctx context.Context, req ae.StoreRequest) uint16 {
 		}
 	}
 
+	g.audit(ctx, auditInstancesStored, "success", "study", inst.StudyInstanceUID,
+		"patient_id", inst.PatientID, "sop_instance_uid", inst.SOPInstanceUID)
 	g.m.storeBytes.Add(float64(n))
 	log.Debug("instance stored", "study", inst.StudyInstanceUID, "bytes", n, "ms", time.Since(start).Milliseconds())
 	return result(status.Success, "success")

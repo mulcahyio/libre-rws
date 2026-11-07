@@ -278,9 +278,16 @@ func TestEndToEnd(t *testing.T) {
 	}
 }
 
+// logSink, when set by a test, receives the gateway log as well.
+var logSink io.Writer
+
 func testWriter() io.Writer {
+	var w io.Writer = io.Discard
 	if testing.Verbose() {
-		return os.Stderr
+		w = os.Stderr
 	}
-	return io.Discard
+	if logSink != nil {
+		return io.MultiWriter(w, logSink)
+	}
+	return w
 }

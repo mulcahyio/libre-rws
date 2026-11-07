@@ -56,6 +56,11 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   corrupted upload is rejected. The store contract and the full DIMSE
   end-to-end tests run on S3 too (`make test-s3`, SeaweedFS in Docker). New
   dependency: `github.com/minio/minio-go/v7` (Apache-2.0).
+- Audit log: structured `audit=true` records for received instances,
+  queries, exports (C-MOVE/C-GET, with destination, studies and patient IDs)
+  and rejected associations, named after the DICOM audit message types
+  (PS3.15 A.5) so they can become ATNA syslog messages later. Turn off with
+  `RWS_DICOM_AUDIT_LOG_OFF=true`.
 - Index conformance suite: the same query, outbox and upgrade tests run
   against SQLite and PostgreSQL (`make test-postgres`).
 - Stored instances and `instance.stored` events now record the sending AE

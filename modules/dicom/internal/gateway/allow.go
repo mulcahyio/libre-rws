@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/netip"
@@ -79,5 +80,6 @@ func (g *Gateway) callingAEAllowed(callingAE string, remote net.Addr) bool {
 		}
 	}
 	g.m.rejected.Inc()
+	g.audit(context.Background(), auditAssocRejected, "minor-failure", "calling_ae", callingAE, "remote", remote.String())
 	return false
 }
