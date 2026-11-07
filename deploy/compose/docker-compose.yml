@@ -9,13 +9,13 @@ services:
 
   dicom:
     build: {context: ../.., dockerfile: deploy/docker/Dockerfile.dicom}
-    image: rws/dicom:dev
+    image: libre/dcm:dev
     environment:
-      RWS_NODE_ID: dicom-1
-      RWS_EVENTS_DRIVER: nats
-      RWS_EVENTS_URL: nats://nats:4222
+      LIBRE_DCM_NODE_ID: dicom-1
+      LIBRE_DCM_EVENTS_DRIVER: nats
+      LIBRE_DCM_EVENTS_URL: nats://nats:4222
     ports: ["11112:11112", "8081:8081"]
-    volumes: [dicom-data:/var/lib/rws]
+    volumes: [dicom-data:/var/lib/libredcm]
     depends_on: [nats]
     restart: unless-stopped
 

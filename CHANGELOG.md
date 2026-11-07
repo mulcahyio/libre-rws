@@ -61,6 +61,13 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   and rejected associations, named after the DICOM audit message types
   (PS3.15 A.5) so they can become ATNA syslog messages later. Turn off with
   `RWS_DICOM_AUDIT_LOG_OFF=true`.
+- Configurable patient IDs: `LIBRE_DCM_EVENTS_OMIT_PATIENT_ID` and
+  `LIBRE_DCM_AUDIT_OMIT_PATIENT_ID` leave the patient ID out of bus events
+  and audit records (default: included).
+- Configurable TLS: admin endpoint over HTTPS (`LIBRE_DCM_ADMIN_TLS_CERT` /
+  `_KEY`; the container health check follows), `-gen-cert DIR` creates a
+  self-signed certificate (kept unless `-gen-cert-force`), and `-echo` uses
+  DICOM TLS when the node has a certificate (`-echo-tls`).
 - Index conformance suite: the same query, outbox and upgrade tests run
   against SQLite and PostgreSQL (`make test-postgres`).
 - Stored instances and `instance.stored` events now record the sending AE
@@ -69,6 +76,22 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   catalog, eviction, replication, role-based nodes).
 
 ### Changed
+- **Code identifiers renamed** (decided 2026-11-07): program `LibreDCM`
+  (was `rws-dicom`), image `libre/dcm` (was `rws/dicom`), settings
+  `LIBRE_DCM_*` (was `RWS_DICOM_*` / `RWS_*`), event subjects `libre.dcm.*`
+  (was `rws.dicom.*`), metrics `libre_dcm_*` (was `rws_dicom_*`), default
+  AE title `LIBREDCM`, Go module `github.com/mulcahyio/libre-rws`. Backward
+  compatible: `RWS_*` settings are still read (a warning names the
+  replacement), events are also published under the old subjects
+  (`LIBRE_DCM_EVENTS_LEGACY_SUBJECTS=false` stops it), and an upgraded install
+  keeps its `RWS_DICOM` stream. Metric names changed without aliases.
+- Workstation package: `LibreDCM.sh` / `LibreDCM.ps1` (were `rws-dicom.*`),
+  container `libredcm`. `install` now asks the install-time choices (storage:
+  this PC or S3; TLS: off, self-signed or your own files; patient IDs in
+  events and audit log) and generates an admin token; `configure` asks again;
+  `-Yes` / `LIBREDCM_YES=1` for unattended installs. `upgrade` moves a 0.1.x
+  install over: renames `.env` keys (backup kept), removes the old container
+  and keeps the `rws-dicom-data` volume.
 - An environment variable that is set but empty no longer overrides the
   config file (compose passes every variable through, so empty values were
   wiping file settings).

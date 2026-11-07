@@ -20,14 +20,14 @@ services:
 
   dicom:
     build: {context: ../.., dockerfile: deploy/docker/Dockerfile.dicom}
-    image: rws/dicom:dev
+    image: libre/dcm:dev
     environment:
-      RWS_INDEX_DRIVER: postgres
-      RWS_INDEX_DSN: postgres://rws:rws@postgres:5432/rws?sslmode=disable
-      RWS_EVENTS_DRIVER: nats
-      RWS_EVENTS_URL: nats://nats:4222
-      RWS_STORAGE_PATH: /var/lib/rws/blobs
-    volumes: [blobs:/var/lib/rws/blobs]
+      LIBRE_DCM_INDEX_DRIVER: postgres
+      LIBRE_DCM_INDEX_DSN: postgres://rws:rws@postgres:5432/rws?sslmode=disable
+      LIBRE_DCM_EVENTS_DRIVER: nats
+      LIBRE_DCM_EVENTS_URL: nats://nats:4222
+      LIBRE_DCM_STORAGE_PATH: /var/lib/libredcm/blobs
+    volumes: [blobs:/var/lib/libredcm/blobs]
     depends_on:
       postgres: {condition: service_healthy}
       nats: {condition: service_started}

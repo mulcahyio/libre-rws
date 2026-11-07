@@ -4,24 +4,24 @@ export CGO_ENABLED=0
 
 .PHONY: build test test-postgres test-s3 vet image up cluster down conformance workstation
 build:        ## static binary in ./bin
-	go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o bin/rws-dicom ./modules/dicom/cmd/rws-dicom
+	go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o bin/LibreDCM ./modules/dicom/cmd/libredcm
 test:         ## unit + end-to-end DIMSE tests
 	go test ./modules/... ./platform/... -count=1
 test-postgres: ## same tests, index suites also against a throwaway PostgreSQL (needs Docker)
 	docker rm -f rws-test-pg >/dev/null 2>&1 || true
 	docker run -d --rm --name rws-test-pg -e POSTGRES_PASSWORD=t -e POSTGRES_DB=rws -p 127.0.0.1:55433:5432 postgres:16-alpine >/dev/null
 	for i in $$(seq 1 30); do docker exec rws-test-pg pg_isready -U postgres >/dev/null 2>&1 && break; sleep 1; done
-	RWS_TEST_POSTGRES_DSN="postgres://postgres:t@127.0.0.1:55433/rws?sslmode=disable" go test -p 1 ./modules/... ./platform/... -count=1; s=$$?; docker rm -f rws-test-pg >/dev/null; exit $$s
+	LIBRE_DCM_TEST_POSTGRES_DSN="postgres://postgres:t@127.0.0.1:55433/rws?sslmode=disable" go test -p 1 ./modules/... ./platform/... -count=1; s=$$?; docker rm -f rws-test-pg >/dev/null; exit $$s
 test-s3:      ## blob contract + DIMSE end-to-end tests on an S3 store (SeaweedFS in Docker)
 	docker rm -f rws-test-s3 >/dev/null 2>&1 || true
 	printf '{"identities":[{"name":"t","credentials":[{"accessKey":"rwstest","secretKey":"rwstest123"}],"actions":["Admin","Read","Write","List"]}]}' > /tmp/rws-test-s3.json
 	docker run -d --rm --name rws-test-s3 -p 127.0.0.1:58334:8333 -v /tmp/rws-test-s3.json:/etc/s3.json:ro chrislusf/seaweedfs:latest server -s3 -s3.config=/etc/s3.json -dir=/data >/dev/null
 	for i in $$(seq 1 30); do curl -s -o /dev/null 127.0.0.1:58334 && break; sleep 1; done
-	RWS_TEST_S3_ENDPOINT=127.0.0.1:58334 RWS_TEST_S3_ACCESS_KEY=rwstest RWS_TEST_S3_SECRET_KEY=rwstest123 go test ./modules/dicom/internal/blob/ ./modules/dicom/internal/gateway/ -count=1; s=$$?; docker rm -f rws-test-s3 >/dev/null; exit $$s
+	LIBRE_DCM_TEST_S3_ENDPOINT=127.0.0.1:58334 LIBRE_DCM_TEST_S3_ACCESS_KEY=rwstest LIBRE_DCM_TEST_S3_SECRET_KEY=rwstest123 go test ./modules/dicom/internal/blob/ ./modules/dicom/internal/gateway/ -count=1; s=$$?; docker rm -f rws-test-s3 >/dev/null; exit $$s
 vet:
 	go vet ./modules/... ./platform/...
 image:        ## container image
-	docker build -f deploy/docker/Dockerfile.dicom --build-arg VERSION=$(VERSION) -t rws/dicom:$(VERSION) .
+	docker build -f deploy/docker/Dockerfile.dicom --build-arg VERSION=$(VERSION) -t libre/dcm:$(VERSION) .
 up:           ## single node
 	docker compose -f deploy/compose/docker-compose.yml up -d --build
 cluster:      ## HA topology on one host (3 gateways)
@@ -31,4 +31,4 @@ down:
 conformance:  ## DCMTK smoke test against a running node: make conformance DIR=path/to/dcm
 	scripts/conformance.sh $(DIR)
 workstation:  ## local workstation install with verification
-	deploy/workstation/rws-dicom.sh install
+	deploy/workstation/LibreDCM.sh install

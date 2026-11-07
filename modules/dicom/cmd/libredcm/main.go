@@ -61,6 +61,7 @@ func main() {
 	genCertDir := flag.String("gen-cert", "", "write a self-signed TLS certificate (tls.crt, tls.key) to DIR and exit")
 	genCertHosts := flag.String("gen-cert-hosts", "", "comma-separated DNS names / IPs for -gen-cert")
 	genCertForce := flag.Bool("gen-cert-force", false, "replace an existing certificate with -gen-cert")
+	echoTLS := flag.Bool("echo-tls", config.Getenv("LIBRE_DCM_TLS_CERT", "RWS_DICOM_TLS_CERT") != "", "use DICOM TLS for -echo (default: on when this node has a TLS certificate)")
 	backupTo := flag.String("backup", "", "write a consistent snapshot of the SQLite index to PATH and exit (safe while the module runs)")
 	flag.Parse()
 	if *showVersion {
@@ -71,7 +72,7 @@ func main() {
 		os.Exit(probe(*healthcheck))
 	}
 	if *echoAddr != "" {
-		os.Exit(echo(*echoAddr, *echoAE))
+		os.Exit(echo(*echoAddr, *echoAE, *echoTLS))
 	}
 	if *genCertDir != "" {
 		if err := genCert(*genCertDir, *genCertHosts, *genCertForce); err != nil {

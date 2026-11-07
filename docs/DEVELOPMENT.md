@@ -1,13 +1,13 @@
 # Libre DCM — DICOM Module Development Document
 
-Libre DCM (DCM = DICOM, binary `rws-dicom`) is the DICOM module of **Libre RWS**
+Libre DCM (DCM = DICOM, binary `LibreDCM`) is the DICOM module of **Libre RWS**
 (Radiology Workflow System), formerly RWS DICOM. Open and extensible.
 
 | | |
 |---|---|
 | **Developed by** | Patrick Mulcahy, Mulcahy.io |
 | **Contact** | dev@mulcahy.io |
-| **Module** | Libre DCM (`rws-dicom`) 0.1.1-beta.1 (first Libre RWS module) |
+| **Module** | Libre DCM (`LibreDCM`) 0.1.1-beta.1 (first Libre RWS module) |
 | **Language** | Go 1.26+ |
 | **Status** | Beta. Not for clinical use. Workstation container package added in 0.1.1-beta.1. See [CHANGELOG.md](../CHANGELOG.md) and [release notes](releases/v0.1.1-beta.1.md). |
 | **Date** | October 2026 |
@@ -71,7 +71,7 @@ stack and for resource efficiency.
              │  balancer       │
              └──┬─────────┬───┘
         ┌───────▼──┐   ┌──▼───────┐
-        │ rws-dicom │…│ rws-dicom │   stateless gateway nodes (1..N)
+        │ LibreDCM │…│ LibreDCM │   stateless gateway nodes (1..N)
         └──┬──┬──┬──┘   └──┬──┬──┬─┘
            │  │  │         │  │  │
    archive │  │  │ index   │  │  │ events
@@ -95,7 +95,7 @@ loss or reconfiguration.
 ```
 platform/config/        YAML + environment-variable configuration loader
 platform/runtime/       shared chassis: logging, admin endpoints, lifecycle
-modules/dicom/cmd/rws-dicom/      entrypoint
+modules/dicom/cmd/libredcm/      entrypoint
 modules/dicom/internal/gateway/   DIMSE services
 modules/dicom/internal/blob/      archive storage
 modules/dicom/internal/index/     metadata index
@@ -134,7 +134,7 @@ SIGINT/SIGTERM, which allows rolling upgrades.
 3. The file is written atomically (temp file, fsync, rename) at
    `<StudyUID>/<SeriesUID>/<SOPInstanceUID>.dcm`.
 4. Study, series and instance rows are upserted in one transaction.
-5. The `rws.dicom.instance.stored` event is published.
+5. The `libre.dcm.instance.stored` event is published.
 
 The order guarantees that an instance is durable before it is queryable, and
 queryable before anyone is notified. Re-sent instances replace earlier ones.
@@ -190,7 +190,7 @@ lands; use C-MOVE for compressed data.
 Migrations run at startup under a PostgreSQL advisory lock, so several nodes
 can start at the same moment safely.
 
-### Event: `rws.dicom.instance.stored`
+### Event: `libre.dcm.instance.stored`
 
 | Field | Description |
 |---|---|
@@ -200,7 +200,7 @@ can start at the same moment safely.
 | `study_instance_uid`, `series_instance_uid`, `sop_instance_uid`, `sop_class_uid` | identity |
 | `transfer_syntax_uid`, `blob_key`, `size_bytes` | storage location and format |
 
-The JetStream stream is `RWS_DICOM` (subjects `rws.dicom.>`), file-backed,
+The JetStream stream is `LIBRE_DCM` (subjects `libre.dcm.>`, plus `rws.dicom.>` while legacy subjects are on; an install upgraded from 0.1.x keeps its `RWS_DICOM` stream), file-backed,
 with configurable replicas and retention (default 7 days) and a 10-minute
 de-duplication window.
 
@@ -258,12 +258,12 @@ the file.
 
 | Area | Key settings (env var) |
 |---|---|
-| Admin | `RWS_ADMIN_TOKEN` / `RWS_ADMIN_TOKEN_FILE` (bearer token for `/metrics`, `/version`; probes stay open), `RWS_ADMIN_ADDR`, `RWS_LOG_LEVEL`, `RWS_LOG_FORMAT`, `RWS_SHUTDOWN_TIMEOUT`, `RWS_NODE_ID` |
-| DICOM | `RWS_DICOM_AE_TITLE`, `RWS_DICOM_LISTEN`, `RWS_DICOM_MAX_ASSOCIATIONS`, `RWS_DICOM_MAX_PDU`, `RWS_DICOM_HANDSHAKE_TIMEOUT`, `RWS_DICOM_IDLE_TIMEOUT`, `RWS_DICOM_FIND_LIMIT`, `RWS_DICOM_GET_MAX_BYTES`, `RWS_DICOM_TLS_CERT`, `RWS_DICOM_TLS_KEY`, `RWS_DICOM_ALLOW_ANY_CALLED_AE`, `RWS_DICOM_ACCEPT_ANY_SOP_CLASS`, `RWS_DICOM_ALLOWED_AES` (`AE`, `AE@IP`, `AE@CIDR`; empty = any), `RWS_DICOM_FIND_CASE_SENSITIVE_NAMES`, `RWS_DICOM_AUDIT_LOG_OFF` |
-| C-MOVE destinations | `remote_aes` map (file) or `RWS_DICOM_REMOTE_AES`; `remote_aes` and `allowed_aes` reload on `SIGHUP` without a restart |
-| Storage | `RWS_STORAGE_DRIVER` (fs \| s3), `RWS_STORAGE_PATH` (fs); s3: `RWS_STORAGE_S3_ENDPOINT`, `_BUCKET`, `_REGION`, `_PREFIX`, `_ACCESS_KEY`, `_SECRET_KEY` (or the AWS credential chain), `_INSECURE`, `_CREATE_BUCKET` |
-| Index | `RWS_INDEX_DRIVER` (sqlite \| postgres), `RWS_INDEX_DSN` |
-| Events | `RWS_EVENTS_DRIVER` (none \| log \| nats), `RWS_EVENTS_URL`, `RWS_EVENTS_STREAM`, `RWS_EVENTS_REPLICAS`, `RWS_EVENTS_MAX_AGE_DAYS` |
+| Admin | `LIBRE_DCM_ADMIN_TOKEN` / `LIBRE_DCM_ADMIN_TOKEN_FILE` (bearer token for `/metrics`, `/version`; probes stay open), `LIBRE_DCM_ADMIN_ADDR`, `LIBRE_DCM_LOG_LEVEL`, `LIBRE_DCM_LOG_FORMAT`, `LIBRE_DCM_SHUTDOWN_TIMEOUT`, `LIBRE_DCM_NODE_ID` |
+| DICOM | `LIBRE_DCM_AE_TITLE`, `LIBRE_DCM_LISTEN`, `LIBRE_DCM_MAX_ASSOCIATIONS`, `LIBRE_DCM_MAX_PDU`, `LIBRE_DCM_HANDSHAKE_TIMEOUT`, `LIBRE_DCM_IDLE_TIMEOUT`, `LIBRE_DCM_FIND_LIMIT`, `LIBRE_DCM_GET_MAX_BYTES`, `LIBRE_DCM_TLS_CERT`, `LIBRE_DCM_TLS_KEY`, `LIBRE_DCM_ALLOW_ANY_CALLED_AE`, `LIBRE_DCM_ACCEPT_ANY_SOP_CLASS`, `LIBRE_DCM_ALLOWED_AES` (`AE`, `AE@IP`, `AE@CIDR`; empty = any), `LIBRE_DCM_FIND_CASE_SENSITIVE_NAMES`, `LIBRE_DCM_AUDIT_LOG_OFF` |
+| C-MOVE destinations | `remote_aes` map (file) or `LIBRE_DCM_REMOTE_AES`; `remote_aes` and `allowed_aes` reload on `SIGHUP` without a restart |
+| Storage | `LIBRE_DCM_STORAGE_DRIVER` (fs \| s3), `LIBRE_DCM_STORAGE_PATH` (fs); s3: `LIBRE_DCM_STORAGE_S3_ENDPOINT`, `_BUCKET`, `_REGION`, `_PREFIX`, `_ACCESS_KEY`, `_SECRET_KEY` (or the AWS credential chain), `_INSECURE`, `_CREATE_BUCKET` |
+| Index | `LIBRE_DCM_INDEX_DRIVER` (sqlite \| postgres), `LIBRE_DCM_INDEX_DSN` |
+| Events | `LIBRE_DCM_EVENTS_DRIVER` (none \| log \| nats), `LIBRE_DCM_EVENTS_URL`, `LIBRE_DCM_EVENTS_STREAM`, `LIBRE_DCM_EVENTS_REPLICAS`, `LIBRE_DCM_EVENTS_MAX_AGE_DAYS` |
 
 ---
 
@@ -286,25 +286,25 @@ at-least-once; consumers should de-duplicate on `event_id`.
 
 | Metric | Meaning |
 |---|---|
-| `rws_dicom_connections_total` / `_active` | DICOM connections |
-| `rws_dicom_cstore_total{result}`, `_cstore_bytes_total`, `_cstore_seconds` | storage volume and latency |
-| `rws_dicom_cfind_total{level,result}`, `_cfind_seconds` | query volume and latency |
-| `rws_dicom_retrieve_subops_total{op,result}` | C-MOVE/C-GET outcomes |
-| `rws_dicom_event_publish_failures_total` | failed publish attempts (retried from the outbox, not lost) |
-| `rws_dicom_outbox_pending` | events stored but not yet published; stays above 0 during a bus outage |
-| `rws_module_info{module,version,node}` | build information |
+| `libre_dcm_connections_total` / `_active` | DICOM connections |
+| `libre_dcm_cstore_total{result}`, `_cstore_bytes_total`, `_cstore_seconds` | storage volume and latency |
+| `libre_dcm_cfind_total{level,result}`, `_cfind_seconds` | query volume and latency |
+| `libre_dcm_retrieve_subops_total{op,result}` | C-MOVE/C-GET outcomes |
+| `libre_dcm_event_publish_failures_total` | failed publish attempts (retried from the outbox, not lost) |
+| `libre_dcm_outbox_pending` | events stored but not yet published; stays above 0 during a bus outage |
+| `libre_module_info{module,version,node}` | build information |
 
 ### Deployment
 
 | Topology | How |
 |---|---|
-| Bare metal / VM | `make build`, run `bin/rws-dicom -config …` |
+| Bare metal / VM | `make build`, run `bin/LibreDCM -config …` |
 | Workstation | `deploy/workstation/` installer (gateway only, SQLite, Docker volume; NATS optional) |
 | Single container | `make up` (gateway + NATS, SQLite, local volume) |
 | HA on one host | `make cluster` (PostgreSQL + NATS + 3 gateways behind HAProxy) |
 | Kubernetes | Same image; Helm chart planned |
 
-The image uses a built-in health check (`rws-dicom -healthcheck 127.0.0.1:8081`).
+The image uses a built-in health check (`LibreDCM -healthcheck 127.0.0.1:8081`).
 Upgrades are rolling: stop one node (it drains on SIGTERM), replace it, and
 repeat.
 
@@ -326,7 +326,7 @@ All results below come from the development sandbox.
 | Bus outage | `/readyz` returns 503; stores still succeed; failure counted |
 | Concurrent node start (migration race) | Found and fixed (advisory lock) |
 | Load: 1,000 instances, 10 parallel associations, 2 nodes | 0 failures, about 190 images/s, about 30 MB RAM per node, all indexed, 1,000 events |
-| Docker images / compose files | Dockerfile added in 0.1.1-beta.1 (it was missing from 0.1.0). Release check, 2026-10-11 (Docker 29.7.2, Linux): image `rws/dicom:0.1.1-beta.1` built (74 MB); container reports healthy; `/version` returns `0.1.1-beta.1`; `/readyz` returns 200; C-ECHO succeeds inside the container and through the published port; all three compose files pass `docker compose config`. **Not yet run:** the compose topologies themselves (single, cluster, workstation install scripts). |
+| Docker images / compose files | Dockerfile added in 0.1.1-beta.1 (it was missing from 0.1.0). Release check, 2026-10-11 (Docker 29.7.2, Linux): image `libre/dcm:0.1.1-beta.1` built (74 MB); container reports healthy; `/version` returns `0.1.1-beta.1`; `/readyz` returns 200; C-ECHO succeeds inside the container and through the published port; all three compose files pass `docker compose config`. **Not yet run:** the compose topologies themselves (single, cluster, workstation install scripts). |
 
 ---
 
@@ -348,7 +348,7 @@ All results below come from the development sandbox.
 
 ## 12. Attribution and licensing
 
-Libre RWS and the Libre DCM module (`rws-dicom`) were developed by **Patrick Mulcahy, Mulcahy.io**
+Libre RWS and the Libre DCM module (`LibreDCM`) were developed by **Patrick Mulcahy, Mulcahy.io**
 (dev@mulcahy.io). Copyright (c) 2026 Patrick Mulcahy, Mulcahy.io. The license
 for Libre RWS itself is to be determined.
 
@@ -369,10 +369,10 @@ Developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   dynamically linked (purego, via the JPEG codec), so `distroless/static` would
   fail to start it.
 - **`deploy/workstation/`:** single-node compose, `.env` as the only settings
-  file, `rws-dicom.ps1` / `rws-dicom.sh` (install, upgrade with index backup,
+  file, `LibreDCM.ps1` / `LibreDCM.sh` (install, upgrade with index backup,
   verify, status, logs, backup, uninstall), `install.cmd`, and `INSTALL.md`.
 - **`-echo HOST:PORT` flag:** built-in C-ECHO for install verification, with no
   DCMTK needed.
-- **`RWS_DICOM_REMOTE_AES`:** C-MOVE destinations from one environment variable
+- **`LIBRE_DCM_REMOTE_AES`:** C-MOVE destinations from one environment variable
   (`NAME=HOST:PORT[:AE]`, comma-separated). This removes the need to bind-mount
   a config file, which fails when the repository sits on a network drive.

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"os"
 	"time"
@@ -16,10 +17,18 @@ import (
 // reachable without needing DCMTK or another external tool:
 //
 //	LibreDCM -echo 127.0.0.1:11112 -echo-ae LIBREDCM
-func echo(addr, calledAE string) int {
+// With useTLS the association runs over DICOM TLS; the server certificate is
+// not verified, because this is a reachability check (often of a self-signed
+// install), not a trust decision.
+func echo(addr, calledAE string, useTLS bool) int {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
+	var tlsCfg *tls.Config
+	if useTLS {
+		tlsCfg = &tls.Config{InsecureSkipVerify: true, MinVersion: tls.VersionTLS12} //nolint:gosec // reachability check only
+	}
 	scu, err := ae.Dial(ctx, ae.Config{
+		TLS:     tlsCfg,
 		AETitle: "LIBREDCM_ECHO",
 		PresentationContexts: []ae.PresentationContext{
 			{AbstractSyntax: "1.2.840.10008.1.1", TransferSyntaxes: []string{dcm.ImplicitVRLittleEndian}},
