@@ -74,6 +74,9 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   wiping file settings).
 
 ### Fixed
+- Cluster HAProxy: a gateway that has just died no longer fails new
+  associations for ~10 s; connects are retried on another node
+  (`retries 3`, `option redispatch`) and health checks run every 2 s.
 - SQLite wildcard queries were case-insensitive for ASCII while PostgreSQL's
   were case-sensitive. Both are now case-sensitive (found by the conformance
   suite); name matching uses its own case-insensitive path.
@@ -90,6 +93,20 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 - `INSTALL.md`: Linux host firewalls can block C-MOVE to a viewer on the same
   PC (`host.docker.internal`); how to allow it.
 - `INSTALL.md`: how to take a consistent backup (see Known issues).
+
+### Tested (2026-11-07)
+- Workstation install, upgrade (index v2 to v3 in place), `backup` under load
+  and with a NATS outage: 12 events stored during the outage were all
+  published once after recovery.
+- DCMTK conformance against the workstation and the 3-node cluster:
+  C-ECHO, C-STORE (Explicit VR LE, JPEG Baseline, JPEG 2000 lossless and
+  lossy, RLE, JPEG-LS), C-FIND, C-MOVE with byte-identical compressed pixel
+  data. JPEG 2000 is now covered.
+- Cluster (PostgreSQL, NATS, HAProxy, 3 gateways): load spread over all
+  nodes; with one node killed and NATS stopped, 15 stores succeeded, both
+  surviving nodes drained the shared outbox after recovery and the stream
+  held exactly one event per store (52 of 52).
+- Not tested: the Windows PowerShell installer.
 
 ## rws-dicom 0.1.1-beta.1 (2026-10-11)
 
