@@ -51,6 +51,11 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   are labelled `ISO_IR 192` (UTF-8) instead of echoing a character set that
   didn't match the bytes. Index schema version 3 (adds a folded name column,
   filled in for existing studies on first start).
+- S3 storage backend (`RWS_STORAGE_DRIVER=s3`) for AWS S3 and S3-compatible
+  stores (MinIO, Ceph, NAS appliances). Uploads carry a Content-MD5 so a
+  corrupted upload is rejected. The store contract and the full DIMSE
+  end-to-end tests run on S3 too (`make test-s3`, SeaweedFS in Docker). New
+  dependency: `github.com/minio/minio-go/v7` (Apache-2.0).
 - Index conformance suite: the same query, outbox and upgrade tests run
   against SQLite and PostgreSQL (`make test-postgres`).
 - Stored instances and `instance.stored` events now record the sending AE

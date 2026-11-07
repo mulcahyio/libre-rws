@@ -102,7 +102,7 @@ workstation installer end to end.
 1. ~~Event outbox~~ (done in 0.2.0: events are written to an outbox table
    with the instance and published by a relay, so a bus outage delays events
    instead of losing them).
-2. **S3/MinIO storage backend.** Replaces the shared volume for real clusters.
+2. ~~S3/MinIO storage backend~~ (done in 0.2.0, `RWS_STORAGE_DRIVER=s3`). Next: local staging with async replication (BACKLOG.md).
 3. **Fork items** (third_party/gonetdicom/RWS_FORK.md): streaming C-MOVE/C-GET
    with Pending responses and C-CANCEL, C-GET transfer-syntax awareness,
    calling-AE in handlers (needed for per-AE access control and

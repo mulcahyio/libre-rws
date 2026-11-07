@@ -261,7 +261,7 @@ the file.
 | Admin | `RWS_ADMIN_TOKEN` / `RWS_ADMIN_TOKEN_FILE` (bearer token for `/metrics`, `/version`; probes stay open), `RWS_ADMIN_ADDR`, `RWS_LOG_LEVEL`, `RWS_LOG_FORMAT`, `RWS_SHUTDOWN_TIMEOUT`, `RWS_NODE_ID` |
 | DICOM | `RWS_DICOM_AE_TITLE`, `RWS_DICOM_LISTEN`, `RWS_DICOM_MAX_ASSOCIATIONS`, `RWS_DICOM_MAX_PDU`, `RWS_DICOM_HANDSHAKE_TIMEOUT`, `RWS_DICOM_IDLE_TIMEOUT`, `RWS_DICOM_FIND_LIMIT`, `RWS_DICOM_GET_MAX_BYTES`, `RWS_DICOM_TLS_CERT`, `RWS_DICOM_TLS_KEY`, `RWS_DICOM_ALLOW_ANY_CALLED_AE`, `RWS_DICOM_ACCEPT_ANY_SOP_CLASS`, `RWS_DICOM_ALLOWED_AES` (`AE`, `AE@IP`, `AE@CIDR`; empty = any), `RWS_DICOM_FIND_CASE_SENSITIVE_NAMES` |
 | C-MOVE destinations | `remote_aes` map (file) or `RWS_DICOM_REMOTE_AES`; `remote_aes` and `allowed_aes` reload on `SIGHUP` without a restart |
-| Storage | `RWS_STORAGE_DRIVER` (fs), `RWS_STORAGE_PATH` |
+| Storage | `RWS_STORAGE_DRIVER` (fs \| s3), `RWS_STORAGE_PATH` (fs); s3: `RWS_STORAGE_S3_ENDPOINT`, `_BUCKET`, `_REGION`, `_PREFIX`, `_ACCESS_KEY`, `_SECRET_KEY` (or the AWS credential chain), `_INSECURE`, `_CREATE_BUCKET` |
 | Index | `RWS_INDEX_DRIVER` (sqlite \| postgres), `RWS_INDEX_DSN` |
 | Events | `RWS_EVENTS_DRIVER` (none \| log \| nats), `RWS_EVENTS_URL`, `RWS_EVENTS_STREAM`, `RWS_EVENTS_REPLICAS`, `RWS_EVENTS_MAX_AGE_DAYS` |
 
@@ -336,7 +336,7 @@ All results below come from the development sandbox.
 |---|---|---|
 | 1 | Run the compose topologies and the workstation installer end to end (image build verified in 0.1.1-beta.1) | High |
 | 2 | ~~Transactional event outbox~~ (done in 0.2.0) | Done |
-| 3 | S3/MinIO storage backend, replacing the shared volume for clusters | High |
+| 3 | ~~S3/MinIO storage backend~~ (0.2.0); local-staged storage with async replication (BACKLOG.md) | High |
 | 4 | Fork changes 2–5 (streaming retrieve, C-GET fixes, calling AE, lazy decode) and upstream PRs | High |
 | 5 | Security: ~~AE allow-listing~~, ~~admin endpoint authentication~~ (0.2.0), audit trail (ATNA), TLS by default | High |
 | 6 | RWS-owned DICOM UID root (replace the borrowed Implementation Class UID) | Medium |

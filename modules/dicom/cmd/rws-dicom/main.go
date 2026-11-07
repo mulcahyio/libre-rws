@@ -28,8 +28,9 @@ type Config struct {
 	Admin   runtime.AdminConfig `yaml:"admin"`
 	DICOM   gateway.Config      `yaml:"dicom"`
 	Storage struct {
-		Driver string `yaml:"driver" env:"RWS_STORAGE_DRIVER"` // fs (s3 planned)
-		Path   string `yaml:"path" env:"RWS_STORAGE_PATH"`
+		Driver string        `yaml:"driver" env:"RWS_STORAGE_DRIVER"` // fs | s3
+		Path   string        `yaml:"path" env:"RWS_STORAGE_PATH"`     // fs
+		S3     blob.S3Config `yaml:"s3"`
 	} `yaml:"storage"`
 	Index struct {
 		Driver string `yaml:"driver" env:"RWS_INDEX_DRIVER"` // sqlite | postgres
@@ -131,10 +132,15 @@ func run(cfgPath string) error {
 	log := rt.Logger
 	ctx := context.Background()
 
-	if cfg.Storage.Driver != "fs" {
-		return fmt.Errorf("storage driver %q not supported yet (fs)", cfg.Storage.Driver)
+	var blobs blob.Store
+	switch cfg.Storage.Driver {
+	case "fs":
+		blobs, err = blob.NewFS(cfg.Storage.Path)
+	case "s3":
+		blobs, err = blob.NewS3(ctx, cfg.Storage.S3)
+	default:
+		err = fmt.Errorf("storage driver %q not supported (fs, s3)", cfg.Storage.Driver)
 	}
-	blobs, err := blob.NewFS(cfg.Storage.Path)
 	if err != nil {
 		return err
 	}

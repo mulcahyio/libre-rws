@@ -71,7 +71,15 @@ func ctImage(study, series, sop string, n int) *godicom.Dataset {
 func startGateway(t *testing.T, ctx context.Context, remotes map[string]RemoteAE) (string, *Gateway, *recPub) {
 	t.Helper()
 	dir := t.TempDir()
-	blobs, err := blob.NewFS(filepath.Join(dir, "blobs"))
+	var blobs blob.Store
+	var err error
+	if ep := os.Getenv("RWS_TEST_S3_ENDPOINT"); ep != "" { // run the DIMSE flows on object storage too
+		blobs, err = blob.NewS3(ctx, blob.S3Config{Endpoint: ep, Bucket: "rws-e2e", Insecure: true, CreateBucket: true,
+			AccessKey: os.Getenv("RWS_TEST_S3_ACCESS_KEY"), SecretKey: os.Getenv("RWS_TEST_S3_SECRET_KEY"),
+			Prefix: t.Name() + "-" + time.Now().Format("150405.000000") + "/"})
+	} else {
+		blobs, err = blob.NewFS(filepath.Join(dir, "blobs"))
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
