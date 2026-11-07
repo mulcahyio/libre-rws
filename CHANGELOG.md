@@ -43,6 +43,14 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 - Live reload: `SIGHUP` (`docker kill -s HUP rws-dicom`) re-reads the config
   and applies `remote_aes` and `allowed_aes` without dropping associations.
   A config that fails to load keeps the running settings.
+- C-FIND: `PatientName` matches case-insensitively, including non-ASCII
+  letters (`müller*` finds `MÜLLER^HANS`); turn off with
+  `RWS_DICOM_FIND_CASE_SENSITIVE_NAMES=true`. `StudyTime` now matches single
+  times and ranges (`0800-1200`, `0830-`, `-1700`, old `08:30` style); a
+  partial bound covers its whole period. Responses containing non-ASCII text
+  are labelled `ISO_IR 192` (UTF-8) instead of echoing a character set that
+  didn't match the bytes. Index schema version 3 (adds a folded name column,
+  filled in for existing studies on first start).
 - Stored instances and `instance.stored` events now record the sending AE
   title (`source_ae`), which was always empty before.
 - `BACKLOG.md`: the clustering change backlog (storage abstraction, shared

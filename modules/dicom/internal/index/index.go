@@ -41,7 +41,13 @@ const (
 	OpLike                       // DICOM wildcard (* ?), already translated to SQL LIKE pattern
 	OpRange                      // inclusive range; empty bound = open
 	OpStudyHasModality           // study has at least one series with a modality in Values
+	OpEqFold                     // case-insensitive equality; Column is a *_fold column, Values pre-folded
+	OpLikeFold                   // case-insensitive LIKE on a *_fold column
 )
+
+// Fold is the case folding used for case-insensitive person name matching.
+// It is done in Go, not SQL, because SQLite's LOWER() only folds ASCII.
+func Fold(s string) string { return strings.ToLower(s) }
 
 // Filter restricts a query on one column.
 type Filter struct {
@@ -137,7 +143,7 @@ func Open(ctx context.Context, driver, dsn string) (*SQL, error) {
 }
 
 // schemaVersion is bumped when migrations are appended below.
-const schemaVersion = 2
+const schemaVersion = 3
 
 var migrations = []string{
 	`CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL)`,
@@ -194,6 +200,13 @@ var migrations = []string{
 	`CREATE INDEX IF NOT EXISTS idx_outbox_due ON event_outbox(next_attempt_at)`,
 }
 
+// versionedMigrations run once, when upgrading from an older schema version.
+// They hold changes (like ADD COLUMN) that can't be written idempotently for
+// both engines.
+var versionedMigrations = map[int][]string{
+	3: {`ALTER TABLE studies ADD COLUMN patient_name_fold TEXT NOT NULL DEFAULT ''`},
+}
+
 // migrationLockKey serializes schema changes across cluster nodes starting at
 // the same time (PostgreSQL DDL is not safe to run concurrently).
 const migrationLockKey = 7_311_400_101
@@ -221,12 +234,62 @@ func (s *SQL) migrate(ctx context.Context) error {
 	if err := conn.QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_version`).Scan(&n); err != nil {
 		return err
 	}
+	current := 0 // fresh database: base tables were just created at version 2's shape
 	if n == 0 {
-		_, err := conn.ExecContext(ctx, s.rebind(`INSERT INTO schema_version(version) VALUES (?)`), schemaVersion)
+		if _, err := conn.ExecContext(ctx, s.rebind(`INSERT INTO schema_version(version) VALUES (?)`), 2); err != nil {
+			return err
+		}
+		current = 2
+	} else if err := conn.QueryRowContext(ctx, `SELECT MAX(version) FROM schema_version`).Scan(&current); err != nil {
 		return err
 	}
-	_, err = conn.ExecContext(ctx, s.rebind(`UPDATE schema_version SET version = ? WHERE version < ?`), schemaVersion, schemaVersion)
-	return err
+	if current < 2 {
+		current = 2 // v2 (outbox) is created idempotently above
+	}
+	for v := current + 1; v <= schemaVersion; v++ {
+		for _, m := range versionedMigrations[v] {
+			if _, err := conn.ExecContext(ctx, m); err != nil {
+				return fmt.Errorf("index: migrate to v%d: %w", v, err)
+			}
+		}
+		if v == 3 {
+			if err := backfillFold(ctx, conn, s); err != nil {
+				return fmt.Errorf("index: migrate to v3: %w", err)
+			}
+		}
+		if _, err := conn.ExecContext(ctx, s.rebind(`UPDATE schema_version SET version = ?`), v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// backfillFold fills patient_name_fold for studies stored before schema v3.
+func backfillFold(ctx context.Context, conn *sql.Conn, s *SQL) error {
+	rows, err := conn.QueryContext(ctx, `SELECT study_uid, patient_name FROM studies`)
+	if err != nil {
+		return err
+	}
+	type pair struct{ uid, name string }
+	var all []pair
+	for rows.Next() {
+		var p pair
+		if err := rows.Scan(&p.uid, &p.name); err != nil {
+			rows.Close()
+			return err
+		}
+		all = append(all, p)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	for _, p := range all {
+		if _, err := conn.ExecContext(ctx, s.rebind(`UPDATE studies SET patient_name_fold = ? WHERE study_uid = ?`), Fold(p.name), p.uid); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // rebind converts ? placeholders to $n for PostgreSQL.
@@ -266,10 +329,11 @@ func (s *SQL) UpsertWithEvent(ctx context.Context, r Record, ev *OutboxEvent) er
 
 	if _, err := tx.ExecContext(ctx, s.rebind(`
 		INSERT INTO studies (study_uid, patient_id, patient_name, patient_birth_date, patient_sex,
-			study_date, study_time, accession_number, study_id, study_description, referring_physician, updated_at)
-		VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+			study_date, study_time, accession_number, study_id, study_description, referring_physician, updated_at,
+			patient_name_fold)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
 		ON CONFLICT (study_uid) DO UPDATE SET
-			patient_id=excluded.patient_id, patient_name=excluded.patient_name,
+			patient_id=excluded.patient_id, patient_name=excluded.patient_name, patient_name_fold=excluded.patient_name_fold,
 			patient_birth_date=excluded.patient_birth_date, patient_sex=excluded.patient_sex,
 			study_date=excluded.study_date, study_time=excluded.study_time,
 			accession_number=excluded.accession_number, study_id=excluded.study_id,
@@ -277,6 +341,7 @@ func (s *SQL) UpsertWithEvent(ctx context.Context, r Record, ev *OutboxEvent) er
 			updated_at=excluded.updated_at`),
 		r.StudyUID, r.PatientID, r.PatientName, r.PatientBirthDate, r.PatientSex,
 		r.StudyDate, r.StudyTime, r.AccessionNumber, r.StudyID, r.StudyDescription, r.ReferringPhysician, now,
+		Fold(r.PatientName),
 	); err != nil {
 		return fmt.Errorf("index: upsert study: %w", err)
 	}
@@ -430,6 +495,14 @@ func buildWhere(filters []Filter) (string, []any) {
 		case OpLike:
 			parts = append(parts, f.Column+` LIKE ? ESCAPE '\'`)
 			args = append(args, f.Values[0])
+		case OpEqFold:
+			parts = append(parts, f.Column+" = ?")
+			args = append(args, Fold(f.Values[0]))
+		case OpLikeFold:
+			// SQLite's LIKE is ASCII case-insensitive and PostgreSQL's is
+			// case-sensitive; both match correctly on pre-folded values.
+			parts = append(parts, f.Column+` LIKE ? ESCAPE '\'`)
+			args = append(args, Fold(f.Values[0]))
 		case OpStudyHasModality:
 			ph := strings.TrimSuffix(strings.Repeat("?,", len(f.Values)), ",")
 			parts = append(parts, "EXISTS (SELECT 1 FROM series m WHERE m.study_uid = st.study_uid AND m.modality IN ("+ph+"))")

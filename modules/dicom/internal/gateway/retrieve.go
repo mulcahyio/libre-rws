@@ -36,7 +36,7 @@ const maxContextsPerAssoc = 120 // < 128 odd presentation-context IDs
 var errUniversalRetrieve = errors.New("retrieve identifier has no unique keys")
 
 func (g *Gateway) resolveRetrieve(ctx context.Context, ident *godicom.Dataset, model string) ([]index.Row, uint16) {
-	q, err := parseIdentifier(ident, model)
+	q, err := parseIdentifier(ident, model, g.queryOptions())
 	if err != nil {
 		return nil, status.IdentifierDoesNotMatchSOPClass
 	}

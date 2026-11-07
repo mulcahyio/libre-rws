@@ -259,7 +259,7 @@ the file.
 | Area | Key settings (env var) |
 |---|---|
 | Admin | `RWS_ADMIN_TOKEN` / `RWS_ADMIN_TOKEN_FILE` (bearer token for `/metrics`, `/version`; probes stay open), `RWS_ADMIN_ADDR`, `RWS_LOG_LEVEL`, `RWS_LOG_FORMAT`, `RWS_SHUTDOWN_TIMEOUT`, `RWS_NODE_ID` |
-| DICOM | `RWS_DICOM_AE_TITLE`, `RWS_DICOM_LISTEN`, `RWS_DICOM_MAX_ASSOCIATIONS`, `RWS_DICOM_MAX_PDU`, `RWS_DICOM_HANDSHAKE_TIMEOUT`, `RWS_DICOM_IDLE_TIMEOUT`, `RWS_DICOM_FIND_LIMIT`, `RWS_DICOM_GET_MAX_BYTES`, `RWS_DICOM_TLS_CERT`, `RWS_DICOM_TLS_KEY`, `RWS_DICOM_ALLOW_ANY_CALLED_AE`, `RWS_DICOM_ACCEPT_ANY_SOP_CLASS`, `RWS_DICOM_ALLOWED_AES` (`AE`, `AE@IP`, `AE@CIDR`; empty = any) |
+| DICOM | `RWS_DICOM_AE_TITLE`, `RWS_DICOM_LISTEN`, `RWS_DICOM_MAX_ASSOCIATIONS`, `RWS_DICOM_MAX_PDU`, `RWS_DICOM_HANDSHAKE_TIMEOUT`, `RWS_DICOM_IDLE_TIMEOUT`, `RWS_DICOM_FIND_LIMIT`, `RWS_DICOM_GET_MAX_BYTES`, `RWS_DICOM_TLS_CERT`, `RWS_DICOM_TLS_KEY`, `RWS_DICOM_ALLOW_ANY_CALLED_AE`, `RWS_DICOM_ACCEPT_ANY_SOP_CLASS`, `RWS_DICOM_ALLOWED_AES` (`AE`, `AE@IP`, `AE@CIDR`; empty = any), `RWS_DICOM_FIND_CASE_SENSITIVE_NAMES` |
 | C-MOVE destinations | `remote_aes` map (file) or `RWS_DICOM_REMOTE_AES`; `remote_aes` and `allowed_aes` reload on `SIGHUP` without a restart |
 | Storage | `RWS_STORAGE_DRIVER` (fs), `RWS_STORAGE_PATH` |
 | Index | `RWS_INDEX_DRIVER` (sqlite \| postgres), `RWS_INDEX_DSN` |
@@ -341,7 +341,7 @@ All results below come from the development sandbox.
 | 5 | Security: ~~AE allow-listing~~, ~~admin endpoint authentication~~ (0.2.0), audit trail (ATNA), TLS by default | High |
 | 6 | RWS-owned DICOM UID root (replace the borrowed Implementation Class UID) | Medium |
 | 7 | Helm chart; ~~config hot-reload for `remote_aes`~~ (0.2.0, SIGHUP) | Medium |
-| 8 | C-FIND refinements: case-insensitive names, time ranges, character sets | Medium |
+| 8 | ~~C-FIND refinements~~ (0.2.0: case-insensitive names, time ranges, UTF-8 responses); re-encoding responses to the request's character set | Low |
 | 9 | Next modules: Modality Worklist, DICOMweb | Next phase |
 
 ---

@@ -51,6 +51,13 @@ type Config struct {
 	// AllowedAEs restricts which peers may associate: entries are "AE" (any
 	// address) or "AE@IP" / "AE@CIDR". Empty allows any calling AE.
 	AllowedAEs []string `yaml:"allowed_aes" env:"RWS_DICOM_ALLOWED_AES"`
+	// FindCaseSensitiveNames turns off case-insensitive PatientName matching
+	// in C-FIND (on by default: "doe*" finds "DOE^JOHN").
+	FindCaseSensitiveNames bool `yaml:"find_case_sensitive_names" env:"RWS_DICOM_FIND_CASE_SENSITIVE_NAMES"`
+}
+
+func (g *Gateway) queryOptions() queryOptions {
+	return queryOptions{caseInsensitivePN: !g.cfg.FindCaseSensitiveNames}
 }
 
 // DefaultConfig returns production-sane defaults.
