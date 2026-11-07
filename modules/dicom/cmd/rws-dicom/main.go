@@ -80,10 +80,26 @@ func main() {
 	}
 }
 
+// loadConfig reads the YAML file, applies environment overrides and merges
+// RWS_DICOM_REMOTE_AES into the destination table (environment wins per entry).
 func loadConfig(cfgPath string) (Config, error) {
 	cfg := defaults()
-	err := config.Load(cfgPath, &cfg)
-	return cfg, err
+	if err := config.Load(cfgPath, &cfg); err != nil {
+		return cfg, err
+	}
+	if v := os.Getenv("RWS_DICOM_REMOTE_AES"); v != "" {
+		aes, err := parseRemoteAEs(v)
+		if err != nil {
+			return cfg, err
+		}
+		if cfg.DICOM.RemoteAEs == nil {
+			cfg.DICOM.RemoteAEs = map[string]gateway.RemoteAE{}
+		}
+		for k, a := range aes {
+			cfg.DICOM.RemoteAEs[k] = a
+		}
+	}
+	return cfg, nil
 }
 
 // backup snapshots the index without stopping a running module. Images are
@@ -110,18 +126,6 @@ func run(cfgPath string) error {
 	cfg, err := loadConfig(cfgPath)
 	if err != nil {
 		return err
-	}
-	if v := os.Getenv("RWS_DICOM_REMOTE_AES"); v != "" {
-		aes, err := parseRemoteAEs(v)
-		if err != nil {
-			return err
-		}
-		if cfg.DICOM.RemoteAEs == nil {
-			cfg.DICOM.RemoteAEs = map[string]gateway.RemoteAE{}
-		}
-		for k, a := range aes { // environment wins over the file, per entry
-			cfg.DICOM.RemoteAEs[k] = a
-		}
 	}
 	rt := runtime.New("rws-dicom", version, cfg.Admin)
 	log := rt.Logger
@@ -157,7 +161,7 @@ func run(cfgPath string) error {
 	rt.AddReadinessCheck("events", pub.Check)
 
 	gw := gateway.New(cfg.DICOM, rt.NodeID, log, rt.Registry, blobs, idx, pub)
-	components := []runtime.Component{gw}
+	components := []runtime.Component{gw, &reloader{path: cfgPath, gw: gw, log: log}}
 	if cfg.Events.Driver != "" && cfg.Events.Driver != "none" {
 		// Events go through the outbox so a bus outage can't lose them.
 		relay := events.NewRelay(idx, pub, log, rt.Registry, gw.CountEventFailure)

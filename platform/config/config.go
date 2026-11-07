@@ -6,6 +6,7 @@
 // Environment overrides are declared with an `env` struct tag on leaf fields.
 // Nested structs are walked automatically. Supported leaf kinds: string, bool,
 // ints, uints, floats, time.Duration and []string (comma separated).
+// A variable that is set but empty is treated as unset.
 package config
 
 import (
@@ -65,7 +66,10 @@ func applyEnv(v reflect.Value) error {
 			continue
 		}
 		raw, ok := os.LookupEnv(key)
-		if !ok {
+		if !ok || strings.TrimSpace(raw) == "" {
+			// Set-but-empty counts as unset. Compose files pass every variable
+			// through (VAR: ${VAR:-}), and an empty one must not wipe a value
+			// from the config file (for example an allow-list or a token).
 			continue
 		}
 		if err := setValue(fv, raw); err != nil {

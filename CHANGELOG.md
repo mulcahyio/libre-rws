@@ -40,10 +40,18 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   probes, but `/readyz` hides check details without the token. An unreadable
   token file refuses requests rather than serving them. The workstation
   scripts send the token from `.env`.
+- Live reload: `SIGHUP` (`docker kill -s HUP rws-dicom`) re-reads the config
+  and applies `remote_aes` and `allowed_aes` without dropping associations.
+  A config that fails to load keeps the running settings.
 - Stored instances and `instance.stored` events now record the sending AE
   title (`source_ae`), which was always empty before.
 - `BACKLOG.md`: the clustering change backlog (storage abstraction, shared
   catalog, eviction, replication, role-based nodes).
+
+### Changed
+- An environment variable that is set but empty no longer overrides the
+  config file (compose passes every variable through, so empty values were
+  wiping file settings).
 
 ### Fixed
 - Workstation `backup` is now consistent while the module runs: it snapshots

@@ -260,7 +260,7 @@ the file.
 |---|---|
 | Admin | `RWS_ADMIN_TOKEN` / `RWS_ADMIN_TOKEN_FILE` (bearer token for `/metrics`, `/version`; probes stay open), `RWS_ADMIN_ADDR`, `RWS_LOG_LEVEL`, `RWS_LOG_FORMAT`, `RWS_SHUTDOWN_TIMEOUT`, `RWS_NODE_ID` |
 | DICOM | `RWS_DICOM_AE_TITLE`, `RWS_DICOM_LISTEN`, `RWS_DICOM_MAX_ASSOCIATIONS`, `RWS_DICOM_MAX_PDU`, `RWS_DICOM_HANDSHAKE_TIMEOUT`, `RWS_DICOM_IDLE_TIMEOUT`, `RWS_DICOM_FIND_LIMIT`, `RWS_DICOM_GET_MAX_BYTES`, `RWS_DICOM_TLS_CERT`, `RWS_DICOM_TLS_KEY`, `RWS_DICOM_ALLOW_ANY_CALLED_AE`, `RWS_DICOM_ACCEPT_ANY_SOP_CLASS`, `RWS_DICOM_ALLOWED_AES` (`AE`, `AE@IP`, `AE@CIDR`; empty = any) |
-| C-MOVE destinations | `remote_aes` map (file only) |
+| C-MOVE destinations | `remote_aes` map (file) or `RWS_DICOM_REMOTE_AES`; `remote_aes` and `allowed_aes` reload on `SIGHUP` without a restart |
 | Storage | `RWS_STORAGE_DRIVER` (fs), `RWS_STORAGE_PATH` |
 | Index | `RWS_INDEX_DRIVER` (sqlite \| postgres), `RWS_INDEX_DSN` |
 | Events | `RWS_EVENTS_DRIVER` (none \| log \| nats), `RWS_EVENTS_URL`, `RWS_EVENTS_STREAM`, `RWS_EVENTS_REPLICAS`, `RWS_EVENTS_MAX_AGE_DAYS` |
@@ -340,7 +340,7 @@ All results below come from the development sandbox.
 | 4 | Fork changes 2–5 (streaming retrieve, C-GET fixes, calling AE, lazy decode) and upstream PRs | High |
 | 5 | Security: ~~AE allow-listing~~, ~~admin endpoint authentication~~ (0.2.0), audit trail (ATNA), TLS by default | High |
 | 6 | RWS-owned DICOM UID root (replace the borrowed Implementation Class UID) | Medium |
-| 7 | Helm chart; config hot-reload for `remote_aes` | Medium |
+| 7 | Helm chart; ~~config hot-reload for `remote_aes`~~ (0.2.0, SIGHUP) | Medium |
 | 8 | C-FIND refinements: case-insensitive names, time ranges, character sets | Medium |
 | 9 | Next modules: Modality Worklist, DICOMweb | Next phase |
 
