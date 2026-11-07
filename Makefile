@@ -2,11 +2,16 @@
 VERSION ?= $(patsubst v%,%,$(shell git describe --tags --always 2>/dev/null || echo dev))
 export CGO_ENABLED=0
 
-.PHONY: build test vet image up cluster down conformance workstation
+.PHONY: build test test-postgres vet image up cluster down conformance workstation
 build:        ## static binary in ./bin
 	go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o bin/rws-dicom ./modules/dicom/cmd/rws-dicom
 test:         ## unit + end-to-end DIMSE tests
 	go test ./modules/... ./platform/... -count=1
+test-postgres: ## same tests, index suites also against a throwaway PostgreSQL (needs Docker)
+	docker rm -f rws-test-pg >/dev/null 2>&1 || true
+	docker run -d --rm --name rws-test-pg -e POSTGRES_PASSWORD=t -e POSTGRES_DB=rws -p 127.0.0.1:55433:5432 postgres:16-alpine >/dev/null
+	for i in $$(seq 1 30); do docker exec rws-test-pg pg_isready -U postgres >/dev/null 2>&1 && break; sleep 1; done
+	RWS_TEST_POSTGRES_DSN="postgres://postgres:t@127.0.0.1:55433/rws?sslmode=disable" go test -p 1 ./modules/... ./platform/... -count=1; s=$$?; docker rm -f rws-test-pg >/dev/null; exit $$s
 vet:
 	go vet ./modules/... ./platform/...
 image:        ## container image

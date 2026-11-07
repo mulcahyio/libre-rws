@@ -51,6 +51,8 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   are labelled `ISO_IR 192` (UTF-8) instead of echoing a character set that
   didn't match the bytes. Index schema version 3 (adds a folded name column,
   filled in for existing studies on first start).
+- Index conformance suite: the same query, outbox and upgrade tests run
+  against SQLite and PostgreSQL (`make test-postgres`).
 - Stored instances and `instance.stored` events now record the sending AE
   title (`source_ae`), which was always empty before.
 - `BACKLOG.md`: the clustering change backlog (storage abstraction, shared
@@ -62,6 +64,9 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   wiping file settings).
 
 ### Fixed
+- SQLite wildcard queries were case-insensitive for ASCII while PostgreSQL's
+  were case-sensitive. Both are now case-sensitive (found by the conformance
+  suite); name matching uses its own case-insensitive path.
 - Workstation `backup` is now consistent while the module runs: it snapshots
   the index with `-backup`, then copies the snapshot and the images
   ([#1](https://github.com/mulcahyio/libre-rws/issues/1)). The stop/backup/start

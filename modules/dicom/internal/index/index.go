@@ -117,6 +117,10 @@ func Open(ctx context.Context, driver, dsn string) (*SQL, error) {
 			}
 			dsn += sep + "_pragma=busy_timeout(10000)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)"
 		}
+		// SQLite's LIKE ignores ASCII case; PostgreSQL's doesn't. Make SQLite
+		// match so wildcard queries behave the same on both engines
+		// (case-insensitive name matching uses the folded column instead).
+		dsn += "&_pragma=case_sensitive_like(1)"
 		db, err := sql.Open("sqlite", dsn)
 		if err != nil {
 			return nil, err
