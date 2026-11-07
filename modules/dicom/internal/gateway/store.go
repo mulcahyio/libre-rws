@@ -3,6 +3,7 @@ package gateway
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/godicom-dev/gonetdicom/ae"
@@ -79,11 +80,6 @@ func (g *Gateway) onCStore(ctx context.Context, req ae.StoreRequest) uint16 {
 		InstanceNumber: inst.InstanceNumber, TransferSyntaxUID: req.TransferSyntax,
 		BlobKey: key, SizeBytes: n, ReceivedAt: receivedAt,
 	}
-	if err := g.idx.Upsert(ctx, rec); err != nil {
-		log.Error("index instance", "err", err)
-		return result(status.OutOfResources, "error")
-	}
-
 	ev := events.InstanceStored{
 		EventID:    inst.SOPInstanceUID + "@" + receivedAt.Format(time.RFC3339Nano),
 		OccurredAt: receivedAt, Node: g.node,
@@ -91,13 +87,35 @@ func (g *Gateway) onCStore(ctx context.Context, req ae.StoreRequest) uint16 {
 		SOPInstanceUID: inst.SOPInstanceUID, SOPClassUID: inst.SOPClassUID, Modality: inst.Modality,
 		AccessionNum: inst.AccessionNumber, TransferSyntax: req.TransferSyntax, BlobKey: key, SizeBytes: n,
 	}
-	pctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	if err := g.events.Publish(pctx, events.SubjectInstanceStored, ev.EventID, ev); err != nil {
-		// The instance is safely archived and indexed; a missed event must not
-		// make the modality resend. Tracked by metric; see README "outbox".
-		g.m.eventFailures.Inc()
-		log.Warn("publish instance.stored failed", "err", err)
+
+	if g.outbox != nil {
+		// Instance and event are committed together; the relay publishes the
+		// event, retrying through bus outages, so no event is lost.
+		payload, err := json.Marshal(ev)
+		if err != nil {
+			log.Error("encode event", "err", err)
+			return result(status.OutOfResources, "error")
+		}
+		if err := g.idx.UpsertWithEvent(ctx, rec, &index.OutboxEvent{
+			MsgID: ev.EventID, Subject: events.SubjectInstanceStored, Payload: payload,
+		}); err != nil {
+			log.Error("index instance", "err", err)
+			return result(status.OutOfResources, "error")
+		}
+		g.outbox.Nudge()
+	} else {
+		if err := g.idx.Upsert(ctx, rec); err != nil {
+			log.Error("index instance", "err", err)
+			return result(status.OutOfResources, "error")
+		}
+		pctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		if err := g.events.Publish(pctx, events.SubjectInstanceStored, ev.EventID, ev); err != nil {
+			// The instance is safely archived and indexed; a missed event must
+			// not make the modality resend. Enable the outbox to avoid losing it.
+			g.m.eventFailures.Inc()
+			log.Warn("publish instance.stored failed", "err", err)
+		}
 	}
 
 	g.m.storeBytes.Add(float64(n))

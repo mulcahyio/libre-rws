@@ -157,9 +157,16 @@ func run(cfgPath string) error {
 	rt.AddReadinessCheck("events", pub.Check)
 
 	gw := gateway.New(cfg.DICOM, rt.NodeID, log, rt.Registry, blobs, idx, pub)
+	components := []runtime.Component{gw}
+	if cfg.Events.Driver != "" && cfg.Events.Driver != "none" {
+		// Events go through the outbox so a bus outage can't lose them.
+		relay := events.NewRelay(idx, pub, log, rt.Registry, gw.CountEventFailure)
+		gw.UseOutbox(relay)
+		components = append(components, relay)
+	}
 	log.Info("rws-dicom starting", "version", version,
 		"storage", cfg.Storage.Driver, "index", cfg.Index.Driver, "events", cfg.Events.Driver)
-	return rt.Run(ctx, gw)
+	return rt.Run(ctx, components...)
 }
 
 // probe lets distroless images (no curl/wget) run a container health check.

@@ -269,6 +269,19 @@ the file.
 
 ## 9. Operations
 
+### Event outbox (0.2.0)
+
+When the events driver is `log` or `nats`, C-STORE writes the
+`instance.stored` event to the `event_outbox` table in the same transaction
+as the instance. The `event-outbox` component publishes due events (nudged on
+every store, polled every 2 s), deletes each one once the bus acknowledges it,
+and retries failures with back-off (1 s doubling to 5 min). Claims are leased
+for 30 s, so several nodes can drain one PostgreSQL outbox without handing
+out the same event twice. Each event keeps its message id on retry, and
+JetStream de-duplicates within its 10-minute window. Delivery is
+at-least-once; consumers should de-duplicate on `event_id`.
+
+
 ### Metrics
 
 | Metric | Meaning |
@@ -277,7 +290,8 @@ the file.
 | `rws_dicom_cstore_total{result}`, `_cstore_bytes_total`, `_cstore_seconds` | storage volume and latency |
 | `rws_dicom_cfind_total{level,result}`, `_cfind_seconds` | query volume and latency |
 | `rws_dicom_retrieve_subops_total{op,result}` | C-MOVE/C-GET outcomes |
-| `rws_dicom_event_publish_failures_total` | events lost while the bus was unavailable |
+| `rws_dicom_event_publish_failures_total` | failed publish attempts (retried from the outbox, not lost) |
+| `rws_dicom_outbox_pending` | events stored but not yet published; stays above 0 during a bus outage |
 | `rws_module_info{module,version,node}` | build information |
 
 ### Deployment
@@ -321,7 +335,7 @@ All results below come from the development sandbox.
 | # | Item | Priority |
 |---|---|---|
 | 1 | Run the compose topologies and the workstation installer end to end (image build verified in 0.1.1-beta.1) | High |
-| 2 | Transactional event outbox, so no event is lost during a bus outage | High |
+| 2 | ~~Transactional event outbox~~ (done in 0.2.0) | Done |
 | 3 | S3/MinIO storage backend, replacing the shared volume for clusters | High |
 | 4 | Fork changes 2–5 (streaming retrieve, C-GET fixes, calling AE, lazy decode) and upstream PRs | High |
 | 5 | Security: AE allow-listing, admin endpoint authentication, audit trail (ATNA), TLS by default | High |

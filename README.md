@@ -99,9 +99,9 @@ workstation installer end to end.
 
 ## Known gaps / next work
 
-1. **Event outbox.** If the bus is down, the store still succeeds but the
-   event is lost (counted in `rws_dicom_event_publish_failures_total`). Fix:
-   transactional outbox table plus relay.
+1. ~~Event outbox~~ (done in 0.2.0: events are written to an outbox table
+   with the instance and published by a relay, so a bus outage delays events
+   instead of losing them).
 2. **S3/MinIO storage backend.** Replaces the shared volume for real clusters.
 3. **Fork items** (third_party/gonetdicom/RWS_FORK.md): streaming C-MOVE/C-GET
    with Pending responses and C-CANCEL, C-GET transfer-syntax awareness,

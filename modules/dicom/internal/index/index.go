@@ -62,12 +62,31 @@ type Record struct {
 	ReceivedAt                                                     time.Time
 }
 
+// OutboxEvent is an event written in the same transaction as the instance it
+// describes, so it can't be lost if the event bus is down. A relay publishes
+// it later and deletes it once the bus has acknowledged it.
+type OutboxEvent struct {
+	MsgID    string // stable id, used by the bus to de-duplicate retries
+	Subject  string
+	Payload  []byte // JSON
+	Attempts int
+}
+
 // Row is one query result, keyed by DICOM keyword (plus internal "_" keys).
 type Row map[string]string
 
 // Index is the metadata store contract.
 type Index interface {
 	Upsert(ctx context.Context, r Record) error
+	// UpsertWithEvent is Upsert plus an outbox event in the same transaction.
+	UpsertWithEvent(ctx context.Context, r Record, ev *OutboxEvent) error
+	// ClaimEvents leases up to limit due events for publishing. A leased event
+	// is not handed out again until the lease expires, so several nodes can
+	// drain one shared outbox.
+	ClaimEvents(ctx context.Context, limit int, lease time.Duration) ([]OutboxEvent, error)
+	AckEvent(ctx context.Context, msgID string) error
+	NackEvent(ctx context.Context, msgID string, retryAt time.Time, errText string) error
+	PendingEvents(ctx context.Context) (int, error)
 	Find(ctx context.Context, level Level, filters []Filter, limit int) ([]Row, error)
 	ModalitiesForStudies(ctx context.Context, studyUIDs []string) (map[string][]string, error)
 	Ping(ctx context.Context) error
@@ -118,7 +137,7 @@ func Open(ctx context.Context, driver, dsn string) (*SQL, error) {
 }
 
 // schemaVersion is bumped when migrations are appended below.
-const schemaVersion = 1
+const schemaVersion = 2
 
 var migrations = []string{
 	`CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL)`,
@@ -162,6 +181,17 @@ var migrations = []string{
 	`CREATE INDEX IF NOT EXISTS idx_series_study ON series(study_uid)`,
 	`CREATE INDEX IF NOT EXISTS idx_instances_series ON instances(series_uid)`,
 	`CREATE INDEX IF NOT EXISTS idx_instances_study ON instances(study_uid)`,
+	// v2: event outbox. Times are Unix milliseconds.
+	`CREATE TABLE IF NOT EXISTS event_outbox (
+		msg_id          TEXT PRIMARY KEY,
+		subject         TEXT NOT NULL,
+		payload         TEXT NOT NULL,
+		created_at      BIGINT NOT NULL,
+		next_attempt_at BIGINT NOT NULL,
+		attempts        INTEGER NOT NULL DEFAULT 0,
+		last_error      TEXT NOT NULL DEFAULT ''
+	)`,
+	`CREATE INDEX IF NOT EXISTS idx_outbox_due ON event_outbox(next_attempt_at)`,
 }
 
 // migrationLockKey serializes schema changes across cluster nodes starting at
@@ -195,7 +225,8 @@ func (s *SQL) migrate(ctx context.Context) error {
 		_, err := conn.ExecContext(ctx, s.rebind(`INSERT INTO schema_version(version) VALUES (?)`), schemaVersion)
 		return err
 	}
-	return nil
+	_, err = conn.ExecContext(ctx, s.rebind(`UPDATE schema_version SET version = ? WHERE version < ?`), schemaVersion, schemaVersion)
+	return err
 }
 
 // rebind converts ? placeholders to $n for PostgreSQL.
@@ -218,7 +249,11 @@ func (s *SQL) rebind(q string) string {
 
 // Upsert writes study, series and instance rows in one transaction. A resent
 // instance (same SOP Instance UID) replaces the previous metadata.
-func (s *SQL) Upsert(ctx context.Context, r Record) error {
+func (s *SQL) Upsert(ctx context.Context, r Record) error { return s.UpsertWithEvent(ctx, r, nil) }
+
+// UpsertWithEvent writes the instance and, when ev is not nil, its outbox
+// event atomically: either both are stored or neither is.
+func (s *SQL) UpsertWithEvent(ctx context.Context, r Record, ev *OutboxEvent) error {
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	if r.ReceivedAt.IsZero() {
 		r.ReceivedAt = time.Now()
@@ -269,6 +304,16 @@ func (s *SQL) Upsert(ctx context.Context, r Record) error {
 		r.TransferSyntaxUID, r.BlobKey, r.SizeBytes, r.SourceAE, r.ReceivedAt.UTC().Format(time.RFC3339Nano),
 	); err != nil {
 		return fmt.Errorf("index: upsert instance: %w", err)
+	}
+	if ev != nil {
+		ms := time.Now().UnixMilli()
+		if _, err := tx.ExecContext(ctx, s.rebind(`
+			INSERT INTO event_outbox (msg_id, subject, payload, created_at, next_attempt_at)
+			VALUES (?,?,?,?,?) ON CONFLICT (msg_id) DO NOTHING`),
+			ev.MsgID, ev.Subject, string(ev.Payload), ms, ms,
+		); err != nil {
+			return fmt.Errorf("index: outbox event: %w", err)
+		}
 	}
 	return tx.Commit()
 }
@@ -433,6 +478,55 @@ func (s *SQL) ModalitiesForStudies(ctx context.Context, studyUIDs []string) (map
 		out[st] = append(out[st], mod)
 	}
 	return out, rows.Err()
+}
+
+// ClaimEvents leases due events, oldest first. The outer next_attempt_at
+// condition is re-checked by PostgreSQL after a row lock wait, so two nodes
+// claiming at once never get the same event.
+func (s *SQL) ClaimEvents(ctx context.Context, limit int, lease time.Duration) ([]OutboxEvent, error) {
+	now := time.Now().UnixMilli()
+	rows, err := s.db.QueryContext(ctx, s.rebind(`
+		UPDATE event_outbox SET next_attempt_at = ?, attempts = attempts + 1
+		WHERE next_attempt_at <= ? AND msg_id IN (
+			SELECT msg_id FROM event_outbox WHERE next_attempt_at <= ?
+			ORDER BY created_at, msg_id LIMIT ?)
+		RETURNING msg_id, subject, payload, attempts`),
+		now+lease.Milliseconds(), now, now, limit)
+	if err != nil {
+		return nil, fmt.Errorf("index: claim events: %w", err)
+	}
+	defer rows.Close()
+	var out []OutboxEvent
+	for rows.Next() {
+		var e OutboxEvent
+		var payload string
+		if err := rows.Scan(&e.MsgID, &e.Subject, &payload, &e.Attempts); err != nil {
+			return nil, err
+		}
+		e.Payload = []byte(payload)
+		out = append(out, e)
+	}
+	return out, rows.Err()
+}
+
+// AckEvent removes a published event.
+func (s *SQL) AckEvent(ctx context.Context, msgID string) error {
+	_, err := s.db.ExecContext(ctx, s.rebind(`DELETE FROM event_outbox WHERE msg_id = ?`), msgID)
+	return err
+}
+
+// NackEvent schedules a failed event for another attempt.
+func (s *SQL) NackEvent(ctx context.Context, msgID string, retryAt time.Time, errText string) error {
+	_, err := s.db.ExecContext(ctx, s.rebind(`UPDATE event_outbox SET next_attempt_at = ?, last_error = ? WHERE msg_id = ?`),
+		retryAt.UnixMilli(), errText, msgID)
+	return err
+}
+
+// PendingEvents counts events not yet published.
+func (s *SQL) PendingEvents(ctx context.Context) (int, error) {
+	var n int
+	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM event_outbox`).Scan(&n)
+	return n, err
 }
 
 // Backup writes a consistent copy of a SQLite index to dest while the module

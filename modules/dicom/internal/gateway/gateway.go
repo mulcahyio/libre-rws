@@ -77,7 +77,16 @@ type Gateway struct {
 
 	mu        sync.RWMutex
 	remoteAEs map[string]RemoteAE
+
+	outbox interface{ Nudge() } // nil: events are published directly (no outbox)
 }
+
+// UseOutbox makes C-STORE write its event to the index outbox in the same
+// transaction as the instance; relay publishes it. Call before Run.
+func (g *Gateway) UseOutbox(relay interface{ Nudge() }) { g.outbox = relay }
+
+// CountEventFailure records a failed event publish (used by the outbox relay).
+func (g *Gateway) CountEventFailure() { g.m.eventFailures.Inc() }
 
 // New builds a Gateway and registers its metrics.
 func New(cfg Config, node string, log *slog.Logger, reg prometheus.Registerer,

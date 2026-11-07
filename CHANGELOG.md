@@ -25,6 +25,10 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 ### Added
 - `-backup PATH` flag: writes a consistent snapshot of the SQLite index while
   the module keeps running (`VACUUM INTO`). PostgreSQL indexes use `pg_dump`.
+- Event outbox: the `instance.stored` event is committed with the instance
+  and published by a relay with retries, so a NATS outage delays events
+  instead of losing them. New metric `rws_dicom_outbox_pending`. Index schema
+  version 2 (adds `event_outbox`; applied automatically on start).
 - `BACKLOG.md`: the clustering change backlog (storage abstraction, shared
   catalog, eviction, replication, role-based nodes).
 

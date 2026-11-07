@@ -78,6 +78,9 @@ func (nop) Close() error                                       { return nil }
 type logPub struct{ log *slog.Logger }
 
 func (l logPub) Publish(_ context.Context, subject, msgID string, payload any) error {
+	if raw, ok := payload.(json.RawMessage); ok {
+		payload = string(raw)
+	}
 	l.log.Info("event", "subject", subject, "msg_id", msgID, "payload", payload)
 	return nil
 }
