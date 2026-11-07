@@ -13,7 +13,7 @@ import (
 )
 
 // stores returns every backend to hold to the same contract: the filesystem
-// always, and S3 when RWS_TEST_S3_ENDPOINT is set (MinIO in a container is
+// always, and S3 when LIBRE_DCM_TEST_S3_ENDPOINT is set (MinIO in a container is
 // enough; see `make test-s3`).
 func stores(t *testing.T) map[string]Store {
 	t.Helper()
@@ -23,10 +23,10 @@ func stores(t *testing.T) map[string]Store {
 		t.Fatal(err)
 	}
 	out["fs"] = fs
-	if ep := os.Getenv("RWS_TEST_S3_ENDPOINT"); ep != "" {
+	if ep := os.Getenv("LIBRE_DCM_TEST_S3_ENDPOINT"); ep != "" {
 		s3, err := NewS3(context.Background(), S3Config{
-			Endpoint: ep, Bucket: "rws-test", Insecure: true, CreateBucket: true,
-			AccessKey: os.Getenv("RWS_TEST_S3_ACCESS_KEY"), SecretKey: os.Getenv("RWS_TEST_S3_SECRET_KEY"),
+			Endpoint: ep, Bucket: "libredcm-test", Insecure: true, CreateBucket: true,
+			AccessKey: os.Getenv("LIBRE_DCM_TEST_S3_ACCESS_KEY"), SecretKey: os.Getenv("LIBRE_DCM_TEST_S3_SECRET_KEY"),
 			Prefix: fmt.Sprintf("t%d/", time.Now().UnixNano()),
 		})
 		if err != nil {

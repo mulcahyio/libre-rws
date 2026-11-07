@@ -6,7 +6,9 @@
 // Environment overrides are declared with an `env` struct tag on leaf fields.
 // Nested structs are walked automatically. Supported leaf kinds: string, bool,
 // ints, uints, floats, time.Duration and []string (comma separated).
-// A variable that is set but empty is treated as unset.
+// A variable that is set but empty is treated as unset. A tag may list
+// several names ("NEW,OLD"): the first one set wins, so renamed settings keep
+// working under their old names.
 package config
 
 import (
@@ -15,6 +17,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -61,15 +64,12 @@ func applyEnv(v reflect.Value) error {
 			}
 			continue
 		}
-		key := f.Tag.Get("env")
-		if key == "" {
+		tag := f.Tag.Get("env")
+		if tag == "" {
 			continue
 		}
-		raw, ok := os.LookupEnv(key)
-		if !ok || strings.TrimSpace(raw) == "" {
-			// Set-but-empty counts as unset. Compose files pass every variable
-			// through (VAR: ${VAR:-}), and an empty one must not wipe a value
-			// from the config file (for example an allow-list or a token).
+		key, raw, found := lookupEnv(tag)
+		if !found {
 			continue
 		}
 		if err := setValue(fv, raw); err != nil {
@@ -77,6 +77,55 @@ func applyEnv(v reflect.Value) error {
 		}
 	}
 	return nil
+}
+
+// Prefix replaces "{P}" in env tags, so shared chassis settings take the
+// running module's prefix (LibreDCM sets "LIBRE_DCM_": {P}ADMIN_TOKEN reads
+// LIBRE_DCM_ADMIN_TOKEN). Set it before Load.
+var Prefix = "RWS_"
+
+var (
+	deprecatedMu   sync.Mutex
+	deprecatedUsed = map[string]string{}
+)
+
+// lookupEnv tries the comma-separated names in tag in order: the current
+// name first, then older names kept for backward compatibility. A variable
+// that is set but empty counts as unset: compose files pass every variable
+// through (VAR: ${VAR:-}), and an empty one must not wipe a config-file value.
+func lookupEnv(tag string) (key, raw string, found bool) {
+	names := strings.Split(tag, ",")
+	for i, n := range names {
+		n = strings.ReplaceAll(strings.TrimSpace(n), "{P}", Prefix)
+		if v, ok := os.LookupEnv(n); ok && strings.TrimSpace(v) != "" {
+			if i > 0 {
+				deprecatedMu.Lock()
+				deprecatedUsed[n] = strings.ReplaceAll(strings.TrimSpace(names[0]), "{P}", Prefix)
+				deprecatedMu.Unlock()
+			}
+			return n, v, true
+		}
+	}
+	return "", "", false
+}
+
+// Getenv reads one setting the same way (current name first, then legacy
+// names), for values not held in a config struct.
+func Getenv(names ...string) string {
+	_, v, _ := lookupEnv(strings.Join(names, ","))
+	return v
+}
+
+// DeprecatedInUse returns legacy variable names that were used, mapped to
+// their replacements, so the module can log a warning.
+func DeprecatedInUse() map[string]string {
+	deprecatedMu.Lock()
+	defer deprecatedMu.Unlock()
+	out := make(map[string]string, len(deprecatedUsed))
+	for k, v := range deprecatedUsed {
+		out[k] = v
+	}
+	return out
 }
 
 func setValue(fv reflect.Value, raw string) error {

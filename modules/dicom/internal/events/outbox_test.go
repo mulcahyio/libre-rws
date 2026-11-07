@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"rws/modules/dicom/internal/index"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
 )
 
 // flakyPub fails while down is true and records what it published.

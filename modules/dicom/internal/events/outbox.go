@@ -8,7 +8,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"rws/modules/dicom/internal/index"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
 )
 
 // Outbox is the part of the index the relay needs.
@@ -45,7 +45,7 @@ func NewRelay(ob Outbox, pub Publisher, log *slog.Logger, reg prometheus.Registe
 		ob: ob, pub: pub, log: log.With("component", "event-outbox"), onFail: onFail,
 		nudge: make(chan struct{}, 1),
 		pending: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: "rws_dicom_outbox_pending", Help: "Events stored but not yet published to the bus.",
+			Name: "libre_dcm_outbox_pending", Help: "Events stored but not yet published to the bus.",
 		}),
 		Interval: 2 * time.Second, Batch: 100, Lease: 30 * time.Second, MaxDelay: 5 * time.Minute,
 	}

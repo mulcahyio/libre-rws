@@ -15,6 +15,7 @@ package runtime
 import (
 	"context"
 	"crypto/subtle"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -36,17 +37,20 @@ import (
 
 // AdminConfig controls the shared operational endpoints and logging.
 type AdminConfig struct {
-	Addr            string        `yaml:"addr" env:"RWS_ADMIN_ADDR"`
-	LogLevel        string        `yaml:"log_level" env:"RWS_LOG_LEVEL"`   // debug|info|warn|error
-	LogFormat       string        `yaml:"log_format" env:"RWS_LOG_FORMAT"` // json|text
-	ShutdownTimeout time.Duration `yaml:"shutdown_timeout" env:"RWS_SHUTDOWN_TIMEOUT"`
-	NodeID          string        `yaml:"node_id" env:"RWS_NODE_ID"` // defaults to hostname
+	Addr            string        `yaml:"addr" env:"{P}ADMIN_ADDR,RWS_ADMIN_ADDR"`
+	LogLevel        string        `yaml:"log_level" env:"{P}LOG_LEVEL,RWS_LOG_LEVEL"`   // debug|info|warn|error
+	LogFormat       string        `yaml:"log_format" env:"{P}LOG_FORMAT,RWS_LOG_FORMAT"` // json|text
+	ShutdownTimeout time.Duration `yaml:"shutdown_timeout" env:"{P}SHUTDOWN_TIMEOUT,RWS_SHUTDOWN_TIMEOUT"`
+	NodeID          string        `yaml:"node_id" env:"{P}NODE_ID,RWS_NODE_ID"` // defaults to hostname
 	// Token, when set (directly or via TokenFile), is required as
 	// "Authorization: Bearer <token>" on /metrics, /version and any other
 	// admin endpoint. /healthz and /readyz stay open for container and load
 	// balancer probes, but /readyz omits check details without the token.
-	Token     string `yaml:"token" env:"RWS_ADMIN_TOKEN"`
-	TokenFile string `yaml:"token_file" env:"RWS_ADMIN_TOKEN_FILE"`
+	Token     string `yaml:"token" env:"{P}ADMIN_TOKEN"`
+	TokenFile string `yaml:"token_file" env:"{P}ADMIN_TOKEN_FILE"`
+	// TLSCertFile/TLSKeyFile serve the admin endpoint over HTTPS.
+	TLSCertFile string `yaml:"tls_cert_file" env:"{P}ADMIN_TLS_CERT"`
+	TLSKeyFile  string `yaml:"tls_key_file" env:"{P}ADMIN_TLS_KEY"`
 }
 
 // DefaultAdmin returns sensible defaults for AdminConfig.
@@ -86,7 +90,7 @@ func New(module, version string, cfg AdminConfig) *Runtime {
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(collectors.NewGoCollector(), collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 	reg.MustRegister(prometheus.NewGaugeFunc(prometheus.GaugeOpts{
-		Name:        "rws_module_info",
+		Name:        "libre_module_info",
 		Help:        "Static module information.",
 		ConstLabels: prometheus.Labels{"module": module, "version": version, "node": cfg.NodeID},
 	}, func() float64 { return 1 }))
@@ -132,8 +136,16 @@ func (r *Runtime) Run(parent context.Context, components ...Component) error {
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		r.Logger.Info("admin endpoint listening", "addr", r.cfg.Addr)
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		var err error
+		if r.cfg.TLSCertFile != "" {
+			r.Logger.Info("admin endpoint listening (https)", "addr", r.cfg.Addr)
+			srv.TLSConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+			err = srv.ListenAndServeTLS(r.cfg.TLSCertFile, r.cfg.TLSKeyFile)
+		} else {
+			r.Logger.Info("admin endpoint listening", "addr", r.cfg.Addr)
+			err = srv.ListenAndServe()
+		}
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			return fmt.Errorf("admin http: %w", err)
 		}
 		return nil
@@ -197,7 +209,7 @@ func (r *Runtime) adminMux() *http.ServeMux {
 	protect := func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			if !authorized(req) {
-				w.Header().Set("WWW-Authenticate", `Bearer realm="rws-admin"`)
+				w.Header().Set("WWW-Authenticate", `Bearer realm="libre-admin"`)
 				writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
 				return
 			}

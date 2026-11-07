@@ -13,8 +13,8 @@ import (
 	"github.com/godicom-dev/gonetdicom/status"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"rws/modules/dicom/internal/dcm"
-	"rws/modules/dicom/internal/events"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/events"
 )
 
 func TestParseAllowRule(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"rws/modules/dicom/internal/gateway"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway"
 )
 
 // reloadTarget is the part of the gateway that can change without a restart.

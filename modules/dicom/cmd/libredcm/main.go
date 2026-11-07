@@ -1,4 +1,4 @@
-// Command rws-dicom runs the RWS DICOM module: a DIMSE gateway (C-ECHO,
+// Command LibreDCM runs the Libre DCM module of Libre RWS: a DIMSE gateway (C-ECHO,
 // C-STORE, C-FIND, C-MOVE, C-GET) backed by pluggable storage, index and
 // event bus. It runs identically as a single process, a single container, or
 // N replicas behind a TCP load balancer.
@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"net/http"
@@ -13,12 +14,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"rws/modules/dicom/internal/blob"
-	"rws/modules/dicom/internal/events"
-	"rws/modules/dicom/internal/gateway"
-	"rws/modules/dicom/internal/index"
-	"rws/platform/config"
-	"rws/platform/runtime"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/blob"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/events"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
+	"github.com/mulcahyio/libre-rws/platform/config"
+	"github.com/mulcahyio/libre-rws/platform/runtime"
 )
 
 // version is set at build time: -ldflags "-X main.version=1.2.3"
@@ -28,13 +29,13 @@ type Config struct {
 	Admin   runtime.AdminConfig `yaml:"admin"`
 	DICOM   gateway.Config      `yaml:"dicom"`
 	Storage struct {
-		Driver string        `yaml:"driver" env:"RWS_STORAGE_DRIVER"` // fs | s3
-		Path   string        `yaml:"path" env:"RWS_STORAGE_PATH"`     // fs
+		Driver string        `yaml:"driver" env:"LIBRE_DCM_STORAGE_DRIVER,RWS_STORAGE_DRIVER"` // fs | s3
+		Path   string        `yaml:"path" env:"LIBRE_DCM_STORAGE_PATH,RWS_STORAGE_PATH"`     // fs
 		S3     blob.S3Config `yaml:"s3"`
 	} `yaml:"storage"`
 	Index struct {
-		Driver string `yaml:"driver" env:"RWS_INDEX_DRIVER"` // sqlite | postgres
-		DSN    string `yaml:"dsn" env:"RWS_INDEX_DSN"`
+		Driver string `yaml:"driver" env:"LIBRE_DCM_INDEX_DRIVER,RWS_INDEX_DRIVER"` // sqlite | postgres
+		DSN    string `yaml:"dsn" env:"LIBRE_DCM_INDEX_DSN,RWS_INDEX_DSN"`
 	} `yaml:"index"`
 	Events events.Config `yaml:"events"`
 }
@@ -46,15 +47,20 @@ func defaults() Config {
 	c.Storage.Driver, c.Storage.Path = "fs", "./data/blobs"
 	c.Index.Driver, c.Index.DSN = "sqlite", "file:./data/index.db"
 	c.Events.Driver = "log"
+	c.Events.LegacySubjects = true
 	return c
 }
 
 func main() {
-	cfgPath := flag.String("config", envOr("RWS_CONFIG", "config.yaml"), "path to YAML config")
+	config.Prefix = "LIBRE_DCM_" // shared settings: LIBRE_DCM_ADMIN_TOKEN, LIBRE_DCM_LOG_LEVEL, ...
+	cfgPath := flag.String("config", envOr("config.yaml", "LIBRE_DCM_CONFIG", "RWS_CONFIG"), "path to YAML config")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	healthcheck := flag.String("healthcheck", "", "probe http://ADDR/readyz and exit 0/1 (for container HEALTHCHECK)")
 	echoAddr := flag.String("echo", "", "send a DICOM C-ECHO to HOST:PORT and exit 0/1 (install verification)")
-	echoAE := flag.String("echo-ae", envOr("RWS_DICOM_AE_TITLE", "RWS_DICOM"), "called AE title for -echo")
+	echoAE := flag.String("echo-ae", envOr("LIBREDCM", "LIBRE_DCM_AE_TITLE", "RWS_DICOM_AE_TITLE"), "called AE title for -echo")
+	genCertDir := flag.String("gen-cert", "", "write a self-signed TLS certificate (tls.crt, tls.key) to DIR and exit")
+	genCertHosts := flag.String("gen-cert-hosts", "", "comma-separated DNS names / IPs for -gen-cert")
+	genCertForce := flag.Bool("gen-cert-force", false, "replace an existing certificate with -gen-cert")
 	backupTo := flag.String("backup", "", "write a consistent snapshot of the SQLite index to PATH and exit (safe while the module runs)")
 	flag.Parse()
 	if *showVersion {
@@ -67,28 +73,35 @@ func main() {
 	if *echoAddr != "" {
 		os.Exit(echo(*echoAddr, *echoAE))
 	}
+	if *genCertDir != "" {
+		if err := genCert(*genCertDir, *genCertHosts, *genCertForce); err != nil {
+			fmt.Fprintln(os.Stderr, "LibreDCM: gen-cert:", err)
+			os.Exit(1)
+		}
+		return
+	}
 	if *backupTo != "" {
 		if err := backup(*cfgPath, *backupTo); err != nil {
-			fmt.Fprintln(os.Stderr, "rws-dicom: backup:", err)
+			fmt.Fprintln(os.Stderr, "LibreDCM: backup:", err)
 			os.Exit(1)
 		}
 		fmt.Println("index snapshot written to", *backupTo)
 		return
 	}
 	if err := run(*cfgPath); err != nil {
-		fmt.Fprintln(os.Stderr, "rws-dicom:", err)
+		fmt.Fprintln(os.Stderr, "LibreDCM:", err)
 		os.Exit(1)
 	}
 }
 
 // loadConfig reads the YAML file, applies environment overrides and merges
-// RWS_DICOM_REMOTE_AES into the destination table (environment wins per entry).
+// LIBRE_DCM_REMOTE_AES (or the old RWS_DICOM_REMOTE_AES) into the destination table (environment wins per entry).
 func loadConfig(cfgPath string) (Config, error) {
 	cfg := defaults()
 	if err := config.Load(cfgPath, &cfg); err != nil {
 		return cfg, err
 	}
-	if v := os.Getenv("RWS_DICOM_REMOTE_AES"); v != "" {
+	if v := config.Getenv("LIBRE_DCM_REMOTE_AES", "RWS_DICOM_REMOTE_AES"); v != "" {
 		aes, err := parseRemoteAEs(v)
 		if err != nil {
 			return cfg, err
@@ -128,7 +141,7 @@ func run(cfgPath string) error {
 	if err != nil {
 		return err
 	}
-	rt := runtime.New("rws-dicom", version, cfg.Admin)
+	rt := runtime.New("LibreDCM", version, cfg.Admin)
 	log := rt.Logger
 	ctx := context.Background()
 
@@ -174,15 +187,25 @@ func run(cfgPath string) error {
 		gw.UseOutbox(relay)
 		components = append(components, relay)
 	}
-	log.Info("rws-dicom starting", "version", version,
+	for old, repl := range config.DeprecatedInUse() {
+		log.Warn("deprecated setting; rename it", "old", old, "new", repl)
+	}
+	log.Info("LibreDCM starting", "version", version,
 		"storage", cfg.Storage.Driver, "index", cfg.Index.Driver, "events", cfg.Events.Driver)
 	return rt.Run(ctx, components...)
 }
 
 // probe lets distroless images (no curl/wget) run a container health check.
+// When the admin endpoint serves HTTPS it probes over HTTPS; certificate checks
+// are skipped because this only ever talks to its own loopback port.
 func probe(addr string) int {
-	c := http.Client{Timeout: 3 * time.Second}
-	resp, err := c.Get("http://" + addr + "/readyz")
+	scheme, tr := "http", http.DefaultTransport
+	if config.Getenv("LIBRE_DCM_ADMIN_TLS_CERT") != "" {
+		scheme = "https"
+		tr = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}} //nolint:gosec // loopback self-probe
+	}
+	c := http.Client{Timeout: 3 * time.Second, Transport: tr}
+	resp, err := c.Get(scheme + "://" + addr + "/readyz")
 	if err != nil {
 		return 1
 	}
@@ -206,8 +229,8 @@ func sqlitePath(dsn string) string {
 	return p
 }
 
-func envOr(k, def string) string {
-	if v := os.Getenv(k); v != "" {
+func envOr(def string, names ...string) string {
+	if v := config.Getenv(names...); v != "" {
 		return v
 	}
 	return def

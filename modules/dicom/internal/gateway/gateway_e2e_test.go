@@ -18,10 +18,10 @@ import (
 	"github.com/godicom-dev/gonetdicom/status"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"rws/modules/dicom/internal/blob"
-	"rws/modules/dicom/internal/dcm"
-	"rws/modules/dicom/internal/events"
-	"rws/modules/dicom/internal/index"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/blob"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/events"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
 )
 
 type recPub struct {
@@ -73,9 +73,9 @@ func startGateway(t *testing.T, ctx context.Context, remotes map[string]RemoteAE
 	dir := t.TempDir()
 	var blobs blob.Store
 	var err error
-	if ep := os.Getenv("RWS_TEST_S3_ENDPOINT"); ep != "" { // run the DIMSE flows on object storage too
-		blobs, err = blob.NewS3(ctx, blob.S3Config{Endpoint: ep, Bucket: "rws-e2e", Insecure: true, CreateBucket: true,
-			AccessKey: os.Getenv("RWS_TEST_S3_ACCESS_KEY"), SecretKey: os.Getenv("RWS_TEST_S3_SECRET_KEY"),
+	if ep := os.Getenv("LIBRE_DCM_TEST_S3_ENDPOINT"); ep != "" { // run the DIMSE flows on object storage too
+		blobs, err = blob.NewS3(ctx, blob.S3Config{Endpoint: ep, Bucket: "libredcm-e2e", Insecure: true, CreateBucket: true,
+			AccessKey: os.Getenv("LIBRE_DCM_TEST_S3_ACCESS_KEY"), SecretKey: os.Getenv("LIBRE_DCM_TEST_S3_SECRET_KEY"),
 			Prefix: t.Name() + "-" + time.Now().Format("150405.000000") + "/"})
 	} else {
 		blobs, err = blob.NewFS(filepath.Join(dir, "blobs"))

@@ -7,7 +7,7 @@ import (
 
 	"github.com/godicom-dev/gonetdicom/ae"
 
-	"rws/modules/dicom/internal/index"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
 )
 
 // Audit events follow the DICOM audit message vocabulary (PS3.15 A.5) so they
@@ -46,6 +46,14 @@ func argsToAttrs(args []any) []slog.Attr {
 	return out
 }
 
+// auditPatientID returns id, or "" when audit_omit_patient_id is set.
+func (g *Gateway) auditPatientID(id string) string {
+	if g.cfg.AuditOmitPatientID {
+		return ""
+	}
+	return id
+}
+
 // studiesAndPatients summarises retrieved rows for an export audit record.
 func studiesAndPatients(rows []index.Row) (studies, patients []string) {
 	s, p := map[string]bool{}, map[string]bool{}
@@ -64,4 +72,11 @@ func studiesAndPatients(rows []index.Row) (studies, patients []string) {
 	sort.Strings(studies)
 	sort.Strings(patients)
 	return studies, patients
+}
+
+func (g *Gateway) auditPatientIDs(ids []string) []string {
+	if g.cfg.AuditOmitPatientID {
+		return nil
+	}
+	return ids
 }

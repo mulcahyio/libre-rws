@@ -11,6 +11,8 @@ import (
 	"github.com/godicom-dev/godicom/uid"
 	"github.com/godicom-dev/gonetdicom/ae"
 	"github.com/godicom-dev/gonetdicom/status"
+
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/events"
 )
 
 type syncBuf struct {
@@ -53,5 +55,36 @@ func TestAuditRecords(t *testing.T) {
 		if !strings.Contains(log, want) {
 			t.Errorf("audit log missing %q", want)
 		}
+	}
+}
+
+func TestOmitPatientID(t *testing.T) {
+	buf := &syncBuf{}
+	logSink = buf
+	t.Cleanup(func() { logSink = nil })
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	addr, gw, pub := startGateway(t, ctx, nil)
+	gw.cfg.EventsOmitPatientID, gw.cfg.AuditOmitPatientID = true, true
+
+	scu, err := dialAs(ctx, addr, "MODALITY")
+	if err != nil {
+		t.Fatal(err)
+	}
+	study, series := "1.2.826.0.1.3680043.10.999.40", "1.2.826.0.1.3680043.10.999.40.1"
+	res, err := scu.CStore(ctx, ae.StoreRequest{AffectedSOPClassUID: string(uid.CTImageStorage),
+		AffectedSOPInstanceUID: series + ".1", Data: ctImage(study, series, series+".1", 1)})
+	if err != nil || res.Status != status.Success {
+		t.Fatalf("store: %v %v", err, res)
+	}
+	_ = scu.Release(ctx)
+	pub.mu.Lock()
+	ev := pub.evs[len(pub.evs)-1].(events.InstanceStored)
+	pub.mu.Unlock()
+	if ev.PatientID != "" || ev.StudyUID != study {
+		t.Errorf("event patient_id=%q study=%q, want patient omitted", ev.PatientID, ev.StudyUID)
+	}
+	if strings.Contains(buf.String(), "P001") {
+		t.Error("audit log contains the patient ID although omitted")
 	}
 }

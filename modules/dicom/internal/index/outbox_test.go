@@ -10,7 +10,7 @@ import (
 )
 
 // openTestIndexes returns a fresh SQLite index and, when
-// RWS_TEST_POSTGRES_DSN is set, a PostgreSQL index with empty tables, so the
+// LIBRE_DCM_TEST_POSTGRES_DSN is set, a PostgreSQL index with empty tables, so the
 // same tests hold both engines to one behaviour.
 func openTestIndexes(t *testing.T) map[string]*SQL {
 	t.Helper()
@@ -22,7 +22,7 @@ func openTestIndexes(t *testing.T) map[string]*SQL {
 	}
 	t.Cleanup(func() { _ = lite.Close() })
 	out["sqlite"] = lite
-	if dsn := os.Getenv("RWS_TEST_POSTGRES_DSN"); dsn != "" {
+	if dsn := os.Getenv("LIBRE_DCM_TEST_POSTGRES_DSN"); dsn != "" {
 		pg, err := Open(ctx, "postgres", dsn)
 		if err != nil {
 			t.Fatal(err)
@@ -39,7 +39,7 @@ func openTestIndexes(t *testing.T) map[string]*SQL {
 }
 
 func ev(id string) *OutboxEvent {
-	return &OutboxEvent{MsgID: id, Subject: "rws.dicom.instance.stored", Payload: []byte(`{"id":"` + id + `"}`)}
+	return &OutboxEvent{MsgID: id, Subject: "libre.dcm.instance.stored", Payload: []byte(`{"id":"` + id + `"}`)}
 }
 
 func TestOutboxLifecycle(t *testing.T) {

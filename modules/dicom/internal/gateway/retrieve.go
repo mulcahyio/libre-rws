@@ -15,8 +15,8 @@ import (
 	"github.com/godicom-dev/gonetdicom/dimse"
 	"github.com/godicom-dev/gonetdicom/status"
 
-	"rws/modules/dicom/internal/dcm"
-	"rws/modules/dicom/internal/index"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
 )
 
 // Design note — why C-MOVE does not use gonetdicom's MovePlan.Stores:
@@ -139,7 +139,7 @@ func (g *Gateway) onCMove(ctx context.Context, req ae.MoveRequest) ae.MovePlan {
 		outcome = "minor-failure"
 	}
 	g.audit(ctx, auditInstancesExported, outcome, "op", "C-MOVE", "destination", req.MoveDestination,
-		"destination_host", dest.Host, "studies", studies, "patient_ids", patients,
+		"destination_host", dest.Host, "studies", studies, "patient_ids", g.auditPatientIDs(patients),
 		"instances", len(rows), "failed", tally.failed)
 	g.log.Info("C-MOVE finished", "destination", req.MoveDestination, "instances", len(rows),
 		"completed", tally.completed, "failed", tally.failed, "warning", tally.warning,
@@ -346,7 +346,7 @@ func (g *Gateway) onCGet(ctx context.Context, req ae.GetRequest) ae.GetPlan {
 	if tally.failed > 0 {
 		outcome = "minor-failure"
 	}
-	g.audit(ctx, auditInstancesExported, outcome, "op", "C-GET", "studies", studies, "patient_ids", patients,
+	g.audit(ctx, auditInstancesExported, outcome, "op", "C-GET", "studies", studies, "patient_ids", g.auditPatientIDs(patients),
 		"instances", len(stores), "failed", tally.failed)
 	return ae.GetPlan{Stores: stores, Responses: []ae.RetrieveMatch{tally.final()}}
 }

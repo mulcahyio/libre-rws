@@ -7,7 +7,7 @@ import (
 )
 
 // The conformance suite runs every query operation against SQLite and, when
-// RWS_TEST_POSTGRES_DSN is set, PostgreSQL, so the two engines can't drift
+// LIBRE_DCM_TEST_POSTGRES_DSN is set, PostgreSQL, so the two engines can't drift
 // (BACKLOG.md "Metadata index"). Run both with `make test-postgres`.
 
 func seed(t *testing.T, idx *SQL) {

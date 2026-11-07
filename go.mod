@@ -1,4 +1,4 @@
-module rws
+module github.com/mulcahyio/libre-rws
 
 go 1.26.0
 

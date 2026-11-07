@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"rws/modules/dicom/internal/gateway"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway"
 )
 
 type fakeTarget struct {
@@ -27,8 +27,8 @@ func (f *fakeTarget) SetAllowedAEs(a []string) error {
 }
 
 func TestReloadAppliesLiveSettings(t *testing.T) {
-	t.Setenv("RWS_DICOM_REMOTE_AES", "ENVVIEW=10.0.0.9:104")
-	t.Setenv("RWS_DICOM_ALLOWED_AES", "")
+	t.Setenv("LIBRE_DCM_REMOTE_AES", "ENVVIEW=10.0.0.9:104")
+	t.Setenv("LIBRE_DCM_ALLOWED_AES", "")
 	p := filepath.Join(t.TempDir(), "config.yaml")
 	write := func(s string) {
 		if err := os.WriteFile(p, []byte(s), 0o600); err != nil {

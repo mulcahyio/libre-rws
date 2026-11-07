@@ -16,14 +16,14 @@ import (
 // S3Config configures the object-store backend. It works with AWS S3 and any
 // S3-compatible store (MinIO, Ceph RGW, NAS appliances with an S3 API).
 type S3Config struct {
-	Endpoint     string `yaml:"endpoint" env:"RWS_STORAGE_S3_ENDPOINT"` // host[:port], e.g. s3.amazonaws.com or minio:9000
-	Bucket       string `yaml:"bucket" env:"RWS_STORAGE_S3_BUCKET"`
-	Region       string `yaml:"region" env:"RWS_STORAGE_S3_REGION"`
-	Prefix       string `yaml:"prefix" env:"RWS_STORAGE_S3_PREFIX"` // optional key prefix, e.g. "site-a/"
-	AccessKey    string `yaml:"access_key" env:"RWS_STORAGE_S3_ACCESS_KEY"`
-	SecretKey    string `yaml:"secret_key" env:"RWS_STORAGE_S3_SECRET_KEY"`
-	Insecure     bool   `yaml:"insecure" env:"RWS_STORAGE_S3_INSECURE"`           // plain HTTP (lab / same-host MinIO only)
-	CreateBucket bool   `yaml:"create_bucket" env:"RWS_STORAGE_S3_CREATE_BUCKET"` // create the bucket at start if missing
+	Endpoint     string `yaml:"endpoint" env:"LIBRE_DCM_STORAGE_S3_ENDPOINT"` // host[:port], e.g. s3.amazonaws.com or minio:9000
+	Bucket       string `yaml:"bucket" env:"LIBRE_DCM_STORAGE_S3_BUCKET"`
+	Region       string `yaml:"region" env:"LIBRE_DCM_STORAGE_S3_REGION"`
+	Prefix       string `yaml:"prefix" env:"LIBRE_DCM_STORAGE_S3_PREFIX"` // optional key prefix, e.g. "site-a/"
+	AccessKey    string `yaml:"access_key" env:"LIBRE_DCM_STORAGE_S3_ACCESS_KEY"`
+	SecretKey    string `yaml:"secret_key" env:"LIBRE_DCM_STORAGE_S3_SECRET_KEY"`
+	Insecure     bool   `yaml:"insecure" env:"LIBRE_DCM_STORAGE_S3_INSECURE"`           // plain HTTP (lab / same-host MinIO only)
+	CreateBucket bool   `yaml:"create_bucket" env:"LIBRE_DCM_STORAGE_S3_CREATE_BUCKET"` // create the bucket at start if missing
 }
 
 // S3 stores each object under Prefix+key in one bucket. A PUT is atomic on

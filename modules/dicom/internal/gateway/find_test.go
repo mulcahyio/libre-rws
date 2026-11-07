@@ -10,8 +10,8 @@ import (
 	"github.com/godicom-dev/gonetdicom/ae"
 	"github.com/godicom-dev/gonetdicom/status"
 
-	"rws/modules/dicom/internal/dcm"
-	"rws/modules/dicom/internal/index"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
 )
 
 func TestTimeBounds(t *testing.T) {
