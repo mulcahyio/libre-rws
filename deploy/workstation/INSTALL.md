@@ -66,6 +66,36 @@ healthy, the admin endpoint answers, the DICOM port is reachable from the PC,
 and a DICOM C-ECHO succeeds (over TLS when it is on). It prints the AE title,
 IP address and port to enter on your modalities and viewers.
 
+## License (official builds)
+
+Official LibreDCM builds need a license from LibreKey, locked to this PC.
+Source builds (compiled yourself from the open-source code) need none.
+
+- **Online:** `install` asks for your license key (from the LibreKey portal)
+  and activates this PC. Unattended: put it in `LIBRE_DCM_LICENSE_KEY`.
+- **No internet on this PC:** answer `offline`. The installer writes
+  `license-request.txt`. Upload it on your license page in the portal,
+  download the license file, then run `license-install <file>` and `install`.
+- **Renewal:** annual licenses renew automatically when the PC can reach the
+  LibreKey server in the last 30 days; offline PCs need a new license file.
+- **Expiry:** after the expiry date LibreDCM keeps working for the grace
+  period (30 days), with warnings in the log. Then it **stops receiving new
+  studies** (C-STORE is refused with "out of resources", so modalities keep
+  the images and retry). C-ECHO, C-FIND, C-MOVE and C-GET keep working, so
+  all existing studies stay available.
+- **Moving to another PC:** deactivate the old PC in the portal, then
+  activate the new one.
+
+```powershell
+.\LibreDCM.ps1 license                    # status
+.\LibreDCM.ps1 activate LK-XXXXX-...      # activate online
+.\LibreDCM.ps1 license-request            # request file for offline activation
+.\LibreDCM.ps1 license-install FILE       # install a license file
+```
+
+Metrics: `libre_dcm_license_state` (0 valid, 1 grace, 2 not receiving) and
+`libre_dcm_license_days_left`.
+
 ## Other settings
 
 All settings are in **`.env`**. Edit it, then run `install` again. Your data is kept.

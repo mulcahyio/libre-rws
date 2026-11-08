@@ -75,6 +75,18 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 - `BACKLOG.md`: the clustering change backlog (storage abstraction, shared
   catalog, eviction, replication, role-based nodes).
 
+### Added (licensing)
+- **LibreKey licensing for official builds** (decided 2026-11-07): official
+  builds (`BUILD_TAGS=official`) embed the LibreKey public key and need a
+  machine-locked license (annual or perpetual). After expiry there is a
+  30-day grace period; then C-STORE is refused with *out of resources* while
+  C-ECHO / C-FIND / C-MOVE / C-GET keep serving existing studies. Source
+  builds need no license. New flags `-license-status`, `-license-request`,
+  `-license-activate`, `-license-install`; the installer activates online
+  (license key) or offline (request file); metrics `libre_dcm_license_state`
+  and `libre_dcm_license_days_left`. LibreKey client copied to
+  `third_party/librekey` (standard library only).
+
 ### Changed
 - **Code identifiers renamed** (decided 2026-11-07): program `LibreDCM`
   (was `rws-dicom`), image `libre/dcm` (was `rws/dicom`), settings
@@ -138,7 +150,13 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 - Linux: interactive `install` (self-signed TLS, patient IDs left out of
   events), then S3 storage (SeaweedFS) with TLS; events carried an empty
   patient ID and were also published under the legacy subject.
-- Not tested: the Windows question prompts (needs a signed-in desktop
+- Licensing (Linux, official build against a local LibreKey server): an
+  unattended install without a key wrote an activation request and stopped;
+  with a key it activated online and stored images; an expired license
+  refused C-STORE while C-ECHO and C-FIND worked; reinstalling a valid
+  license resumed receiving. Windows: an unattended official install without
+  a key wrote the request file and stopped as designed.
+- Not tested: completing the offline activation on Windows; the Windows question prompts (needs a signed-in desktop
   session) and S3 on Windows.
 
 ## rws-dicom 0.1.1-beta.1 (2026-10-11)
