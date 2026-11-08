@@ -152,3 +152,7 @@ in [docs/releases/](docs/releases/).
 Libre RWS was developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 Copyright (c) 2026 Patrick Mulcahy, Mulcahy.io. See NOTICE for third-party
 licenses (gonetdicom and godicom are MIT, Copyright (c) 2026 godicom-dev).
+
+## Licence
+
+Apache License 2.0 (see `LICENSE` and `NOTICE`). Official builds of LibreDCM are activated with a LibreKey license; the source code is free to use under the Apache licence.

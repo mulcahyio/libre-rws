@@ -1,14 +1,8 @@
-Libre RWS (formerly RWS)
-Developed by Patrick Mulcahy, Mulcahy.io
-Contact: dev@mulcahy.io
-Copyright (c) 2026 Patrick Mulcahy, Mulcahy.io. License for Libre RWS: to be determined.
+Libre RWS (including LibreDCM)
+Copyright 2026 Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io)
 
-This product includes third-party software:
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+"Libre RWS", "LibreDCM" and "LibreKey" are names of Mulcahy.io; the licence does not grant trademark rights.
 
-  gonetdicom (forked in third_party/gonetdicom) - MIT License
-  Copyright (c) 2026 godicom-dev
-  Libre RWS fork modifications by Patrick Mulcahy, Mulcahy.io (see third_party/gonetdicom/RWS_FORK.md)
-
-  godicom - MIT License, Copyright (c) 2026 godicom-dev
-
-Other dependencies and their licenses are listed in go.mod / go.sum.
+Third-party code: third_party/gonetdicom (see its LICENSE and RWS_FORK.md),
+third_party/librekey (LibreKey client; see LIBREKEY_COPY.md).

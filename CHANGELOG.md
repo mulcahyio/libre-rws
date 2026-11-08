@@ -76,6 +76,7 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   catalog, eviction, replication, role-based nodes).
 
 ### Added (licensing)
+- Libre RWS and LibreDCM are licensed under Apache-2.0 (`LICENSE`, `NOTICE`; decided 2026-11-08).
 - **LibreKey licensing for official builds** (decided 2026-11-07): official
   builds (`BUILD_TAGS=official`) embed the LibreKey public key and need a
   machine-locked license (annual or perpetual). After expiry there is a
