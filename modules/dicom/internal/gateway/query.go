@@ -17,14 +17,14 @@ import (
 type matchKind int
 
 const (
-	kString   matchKind = iota // single value or wildcard
-	kUID                       // single UID or list
-	kDate                      // single date or range
-	kExact                     // single value only
-	kReturn                    // return-only (computed); matching ignored
-	kModality                  // ModalitiesInStudy
-	kPersonName                // like kString; case-insensitive when configured
-	kTime                      // single time or range (TM)
+	kString     matchKind = iota // single value or wildcard
+	kUID                         // single UID or list
+	kDate                        // single date or range
+	kExact                       // single value only
+	kReturn                      // return-only (computed); matching ignored
+	kModality                    // ModalitiesInStudy
+	kPersonName                  // like kString; case-insensitive when configured
+	kTime                        // single time or range (TM)
 )
 
 type keyDef struct {

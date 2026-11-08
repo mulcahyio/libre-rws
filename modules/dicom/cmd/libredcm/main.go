@@ -18,26 +18,32 @@ import (
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/events"
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway"
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/licensing"
 	"github.com/mulcahyio/libre-rws/platform/config"
 	"github.com/mulcahyio/libre-rws/platform/runtime"
 )
 
-// version is set at build time: -ldflags "-X main.version=1.2.3"
-var version = "dev"
+// version and buildDate (YYYY-MM-DD, the release date checked against a
+// license's update period) are set at build time with -ldflags -X.
+var (
+	version   = "dev"
+	buildDate = ""
+)
 
 type Config struct {
 	Admin   runtime.AdminConfig `yaml:"admin"`
 	DICOM   gateway.Config      `yaml:"dicom"`
 	Storage struct {
 		Driver string        `yaml:"driver" env:"LIBRE_DCM_STORAGE_DRIVER,RWS_STORAGE_DRIVER"` // fs | s3
-		Path   string        `yaml:"path" env:"LIBRE_DCM_STORAGE_PATH,RWS_STORAGE_PATH"`     // fs
+		Path   string        `yaml:"path" env:"LIBRE_DCM_STORAGE_PATH,RWS_STORAGE_PATH"`       // fs
 		S3     blob.S3Config `yaml:"s3"`
 	} `yaml:"storage"`
 	Index struct {
 		Driver string `yaml:"driver" env:"LIBRE_DCM_INDEX_DRIVER,RWS_INDEX_DRIVER"` // sqlite | postgres
 		DSN    string `yaml:"dsn" env:"LIBRE_DCM_INDEX_DSN,RWS_INDEX_DSN"`
 	} `yaml:"index"`
-	Events events.Config `yaml:"events"`
+	Events  events.Config    `yaml:"events"`
+	License licensing.Config `yaml:"license"`
 }
 
 func defaults() Config {
@@ -48,6 +54,7 @@ func defaults() Config {
 	c.Index.Driver, c.Index.DSN = "sqlite", "file:./data/index.db"
 	c.Events.Driver = "log"
 	c.Events.LegacySubjects = true
+	c.License.File = "./data/license.lic"
 	return c
 }
 
@@ -62,6 +69,12 @@ func main() {
 	genCertHosts := flag.String("gen-cert-hosts", "", "comma-separated DNS names / IPs for -gen-cert")
 	genCertForce := flag.Bool("gen-cert-force", false, "replace an existing certificate with -gen-cert")
 	echoTLS := flag.Bool("echo-tls", config.Getenv("LIBRE_DCM_TLS_CERT", "RWS_DICOM_TLS_CERT") != "", "use DICOM TLS for -echo (default: on when this node has a TLS certificate)")
+	licStatus := flag.Bool("license-status", false, "show the license status and exit (0 receiving, 2 not receiving, 3 no license needed)")
+	licRequest := flag.Bool("license-request", false, "print an activation request for this machine (offline activation) and exit")
+	licActivate := flag.String("license-activate", "", "activate this machine online with a license KEY and exit")
+	licInstall := flag.String("license-install", "", "install a license FILE (offline activation) and exit")
+	licKey := flag.String("license-key", "", "license key to include in -license-request")
+	licSite := flag.String("license-site", "", "site name for -license-request / -license-activate")
 	backupTo := flag.String("backup", "", "write a consistent snapshot of the SQLite index to PATH and exit (safe while the module runs)")
 	flag.Parse()
 	if *showVersion {
@@ -80,6 +93,9 @@ func main() {
 			os.Exit(1)
 		}
 		return
+	}
+	if *licStatus || *licRequest || *licActivate != "" || *licInstall != "" {
+		os.Exit(licenseCommand(*cfgPath, *licStatus, *licRequest, *licActivate, *licInstall, *licKey, *licSite))
 	}
 	if *backupTo != "" {
 		if err := backup(*cfgPath, *backupTo); err != nil {
@@ -182,6 +198,14 @@ func run(cfgPath string) error {
 
 	gw := gateway.New(cfg.DICOM, rt.NodeID, log, rt.Registry, blobs, idx, pub)
 	components := []runtime.Component{gw, &reloader{path: cfgPath, gw: gw, log: log}}
+	lic, err := licensing.New(cfg.License, version, parseBuildDate(), log, rt.Registry)
+	if err != nil {
+		return fmt.Errorf("license: %w", err)
+	}
+	if lic != nil {
+		gw.UseReceiveGate(lic.CanReceive)
+		components = append(components, lic)
+	}
 	if cfg.Events.Driver != "" && cfg.Events.Driver != "none" {
 		// Events go through the outbox so a bus outage can't lose them.
 		relay := events.NewRelay(idx, pub, log, rt.Registry, gw.CountEventFailure)

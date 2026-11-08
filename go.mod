@@ -7,6 +7,7 @@ require (
 	github.com/godicom-dev/gonetdicom v0.17.0
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/minio/minio-go/v7 v7.4.1
+	github.com/mulcahyio/librekey v0.0.0
 	github.com/nats-io/nats.go v1.54.0
 	github.com/prometheus/client_golang v1.24.1
 	golang.org/x/sync v0.23.0
@@ -59,3 +60,6 @@ require (
 
 // RWS maintains a fork of gonetdicom; see third_party/gonetdicom/RWS_FORK.md.
 replace github.com/godicom-dev/gonetdicom => ./third_party/gonetdicom
+
+// LibreKey client, copied so builds don't need the private repo; see third_party/librekey/LIBREKEY_COPY.md.
+replace github.com/mulcahyio/librekey => ./third_party/librekey

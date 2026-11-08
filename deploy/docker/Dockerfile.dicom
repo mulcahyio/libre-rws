@@ -22,8 +22,13 @@ RUN --mount=type=cache,target=/go/pkg/mod go mod download
 COPY platform/ platform/
 COPY modules/ modules/
 ARG VERSION=dev
+# Official builds: BUILD_TAGS=official embeds the LibreKey public key, so a
+# valid license is required. BUILD_DATE (YYYY-MM-DD) is checked against a
+# license's update period. Source builds leave both empty.
+ARG BUILD_TAGS=
+ARG BUILD_DATE=
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
-    go build -ldflags "-s -w -X main.version=${VERSION}" -o /out/LibreDCM ./modules/dicom/cmd/libredcm
+    go build -tags "${BUILD_TAGS}" -ldflags "-s -w -X main.version=${VERSION} -X main.buildDate=${BUILD_DATE}" -o /out/LibreDCM ./modules/dicom/cmd/libredcm
 
 # Data directory owned by the distroless "nonroot" user (65532). Distroless has
 # no shell, so it is prepared here and copied across with ownership.
@@ -50,6 +55,8 @@ ENV LIBRE_DCM_CONFIG=/etc/libredcm/config.yaml \
     LIBRE_DCM_LISTEN=:11112 \
     LIBRE_DCM_STORAGE_PATH=/var/lib/libredcm/blobs \
     LIBRE_DCM_INDEX_DSN=file:/var/lib/libredcm/index.db \
+    LIBRE_DCM_LICENSE_FILE=/var/lib/libredcm/license.lic \
+    LIBRE_DCM_LICENSE_DATA=/var/lib/libredcm \
     LIBRE_DCM_LOG_FORMAT=json
 
 USER 65532:65532

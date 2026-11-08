@@ -3,6 +3,7 @@
 # Libre RWS (Radiology Workflow System) - developed by Patrick Mulcahy, Mulcahy.io <dev@mulcahy.io>
 #
 #   ./LibreDCM.sh install | configure | upgrade | verify | status | logs | start | stop | restart | backup | uninstall [--remove-data]
+#   ./LibreDCM.sh license | activate KEY | license-request [KEY] | license-install FILE   (official builds)
 #
 # install asks the install-time questions (storage, TLS, patient IDs) the first
 # time; `configure` asks them again. Set LIBREDCM_YES=1 to take the values in
@@ -244,11 +245,55 @@ backup() {
 }
 
 echo; echo "  LibreDCM - $CMD   (Mulcahy.io)"
+host_id() { # this machine's id, part of the license lock (the container can't read it)
+  local id=""
+  [ -r /etc/machine-id ] && id=$(cat /etc/machine-id)
+  [ -z "$id" ] && [ "$(uname)" = Darwin ] && id=$(ioreg -rd1 -c IOPlatformExpertDevice | awk -F'"' '/IOPlatformUUID/{print $4}')
+  echo "$id"
+}
+
+lic() { compose run --rm --no-deps -T dicom "$@"; }
+
+# Official builds: make sure this PC has a valid license before starting.
+# Source builds report "no license needed" (exit 3) and skip this.
+ensure_license() {
+  [ -n "$(envval LIBREKEY_HOST_ID)" ] || setenv LIBREKEY_HOST_ID "$(host_id)"
+  local rc=0; lic -license-status >/dev/null 2>&1 || rc=$?
+  case $rc in
+    3) return 0 ;;
+    0) ok "License valid"; return 0 ;;
+  esac
+  local key; key=$(envval LIBRE_DCM_LICENSE_KEY)
+  if [ -z "$key" ] && interactive; then
+    echo; info "This is an official LibreDCM build: it needs a license for this PC."
+    info "Enter your license key (from the LibreKey portal), or 'offline' if this PC has no internet."
+    key=$(ask "License key" "")
+  fi
+  if [ "$key" = offline ] || { [ -z "$key" ] && ! interactive; }; then
+    lic -license-request -license-site "$(envval LIBRE_DCM_AE_TITLE)" > license-request.txt
+    info "Activation request written to $(pwd)/license-request.txt"
+    info "Upload it on your license page in the LibreKey portal, download the license file, then run:"
+    info "  ./LibreDCM.sh license-install <file>   and   ./LibreDCM.sh install"
+    fail "Not activated yet"
+  fi
+  [ -n "$key" ] || fail "A license key is required for this official build"
+  lic -license-activate "$key" -license-site "$(envval LIBRE_DCM_AE_TITLE)" || fail "Activation failed (see the message above)"
+  setenv LIBRE_DCM_LICENSE_KEY "$key"
+  ok "License activated for this PC"
+}
+
+license_install() {
+  [ -f "${1:-}" ] || fail "usage: ./LibreDCM.sh license-install FILE"
+  [ -n "$(envval LIBREKEY_HOST_ID)" ] || setenv LIBREKEY_HOST_ID "$(host_id)"
+  local abs; abs="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+  compose run --rm --no-deps -T -v "$abs:/tmp/license.lic:ro" dicom -license-install /tmp/license.lic
+}
+
 case "$CMD" in
   install|configure)
-    check_docker; init_config; compose build; make_cert; compose up -d; verify; summary ;;
+    check_docker; init_config; compose build; ensure_license; make_cert; compose up -d; verify; summary ;;
   upgrade)
-    check_docker; init_config; compose build --pull; make_cert
+    check_docker; init_config; compose build --pull; ensure_license; make_cert
     if docker container inspect $CONTAINER >/dev/null 2>&1; then
       compose stop dicom
       d=backups/index-$(date +%Y%m%d-%H%M%S); mkdir -p "$d"
@@ -262,6 +307,10 @@ case "$CMD" in
   stop)    compose stop ;;
   restart) compose restart dicom; verify ;;
   backup)  backup ;;
+  license) lic -license-status || true ;;
+  activate) [ -n "${2:-}" ] || fail "usage: ./LibreDCM.sh activate KEY"; setenv LIBRE_DCM_LICENSE_KEY "$2"; ensure_license; compose restart dicom 2>/dev/null || true ;;
+  license-request) lic -license-request -license-key "${2:-}" -license-site "$(envval LIBRE_DCM_AE_TITLE)" ;;
+  license-install) license_install "${2:-}" && { compose restart dicom 2>/dev/null || true; } ;;
   uninstall)
     if [ "${2:-}" = --remove-data ]; then
       read -rp "  This permanently deletes all stored images and the index. Type DELETE to confirm: " c

@@ -17,6 +17,10 @@
     logs       Follow the module log (Ctrl+C to stop)
     start | stop | restart
     backup     Index snapshot + images to .\backups\<timestamp> (safe while running)
+    license    License status (official builds)
+    activate KEY            Activate this PC online with a license key
+    license-request [KEY]   Write an activation request (PC without internet)
+    license-install FILE    Install a license file from the LibreKey portal
     uninstall  Remove containers and image. Data is kept unless -RemoveData.
 
   -Yes takes the values in .env without asking (unattended installs).
@@ -29,8 +33,10 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('install', 'configure', 'upgrade', 'verify', 'status', 'logs', 'start', 'stop', 'restart', 'backup', 'uninstall')]
+    [ValidateSet('install', 'configure', 'upgrade', 'verify', 'status', 'logs', 'start', 'stop', 'restart', 'backup', 'uninstall', 'license', 'activate', 'license-request', 'license-install')]
     [string]$Command = 'install',
+    [Parameter(Position = 1)]
+    [string]$Arg,
     [string]$AETitle,
     [int]$DicomPort,
     [string]$DataDir,
@@ -373,6 +379,49 @@ function Invoke-Backup {
     Ok "Backed up to $dest (index snapshot + images)"
 }
 
+# ---- License (official builds) ---------------------------------------------
+function Get-HostId {
+    try { return (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Cryptography' -Name MachineGuid -ErrorAction Stop).MachineGuid } catch { return '' }
+}
+
+# Official builds need a license for this PC before starting; source builds
+# report "no license needed" (exit 3) and skip this.
+function Confirm-License {
+    if (-not (Read-Env)['LIBREKEY_HOST_ID']) { Set-EnvValue 'LIBREKEY_HOST_ID' (Get-HostId) }
+    & docker compose -f docker-compose.yml run --rm --no-deps -T dicom -license-status *> $null
+    $rc = $LASTEXITCODE
+    if ($rc -eq 3) { return }
+    if ($rc -eq 0) { Ok 'License valid'; return }
+    $e = Read-Env
+    $key = $e['LIBRE_DCM_LICENSE_KEY']
+    if (-not $key -and (Test-Interactive)) {
+        Write-Host ''
+        Info 'This is an official LibreDCM build: it needs a license for this PC.'
+        Info "Enter your license key (from the LibreKey portal), or 'offline' if this PC has no internet."
+        $key = Read-Host '  License key'
+    }
+    if ($key -eq 'offline' -or (-not $key -and -not (Test-Interactive))) {
+        & docker compose -f docker-compose.yml run --rm --no-deps -T dicom -license-request -license-site $e['LIBRE_DCM_AE_TITLE'] 2>$null | Out-File -Encoding ascii license-request.txt
+        Info "Activation request written to $PSScriptRoot\license-request.txt"
+        Info 'Upload it on your license page in the LibreKey portal, download the license file, then run:'
+        Info '  .\LibreDCM.ps1 license-install <file>   and   .\LibreDCM.ps1 install'
+        Fail 'Not activated yet'
+    }
+    if (-not $key) { Fail 'A license key is required for this official build' }
+    & docker compose -f docker-compose.yml run --rm --no-deps -T dicom -license-activate $key -license-site $e['LIBRE_DCM_AE_TITLE']
+    if ($LASTEXITCODE -ne 0) { Fail 'Activation failed (see the message above)' }
+    Set-EnvValue 'LIBRE_DCM_LICENSE_KEY' $key
+    Ok 'License activated for this PC'
+}
+
+function Install-LicenseFile([string]$File) {
+    if (-not $File -or -not (Test-Path -LiteralPath $File)) { Fail 'usage: .\LibreDCM.ps1 license-install FILE' }
+    if (-not (Read-Env)['LIBREKEY_HOST_ID']) { Set-EnvValue 'LIBREKEY_HOST_ID' (Get-HostId) }
+    $abs = (Resolve-Path -LiteralPath $File).Path
+    & docker compose -f docker-compose.yml run --rm --no-deps -T -v "${abs}:/tmp/license.lic:ro" dicom -license-install /tmp/license.lic
+    if ($LASTEXITCODE -ne 0) { Fail 'License not installed' }
+}
+
 function Backup-Index {
     $dest = Join-Path 'backups' ("index-" + (Get-Date -Format 'yyyyMMdd-HHmmss'))
     New-Item -ItemType Directory -Path $dest -Force | Out-Null
@@ -388,6 +437,7 @@ switch ($Command) {
         Test-Docker; Initialize-Config; Test-Settings
         Info 'Building the image (first build takes a few minutes)...'
         Invoke-Compose build
+        Confirm-License
         New-Certificate
         Invoke-Compose up -d
         Invoke-Verify; Show-Summary
@@ -396,6 +446,7 @@ switch ($Command) {
         Test-Docker; Initialize-Config
         Info 'Building the new image (the running module keeps serving)...'
         Invoke-Compose build --pull
+        Confirm-License
         New-Certificate
         & docker container inspect $Container *> $null
         if ($LASTEXITCODE -eq 0) { Invoke-Compose stop dicom; Backup-Index }
@@ -413,6 +464,14 @@ switch ($Command) {
     'stop'    { Invoke-Compose stop }
     'restart' { Invoke-Compose restart dicom; Invoke-Verify }
     'backup'  { Invoke-Backup }
+    'license' { & docker compose -f docker-compose.yml run --rm --no-deps -T dicom -license-status }
+    'activate' {
+        if (-not $Arg) { Fail 'usage: .\LibreDCM.ps1 activate KEY' }
+        Set-EnvValue 'LIBRE_DCM_LICENSE_KEY' $Arg; Confirm-License
+        & docker compose -f docker-compose.yml restart dicom 2>$null | Out-Null
+    }
+    'license-request' { & docker compose -f docker-compose.yml run --rm --no-deps -T dicom -license-request -license-key "$Arg" -license-site (Read-Env)['LIBRE_DCM_AE_TITLE'] }
+    'license-install' { Install-LicenseFile $Arg; & docker compose -f docker-compose.yml restart dicom 2>$null | Out-Null; Ok 'License installed' }
     'uninstall' {
         if ($RemoveData) {
             $c = Read-Host '  This permanently deletes all stored images and the index in the Docker volumes. Type DELETE to confirm'

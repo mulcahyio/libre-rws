@@ -14,6 +14,8 @@ services:
       dockerfile: deploy/docker/Dockerfile.dicom
       args:
         VERSION: "${LIBRE_DCM_VERSION:-0.2.0-beta.1}"
+        BUILD_TAGS: "${LIBRE_DCM_BUILD_TAGS:-}"
+        BUILD_DATE: "${LIBRE_DCM_BUILD_DATE:-}"
     image: "libre/dcm:${LIBRE_DCM_VERSION:-0.2.0-beta.1}"
     container_name: libredcm
     restart: unless-stopped
@@ -26,6 +28,8 @@ services:
       LIBRE_DCM_ALLOWED_AES: "${LIBRE_DCM_ALLOWED_AES:-}"
       LIBRE_DCM_MAX_ASSOCIATIONS: "${LIBRE_DCM_MAX_ASSOCIATIONS:-16}"
       LIBRE_DCM_ADMIN_TOKEN: "${LIBRE_DCM_ADMIN_TOKEN:-}"
+      LIBRE_DCM_LICENSE_SERVER: "${LIBRE_DCM_LICENSE_SERVER:-}"
+      LIBREKEY_HOST_ID: "${LIBREKEY_HOST_ID:-}"
       LIBRE_DCM_LOG_LEVEL: "${LIBRE_DCM_LOG_LEVEL:-info}"
       LIBRE_DCM_LOG_FORMAT: "${LIBRE_DCM_LOG_FORMAT:-text}"
       LIBRE_DCM_EVENTS_DRIVER: "${LIBRE_DCM_EVENTS_DRIVER:-log}"

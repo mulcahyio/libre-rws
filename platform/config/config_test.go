@@ -18,7 +18,7 @@ func TestEnvOverridesAndEmptyIsUnset(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv("T_NAME", "env")
-	t.Setenv("T_LIST", "")  // empty: keep the file's list
+	t.Setenv("T_LIST", "")   // empty: keep the file's list
 	t.Setenv("T_COUNT", " ") // blank: keep the file's value (and no parse error)
 	var c testCfg
 	if err := Load(p, &c); err != nil {

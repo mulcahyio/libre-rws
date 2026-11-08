@@ -38,7 +38,7 @@ import (
 // AdminConfig controls the shared operational endpoints and logging.
 type AdminConfig struct {
 	Addr            string        `yaml:"addr" env:"{P}ADMIN_ADDR,RWS_ADMIN_ADDR"`
-	LogLevel        string        `yaml:"log_level" env:"{P}LOG_LEVEL,RWS_LOG_LEVEL"`   // debug|info|warn|error
+	LogLevel        string        `yaml:"log_level" env:"{P}LOG_LEVEL,RWS_LOG_LEVEL"`    // debug|info|warn|error
 	LogFormat       string        `yaml:"log_format" env:"{P}LOG_FORMAT,RWS_LOG_FORMAT"` // json|text
 	ShutdownTimeout time.Duration `yaml:"shutdown_timeout" env:"{P}SHUTDOWN_TIMEOUT,RWS_SHUTDOWN_TIMEOUT"`
 	NodeID          string        `yaml:"node_id" env:"{P}NODE_ID,RWS_NODE_ID"` // defaults to hostname
