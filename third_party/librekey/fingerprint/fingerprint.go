@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Patrick Mulcahy, Mulcahy.io (LibreKey client)
+
 // Package fingerprint identifies a machine so a license can be locked to it.
 //
 // A fingerprint has three parts, each a short hash of one hardware or OS

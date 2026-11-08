@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Patrick Mulcahy, Mulcahy.io (LibreKey client)
+
 // Package request defines the activation request a product creates on the
 // machine to be licensed. Online it is sent to the LibreKey server; offline
 // (air-gapped sites) it is saved as a file and uploaded in the customer portal.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Patrick Mulcahy, Mulcahy.io (LibreKey client)
+
 // Package license defines the LibreKey license file: a JSON document signed
 // with Ed25519, wrapped in a text armor so it can be emailed, pasted or saved.
 //

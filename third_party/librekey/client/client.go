@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Patrick Mulcahy, Mulcahy.io (LibreKey client)
+
 // Package client is the LibreKey key manager embedded in Libre products.
 // It loads and verifies the machine's license file offline, works out
 // whether the product may keep receiving new work (valid, in grace, expired),
