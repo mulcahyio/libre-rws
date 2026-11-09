@@ -19,6 +19,7 @@ func rec(n int) Record {
 // TestBackupWhileWriting takes a snapshot while another goroutine keeps
 // inserting, then checks the snapshot opens as a valid index with a
 // consistent instance count (issue #1).
+// Verifies: DCM-SRS-022
 func TestBackupWhileWriting(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
@@ -81,6 +82,7 @@ func TestBackupWhileWriting(t *testing.T) {
 	}
 }
 
+// Verifies: DCM-SRS-022
 func TestBackupRejectsEmptyDest(t *testing.T) {
 	idx, err := Open(context.Background(), "sqlite", "file:"+filepath.Join(t.TempDir(), "i.db"))
 	if err != nil {

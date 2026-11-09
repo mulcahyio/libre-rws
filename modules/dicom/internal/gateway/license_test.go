@@ -17,6 +17,7 @@ import (
 // When the license gate says no, new studies are refused with "out of
 // resources" (the modality keeps them and retries) while existing studies
 // stay searchable; when it says yes again, receiving resumes.
+// Verifies: DCM-SRS-052
 func TestReceiveGate(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

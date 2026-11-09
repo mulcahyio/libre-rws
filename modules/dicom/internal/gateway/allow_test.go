@@ -17,6 +17,7 @@ import (
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/events"
 )
 
+// Verifies: DCM-SRS-015
 func TestParseAllowRule(t *testing.T) {
 	for _, bad := range []string{"", "@1.2.3.4", "WAY_TOO_LONG_AE_TITLE", "CT@not-an-ip", "CT@10.0.0.0/99"} {
 		if _, err := parseAllowRule(bad); err == nil {
@@ -66,6 +67,7 @@ func dialAs(ctx context.Context, addr, calling string) (*ae.Association, error) 
 // TestAllowListEndToEnd: allowed peers associate, others get A-ASSOCIATE-RJ,
 // list changes apply to new associations without a restart, and the calling
 // AE is recorded as the source of stored instances.
+// Verifies: DCM-SRS-015, DCM-SRS-017
 func TestAllowListEndToEnd(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

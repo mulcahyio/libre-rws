@@ -26,6 +26,7 @@ func (f *fakeTarget) SetAllowedAEs(a []string) error {
 	return nil
 }
 
+// Verifies: DCM-SRS-016
 func TestReloadAppliesLiveSettings(t *testing.T) {
 	t.Setenv("LIBRE_DCM_REMOTE_AES", "ENVVIEW=10.0.0.9:104")
 	t.Setenv("LIBRE_DCM_ALLOWED_AES", "")

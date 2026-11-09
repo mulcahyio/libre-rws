@@ -1,0 +1,20 @@
+name: Change request
+description: A change to existing behaviour, design, dependency, build or documentation
+labels: ["type:change"]
+body:
+  - type: textarea
+    id: change
+    attributes: {label: Proposed change and reason}
+    validations: {required: true}
+  - type: textarea
+    id: affected
+    attributes: {label: Affected items, description: "Requirement IDs, modules, documents, dependencies, installer, labeling"}
+    validations: {required: true}
+  - type: textarea
+    id: risk
+    attributes: {label: Risk and security impact}
+    validations: {required: true}
+  - type: textarea
+    id: verification
+    attributes: {label: How the change will be verified}
+    validations: {required: true}

@@ -42,6 +42,7 @@ func ev(id string) *OutboxEvent {
 	return &OutboxEvent{MsgID: id, Subject: "libre.dcm.instance.stored", Payload: []byte(`{"id":"` + id + `"}`)}
 }
 
+// Verifies: DCM-SRS-030
 func TestOutboxLifecycle(t *testing.T) {
 	for name, idx := range openTestIndexes(t) {
 		t.Run(name, func(t *testing.T) {
@@ -95,6 +96,7 @@ func TestOutboxLifecycle(t *testing.T) {
 
 // TestOutboxConcurrentClaims checks that parallel claimers (several nodes on
 // one shared index) never receive the same event twice.
+// Verifies: DCM-SRS-030
 func TestOutboxConcurrentClaims(t *testing.T) {
 	for name, idx := range openTestIndexes(t) {
 		t.Run(name, func(t *testing.T) {

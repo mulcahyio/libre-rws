@@ -41,6 +41,7 @@ func (f *flakyPub) published() []string {
 
 // TestRelaySurvivesBusOutage: events stored while the bus is down are
 // published exactly once, after it comes back.
+// Verifies: DCM-SRS-030
 func TestRelaySurvivesBusOutage(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -94,6 +95,7 @@ func TestRelaySurvivesBusOutage(t *testing.T) {
 	}
 }
 
+// Verifies: DCM-SRS-030
 func TestBackoff(t *testing.T) {
 	r := &Relay{MaxDelay: 10 * time.Second}
 	for attempts, want := range map[int]time.Duration{1: time.Second, 2: 2 * time.Second, 4: 8 * time.Second, 9: 10 * time.Second} {

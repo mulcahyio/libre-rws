@@ -12,6 +12,7 @@ type testCfg struct {
 	Count int      `yaml:"count" env:"T_COUNT"`
 }
 
+// Verifies: DCM-SRS-050
 func TestEnvOverridesAndEmptyIsUnset(t *testing.T) {
 	p := filepath.Join(t.TempDir(), "c.yaml")
 	if err := os.WriteFile(p, []byte("name: file\nlist: [a, b]\ncount: 3\n"), 0o600); err != nil {
@@ -41,6 +42,7 @@ type aliasCfg struct {
 	Level string `yaml:"level" env:"{P}LEVEL,OLD_LEVEL"`
 }
 
+// Verifies: DCM-SRS-051
 func TestLegacyNamesAndPrefix(t *testing.T) {
 	old := Prefix
 	Prefix = "LIBRE_DCM_"
