@@ -120,11 +120,11 @@ records and QMS procedures live in this public repository; records that
 aren't tied to code (training, supplier contracts, signed release and
 design-review PDFs, regulatory correspondence, anything sensitive such as
 penetration-test reports or complaints with patient data) live in Google
-Drive (mulcahy.io until the manufacturer, Libre Systems, has its own
-Workspace), indexed from `docs/qms/records-index.md`.
+Drive (folder `LibreRWS/QMS`, owned by patrick@mulcahy.io until the
+manufacturer, Libre Systems, has its own Workspace), indexed from `docs/qms/records-index.md`.
 
 `master` is protected (pull request required, also for admins; no force
-pushes or deletions; conversations resolved) and `v*` release tags cannot be
+pushes or deletions; conversations resolved; the `verify` CI check must pass) and `v*` release tags cannot be
 moved or deleted. Required approvals are 0 while there is a single
 developer, because GitHub does not let an author approve their own pull
 request; this becomes 1 when a second reviewer joins. Design records are kept in this repository. Approval is a GitHub PR
@@ -138,4 +138,4 @@ the release record.
 
 - Name the roles: management representative, QA approver, independent reviewer.
 - ~~Decide on docs-as-code vs an eQMS~~ decided 2026-11-09: GitHub + Drive (§8).
-- ~~Enable branch protection~~ done 2026-11-09 (see §8); add required status checks once `qms.yml` is on `master`.
+- ~~Enable branch protection~~ done 2026-11-09 (see §8). The `verify` CI check (`qms.yml`) is a required status check on `master` since 2026-11-09.
