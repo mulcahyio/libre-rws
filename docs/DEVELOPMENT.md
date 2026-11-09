@@ -7,9 +7,9 @@ Libre DCM (DCM = DICOM, binary `LibreDCM`) is the DICOM module of **Libre RWS**
 |---|---|
 | **Developed by** | Patrick Mulcahy, Mulcahy.io |
 | **Contact** | dev@mulcahy.io |
-| **Module** | Libre DCM (`LibreDCM`) 0.1.1-beta.1 (first Libre RWS module) |
+| **Module** | LibreDCM 0.2.0-beta.1 (first Libre RWS module) |
 | **Language** | Go 1.26+ |
-| **Status** | Beta. Not for clinical use. Workstation container package added in 0.1.1-beta.1. See [CHANGELOG.md](../CHANGELOG.md) and [release notes](releases/v0.1.1-beta.1.md). |
+| **Status** | Beta. Not for clinical use. See [CHANGELOG.md](../CHANGELOG.md) and the [0.2.0-beta.1 release notes](releases/v0.2.0-beta.1.md). Some sections below describe 0.1.x and are kept as history. |
 | **Date** | October 2026 |
 
 ---

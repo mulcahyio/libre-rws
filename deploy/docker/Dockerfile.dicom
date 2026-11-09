@@ -6,10 +6,12 @@
 # Build from the repository root:
 #   docker build -f deploy/docker/Dockerfile.dicom --build-arg VERSION=0.2.0-beta.1 -t libre/dcm:0.2.0-beta.1 .
 
-ARG GO_VERSION=1.26
+ARG GO_VERSION=1.26.10
+# Base images are pinned by digest for reproducible release builds (QMS
+# release checklist). Update the digests deliberately, in a reviewed PR.
 
 # ---- build stage ------------------------------------------------------------
-FROM golang:${GO_VERSION}-bookworm AS build
+FROM golang:${GO_VERSION}-bookworm@sha256:5de7c99eb78ca5e515a4c340235d0955ec5964a5071c492c15503d7c267da473 AS build
 WORKDIR /src
 ENV CGO_ENABLED=0 GOFLAGS=-trimpath GOTOOLCHAIN=auto
 
@@ -37,7 +39,7 @@ RUN mkdir -p /out/var/lib/libredcm/blobs /out/etc/libredcm
 # ---- runtime stage ----------------------------------------------------------
 # distroless/base (not /static): the JPEG codec loads native libraries through
 # purego, so the binary needs the glibc loader even though CGO is off.
-FROM gcr.io/distroless/base-debian12:nonroot
+FROM gcr.io/distroless/base-debian12:nonroot@sha256:7f0c72cd138b442ae0deeb69c08b1acf5525439ba251a49ad93c320a061567e5
 ARG VERSION=dev
 LABEL org.opencontainers.image.title="LibreDCM" \
       org.opencontainers.image.description="Libre DCM - DIMSE gateway (C-ECHO, C-STORE, C-FIND, C-MOVE, C-GET)" \

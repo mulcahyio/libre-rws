@@ -12,3 +12,4 @@ baseline build and written up in a signed system test report.
 - DCM-SRS-014: DCMTK echoscu with a wrong called AE title, rejected "Called AE Title Not Recognized" (pre-QMS run 2026-10-11)
 - DCM-SRS-055: 3-node cluster (PostgreSQL + NATS + HAProxy) conformance and node-failure test (pre-QMS run 2026-11-07)
 - DCM-SRS-056: workstation installer end-to-end on Linux (2026-10-11, 2026-11-07) and Windows upgrade on Surface Pro 7 (2026-11-07); macOS not tested
+- DCM-SRS-043: Windows (Surface Pro 7) self-signed and own-file TLS: DICOM TLS store/find worked and plain DICOM was refused (pre-QMS run 2026-11-07, CHANGELOG "Tested (2026-11-07)")

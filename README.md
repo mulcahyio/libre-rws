@@ -8,7 +8,7 @@
 Full design and developer documentation: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 Planned changes for clustering and storage: [BACKLOG.md](BACKLOG.md)
 
-**Current release:** Libre DCM (`LibreDCM`) **0.1.1-beta.1** (beta, not for clinical use). See the [release notes](docs/releases/v0.1.1-beta.1.md) and [CHANGELOG.md](CHANGELOG.md).
+**Current release:** LibreDCM **0.2.0-beta.1** (beta, not for clinical use). See the [release notes](docs/releases/v0.2.0-beta.1.md), the [release record](docs/releases/v0.2.0-beta.1-record.md) and [CHANGELOG.md](CHANGELOG.md).
 
 Modular, container-native platform, written in Go. Each module is an
 independent binary and container image that can run on its own or as part of

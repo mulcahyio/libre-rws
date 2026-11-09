@@ -1,0 +1,9 @@
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/cmd/libredcm	0.005s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/blob	0.010s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm	0.003s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/events	0.264s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway	0.098s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/index	0.822s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/licensing	0.003s
+ok  	github.com/mulcahyio/libre-rws/platform/config	0.003s
+ok  	github.com/mulcahyio/libre-rws/platform/runtime	0.005s

@@ -1,0 +1,42 @@
+commit 053792837dbbc210e825c0f1766ef539ba787684  branch release/v0.2.0-beta.1  date 2026-11-09T17:44:54-05:00
+go version go1.26.10 linux/amd64
+== go vet (default + official tags)
+   -> PASS
+== go test -race (all packages)
+   -> PASS (9 packages ok)
+== go test -tags official
+   -> PASS
+== PostgreSQL index suites
+   -> PASS
+== S3 suites (SeaweedFS)
+   -> PASS
+== govulncheck
+   -> exit 0: No vulnerabilities found. Your code is affected by 0 vulnerabilities. 
+== SBOM
+   -> PASS (49 components)
+== image build (source build)
+   -> PASS image id sha256:7317c9a75fdf02f80511f1b61889363ff55c3649c8f1b6e3654bfcfc136ffaf1
+== image build (official build)
+   -> PASS image id sha256:b9c7f6f7c43a0592a486a82f55d354828d5799bc57f6caef5a11666d78d2357b
+== DCMTK conformance (source build container)
+   -> container healthy
+   -> PASS: 11 pass lines
+   -> /version: Unable to find image 'curlimages/curl:latest' locally
+latest: Pulling from curlimages/curl
+76790e7f0590: Pulling fs layer
+76790e7f0590: Download complete
+76790e7f0590: Pull complete
+Digest: sha256:3fb7e13e5d179a845c97d78204f3f1064d1907037f26a3ebf91710571151fd93
+Status: Downloaded newer image for curlimages/curl:latest
+{"module":"LibreDCM","node":"8f7e74c9db29","uptime_seconds":8,"version":"0.2.0-beta.1"}
+== Official build, NO licence: DICOM must keep working (DCM-SRS-058..061)
+   -> container healthy without a licence
+   -> PASS: C-ECHO/STORE/FIND/MOVE all work while unlicensed
+   -> /version: {"license_ack_required":true,"license_message":"no license installed; activate with a license key or a license file","license_state":"missing","licensed":false,"module":"LibreDCM","node":"1b4bb93a7dee","uptime_seconds":7,"version":"0.2.0-beta.1"}
+   -> unlicensed error lines: 1
+   -> reload blocked lines after SIGHUP: 1
+   -> ack: acknowledged by Hermes release test at 2026-11-09T22:46:44Z (license state: missing); reminders and the configuration block resume after 2026-11-10T22:46:44Z unless the license is renewed
+   -> audit license_acknowledged lines: 1
+   -> configuration reloaded lines after ack: 1
+   -> /version after ack: {"license_ack_required":false,"license_message":"no license installed; activate with a license key or a license file","license_state":"missing","licensed":false,"module":"LibreDCM","node":"1b4bb93a7dee","uptime_seconds":77,"version":"0.2.0-beta.1"}
+== done
