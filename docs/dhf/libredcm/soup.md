@@ -17,11 +17,12 @@ Go language version: `1.26.0`. Runtime image: see `deploy/Dockerfile` (pin by di
 | `github.com/mulcahyio/librekey` | v0.0.0 | Apache-2.0 | **Own software item** (replaced by `./third_party/librekey`; verified as LibreDCM code, not SOUP) | Licence verification for official builds (standard library only) | Wrong licence state → C-STORE refused (HAZ-010) | Own code; verified with LibreDCM | Maintained by Mulcahy.io |
 | `github.com/nats-io/nats.go` | v1.54.0 | Apache-2.0 | SOUP | Event bus client (JetStream publish) | Publish fault → delayed events (HAZ-006); outbox prevents loss | govulncheck 2026-11-09: none called | Active; maintained by Synadia/CNCF |
 | `github.com/prometheus/client_golang` | v1.24.1 | Apache-2.0 | SOUP | Metrics exposition | Fault → missing monitoring signal (HAZ-004 detection) | govulncheck 2026-11-09: none called | Active; CNCF project |
+| `github.com/prometheus/client_model` | v0.6.2 | Apache-2.0 | SOUP | Prometheus metric data model; used directly only by tests (reading gauge values) | None at runtime beyond client_golang's own use; test-only direct use | govulncheck 2026-11-09: none. Was already an indirect dependency at the same version | Active; Prometheus/CNCF project |
 | `golang.org/x/sync` | v0.23.0 | BSD-3-Clause | SOUP | errgroup/semaphore concurrency helpers | Concurrency fault → failed association handling (HAZ-004) | govulncheck 2026-11-09: none | Go project, follows Go support policy |
 | `gopkg.in/yaml.v3` | v3.0.1 | Apache-2.0 | SOUP | Configuration file parsing | Mis-parse → wrong configuration (HAZ-005) | govulncheck 2026-11-09: none. Upstream repository archived (2025); plan replacement or fork | **Unmaintained upstream**: action needed |
 | `modernc.org/sqlite` | v1.60.1 | Apache-2.0 | SOUP | Embedded SQLite index (single node) | Fault → index corruption or wrong results (HAZ-001, HAZ-002) | govulncheck 2026-11-09: none. Pure-Go transpilation of SQLite; track upstream SQLite CVEs | Active, single primary maintainer |
 
-## Indirect dependencies (40)
+## Indirect dependencies (39)
 
 Covered through the direct dependency that pulls them in, the SBOM and the vulnerability scan.
 
@@ -50,7 +51,6 @@ Covered through the direct dependency that pulls them in, the SBOM and the vulne
 | github.com/nats-io/nuid | v1.0.1 | Apache-2.0 |
 | github.com/ncruces/go-strftime | v1.0.0 | MIT |
 | github.com/philhofer/fwd | v1.2.0 | MIT |
-| github.com/prometheus/client_model | v0.6.2 | Apache-2.0 |
 | github.com/prometheus/common | v0.70.1 | Apache-2.0 |
 | github.com/prometheus/procfs | v0.21.1 | Apache-2.0 |
 | github.com/remyoudompheng/bigfft | v0.0.0-20230129092748-24d4a6f8daec | BSD-3-Clause |

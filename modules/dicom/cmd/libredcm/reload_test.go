@@ -62,3 +62,26 @@ func TestReloadAppliesLiveSettings(t *testing.T) {
 		t.Fatal("settings changed after a failed reload")
 	}
 }
+
+// An unlicensed node that no administrator has acknowledged keeps its
+// running settings on SIGHUP; once acknowledged, reloads work again.
+// Verifies: DCM-SRS-060
+func TestReloadBlockedUntilLicenseAcknowledged(t *testing.T) {
+	t.Setenv("LIBRE_DCM_REMOTE_AES", "")
+	t.Setenv("LIBRE_DCM_ALLOWED_AES", "")
+	p := filepath.Join(t.TempDir(), "config.yaml")
+	if err := os.WriteFile(p, []byte("dicom:\n  allowed_aes: [CT1]\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	acked := false
+	ft := &fakeTarget{}
+	r := &reloader{path: p, gw: ft, log: slog.New(slog.NewTextHandler(io.Discard, nil)),
+		gate: func() (bool, string) { return acked, "unlicensed" }}
+	if err := r.reload(); err != errReloadBlocked || ft.allowed != nil {
+		t.Fatalf("reload while unacknowledged: err=%v allowed=%v", err, ft.allowed)
+	}
+	acked = true
+	if err := r.reload(); err != nil || len(ft.allowed) != 1 {
+		t.Fatalf("reload after acknowledgement: err=%v allowed=%v", err, ft.allowed)
+	}
+}

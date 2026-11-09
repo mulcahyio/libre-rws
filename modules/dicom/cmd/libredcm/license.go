@@ -17,7 +17,7 @@ func parseBuildDate() time.Time {
 }
 
 // licenseCommand implements the -license-* flags used by the installer.
-func licenseCommand(cfgPath string, status, request bool, activateKey, installFile, key, site string) int {
+func licenseCommand(cfgPath string, status, request bool, activateKey, installFile, key, site, ackBy string) int {
 	if !licensing.Enforced() {
 		fmt.Println("source build: no license needed")
 		return 3
@@ -35,6 +35,15 @@ func licenseCommand(cfgPath string, status, request bool, activateKey, installFi
 	}
 	m := lic.Manager()
 	switch {
+	case ackBy != "":
+		a, err := lic.Acknowledge(ackBy)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "LibreDCM: license-ack:", err)
+			return 1
+		}
+		fmt.Printf("acknowledged by %s at %s (license state: %s); reminders and the configuration block resume after %s unless the license is renewed\n",
+			a.By, a.At.Format(time.RFC3339), a.State, a.At.Add(licensing.AckValidity).Format(time.RFC3339))
+		return 0
 	case request:
 		fmt.Print(m.Request(key, site).Encode())
 		return 0
@@ -67,7 +76,11 @@ func licenseCommand(cfgPath string, status, request bool, activateKey, installFi
 	if st.License != nil {
 		fmt.Printf("customer: %s\nlicense key: %s\nterm: %s\n", st.License.Customer, st.License.Key, st.License.Term)
 	}
-	if st.CanReceive() {
+	fmt.Println("DICOM services: running (licensing never stops them)")
+	if lic.AckRequired() {
+		fmt.Println("administrator acknowledgement required: LibreDCM -license-ack NAME")
+	}
+	if licensing.Licensed(st) {
 		return 0
 	}
 	return 2

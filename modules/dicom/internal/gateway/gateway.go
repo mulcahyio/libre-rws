@@ -99,15 +99,7 @@ type Gateway struct {
 	allowed []allowRule // empty: any calling AE may associate (guarded by mu)
 
 	outbox interface{ Nudge() } // nil: events are published directly (no outbox)
-
-	receiveGate func() (bool, string) // nil: always receive (source builds)
 }
-
-// UseReceiveGate makes C-STORE ask gate before accepting a new instance
-// (license check). When it says no, C-STORE is refused with "out of
-// resources" so the sender keeps the instance and retries; queries and
-// retrieves are not affected. Call before Run.
-func (g *Gateway) UseReceiveGate(gate func() (bool, string)) { g.receiveGate = gate }
 
 // UseOutbox makes C-STORE write its event to the index outbox in the same
 // transaction as the instance; relay publishes it. Call before Run.

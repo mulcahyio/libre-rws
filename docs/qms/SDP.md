@@ -17,8 +17,10 @@ and *Libre RWS FDA Compliance Plan*.
 
 ## 2. Safety classification
 
-Proposed **IEC 62304 software safety class B** for the system and for
-LibreDCM: a failure could lead to non-serious injury (for example a delayed
+**IEC 62304 software safety class B** for LibreDCM (accepted by Patrick
+Mulcahy 2026-11-09), with class-C depth of detailed design and unit
+verification for the units that carry the main risk controls (store path,
+index/patient association, pixel-data integrity). Rationale: a failure could lead to non-serious injury (for example a delayed
 or wrong diagnosis caused by missing, late or misattributed images), with the
 interpreting physician as an external risk control. The classification and
 its rationale are recorded in each module's risk management file and must be
@@ -113,7 +115,19 @@ produce or check QMS records are validated for their intended use (ISO 13485
 
 ## 8. Records and signatures
 
-Design records are kept in this repository. Approval is a GitHub PR
+Decided 2026-11-09 (Patrick Mulcahy): **GitHub + Google Drive split.** Design
+records and QMS procedures live in this public repository; records that
+aren't tied to code (training, supplier contracts, signed release and
+design-review PDFs, regulatory correspondence, anything sensitive such as
+penetration-test reports or complaints with patient data) live in Google
+Drive (mulcahy.io until the manufacturer, Libre Systems, has its own
+Workspace), indexed from `docs/qms/records-index.md`.
+
+`master` is protected (pull request required, also for admins; no force
+pushes or deletions; conversations resolved) and `v*` release tags cannot be
+moved or deleted. Required approvals are 0 while there is a single
+developer, because GitHub does not let an author approve their own pull
+request; this becomes 1 when a second reviewer joins. Design records are kept in this repository. Approval is a GitHub PR
 approval by an authenticated user, plus signed release tags. Before these
 count as electronic signatures under 21 CFR Part 11, the setup (branch
 protection, required reviews, signed commits, audit log retention) must be
@@ -123,5 +137,5 @@ the release record.
 ## 9. Open items before approval
 
 - Name the roles: management representative, QA approver, independent reviewer.
-- Decide on docs-as-code vs an eQMS (affects §8).
-- Enable branch protection and required reviews on GitHub.
+- ~~Decide on docs-as-code vs an eQMS~~ decided 2026-11-09: GitHub + Drive (§8).
+- ~~Enable branch protection~~ done 2026-11-09 (see §8); add required status checks once `qms.yml` is on `master`.
