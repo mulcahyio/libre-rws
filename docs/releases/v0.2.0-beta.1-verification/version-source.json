@@ -1,0 +1,8 @@
+Unable to find image 'curlimages/curl:latest' locally
+latest: Pulling from curlimages/curl
+76790e7f0590: Pulling fs layer
+76790e7f0590: Download complete
+76790e7f0590: Pull complete
+Digest: sha256:3fb7e13e5d179a845c97d78204f3f1064d1907037f26a3ebf91710571151fd93
+Status: Downloaded newer image for curlimages/curl:latest
+{"module":"LibreDCM","node":"8f7e74c9db29","uptime_seconds":8,"version":"0.2.0-beta.1"}

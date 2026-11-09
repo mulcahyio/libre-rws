@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "serialNumber": "urn:uuid:4649f77f-6ce6-4d5d-9105-97caffc795d4",
+  "serialNumber": "urn:uuid:d8a42f43-368a-4bd3-82e1-a979a34d8a4b",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-11-09T13:41:53Z",
+    "timestamp": "2026-11-09T22:46:18Z",
     "tools": [
       {
         "vendor": "CycloneDX",
@@ -14,23 +14,23 @@
         "hashes": [
           {
             "alg": "MD5",
-            "content": "7ca0d1eae612e7a476b6c7e07f13171c"
+            "content": "2595f9cbdbae4055bbb51a74bd41a1f7"
           },
           {
             "alg": "SHA-1",
-            "content": "1387ad400875596791dfd3213cce7cf00fe3633e"
+            "content": "4f7ca45b0a1bb5d4ee38c6245ae85371af1b6c68"
           },
           {
             "alg": "SHA-256",
-            "content": "a34f21c10421c5194e3dfbac84b606318b822302640f7cba4faa379c96823d47"
+            "content": "749410f4626434fe375b0f6149095698f76abd4814adcc78e2946d007ccd843e"
           },
           {
             "alg": "SHA-384",
-            "content": "946ee8f1b28c4e1cf1109ef4fd399106c68f432454fa35cb32583ccbc73605d91c6e7c80ebceb59cf51f1e67f4132b7b"
+            "content": "17aba28ccfbbcf0712cf72be577326473d6860bfc2142f0e233973d9083e8af6814e244f44ad1a6a28d2262df0cb408b"
           },
           {
             "alg": "SHA-512",
-            "content": "1ac8a2c6a4aaef67439b34def9a8d35e3f28f52bff91d999d25c6540d48414bdf7e3706cc47eaae7e9232c648500c11b95c4534df816f097de81261988a8c78c"
+            "content": "76aee8211270f76d2283eba1c9dbffe89e02b5a07b7a4ede05eb93e2d707161de0cb49d1b67d6a2b4a3fe94be306eb62249a8899317e1570c717e12697b6fef8"
           }
         ],
         "externalReferences": [
@@ -1427,6 +1427,7 @@
         "pkg:golang/github.com/mulcahyio/librekey@v0.1.1-beta.1.0.20261011170911-1759192ef121?type=module",
         "pkg:golang/github.com/nats-io/nats.go@v1.54.0?type=module",
         "pkg:golang/github.com/prometheus/client_golang@v1.24.1?type=module",
+        "pkg:golang/github.com/prometheus/client_model@v0.6.2?type=module",
         "pkg:golang/golang.org/x/sync@v0.23.0?type=module",
         "pkg:golang/gopkg.in/yaml.v3@v3.0.1?type=module",
         "pkg:golang/modernc.org/sqlite@v1.60.1?type=module"

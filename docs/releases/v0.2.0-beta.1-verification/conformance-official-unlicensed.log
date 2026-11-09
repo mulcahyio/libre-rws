@@ -1,0 +1,17 @@
+CT_small.dcm
+JPEG2000.dcm
+MR_small_RLE.dcm
+MR_small_jp2klossless.dcm
+MR_small_jpeg_ls_lossless.dcm
+SC_rgb_jpeg_dcmtk.dcm
+PASS  C-ECHO
+PASS  C-STORE CT_small.dcm (LittleEndianExplicit)
+PASS  C-STORE JPEG2000.dcm (JPEG2000)
+PASS  C-STORE MR_small_RLE.dcm (RLELossless)
+PASS  C-STORE MR_small_jp2klossless.dcm (JPEG2000LosslessOnly)
+PASS  C-STORE MR_small_jpeg_ls_lossless.dcm (JPEGLSLossless)
+PASS  C-STORE SC_rgb_jpeg_dcmtk.dcm (JPEGBaseline)
+PASS  C-FIND STUDY (4 studies)
+PASS  C-MOVE (4 instances received)
+PASS  compressed instances retrieved byte-identical
+All checks passed.

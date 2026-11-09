@@ -9,7 +9,16 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 
 ## Unreleased
 
+_Nothing yet._
+
+## LibreDCM 0.2.0-beta.1 (2026-11-09)
+
+First release made under the QMS process (docs/qms/release-checklist.md).
+Release record: [docs/releases/v0.2.0-beta.1-record.md](docs/releases/v0.2.0-beta.1-record.md).
+
 ### Changed
+- Release builds pin Go 1.26.10 and the golang/distroless base images by
+  digest (`deploy/docker/Dockerfile.dicom`).
 - Product renamed: RWS is now **Libre RWS**, the DICOM module (rws-dicom) is
   **Libre DCM**, and the planned management console is **Libre WT** (Libre
   Watch Tower). Tagline: "Open and extensible." The documentation uses the
@@ -17,10 +26,8 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 - The GitHub repository moved from `StoreHouseAdmin/RWS` to
   [`mulcahyio/libre-rws`](https://github.com/mulcahyio/libre-rws). GitHub
   redirects the old URLs; update your `git remote` to the new one.
-- Code identifiers are unchanged in this release: the `rws-dicom` binary and
-  installer scripts, the `rws/dicom` image, `RWS_*` environment variables,
-  `rws.dicom.*` event subjects and `rws_*` metrics. Existing installs keep
-  working without changes.
+- Code identifiers were renamed later in this release too (see "Code
+  identifiers renamed" below), with backward compatibility.
 
 ### Added
 - `-backup PATH` flag: writes a consistent snapshot of the SQLite index while
@@ -174,6 +181,28 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
   a key wrote the request file and stopped as designed.
 - Not tested: completing the offline activation on Windows; the Windows question prompts (needs a signed-in desktop
   session) and S3 on Windows.
+
+### Tested (2026-11-09, release verification of v0.2.0-beta.1)
+Run with `scripts/qms/release-verify.sh` on the release branch (Go 1.26.10,
+pinned base images); logs in
+[docs/releases/v0.2.0-beta.1-verification/](docs/releases/v0.2.0-beta.1-verification/).
+- `go vet` (default and `official` tags), `go test -race` (9 packages),
+  `go test -tags official`, PostgreSQL index suites, S3 suites (SeaweedFS):
+  all pass.
+- govulncheck: no vulnerabilities found (GO-2026-6809 fixed by Go 1.26.10).
+- SBOM: 49 components.
+- Source and official container images built; DCMTK conformance against the
+  source image: C-ECHO, C-STORE (Explicit VR LE, JPEG Baseline, JPEG 2000
+  lossless and lossy, RLE, JPEG-LS), C-FIND, C-MOVE, compressed pixel data
+  byte-identical. `/version` reports `0.2.0-beta.1`.
+- Official build **with no licence**: container healthy, the same
+  conformance run passes (DICOM keeps working), one "unlicensed" error
+  logged, SIGHUP reload blocked, `/version` shows `license_state: missing`
+  and `license_ack_required: true`; after `LibreDCM -license-ack` the audit
+  record appears within a minute, reload works and `license_ack_required`
+  turns false.
+- Not tested in this release run: Windows (`LibreDCM.ps1 license-ack`), the
+  cluster topology (last run 2026-11-07, pre-QMS), installer upgrade.
 
 ## rws-dicom 0.1.1-beta.1 (2026-10-11)
 
