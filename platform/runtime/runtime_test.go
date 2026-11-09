@@ -91,3 +91,16 @@ func TestAdminTokenFile(t *testing.T) {
 		t.Errorf("missing token file served /version: %d", code)
 	}
 }
+
+// Module information (LibreDCM: license state) appears in /version.
+// Verifies: DCM-SRS-057, DCM-SRS-060
+func TestVersionInfo(t *testing.T) {
+	r := newTestRuntime(DefaultAdmin())
+	r.AddVersionInfo(func() map[string]any { return map[string]any{"license_state": "expired", "licensed": false} })
+	_, body := get(t, r.adminMux(), "/version", "")
+	for _, want := range []string{`"version":"1.0"`, `"license_state":"expired"`, `"licensed":false`} {
+		if !strings.Contains(body, want) {
+			t.Errorf("/version missing %s: %s", want, body)
+		}
+	}
+}

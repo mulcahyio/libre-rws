@@ -24,7 +24,7 @@ and an SBOM (`generated/sbom.cdx.json`).
 | Event bus | NATS JetStream | NATS (TLS capable) | Patient ID omission option | NATS TLS/auth not configured by installer |
 | Index | SQLite file / PostgreSQL | local / PostgreSQL wire | — | PostgreSQL TLS and credentials guidance missing |
 | Object store | S3 / compatible | HTTPS | Content-MD5 integrity | Encryption at rest is the store's job; document it |
-| Licensing | LibreKey server | HTTPS (online) or files (offline) | Ed25519-signed licences | Lock-out behaviour is a safety hazard (HAZ-010) |
+| Licensing | LibreKey server | HTTPS (online) or files (offline) | Ed25519-signed licences; licensing cannot affect DICOM services (DCM-SRS-058) | Acknowledgement file is writable by anyone with container/data-volume access (audit-logged, DCM-SRS-061) |
 | Install/update | Docker images, scripts | HTTPS pulls | — | Images and releases not signed; base image not pinned by digest |
 
 ## 3. Threat model (STRIDE, initial)

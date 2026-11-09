@@ -23,7 +23,7 @@ pre-QMS history.
 | SOUP | List + evaluation | `soup.md` generated, 10 direct items evaluated in draft | Low | Review; fix yaml.v3 (archived upstream) |
 | Traceability | Requirement ↔ test ↔ risk control | 31 of 35 active requirements traced to tests (31 test functions tagged) | Medium | Tests for DCM-SRS-043, -053, -054, -057 |
 | Verification records | Signed reports against tagged builds | CI-less; pre-QMS test runs recorded in vault and CHANGELOG | High | CI (this branch) + signed system test report at baseline |
-| Configuration management | Controlled branches, tags, reproducible builds | Git, tags; no branch protection; base image not pinned | Medium | Branch protection, digest pinning |
+| Configuration management | Controlled branches, tags, reproducible builds | Git, tags; repo public since 2026-11-09 with `master` protection and protected `v*` tags; base image not pinned | Low | Digest pinning; required status checks |
 | Problem resolution | Anomaly process and list | GitHub issues, no templates | Low | Templates (this branch), anomaly list per release |
 | Cybersecurity | Threat model, SBOM, testing, CVD | Seed `cybersecurity.md`, SBOM generated, `SECURITY.md` draft; 1 reachable stdlib vulnerability | High | See cybersecurity.md §5; build with Go ≥ 1.26.10 now |
 | Labeling | IFU, DICOM Conformance Statement, security notes | INSTALL.md only | High | DICOM Conformance Statement (PS3.2), IFU, MDS2 |
@@ -34,8 +34,8 @@ pre-QMS history.
 
 ## Safety-relevant findings to act on now
 
-1. **HAZ-010 licence lock-out:** official builds refuse C-STORE after licence
-   expiry plus grace. Decide before any clinical use (decision D7).
+1. ~~**HAZ-010 licence lock-out**~~: fixed by issue #5 (2026-11-09):
+   licensing can no longer affect DICOM services (DCM-SRS-058…061).
 2. **GO-2026-6809** in the Go standard library is reachable: rebuild with Go
    1.26.10 or later.
 3. **No storage commitment** (IHE RAD-10): modalities cannot confirm that

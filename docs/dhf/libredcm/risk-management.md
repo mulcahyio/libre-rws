@@ -27,7 +27,7 @@
   failure = 1 per IEC 62304); estimation focuses on the hazardous situation.
 - **Security risks** are assessed with the threat model in
   `cybersecurity.md` and moved into this table when they can lead to harm.
-- **Software safety class:** **B**. Rationale: the worst credible outcome of a
+- **Software safety class:** **B** (accepted by Patrick Mulcahy 2026-11-09, with class-C depth of detailed design and unit verification for the units carrying HAZ-001, HAZ-002 and HAZ-003 controls: store path, index/patient association, pixel-data integrity). Rationale: the worst credible outcome of a
   LibreDCM failure is a delayed or wrong diagnosis caused by missing,
   late, misattributed or altered images; independent external controls
   exist (modality-side retention, radiologist review of image content and
@@ -47,7 +47,7 @@
 | HAZ-007 | Unauthorized system stores or retrieves images | PHI disclosure; wrong-patient images injected into the archive | No peer authentication; spoofed AE title | DCM-SRS-014, -015, -016, -044 (Draft) |
 | HAZ-008 | Accesses to patient images cannot be traced | Undetected breach; HIPAA/accountability failure | Missing or untrustworthy audit records, clock drift | DCM-SRS-017, -040, -045 (Draft); NTP time client (planned) |
 | HAZ-009 | Patient data disclosed in transit, in logs, on the bus or via the admin API | Privacy harm | Plain-text DICOM/HTTP, open admin endpoints, PHI in events | DCM-SRS-032, -041, -042, -043, -044 (Draft) |
-| HAZ-010 | **Licence lock-out:** after licence expiry plus grace, C-STORE is refused; modalities cannot archive new studies | Delayed diagnosis; repeat exams if modality storage overflows | Expired or missing licence, wrong machine after hardware change, clock problems | DCM-SRS-052 (current behaviour is itself the cause). **Open:** recommend that clinical builds never refuse storage or retrieval; enforce licensing through warnings and blocked upgrades/support instead (decision D7 in the compliance plan) |
+| HAZ-010 | **Licence lock-out:** a licence problem stops or interrupts image flow, so modalities cannot archive new studies or readers cannot retrieve them | Delayed diagnosis; repeat exams if modality storage overflows | Expired or missing licence, wrong machine after hardware change, clock problems | **Controlled (issue #5, 2026-11-09):** DCM-SRS-058 (no licence state can affect DICOM services; the gateway has no licensing dependency, enforced by a test); the inconvenience goes to administrators instead (DCM-SRS-059–061: warnings, hourly errors, configuration reloads blocked until acknowledged). DCM-SRS-052 (C-STORE refusal) retired. Residual: blocked config reloads could delay adding a new modality; acknowledgement is one command and needs no licence |
 | HAZ-011 | Stale or wrong demographics after patient update/merge in the RIS | Images filed under the wrong patient; wrong-patient diagnosis | No HL7 ADT handling yet | Planned IHE PIR support (RAD-12); until then, labeling must state that LibreDCM does not reconcile demographics |
 | HAZ-012 | Vulnerable SOUP exploited (e.g. Go standard library, x/net, x/crypto) | PHI disclosure, archive unavailable (ransomware) | Known CVEs in dependencies | govulncheck in CI, SBOM, quarterly review, patch policy (SECURITY.md) |
 

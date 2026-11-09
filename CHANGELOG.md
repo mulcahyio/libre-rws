@@ -75,13 +75,28 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 - `BACKLOG.md`: the clustering change backlog (storage abstraction, shared
   catalog, eviction, replication, role-based nodes).
 
+### Changed (licensing, safety)
+- **Licensing never stops DICOM services** (issue #5, risk control for
+  HAZ-010, decided 2026-11-09). Previously an official build refused C-STORE
+  once the license had expired and the 30-day grace period was over; in
+  clinical use that would stop modalities from archiving studies. Now all
+  DICOM services run in every license state. Instead:
+  - the grace period logs a daily warning;
+  - an unlicensed node logs an error every hour, blocks configuration reloads
+    (SIGHUP) and reports the state in `/version` and the new metric
+    `libre_dcm_license_ack_required`, until an administrator runs
+    `LibreDCM -license-ack NAME` (`LibreDCM.sh` / `LibreDCM.ps1 license-ack NAME`);
+  - the acknowledgement is written to the audit log and lasts 24 hours.
+  `libre_dcm_license_state` 2 now means "unlicensed" (was "not receiving").
+  `-license-status` exit codes: 0 licensed, 2 unlicensed, 3 no license needed.
+  The gateway no longer has a receive gate (`UseReceiveGate` removed).
+
 ### Added (licensing)
 - Libre RWS and LibreDCM are licensed under Apache-2.0 (`LICENSE`, `NOTICE`; decided 2026-11-08).
 - **LibreKey licensing for official builds** (decided 2026-11-07): official
   builds (`BUILD_TAGS=official`) embed the LibreKey public key and need a
   machine-locked license (annual or perpetual). After expiry there is a
-  30-day grace period; then C-STORE is refused with *out of resources* while
-  C-ECHO / C-FIND / C-MOVE / C-GET keep serving existing studies. Source
+  30-day grace period (what happens after it: see "Changed (licensing, safety)" above). Source
   builds need no license. New flags `-license-status`, `-license-request`,
   `-license-activate`, `-license-install`; the installer activates online
   (license key) or offline (request file); metrics `libre_dcm_license_state`
