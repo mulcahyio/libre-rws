@@ -1,4 +1,4 @@
-// Package gateway is the DIMSE front door of the RWS DICOM module: it accepts
+// Package gateway is the DIMSE front door of the Libre DCM module: it accepts
 // associations and serves Verification (C-ECHO), Storage (C-STORE) and
 // Query/Retrieve (C-FIND, C-MOVE, C-GET).
 //
@@ -20,10 +20,10 @@ import (
 	"github.com/godicom-dev/gonetdicom/pdu"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"rws/modules/dicom/internal/blob"
-	"rws/modules/dicom/internal/dcm"
-	"rws/modules/dicom/internal/events"
-	"rws/modules/dicom/internal/index"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/blob"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/events"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
 )
 
 // RemoteAE is a peer this node may send to (C-MOVE destinations).
@@ -35,25 +35,43 @@ type RemoteAE struct {
 
 // Config is the DIMSE listener configuration.
 type Config struct {
-	AETitle               string              `yaml:"ae_title" env:"RWS_DICOM_AE_TITLE"`
-	Listen                string              `yaml:"listen" env:"RWS_DICOM_LISTEN"`
-	AllowAnyCalledAETitle bool                `yaml:"allow_any_called_ae_title" env:"RWS_DICOM_ALLOW_ANY_CALLED_AE"`
-	AcceptAnySOPClass     bool                `yaml:"accept_any_sop_class" env:"RWS_DICOM_ACCEPT_ANY_SOP_CLASS"`
-	MaxAssociations       int                 `yaml:"max_associations" env:"RWS_DICOM_MAX_ASSOCIATIONS"`
-	MaxPDULength          uint32              `yaml:"max_pdu_length" env:"RWS_DICOM_MAX_PDU"`
-	HandshakeTimeout      time.Duration       `yaml:"handshake_timeout" env:"RWS_DICOM_HANDSHAKE_TIMEOUT"`
-	IdleTimeout           time.Duration       `yaml:"idle_timeout" env:"RWS_DICOM_IDLE_TIMEOUT"`
-	FindLimit             int                 `yaml:"find_limit" env:"RWS_DICOM_FIND_LIMIT"`
-	GetMaxBytes           int64               `yaml:"get_max_bytes" env:"RWS_DICOM_GET_MAX_BYTES"`
-	TLSCertFile           string              `yaml:"tls_cert_file" env:"RWS_DICOM_TLS_CERT"`
-	TLSKeyFile            string              `yaml:"tls_key_file" env:"RWS_DICOM_TLS_KEY"`
+	AETitle               string              `yaml:"ae_title" env:"LIBRE_DCM_AE_TITLE,RWS_DICOM_AE_TITLE"`
+	Listen                string              `yaml:"listen" env:"LIBRE_DCM_LISTEN,RWS_DICOM_LISTEN"`
+	AllowAnyCalledAETitle bool                `yaml:"allow_any_called_ae_title" env:"LIBRE_DCM_ALLOW_ANY_CALLED_AE,RWS_DICOM_ALLOW_ANY_CALLED_AE"`
+	AcceptAnySOPClass     bool                `yaml:"accept_any_sop_class" env:"LIBRE_DCM_ACCEPT_ANY_SOP_CLASS,RWS_DICOM_ACCEPT_ANY_SOP_CLASS"`
+	MaxAssociations       int                 `yaml:"max_associations" env:"LIBRE_DCM_MAX_ASSOCIATIONS,RWS_DICOM_MAX_ASSOCIATIONS"`
+	MaxPDULength          uint32              `yaml:"max_pdu_length" env:"LIBRE_DCM_MAX_PDU,RWS_DICOM_MAX_PDU"`
+	HandshakeTimeout      time.Duration       `yaml:"handshake_timeout" env:"LIBRE_DCM_HANDSHAKE_TIMEOUT,RWS_DICOM_HANDSHAKE_TIMEOUT"`
+	IdleTimeout           time.Duration       `yaml:"idle_timeout" env:"LIBRE_DCM_IDLE_TIMEOUT,RWS_DICOM_IDLE_TIMEOUT"`
+	FindLimit             int                 `yaml:"find_limit" env:"LIBRE_DCM_FIND_LIMIT,RWS_DICOM_FIND_LIMIT"`
+	GetMaxBytes           int64               `yaml:"get_max_bytes" env:"LIBRE_DCM_GET_MAX_BYTES,RWS_DICOM_GET_MAX_BYTES"`
+	TLSCertFile           string              `yaml:"tls_cert_file" env:"LIBRE_DCM_TLS_CERT,RWS_DICOM_TLS_CERT"`
+	TLSKeyFile            string              `yaml:"tls_key_file" env:"LIBRE_DCM_TLS_KEY,RWS_DICOM_TLS_KEY"`
 	RemoteAEs             map[string]RemoteAE `yaml:"remote_aes"`
+	// AllowedAEs restricts which peers may associate: entries are "AE" (any
+	// address) or "AE@IP" / "AE@CIDR". Empty allows any calling AE.
+	AllowedAEs []string `yaml:"allowed_aes" env:"LIBRE_DCM_ALLOWED_AES"`
+	// FindCaseSensitiveNames turns off case-insensitive PatientName matching
+	// in C-FIND (on by default: "doe*" finds "DOE^JOHN").
+	FindCaseSensitiveNames bool `yaml:"find_case_sensitive_names" env:"LIBRE_DCM_FIND_CASE_SENSITIVE_NAMES"`
+	// AuditLogOff stops the audit=true log records (stores, queries, exports,
+	// rejected associations). On by default.
+	AuditLogOff bool `yaml:"audit_log_off" env:"LIBRE_DCM_AUDIT_LOG_OFF"`
+	// EventsOmitPatientID leaves the patient ID out of bus events (consumers
+	// then look it up by study). AuditOmitPatientID does the same for audit
+	// records. Both default to including it; the installer asks.
+	EventsOmitPatientID bool `yaml:"events_omit_patient_id" env:"LIBRE_DCM_EVENTS_OMIT_PATIENT_ID"`
+	AuditOmitPatientID  bool `yaml:"audit_omit_patient_id" env:"LIBRE_DCM_AUDIT_OMIT_PATIENT_ID"`
+}
+
+func (g *Gateway) queryOptions() queryOptions {
+	return queryOptions{caseInsensitivePN: !g.cfg.FindCaseSensitiveNames}
 }
 
 // DefaultConfig returns production-sane defaults.
 func DefaultConfig() Config {
 	return Config{
-		AETitle:          "RWS_DICOM",
+		AETitle:          "LIBREDCM",
 		Listen:           ":11112",
 		MaxAssociations:  64,
 		MaxPDULength:     131072,
@@ -77,7 +95,18 @@ type Gateway struct {
 
 	mu        sync.RWMutex
 	remoteAEs map[string]RemoteAE
+
+	allowed []allowRule // empty: any calling AE may associate (guarded by mu)
+
+	outbox interface{ Nudge() } // nil: events are published directly (no outbox)
 }
+
+// UseOutbox makes C-STORE write its event to the index outbox in the same
+// transaction as the instance; relay publishes it. Call before Run.
+func (g *Gateway) UseOutbox(relay interface{ Nudge() }) { g.outbox = relay }
+
+// CountEventFailure records a failed event publish (used by the outbox relay).
+func (g *Gateway) CountEventFailure() { g.m.eventFailures.Inc() }
 
 // New builds a Gateway and registers its metrics.
 func New(cfg Config, node string, log *slog.Logger, reg prometheus.Registerer,
@@ -88,6 +117,11 @@ func New(cfg Config, node string, log *slog.Logger, reg prometheus.Registerer,
 		remoteAEs: map[string]RemoteAE{},
 	}
 	g.SetRemoteAEs(cfg.RemoteAEs)
+	if err := g.SetAllowedAEs(cfg.AllowedAEs); err != nil {
+		// Fail closed: a typo in the allow-list must not open the gateway.
+		g.log.Error("invalid allowed_aes; rejecting all associations until fixed", "err", err)
+		g.allowed = []allowRule{{ae: ""}} // matches nothing: empty calling AEs are refused earlier
+	}
 	return g
 }
 
@@ -168,12 +202,13 @@ func (g *Gateway) serverConfig() ae.ServerConfig {
 		AETitle:                   g.cfg.AETitle,
 		AllowAnyCalledAETitle:     g.cfg.AllowAnyCalledAETitle,
 		MaxPDULength:              g.cfg.MaxPDULength,
-		ImplementationVersionName: "RWS_DICOM_01",
+		ImplementationVersionName: "LIBREDCM_020",
 		AcceptedAbstractSyntaxes:  syntaxes,
 		MaxConcurrentAssociations: g.cfg.MaxAssociations,
 		HandshakeTimeout:          g.cfg.HandshakeTimeout,
 		IdleTimeout:               g.cfg.IdleTimeout,
 		RoleSelections:            roles,
+		AcceptCallingAE:           g.callingAEAllowed,
 		SelectTransferSyntax:      selectSyntax(storageSet),
 		OnCStore:                  g.onCStore,
 		OnCFind:                   g.onCFind,

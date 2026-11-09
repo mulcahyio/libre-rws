@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1
-# Libre DCM (rws-dicom) container image
+# LibreDCM container image (Libre DCM module of Libre RWS)
 # Libre RWS (Radiology Workflow System) - developed by Patrick Mulcahy, Mulcahy.io
 # Contact: dev@mulcahy.io
 #
 # Build from the repository root:
-#   docker build -f deploy/docker/Dockerfile.dicom --build-arg VERSION=0.1.1-beta.1 -t rws/dicom:0.1.1-beta.1 .
+#   docker build -f deploy/docker/Dockerfile.dicom --build-arg VERSION=0.2.0-beta.1 -t libre/dcm:0.2.0-beta.1 .
 
 ARG GO_VERSION=1.26
 
@@ -22,39 +22,46 @@ RUN --mount=type=cache,target=/go/pkg/mod go mod download
 COPY platform/ platform/
 COPY modules/ modules/
 ARG VERSION=dev
+# Official builds: BUILD_TAGS=official embeds the LibreKey public key, so a
+# valid license is required. BUILD_DATE (YYYY-MM-DD) is checked against a
+# license's update period. Source builds leave both empty.
+ARG BUILD_TAGS=
+ARG BUILD_DATE=
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
-    go build -ldflags "-s -w -X main.version=${VERSION}" -o /out/rws-dicom ./modules/dicom/cmd/rws-dicom
+    go build -tags "${BUILD_TAGS}" -ldflags "-s -w -X main.version=${VERSION} -X main.buildDate=${BUILD_DATE}" -o /out/LibreDCM ./modules/dicom/cmd/libredcm
 
 # Data directory owned by the distroless "nonroot" user (65532). Distroless has
 # no shell, so it is prepared here and copied across with ownership.
-RUN mkdir -p /out/var/lib/rws/blobs /out/etc/rws
+RUN mkdir -p /out/var/lib/libredcm/blobs /out/etc/libredcm
 
 # ---- runtime stage ----------------------------------------------------------
 # distroless/base (not /static): the JPEG codec loads native libraries through
 # purego, so the binary needs the glibc loader even though CGO is off.
 FROM gcr.io/distroless/base-debian12:nonroot
 ARG VERSION=dev
-LABEL org.opencontainers.image.title="rws-dicom" \
+LABEL org.opencontainers.image.title="LibreDCM" \
       org.opencontainers.image.description="Libre DCM - DIMSE gateway (C-ECHO, C-STORE, C-FIND, C-MOVE, C-GET)" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.authors="Patrick Mulcahy, Mulcahy.io <dev@mulcahy.io>" \
       org.opencontainers.image.vendor="Mulcahy.io"
 
-COPY --from=build /out/rws-dicom /rws-dicom
-COPY --from=build --chown=65532:65532 /out/var/lib/rws /var/lib/rws
-COPY --from=build --chown=65532:65532 /out/etc/rws /etc/rws
+COPY --from=build /out/LibreDCM /LibreDCM
+COPY --from=build --chown=65532:65532 /out/var/lib/libredcm /var/lib/libredcm
+COPY --from=build --chown=65532:65532 /out/etc/libredcm /etc/libredcm
 
 # Container defaults. A config file is optional; environment overrides it.
-ENV RWS_CONFIG=/etc/rws/config.yaml \
-    RWS_ADMIN_ADDR=:8081 \
-    RWS_DICOM_LISTEN=:11112 \
-    RWS_STORAGE_PATH=/var/lib/rws/blobs \
-    RWS_INDEX_DSN=file:/var/lib/rws/index.db \
-    RWS_LOG_FORMAT=json
+ENV LIBRE_DCM_CONFIG=/etc/libredcm/config.yaml \
+    LIBRE_DCM_ADMIN_ADDR=:8081 \
+    LIBRE_DCM_LISTEN=:11112 \
+    LIBRE_DCM_STORAGE_PATH=/var/lib/libredcm/blobs \
+    LIBRE_DCM_INDEX_DSN=file:/var/lib/libredcm/index.db \
+    LIBRE_DCM_LICENSE_FILE=/var/lib/libredcm/license.lic \
+    LIBRE_DCM_LICENSE_DATA=/var/lib/libredcm \
+    LIBRE_DCM_LOG_FORMAT=json
 
 USER 65532:65532
 EXPOSE 11112 8081
-VOLUME ["/var/lib/rws"]
+VOLUME ["/var/lib/libredcm"]
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=3 \
-    CMD ["/rws-dicom", "-healthcheck", "127.0.0.1:8081"]
-ENTRYPOINT ["/rws-dicom"]
+    CMD ["/LibreDCM", "-healthcheck", "127.0.0.1:8081"]
+ENTRYPOINT ["/LibreDCM"]

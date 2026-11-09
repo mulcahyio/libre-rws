@@ -1,10 +1,11 @@
-# Libre DCM - workstation install (single node)
+# LibreDCM - workstation install (single node)
 # Libre RWS (Radiology Workflow System) - developed by Patrick Mulcahy, Mulcahy.io <dev@mulcahy.io>
 #
-# Settings live in .env (copied from .env.example by the installer).
-# Optional event bus:  set RWS_EVENTS_DRIVER=nats in .env and add  --profile events
+# Settings live in .env, written by the installer (LibreDCM.sh / LibreDCM.ps1
+# `install` or `configure`). Optional event bus: LIBRE_DCM_EVENTS_DRIVER=nats
+# plus `--profile events` (the installer adds it).
 
-name: rws-dicom
+name: libredcm
 
 services:
   dicom:
@@ -12,28 +13,53 @@ services:
       context: ../..
       dockerfile: deploy/docker/Dockerfile.dicom
       args:
-        VERSION: ${RWS_VERSION:-0.1.1-beta.1}
-    image: rws/dicom:${RWS_VERSION:-0.1.1-beta.1}
-    container_name: rws-dicom
+        VERSION: "${LIBRE_DCM_VERSION:-0.2.0-beta.1}"
+        BUILD_TAGS: "${LIBRE_DCM_BUILD_TAGS:-}"
+        BUILD_DATE: "${LIBRE_DCM_BUILD_DATE:-}"
+    image: "libre/dcm:${LIBRE_DCM_VERSION:-0.2.0-beta.1}"
+    container_name: libredcm
     restart: unless-stopped
     environment:
-      RWS_NODE_ID: ${RWS_NODE_ID:-workstation}
-      RWS_DICOM_AE_TITLE: ${RWS_DICOM_AE_TITLE:-RWS_DICOM}
-      RWS_DICOM_ALLOW_ANY_CALLED_AE: ${RWS_DICOM_ALLOW_ANY_CALLED_AE:-false}
-      RWS_DICOM_ACCEPT_ANY_SOP_CLASS: ${RWS_DICOM_ACCEPT_ANY_SOP_CLASS:-false}
-      RWS_DICOM_REMOTE_AES: ${RWS_DICOM_REMOTE_AES:-}
-      RWS_DICOM_MAX_ASSOCIATIONS: ${RWS_DICOM_MAX_ASSOCIATIONS:-16}
-      RWS_LOG_LEVEL: ${RWS_LOG_LEVEL:-info}
-      RWS_LOG_FORMAT: ${RWS_LOG_FORMAT:-text}
-      RWS_EVENTS_DRIVER: ${RWS_EVENTS_DRIVER:-log}
-      RWS_EVENTS_URL: nats://nats:4222
-      TZ: ${TZ:-UTC}
+      LIBRE_DCM_NODE_ID: "${LIBRE_DCM_NODE_ID:-workstation}"
+      LIBRE_DCM_AE_TITLE: "${LIBRE_DCM_AE_TITLE:-LIBREDCM}"
+      LIBRE_DCM_ALLOW_ANY_CALLED_AE: "${LIBRE_DCM_ALLOW_ANY_CALLED_AE:-false}"
+      LIBRE_DCM_ACCEPT_ANY_SOP_CLASS: "${LIBRE_DCM_ACCEPT_ANY_SOP_CLASS:-false}"
+      LIBRE_DCM_REMOTE_AES: "${LIBRE_DCM_REMOTE_AES:-}"
+      LIBRE_DCM_ALLOWED_AES: "${LIBRE_DCM_ALLOWED_AES:-}"
+      LIBRE_DCM_MAX_ASSOCIATIONS: "${LIBRE_DCM_MAX_ASSOCIATIONS:-16}"
+      LIBRE_DCM_ADMIN_TOKEN: "${LIBRE_DCM_ADMIN_TOKEN:-}"
+      LIBRE_DCM_LICENSE_SERVER: "${LIBRE_DCM_LICENSE_SERVER:-}"
+      LIBREKEY_HOST_ID: "${LIBREKEY_HOST_ID:-}"
+      LIBRE_DCM_LOG_LEVEL: "${LIBRE_DCM_LOG_LEVEL:-info}"
+      LIBRE_DCM_LOG_FORMAT: "${LIBRE_DCM_LOG_FORMAT:-text}"
+      LIBRE_DCM_EVENTS_DRIVER: "${LIBRE_DCM_EVENTS_DRIVER:-log}"
+      LIBRE_DCM_EVENTS_URL: "nats://nats:4222"
+      LIBRE_DCM_EVENTS_OMIT_PATIENT_ID: "${LIBRE_DCM_EVENTS_OMIT_PATIENT_ID:-false}"
+      LIBRE_DCM_AUDIT_OMIT_PATIENT_ID: "${LIBRE_DCM_AUDIT_OMIT_PATIENT_ID:-false}"
+      # Storage: fs (data volume / folder) or s3, chosen at install.
+      LIBRE_DCM_STORAGE_DRIVER: "${LIBRE_DCM_STORAGE_DRIVER:-fs}"
+      LIBRE_DCM_STORAGE_S3_ENDPOINT: "${LIBRE_DCM_STORAGE_S3_ENDPOINT:-}"
+      LIBRE_DCM_STORAGE_S3_BUCKET: "${LIBRE_DCM_STORAGE_S3_BUCKET:-}"
+      LIBRE_DCM_STORAGE_S3_REGION: "${LIBRE_DCM_STORAGE_S3_REGION:-}"
+      LIBRE_DCM_STORAGE_S3_PREFIX: "${LIBRE_DCM_STORAGE_S3_PREFIX:-}"
+      LIBRE_DCM_STORAGE_S3_ACCESS_KEY: "${LIBRE_DCM_STORAGE_S3_ACCESS_KEY:-}"
+      LIBRE_DCM_STORAGE_S3_SECRET_KEY: "${LIBRE_DCM_STORAGE_S3_SECRET_KEY:-}"
+      LIBRE_DCM_STORAGE_S3_INSECURE: "${LIBRE_DCM_STORAGE_S3_INSECURE:-false}"
+      LIBRE_DCM_STORAGE_S3_CREATE_BUCKET: "${LIBRE_DCM_STORAGE_S3_CREATE_BUCKET:-false}"
+      # TLS, chosen at install; paths are inside the container (set by the installer).
+      LIBRE_DCM_TLS_CERT: "${LIBRE_DCM_TLS_CERT:-}"
+      LIBRE_DCM_TLS_KEY: "${LIBRE_DCM_TLS_KEY:-}"
+      LIBRE_DCM_ADMIN_TLS_CERT: "${LIBRE_DCM_ADMIN_TLS_CERT:-}"
+      LIBRE_DCM_ADMIN_TLS_KEY: "${LIBRE_DCM_ADMIN_TLS_KEY:-}"
+      TZ: "${TZ:-UTC}"
     ports:
-      - "${RWS_BIND_IP:-0.0.0.0}:${RWS_DICOM_PORT:-11112}:11112"   # DICOM (modalities, viewers)
-      - "127.0.0.1:${RWS_ADMIN_PORT:-8081}:8081"                   # health/metrics - this PC only
+      - "${LIBRE_DCM_BIND_IP:-0.0.0.0}:${LIBRE_DCM_PORT:-11112}:11112"   # DICOM (modalities, viewers)
+      - "127.0.0.1:${LIBRE_DCM_ADMIN_PORT:-8081}:8081"                 # health/metrics - this PC only
     volumes:
-      # Named volume by default; set RWS_DATA to a local folder to bind-mount instead.
-      - ${RWS_DATA:-rws-dicom-data}:/var/lib/rws
+      # Docker volume by default; LIBRE_DCM_DATA can name a local folder instead.
+      - "${LIBRE_DCM_DATA:-libredcm-data}:/var/lib/libredcm"
+      # Your own certificate files (TLS mode "files"); an empty folder otherwise.
+      - "${LIBRE_DCM_TLS_DIR:-./tls}:/etc/libredcm/tls:ro"
     extra_hosts:
       - "host.docker.internal:host-gateway"   # lets C-MOVE reach viewers on this PC (Linux too)
     stop_grace_period: 35s
@@ -44,11 +70,15 @@ services:
   nats:
     profiles: [events]
     image: nats:2.11-alpine
-    container_name: rws-dicom-nats
+    container_name: libredcm-nats
     command: ["-js", "-sd", "/data", "-m", "8222"]
     restart: unless-stopped
-    volumes: [rws-dicom-nats:/data]
+    volumes: ["libredcm-nats:/data"]
 
 volumes:
-  rws-dicom-data:
-  rws-dicom-nats:
+  # An install upgraded from 0.1.x keeps its existing volumes: the installer
+  # sets LIBRE_DCM_VOLUME / LIBRE_DCM_NATS_VOLUME to the old names.
+  libredcm-data:
+    name: "${LIBRE_DCM_VOLUME:-libredcm-data}"
+  libredcm-nats:
+    name: "${LIBRE_DCM_NATS_VOLUME:-libredcm-nats}"

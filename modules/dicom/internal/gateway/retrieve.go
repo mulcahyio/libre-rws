@@ -15,8 +15,8 @@ import (
 	"github.com/godicom-dev/gonetdicom/dimse"
 	"github.com/godicom-dev/gonetdicom/status"
 
-	"rws/modules/dicom/internal/dcm"
-	"rws/modules/dicom/internal/index"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
 )
 
 // Design note — why C-MOVE does not use gonetdicom's MovePlan.Stores:
@@ -36,7 +36,7 @@ const maxContextsPerAssoc = 120 // < 128 odd presentation-context IDs
 var errUniversalRetrieve = errors.New("retrieve identifier has no unique keys")
 
 func (g *Gateway) resolveRetrieve(ctx context.Context, ident *godicom.Dataset, model string) ([]index.Row, uint16) {
-	q, err := parseIdentifier(ident, model)
+	q, err := parseIdentifier(ident, model, g.queryOptions())
 	if err != nil {
 		return nil, status.IdentifierDoesNotMatchSOPClass
 	}
@@ -133,6 +133,14 @@ func (g *Gateway) onCMove(ctx context.Context, req ae.MoveRequest) ae.MovePlan {
 	}
 	start := time.Now()
 	tally := g.sendInstances(ctx, dest, rows)
+	studies, patients := studiesAndPatients(rows)
+	outcome := "success"
+	if tally.failed > 0 {
+		outcome = "minor-failure"
+	}
+	g.audit(ctx, auditInstancesExported, outcome, "op", "C-MOVE", "destination", req.MoveDestination,
+		"destination_host", dest.Host, "studies", studies, "patient_ids", g.auditPatientIDs(patients),
+		"instances", len(rows), "failed", tally.failed)
 	g.log.Info("C-MOVE finished", "destination", req.MoveDestination, "instances", len(rows),
 		"completed", tally.completed, "failed", tally.failed, "warning", tally.warning,
 		"seconds", time.Since(start).Seconds())
@@ -333,5 +341,12 @@ func (g *Gateway) onCGet(ctx context.Context, req ae.GetRequest) ae.GetPlan {
 	// Completed counts what was sent.
 	tally.completed = len(stores)
 	g.m.retrieveSubOps.WithLabelValues("get", "completed").Add(float64(len(stores)))
+	studies, patients := studiesAndPatients(rows)
+	outcome := "success"
+	if tally.failed > 0 {
+		outcome = "minor-failure"
+	}
+	g.audit(ctx, auditInstancesExported, outcome, "op", "C-GET", "studies", studies, "patient_ids", g.auditPatientIDs(patients),
+		"instances", len(stores), "failed", tally.failed)
 	return ae.GetPlan{Stores: stores, Responses: []ae.RetrieveMatch{tally.final()}}
 }

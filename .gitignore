@@ -3,3 +3,6 @@ data/
 *.db
 deploy/workstation/.env
 deploy/workstation/backups/
+deploy/workstation/tls/*
+!deploy/workstation/tls/.gitkeep
+deploy/workstation/.env.bak-*

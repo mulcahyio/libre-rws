@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# DICOM conformance smoke test against a running rws-dicom using DCMTK, the
+# DICOM conformance smoke test against a running LibreDCM using DCMTK, the
 # reference toolkit (apt install dcmtk). Exercises echo, native + compressed
 # storage, query and retrieve, and checks pixel data survives byte-for-byte.
 #
 #   scripts/conformance.sh <dir-of-.dcm-files> [host] [port] [ae]
 # Requires: dcmtk, python3 + pydicom (for byte comparison).
 set -euo pipefail
-DIR=${1:?dir of DICOM files}; HOST=${2:-127.0.0.1}; PORT=${3:-11112}; AE=${4:-RWS_DICOM}
-DEST_PORT=${DEST_PORT:-11113}  # rws-dicom must list STORESCP -> this port in remote_aes
+DIR=${1:?dir of DICOM files}; HOST=${2:-127.0.0.1}; PORT=${3:-11112}; AE=${4:-LIBREDCM}
+DEST_PORT=${DEST_PORT:-11113}  # LibreDCM must list STORESCP -> this port in remote_aes
 WORK=$(mktemp -d); trap 'kill ${SCP:-0} 2>/dev/null; rm -rf "$WORK"' EXIT
 pass() { echo "PASS  $*"; }; fail() { echo "FAIL  $*"; exit 1; }
 

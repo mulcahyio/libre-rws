@@ -12,6 +12,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -39,7 +41,13 @@ const (
 	OpLike                       // DICOM wildcard (* ?), already translated to SQL LIKE pattern
 	OpRange                      // inclusive range; empty bound = open
 	OpStudyHasModality           // study has at least one series with a modality in Values
+	OpEqFold                     // case-insensitive equality; Column is a *_fold column, Values pre-folded
+	OpLikeFold                   // case-insensitive LIKE on a *_fold column
 )
+
+// Fold is the case folding used for case-insensitive person name matching.
+// It is done in Go, not SQL, because SQLite's LOWER() only folds ASCII.
+func Fold(s string) string { return strings.ToLower(s) }
 
 // Filter restricts a query on one column.
 type Filter struct {
@@ -60,12 +68,31 @@ type Record struct {
 	ReceivedAt                                                     time.Time
 }
 
+// OutboxEvent is an event written in the same transaction as the instance it
+// describes, so it can't be lost if the event bus is down. A relay publishes
+// it later and deletes it once the bus has acknowledged it.
+type OutboxEvent struct {
+	MsgID    string // stable id, used by the bus to de-duplicate retries
+	Subject  string
+	Payload  []byte // JSON
+	Attempts int
+}
+
 // Row is one query result, keyed by DICOM keyword (plus internal "_" keys).
 type Row map[string]string
 
 // Index is the metadata store contract.
 type Index interface {
 	Upsert(ctx context.Context, r Record) error
+	// UpsertWithEvent is Upsert plus an outbox event in the same transaction.
+	UpsertWithEvent(ctx context.Context, r Record, ev *OutboxEvent) error
+	// ClaimEvents leases up to limit due events for publishing. A leased event
+	// is not handed out again until the lease expires, so several nodes can
+	// drain one shared outbox.
+	ClaimEvents(ctx context.Context, limit int, lease time.Duration) ([]OutboxEvent, error)
+	AckEvent(ctx context.Context, msgID string) error
+	NackEvent(ctx context.Context, msgID string, retryAt time.Time, errText string) error
+	PendingEvents(ctx context.Context) (int, error)
 	Find(ctx context.Context, level Level, filters []Filter, limit int) ([]Row, error)
 	ModalitiesForStudies(ctx context.Context, studyUIDs []string) (map[string][]string, error)
 	Ping(ctx context.Context) error
@@ -90,6 +117,10 @@ func Open(ctx context.Context, driver, dsn string) (*SQL, error) {
 			}
 			dsn += sep + "_pragma=busy_timeout(10000)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)"
 		}
+		// SQLite's LIKE ignores ASCII case; PostgreSQL's doesn't. Make SQLite
+		// match so wildcard queries behave the same on both engines
+		// (case-insensitive name matching uses the folded column instead).
+		dsn += "&_pragma=case_sensitive_like(1)"
 		db, err := sql.Open("sqlite", dsn)
 		if err != nil {
 			return nil, err
@@ -116,7 +147,7 @@ func Open(ctx context.Context, driver, dsn string) (*SQL, error) {
 }
 
 // schemaVersion is bumped when migrations are appended below.
-const schemaVersion = 1
+const schemaVersion = 3
 
 var migrations = []string{
 	`CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL)`,
@@ -160,6 +191,24 @@ var migrations = []string{
 	`CREATE INDEX IF NOT EXISTS idx_series_study ON series(study_uid)`,
 	`CREATE INDEX IF NOT EXISTS idx_instances_series ON instances(series_uid)`,
 	`CREATE INDEX IF NOT EXISTS idx_instances_study ON instances(study_uid)`,
+	// v2: event outbox. Times are Unix milliseconds.
+	`CREATE TABLE IF NOT EXISTS event_outbox (
+		msg_id          TEXT PRIMARY KEY,
+		subject         TEXT NOT NULL,
+		payload         TEXT NOT NULL,
+		created_at      BIGINT NOT NULL,
+		next_attempt_at BIGINT NOT NULL,
+		attempts        INTEGER NOT NULL DEFAULT 0,
+		last_error      TEXT NOT NULL DEFAULT ''
+	)`,
+	`CREATE INDEX IF NOT EXISTS idx_outbox_due ON event_outbox(next_attempt_at)`,
+}
+
+// versionedMigrations run once, when upgrading from an older schema version.
+// They hold changes (like ADD COLUMN) that can't be written idempotently for
+// both engines.
+var versionedMigrations = map[int][]string{
+	3: {`ALTER TABLE studies ADD COLUMN patient_name_fold TEXT NOT NULL DEFAULT ''`},
 }
 
 // migrationLockKey serializes schema changes across cluster nodes starting at
@@ -189,9 +238,60 @@ func (s *SQL) migrate(ctx context.Context) error {
 	if err := conn.QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_version`).Scan(&n); err != nil {
 		return err
 	}
+	current := 0 // fresh database: base tables were just created at version 2's shape
 	if n == 0 {
-		_, err := conn.ExecContext(ctx, s.rebind(`INSERT INTO schema_version(version) VALUES (?)`), schemaVersion)
+		if _, err := conn.ExecContext(ctx, s.rebind(`INSERT INTO schema_version(version) VALUES (?)`), 2); err != nil {
+			return err
+		}
+		current = 2
+	} else if err := conn.QueryRowContext(ctx, `SELECT MAX(version) FROM schema_version`).Scan(&current); err != nil {
 		return err
+	}
+	if current < 2 {
+		current = 2 // v2 (outbox) is created idempotently above
+	}
+	for v := current + 1; v <= schemaVersion; v++ {
+		for _, m := range versionedMigrations[v] {
+			if _, err := conn.ExecContext(ctx, m); err != nil {
+				return fmt.Errorf("index: migrate to v%d: %w", v, err)
+			}
+		}
+		if v == 3 {
+			if err := backfillFold(ctx, conn, s); err != nil {
+				return fmt.Errorf("index: migrate to v3: %w", err)
+			}
+		}
+		if _, err := conn.ExecContext(ctx, s.rebind(`UPDATE schema_version SET version = ?`), v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// backfillFold fills patient_name_fold for studies stored before schema v3.
+func backfillFold(ctx context.Context, conn *sql.Conn, s *SQL) error {
+	rows, err := conn.QueryContext(ctx, `SELECT study_uid, patient_name FROM studies`)
+	if err != nil {
+		return err
+	}
+	type pair struct{ uid, name string }
+	var all []pair
+	for rows.Next() {
+		var p pair
+		if err := rows.Scan(&p.uid, &p.name); err != nil {
+			rows.Close()
+			return err
+		}
+		all = append(all, p)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	for _, p := range all {
+		if _, err := conn.ExecContext(ctx, s.rebind(`UPDATE studies SET patient_name_fold = ? WHERE study_uid = ?`), Fold(p.name), p.uid); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -216,7 +316,11 @@ func (s *SQL) rebind(q string) string {
 
 // Upsert writes study, series and instance rows in one transaction. A resent
 // instance (same SOP Instance UID) replaces the previous metadata.
-func (s *SQL) Upsert(ctx context.Context, r Record) error {
+func (s *SQL) Upsert(ctx context.Context, r Record) error { return s.UpsertWithEvent(ctx, r, nil) }
+
+// UpsertWithEvent writes the instance and, when ev is not nil, its outbox
+// event atomically: either both are stored or neither is.
+func (s *SQL) UpsertWithEvent(ctx context.Context, r Record, ev *OutboxEvent) error {
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	if r.ReceivedAt.IsZero() {
 		r.ReceivedAt = time.Now()
@@ -229,10 +333,11 @@ func (s *SQL) Upsert(ctx context.Context, r Record) error {
 
 	if _, err := tx.ExecContext(ctx, s.rebind(`
 		INSERT INTO studies (study_uid, patient_id, patient_name, patient_birth_date, patient_sex,
-			study_date, study_time, accession_number, study_id, study_description, referring_physician, updated_at)
-		VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+			study_date, study_time, accession_number, study_id, study_description, referring_physician, updated_at,
+			patient_name_fold)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
 		ON CONFLICT (study_uid) DO UPDATE SET
-			patient_id=excluded.patient_id, patient_name=excluded.patient_name,
+			patient_id=excluded.patient_id, patient_name=excluded.patient_name, patient_name_fold=excluded.patient_name_fold,
 			patient_birth_date=excluded.patient_birth_date, patient_sex=excluded.patient_sex,
 			study_date=excluded.study_date, study_time=excluded.study_time,
 			accession_number=excluded.accession_number, study_id=excluded.study_id,
@@ -240,6 +345,7 @@ func (s *SQL) Upsert(ctx context.Context, r Record) error {
 			updated_at=excluded.updated_at`),
 		r.StudyUID, r.PatientID, r.PatientName, r.PatientBirthDate, r.PatientSex,
 		r.StudyDate, r.StudyTime, r.AccessionNumber, r.StudyID, r.StudyDescription, r.ReferringPhysician, now,
+		Fold(r.PatientName),
 	); err != nil {
 		return fmt.Errorf("index: upsert study: %w", err)
 	}
@@ -267,6 +373,16 @@ func (s *SQL) Upsert(ctx context.Context, r Record) error {
 		r.TransferSyntaxUID, r.BlobKey, r.SizeBytes, r.SourceAE, r.ReceivedAt.UTC().Format(time.RFC3339Nano),
 	); err != nil {
 		return fmt.Errorf("index: upsert instance: %w", err)
+	}
+	if ev != nil {
+		ms := time.Now().UnixMilli()
+		if _, err := tx.ExecContext(ctx, s.rebind(`
+			INSERT INTO event_outbox (msg_id, subject, payload, created_at, next_attempt_at)
+			VALUES (?,?,?,?,?) ON CONFLICT (msg_id) DO NOTHING`),
+			ev.MsgID, ev.Subject, string(ev.Payload), ms, ms,
+		); err != nil {
+			return fmt.Errorf("index: outbox event: %w", err)
+		}
 	}
 	return tx.Commit()
 }
@@ -383,6 +499,14 @@ func buildWhere(filters []Filter) (string, []any) {
 		case OpLike:
 			parts = append(parts, f.Column+` LIKE ? ESCAPE '\'`)
 			args = append(args, f.Values[0])
+		case OpEqFold:
+			parts = append(parts, f.Column+" = ?")
+			args = append(args, Fold(f.Values[0]))
+		case OpLikeFold:
+			// SQLite's LIKE is ASCII case-insensitive and PostgreSQL's is
+			// case-sensitive; both match correctly on pre-folded values.
+			parts = append(parts, f.Column+` LIKE ? ESCAPE '\'`)
+			args = append(args, Fold(f.Values[0]))
 		case OpStudyHasModality:
 			ph := strings.TrimSuffix(strings.Repeat("?,", len(f.Values)), ",")
 			parts = append(parts, "EXISTS (SELECT 1 FROM series m WHERE m.study_uid = st.study_uid AND m.modality IN ("+ph+"))")
@@ -431,6 +555,83 @@ func (s *SQL) ModalitiesForStudies(ctx context.Context, studyUIDs []string) (map
 		out[st] = append(out[st], mod)
 	}
 	return out, rows.Err()
+}
+
+// ClaimEvents leases due events, oldest first. The outer next_attempt_at
+// condition is re-checked by PostgreSQL after a row lock wait, so two nodes
+// claiming at once never get the same event.
+func (s *SQL) ClaimEvents(ctx context.Context, limit int, lease time.Duration) ([]OutboxEvent, error) {
+	now := time.Now().UnixMilli()
+	rows, err := s.db.QueryContext(ctx, s.rebind(`
+		UPDATE event_outbox SET next_attempt_at = ?, attempts = attempts + 1
+		WHERE next_attempt_at <= ? AND msg_id IN (
+			SELECT msg_id FROM event_outbox WHERE next_attempt_at <= ?
+			ORDER BY created_at, msg_id LIMIT ?)
+		RETURNING msg_id, subject, payload, attempts`),
+		now+lease.Milliseconds(), now, now, limit)
+	if err != nil {
+		return nil, fmt.Errorf("index: claim events: %w", err)
+	}
+	defer rows.Close()
+	var out []OutboxEvent
+	for rows.Next() {
+		var e OutboxEvent
+		var payload string
+		if err := rows.Scan(&e.MsgID, &e.Subject, &payload, &e.Attempts); err != nil {
+			return nil, err
+		}
+		e.Payload = []byte(payload)
+		out = append(out, e)
+	}
+	return out, rows.Err()
+}
+
+// AckEvent removes a published event.
+func (s *SQL) AckEvent(ctx context.Context, msgID string) error {
+	_, err := s.db.ExecContext(ctx, s.rebind(`DELETE FROM event_outbox WHERE msg_id = ?`), msgID)
+	return err
+}
+
+// NackEvent schedules a failed event for another attempt.
+func (s *SQL) NackEvent(ctx context.Context, msgID string, retryAt time.Time, errText string) error {
+	_, err := s.db.ExecContext(ctx, s.rebind(`UPDATE event_outbox SET next_attempt_at = ?, last_error = ? WHERE msg_id = ?`),
+		retryAt.UnixMilli(), errText, msgID)
+	return err
+}
+
+// PendingEvents counts events not yet published.
+func (s *SQL) PendingEvents(ctx context.Context) (int, error) {
+	var n int
+	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM event_outbox`).Scan(&n)
+	return n, err
+}
+
+// Backup writes a consistent copy of a SQLite index to dest while the module
+// keeps running (VACUUM INTO takes a read transaction, so concurrent writers
+// are not blocked and the copy is a single point-in-time snapshot). An
+// existing file at dest is replaced. PostgreSQL indexes are backed up with the
+// database's own tools (pg_dump), so this returns an error for them.
+func (s *SQL) Backup(ctx context.Context, dest string) error {
+	if s.postgres {
+		return fmt.Errorf("index: backup of a PostgreSQL index uses pg_dump, not -backup")
+	}
+	if dest == "" {
+		return fmt.Errorf("index: backup destination is empty")
+	}
+	if err := os.MkdirAll(filepath.Dir(dest), 0o750); err != nil {
+		return fmt.Errorf("index: backup: %w", err)
+	}
+	tmp := dest + ".partial"
+	_ = os.Remove(tmp)
+	if _, err := s.db.ExecContext(ctx, `VACUUM INTO ?`, tmp); err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("index: backup: %w", err)
+	}
+	if err := os.Rename(tmp, dest); err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("index: backup: %w", err)
+	}
+	return nil
 }
 
 func (s *SQL) Ping(ctx context.Context) error { return s.db.PingContext(ctx) }

@@ -1,0 +1,47 @@
+name: Anomaly / bug
+description: Something does not behave as specified (IEC 62304 problem report)
+labels: ["type:anomaly", "triage"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version / build
+      placeholder: "e.g. 0.2.0-beta.1, image digest"
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Where was it found?
+      options:
+        - "Development / testing"
+        - "Customer or field report (also log as a complaint)"
+        - "Security scan"
+        - "Other"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: "What happened, and what was expected?"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to reproduce (synthetic data only, no patient data)"
+  - type: dropdown
+    id: safety
+    attributes:
+      label: Initial safety impact
+      description: "Could this lead to lost, late, altered or misattributed images, or patient data disclosure?"
+      options:
+        - "None identified"
+        - "Possible: needs risk review"
+        - "Yes: risk review and CAPA consideration required"
+    validations:
+      required: true
+  - type: textarea
+    id: requirements
+    attributes:
+      label: "Affected requirement IDs (if known)"

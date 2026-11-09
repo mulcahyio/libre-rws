@@ -112,6 +112,11 @@ type ServerConfig struct {
 	// SCP/SCU roles (values are the *acceptor* capabilities). Empty means
 	// default roles only (requestor=SCU, acceptor=SCP) and no role reply items.
 	RoleSelections []pdu.RoleSelection
+	// AcceptCallingAE, when non-nil, decides whether a requestor may associate,
+	// from its Calling AE Title (padding removed) and network address. Returning
+	// false rejects the association with A-ASSOCIATE-RJ "calling AE title not
+	// recognized". Nil accepts any calling AE. (RWS fork.)
+	AcceptCallingAE func(callingAE string, remote net.Addr) bool
 	// OnUserIdentity verifies a User Identity RQ item. Nil means identity is
 	// ignored and the association is accepted without an AC response item
 	// (pynetdicom default when no EVT_USER_ID handler is bound).
@@ -392,7 +397,29 @@ func handleAssociation(ctx context.Context, conn net.Conn, cfg ServerConfig) err
 	// deferred conn.Close so the reading goroutine cannot be left blocked.
 	r := newAssocReader(ctx, conn)
 	defer r.Close()
+	ctx = context.WithValue(ctx, assocInfoKey{}, AssociationInfo{
+		CallingAE: normalizeAETitle(rq.CallingAETitle),
+		CalledAE:  normalizeAETitle(rq.CalledAETitle),
+		Remote:    conn.RemoteAddr(),
+	})
 	return scpLoop(ctx, conn, r, cfg, accepted, peerMax, rq.CallingAETitle)
+}
+
+// AssociationInfo identifies the peer of the association a handler is serving.
+// (RWS fork.)
+type AssociationInfo struct {
+	CallingAE string   // requestor's AE title, padding removed
+	CalledAE  string   // AE title the requestor called, padding removed
+	Remote    net.Addr // requestor's network address
+}
+
+type assocInfoKey struct{}
+
+// AssociationFromContext returns the association a handler's context belongs
+// to. ok is false outside an SCP association. (RWS fork.)
+func AssociationFromContext(ctx context.Context) (info AssociationInfo, ok bool) {
+	info, ok = ctx.Value(assocInfoKey{}).(AssociationInfo)
+	return info, ok
 }
 
 func scpLoop(ctx context.Context, conn net.Conn, r *assocReader, cfg ServerConfig, accepted map[byte]acceptedContext, peerMax uint32, callingAE string) error {

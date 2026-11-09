@@ -21,7 +21,7 @@ const (
 	ExplicitVRBigEndian    = "1.2.840.10008.1.2.2" // retired, still seen in the wild
 
 	ImplementationClassUID    = "1.2.826.0.1.3680043.10.541.1" // gonetdicom's root; replace with your own org root
-	ImplementationVersionName = "RWS_DICOM_01"
+	ImplementationVersionName = "LIBREDCM_020"
 )
 
 // IsUncompressed reports whether ts is a native (non-encapsulated) syntax the

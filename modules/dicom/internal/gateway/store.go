@@ -3,14 +3,15 @@ package gateway
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/godicom-dev/gonetdicom/ae"
 	"github.com/godicom-dev/gonetdicom/status"
 
-	"rws/modules/dicom/internal/dcm"
-	"rws/modules/dicom/internal/events"
-	"rws/modules/dicom/internal/index"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/events"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
 )
 
 // blobKey is the storage layout: one folder per study, one per series.
@@ -67,6 +68,10 @@ func (g *Gateway) onCStore(ctx context.Context, req ae.StoreRequest) uint16 {
 	}
 
 	receivedAt := time.Now().UTC()
+	var sourceAE string
+	if a, ok := ae.AssociationFromContext(ctx); ok {
+		sourceAE = a.CallingAE
+	}
 	rec := index.Record{
 		PatientID: inst.PatientID, PatientName: inst.PatientName,
 		PatientBirthDate: inst.PatientBirthDate, PatientSex: inst.PatientSex,
@@ -77,29 +82,51 @@ func (g *Gateway) onCStore(ctx context.Context, req ae.StoreRequest) uint16 {
 		SeriesNumber: inst.SeriesNumber, SeriesDescription: inst.SeriesDescription,
 		SOPInstanceUID: inst.SOPInstanceUID, SOPClassUID: inst.SOPClassUID,
 		InstanceNumber: inst.InstanceNumber, TransferSyntaxUID: req.TransferSyntax,
-		BlobKey: key, SizeBytes: n, ReceivedAt: receivedAt,
+		BlobKey: key, SourceAE: sourceAE, SizeBytes: n, ReceivedAt: receivedAt,
 	}
-	if err := g.idx.Upsert(ctx, rec); err != nil {
-		log.Error("index instance", "err", err)
-		return result(status.OutOfResources, "error")
-	}
-
 	ev := events.InstanceStored{
 		EventID:    inst.SOPInstanceUID + "@" + receivedAt.Format(time.RFC3339Nano),
-		OccurredAt: receivedAt, Node: g.node,
+		OccurredAt: receivedAt, Node: g.node, SourceAE: sourceAE,
 		PatientID: inst.PatientID, StudyUID: inst.StudyInstanceUID, SeriesUID: inst.SeriesInstanceUID,
 		SOPInstanceUID: inst.SOPInstanceUID, SOPClassUID: inst.SOPClassUID, Modality: inst.Modality,
 		AccessionNum: inst.AccessionNumber, TransferSyntax: req.TransferSyntax, BlobKey: key, SizeBytes: n,
 	}
-	pctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	if err := g.events.Publish(pctx, events.SubjectInstanceStored, ev.EventID, ev); err != nil {
-		// The instance is safely archived and indexed; a missed event must not
-		// make the modality resend. Tracked by metric; see README "outbox".
-		g.m.eventFailures.Inc()
-		log.Warn("publish instance.stored failed", "err", err)
+	if g.cfg.EventsOmitPatientID {
+		ev.PatientID = ""
 	}
 
+	if g.outbox != nil {
+		// Instance and event are committed together; the relay publishes the
+		// event, retrying through bus outages, so no event is lost.
+		payload, err := json.Marshal(ev)
+		if err != nil {
+			log.Error("encode event", "err", err)
+			return result(status.OutOfResources, "error")
+		}
+		if err := g.idx.UpsertWithEvent(ctx, rec, &index.OutboxEvent{
+			MsgID: ev.EventID, Subject: events.SubjectInstanceStored, Payload: payload,
+		}); err != nil {
+			log.Error("index instance", "err", err)
+			return result(status.OutOfResources, "error")
+		}
+		g.outbox.Nudge()
+	} else {
+		if err := g.idx.Upsert(ctx, rec); err != nil {
+			log.Error("index instance", "err", err)
+			return result(status.OutOfResources, "error")
+		}
+		pctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		if err := g.events.Publish(pctx, events.SubjectInstanceStored, ev.EventID, ev); err != nil {
+			// The instance is safely archived and indexed; a missed event must
+			// not make the modality resend. Enable the outbox to avoid losing it.
+			g.m.eventFailures.Inc()
+			log.Warn("publish instance.stored failed", "err", err)
+		}
+	}
+
+	g.audit(ctx, auditInstancesStored, "success", "study", inst.StudyInstanceUID,
+		"patient_id", g.auditPatientID(inst.PatientID), "sop_instance_uid", inst.SOPInstanceUID)
 	g.m.storeBytes.Add(float64(n))
 	log.Debug("instance stored", "study", inst.StudyInstanceUID, "bytes", n, "ms", time.Since(start).Milliseconds())
 	return result(status.Success, "success")

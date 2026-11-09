@@ -14,6 +14,8 @@ package runtime
 
 import (
 	"context"
+	"crypto/subtle"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,6 +24,7 @@ import (
 	"os"
 	"os/signal"
 	"sort"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -34,11 +37,20 @@ import (
 
 // AdminConfig controls the shared operational endpoints and logging.
 type AdminConfig struct {
-	Addr            string        `yaml:"addr" env:"RWS_ADMIN_ADDR"`
-	LogLevel        string        `yaml:"log_level" env:"RWS_LOG_LEVEL"`   // debug|info|warn|error
-	LogFormat       string        `yaml:"log_format" env:"RWS_LOG_FORMAT"` // json|text
-	ShutdownTimeout time.Duration `yaml:"shutdown_timeout" env:"RWS_SHUTDOWN_TIMEOUT"`
-	NodeID          string        `yaml:"node_id" env:"RWS_NODE_ID"` // defaults to hostname
+	Addr            string        `yaml:"addr" env:"{P}ADMIN_ADDR,RWS_ADMIN_ADDR"`
+	LogLevel        string        `yaml:"log_level" env:"{P}LOG_LEVEL,RWS_LOG_LEVEL"`    // debug|info|warn|error
+	LogFormat       string        `yaml:"log_format" env:"{P}LOG_FORMAT,RWS_LOG_FORMAT"` // json|text
+	ShutdownTimeout time.Duration `yaml:"shutdown_timeout" env:"{P}SHUTDOWN_TIMEOUT,RWS_SHUTDOWN_TIMEOUT"`
+	NodeID          string        `yaml:"node_id" env:"{P}NODE_ID,RWS_NODE_ID"` // defaults to hostname
+	// Token, when set (directly or via TokenFile), is required as
+	// "Authorization: Bearer <token>" on /metrics, /version and any other
+	// admin endpoint. /healthz and /readyz stay open for container and load
+	// balancer probes, but /readyz omits check details without the token.
+	Token     string `yaml:"token" env:"{P}ADMIN_TOKEN"`
+	TokenFile string `yaml:"token_file" env:"{P}ADMIN_TOKEN_FILE"`
+	// TLSCertFile/TLSKeyFile serve the admin endpoint over HTTPS.
+	TLSCertFile string `yaml:"tls_cert_file" env:"{P}ADMIN_TLS_CERT"`
+	TLSKeyFile  string `yaml:"tls_key_file" env:"{P}ADMIN_TLS_KEY"`
 }
 
 // DefaultAdmin returns sensible defaults for AdminConfig.
@@ -67,7 +79,16 @@ type Runtime struct {
 	cfg     AdminConfig
 	mu      sync.RWMutex
 	checks  map[string]CheckFunc
+	info    []func() map[string]any
 	started time.Time
+}
+
+// AddVersionInfo adds module-specific fields (e.g. license state) to the
+// /version response. Call before Run.
+func (r *Runtime) AddVersionInfo(f func() map[string]any) {
+	r.mu.Lock()
+	r.info = append(r.info, f)
+	r.mu.Unlock()
 }
 
 // New builds a Runtime and its logger.
@@ -78,7 +99,7 @@ func New(module, version string, cfg AdminConfig) *Runtime {
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(collectors.NewGoCollector(), collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 	reg.MustRegister(prometheus.NewGaugeFunc(prometheus.GaugeOpts{
-		Name:        "rws_module_info",
+		Name:        "libre_module_info",
 		Help:        "Static module information.",
 		ConstLabels: prometheus.Labels{"module": module, "version": version, "node": cfg.NodeID},
 	}, func() float64 { return 1 }))
@@ -124,8 +145,16 @@ func (r *Runtime) Run(parent context.Context, components ...Component) error {
 	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
-		r.Logger.Info("admin endpoint listening", "addr", r.cfg.Addr)
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		var err error
+		if r.cfg.TLSCertFile != "" {
+			r.Logger.Info("admin endpoint listening (https)", "addr", r.cfg.Addr)
+			srv.TLSConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+			err = srv.ListenAndServeTLS(r.cfg.TLSCertFile, r.cfg.TLSKeyFile)
+		} else {
+			r.Logger.Info("admin endpoint listening", "addr", r.cfg.Addr)
+			err = srv.ListenAndServe()
+		}
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			return fmt.Errorf("admin http: %w", err)
 		}
 		return nil
@@ -158,7 +187,44 @@ func (r *Runtime) Run(parent context.Context, components ...Component) error {
 	return err
 }
 
+// adminToken resolves the configured token. ok is false when a token file is
+// configured but unreadable or empty; the caller then refuses protected
+// requests instead of serving them unauthenticated.
+func (r *Runtime) adminToken() (token string, ok bool) {
+	if r.cfg.TokenFile == "" {
+		return strings.TrimSpace(r.cfg.Token), true
+	}
+	b, err := os.ReadFile(r.cfg.TokenFile)
+	if err != nil || strings.TrimSpace(string(b)) == "" {
+		r.Logger.Error("admin token file unreadable or empty; protected admin endpoints will refuse requests",
+			"file", r.cfg.TokenFile, "err", err)
+		return "", false
+	}
+	return strings.TrimSpace(string(b)), true
+}
+
 func (r *Runtime) adminMux() *http.ServeMux {
+	token, tokenOK := r.adminToken()
+	authorized := func(req *http.Request) bool {
+		if !tokenOK {
+			return false
+		}
+		if token == "" {
+			return true
+		}
+		got, found := strings.CutPrefix(req.Header.Get("Authorization"), "Bearer ")
+		return found && subtle.ConstantTimeCompare([]byte(got), []byte(token)) == 1
+	}
+	protect := func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			if !authorized(req) {
+				w.Header().Set("WWW-Authenticate", `Bearer realm="libre-admin"`)
+				writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "unauthorized"})
+				return
+			}
+			h.ServeHTTP(w, req)
+		})
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"status": "ok"})
@@ -171,15 +237,27 @@ func (r *Runtime) adminMux() *http.ServeMux {
 		if !ok {
 			code = http.StatusServiceUnavailable
 		}
-		writeJSON(w, code, map[string]any{"ready": ok, "checks": results})
+		body := map[string]any{"ready": ok}
+		if authorized(req) { // check errors can reveal hosts and paths
+			body["checks"] = results
+		}
+		writeJSON(w, code, body)
 	})
-	mux.HandleFunc("GET /version", func(w http.ResponseWriter, _ *http.Request) {
-		writeJSON(w, http.StatusOK, map[string]any{
+	mux.Handle("GET /version", protect(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		body := map[string]any{
 			"module": r.Module, "version": r.Version, "node": r.NodeID,
 			"uptime_seconds": int(time.Since(r.started).Seconds()),
-		})
-	})
-	mux.Handle("GET /metrics", promhttp.HandlerFor(r.Registry, promhttp.HandlerOpts{}))
+		}
+		r.mu.RLock()
+		for _, f := range r.info {
+			for k, v := range f() {
+				body[k] = v
+			}
+		}
+		r.mu.RUnlock()
+		writeJSON(w, http.StatusOK, body)
+	})))
+	mux.Handle("GET /metrics", protect(promhttp.HandlerFor(r.Registry, promhttp.HandlerOpts{})))
 	return mux
 }
 

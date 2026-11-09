@@ -18,21 +18,23 @@ import (
 	"github.com/godicom-dev/gonetdicom/status"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"rws/modules/dicom/internal/blob"
-	"rws/modules/dicom/internal/dcm"
-	"rws/modules/dicom/internal/events"
-	"rws/modules/dicom/internal/index"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/blob"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/events"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
 )
 
 type recPub struct {
 	mu   sync.Mutex
 	msgs []string
+	evs  []any
 }
 
-func (r *recPub) Publish(_ context.Context, subject, id string, _ any) error {
+func (r *recPub) Publish(_ context.Context, subject, id string, payload any) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.msgs = append(r.msgs, subject+" "+id)
+	r.evs = append(r.evs, payload)
 	return nil
 }
 func (r *recPub) Check(context.Context) error { return nil }
@@ -69,7 +71,15 @@ func ctImage(study, series, sop string, n int) *godicom.Dataset {
 func startGateway(t *testing.T, ctx context.Context, remotes map[string]RemoteAE) (string, *Gateway, *recPub) {
 	t.Helper()
 	dir := t.TempDir()
-	blobs, err := blob.NewFS(filepath.Join(dir, "blobs"))
+	var blobs blob.Store
+	var err error
+	if ep := os.Getenv("LIBRE_DCM_TEST_S3_ENDPOINT"); ep != "" { // run the DIMSE flows on object storage too
+		blobs, err = blob.NewS3(ctx, blob.S3Config{Endpoint: ep, Bucket: "libredcm-e2e", Insecure: true, CreateBucket: true,
+			AccessKey: os.Getenv("LIBRE_DCM_TEST_S3_ACCESS_KEY"), SecretKey: os.Getenv("LIBRE_DCM_TEST_S3_SECRET_KEY"),
+			Prefix: t.Name() + "-" + time.Now().Format("150405.000000") + "/"})
+	} else {
+		blobs, err = blob.NewFS(filepath.Join(dir, "blobs"))
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,6 +103,7 @@ func startGateway(t *testing.T, ctx context.Context, remotes map[string]RemoteAE
 	return ln.Addr().String(), gw, pub
 }
 
+// Verifies: DCM-SRS-001, DCM-SRS-002, DCM-SRS-006, DCM-SRS-010, DCM-SRS-011, DCM-SRS-012
 func TestEndToEnd(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
@@ -268,9 +279,16 @@ func TestEndToEnd(t *testing.T) {
 	}
 }
 
+// logSink, when set by a test, receives the gateway log as well.
+var logSink io.Writer
+
 func testWriter() io.Writer {
+	var w io.Writer = io.Discard
 	if testing.Verbose() {
-		return os.Stderr
+		w = os.Stderr
 	}
-	return io.Discard
+	if logSink != nil {
+		return io.MultiWriter(w, logSink)
+	}
+	return w
 }

@@ -6,26 +6,27 @@
 
 **Developed by Patrick Mulcahy, Mulcahy.io** · dev@mulcahy.io
 Full design and developer documentation: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+Planned changes for clustering and storage: [BACKLOG.md](BACKLOG.md)
 
-**Current release:** Libre DCM (`rws-dicom`) **0.1.1-beta.1** (beta, not for clinical use). See the [release notes](docs/releases/v0.1.1-beta.1.md) and [CHANGELOG.md](CHANGELOG.md).
+**Current release:** Libre DCM (`LibreDCM`) **0.1.1-beta.1** (beta, not for clinical use). See the [release notes](docs/releases/v0.1.1-beta.1.md) and [CHANGELOG.md](CHANGELOG.md).
 
 Modular, container-native platform, written in Go. Each module is an
 independent binary and container image that can run on its own or as part of
 the whole system. The first module is **Libre DCM** (the DICOM module, binary
-`rws-dicom`).
+`LibreDCM`).
 
 ```
 platform/            shared chassis every module uses
   config/            YAML file + environment overrides
   runtime/           logging, /healthz /readyz /metrics /version, graceful shutdown
-modules/dicom/       Libre DCM (DIMSE gateway, binary rws-dicom)
-  cmd/rws-dicom/     entrypoint
+modules/dicom/       Libre DCM (DIMSE gateway, binary LibreDCM)
+  cmd/libredcm/      entrypoint
   internal/gateway/  C-ECHO, C-STORE, C-FIND, C-MOVE, C-GET
   internal/blob/     archive storage (filesystem; S3 planned)
   internal/index/    metadata index (SQLite or PostgreSQL)
   internal/events/   event bus (NATS JetStream)
   internal/dcm/      Part 10 wrapping, transfer-syntax policy, value helpers
-third_party/gonetdicom/  Libre RWS fork of the DICOM networking library (see RWS_FORK.md)
+third_party/gonetdicom/  Libre RWS fork of the DICOM networking library (see LIBRE_DCM_FORK.md)
 deploy/              Dockerfile, compose (single node + cluster), HAProxy,
   workstation/       one-step local install (Windows/macOS/Linux)
 scripts/conformance.sh   DCMTK-based conformance smoke test
@@ -53,7 +54,7 @@ uses the same image.
 
 ```bash
 make test                 # unit + end-to-end DIMSE tests
-make build && ./bin/rws-dicom -config modules/dicom/config.example.yaml
+make build && ./bin/LibreDCM -config modules/dicom/config.example.yaml
 make up                   # single node in Docker
 make workstation          # workstation install with checks (see deploy/workstation/INSTALL.md)
 make cluster              # PostgreSQL + NATS + 3 gateways behind HAProxy
@@ -73,7 +74,7 @@ Operational endpoints (default `:8081`): `/healthz` (liveness), `/readyz`
 | C-MOVE | Destinations from `remote_aes`. Streams one instance at a time from storage and keeps the stored transfer syntax, so memory stays flat for any study size. |
 | C-GET | Uncompressed instances only, capped by `get_max_bytes` (library limitation, see below). Use C-MOVE for compressed data. |
 
-Events: `rws.dicom.instance.stored` on JetStream stream `RWS_DICOM`,
+Events: `libre.dcm.instance.stored` on JetStream stream `LIBRE_DCM` (an upgraded 0.1.x install keeps `RWS_DICOM`),
 de-duplicated by event ID. Payload includes patient ID and accession number,
 so keep the bus on a private network with TLS in production.
 
@@ -98,11 +99,11 @@ workstation installer end to end.
 
 ## Known gaps / next work
 
-1. **Event outbox.** If the bus is down, the store still succeeds but the
-   event is lost (counted in `rws_dicom_event_publish_failures_total`). Fix:
-   transactional outbox table plus relay.
-2. **S3/MinIO storage backend.** Replaces the shared volume for real clusters.
-3. **Fork items** (third_party/gonetdicom/RWS_FORK.md): streaming C-MOVE/C-GET
+1. ~~Event outbox~~ (done in 0.2.0: events are written to an outbox table
+   with the instance and published by a relay, so a bus outage delays events
+   instead of losing them).
+2. ~~S3/MinIO storage backend~~ (done in 0.2.0, `LIBRE_DCM_STORAGE_DRIVER=s3`). Next: local staging with async replication (BACKLOG.md).
+3. **Fork items** (third_party/gonetdicom/LIBRE_DCM_FORK.md): streaming C-MOVE/C-GET
    with Pending responses and C-CANCEL, C-GET transfer-syntax awareness,
    calling-AE in handlers (needed for per-AE access control and
    `SourceApplicationEntityTitle`), lazy inbound decode.
@@ -120,14 +121,16 @@ The product family is **Libre**: "Libre" plus a short code for each module.
 | Name | What it is | Formerly |
 |---|---|---|
 | **Libre RWS** | The platform. RWS = Radiology Workflow System. | RWS |
-| **Libre DCM** | The DICOM module. DCM = DICOM. | RWS DICOM (`rws-dicom`) |
+| **Libre DCM** | The DICOM module (program `LibreDCM`). DCM = DICOM. | RWS DICOM (`rws-dicom`) |
 | **Libre WT** | Libre Watch Tower, the web management console (planned). WT = Watch Tower. | RWS DICOM management console |
 
 New modules follow the same pattern, e.g. Libre MWL for the modality
-worklist. The code identifiers (the `rws-dicom` binary, the `rws/dicom`
-image, `RWS_*` environment variables, `rws.dicom.*` event subjects and
-`rws_*` metrics) keep their current names for now; renaming them would break
-existing installs.
+worklist. Since 0.2.0 the code uses the new names: the `LibreDCM` binary, the
+`libre/dcm` image, `LIBRE_DCM_*` settings, `libre.dcm.*` event subjects and
+`libre_dcm_*` metrics. Old `RWS_*` settings are still read (with a warning) and
+events are also published under the old `rws.dicom.*` subjects
+(`LIBRE_DCM_EVENTS_LEGACY_SUBJECTS=false` turns that off), so 0.1.x installs
+and consumers keep working.
 
 ## Versioning
 
@@ -136,7 +139,7 @@ pre-release label while Libre RWS is not ready for clinical use:
 
 - Git tag: `vMAJOR.MINOR.PATCH-beta.N`, e.g. `v0.1.1-beta.1`.
 - Binary (`-version`, `/version`) and image tag: the same without the `v`,
-  e.g. `rws/dicom:0.1.1-beta.1`. `make build` and `make image` take it from
+  e.g. `libre/dcm:0.2.0-beta.1`. `make build` and `make image` take it from
   the tag.
 - `N` goes up for each beta of the same version. The `-beta.N` label is
   dropped only for a release approved for production use.
@@ -149,3 +152,7 @@ in [docs/releases/](docs/releases/).
 Libre RWS was developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 Copyright (c) 2026 Patrick Mulcahy, Mulcahy.io. See NOTICE for third-party
 licenses (gonetdicom and godicom are MIT, Copyright (c) 2026 godicom-dev).
+
+## Licence
+
+Apache License 2.0 (see `LICENSE` and `NOTICE`). Official builds of LibreDCM are activated with a LibreKey license; the source code is free to use under the Apache licence.
