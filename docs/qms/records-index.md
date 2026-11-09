@@ -16,7 +16,7 @@ exists). Subfolders: 01 Training, 02 Suppliers, 03 Design Reviews (signed),
 
 | ID | Record | Type | Date | Drive link | Owner |
 |---|---|---|---|---|---|
-| | | | | | |
+| REC-0001 | LibreDCM 0.2.0-beta.1 release record, signed by Patrick Mulcahy (approver). Source: `docs/releases/v0.2.0-beta.1-record.md` (Markdown SHA-256 `20cd51a2…a11b128b`); signed PDF SHA-256 `10af1533d65f0fdc81a708c4833bf18863914e0c47ef6fa7a26b1931db4e0900` | Release record (signed) | 2026-11-09 | [QMS/04 Release Records (signed)](https://drive.google.com/file/d/1Ci56Ca4XfnEPkGu8vWGGLMIDQmj8Hb73/view) | Patrick Mulcahy |
 
 Record types: training, supplier evaluation/contract, design review (signed),
 release record (signed), management review, internal audit, CAPA,
