@@ -79,7 +79,16 @@ type Runtime struct {
 	cfg     AdminConfig
 	mu      sync.RWMutex
 	checks  map[string]CheckFunc
+	info    []func() map[string]any
 	started time.Time
+}
+
+// AddVersionInfo adds module-specific fields (e.g. license state) to the
+// /version response. Call before Run.
+func (r *Runtime) AddVersionInfo(f func() map[string]any) {
+	r.mu.Lock()
+	r.info = append(r.info, f)
+	r.mu.Unlock()
 }
 
 // New builds a Runtime and its logger.
@@ -235,10 +244,18 @@ func (r *Runtime) adminMux() *http.ServeMux {
 		writeJSON(w, code, body)
 	})
 	mux.Handle("GET /version", protect(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		writeJSON(w, http.StatusOK, map[string]any{
+		body := map[string]any{
 			"module": r.Module, "version": r.Version, "node": r.NodeID,
 			"uptime_seconds": int(time.Since(r.started).Seconds()),
-		})
+		}
+		r.mu.RLock()
+		for _, f := range r.info {
+			for k, v := range f() {
+				body[k] = v
+			}
+		}
+		r.mu.RUnlock()
+		writeJSON(w, http.StatusOK, body)
 	})))
 	mux.Handle("GET /metrics", protect(promhttp.HandlerFor(r.Registry, promhttp.HandlerOpts{})))
 	return mux

@@ -69,12 +69,13 @@ func main() {
 	genCertHosts := flag.String("gen-cert-hosts", "", "comma-separated DNS names / IPs for -gen-cert")
 	genCertForce := flag.Bool("gen-cert-force", false, "replace an existing certificate with -gen-cert")
 	echoTLS := flag.Bool("echo-tls", config.Getenv("LIBRE_DCM_TLS_CERT", "RWS_DICOM_TLS_CERT") != "", "use DICOM TLS for -echo (default: on when this node has a TLS certificate)")
-	licStatus := flag.Bool("license-status", false, "show the license status and exit (0 receiving, 2 not receiving, 3 no license needed)")
+	licStatus := flag.Bool("license-status", false, "show the license status and exit (0 licensed, 2 unlicensed, 3 no license needed)")
 	licRequest := flag.Bool("license-request", false, "print an activation request for this machine (offline activation) and exit")
 	licActivate := flag.String("license-activate", "", "activate this machine online with a license KEY and exit")
 	licInstall := flag.String("license-install", "", "install a license FILE (offline activation) and exit")
 	licKey := flag.String("license-key", "", "license key to include in -license-request")
 	licSite := flag.String("license-site", "", "site name for -license-request / -license-activate")
+	licAck := flag.String("license-ack", "", "acknowledge the unlicensed notice as administrator NAME (lifts the configuration block for 24 hours) and exit")
 	backupTo := flag.String("backup", "", "write a consistent snapshot of the SQLite index to PATH and exit (safe while the module runs)")
 	flag.Parse()
 	if *showVersion {
@@ -94,8 +95,8 @@ func main() {
 		}
 		return
 	}
-	if *licStatus || *licRequest || *licActivate != "" || *licInstall != "" {
-		os.Exit(licenseCommand(*cfgPath, *licStatus, *licRequest, *licActivate, *licInstall, *licKey, *licSite))
+	if *licStatus || *licRequest || *licActivate != "" || *licInstall != "" || *licAck != "" {
+		os.Exit(licenseCommand(*cfgPath, *licStatus, *licRequest, *licActivate, *licInstall, *licKey, *licSite, *licAck))
 	}
 	if *backupTo != "" {
 		if err := backup(*cfgPath, *backupTo); err != nil {
@@ -197,13 +198,17 @@ func run(cfgPath string) error {
 	rt.AddReadinessCheck("events", pub.Check)
 
 	gw := gateway.New(cfg.DICOM, rt.NodeID, log, rt.Registry, blobs, idx, pub)
-	components := []runtime.Component{gw, &reloader{path: cfgPath, gw: gw, log: log}}
 	lic, err := licensing.New(cfg.License, version, parseBuildDate(), log, rt.Registry)
 	if err != nil {
 		return fmt.Errorf("license: %w", err)
 	}
+	// Licensing never touches the DICOM gateway (DCM-SRS-058). An unlicensed,
+	// unacknowledged node only blocks configuration reloads (DCM-SRS-060).
+	rl := &reloader{path: cfgPath, gw: gw, log: log}
+	components := []runtime.Component{gw, rl}
 	if lic != nil {
-		gw.UseReceiveGate(lic.CanReceive)
+		rl.gate = lic.ConfigChangesAllowed
+		rt.AddVersionInfo(lic.Info)
 		components = append(components, lic)
 	}
 	if cfg.Events.Driver != "" && cfg.Events.Driver != "none" {

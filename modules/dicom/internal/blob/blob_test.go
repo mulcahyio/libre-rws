@@ -37,6 +37,7 @@ func stores(t *testing.T) map[string]Store {
 	return out
 }
 
+// Verifies: DCM-SRS-005
 func TestStoreContract(t *testing.T) {
 	for name, s := range stores(t) {
 		t.Run(name, func(t *testing.T) {

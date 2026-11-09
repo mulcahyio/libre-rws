@@ -1,0 +1,40 @@
+name: qms
+
+# Quality gates for every change (docs/qms/SDP.md §4). Results are design
+# verification records: keep run logs for released builds.
+on:
+  pull_request:
+  push:
+    branches: [master, "release/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"   # >= 1.26.10 required (GO-2026-6809)
+      - name: Toolchain version (record)
+        run: go version
+      - name: Vet
+        run: go vet ./...
+      - name: Unit and integration tests (race detector)
+        run: go test -race -count=1 ./...
+      - name: Vulnerability scan (govulncheck)
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+      - name: SBOM (CycloneDX)
+        run: go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.12.0 mod -licenses -json -output sbom.cdx.json .
+      - name: Trace check (requirements to tests)
+        # Report-only until the QMS baseline: 4 active requirements still lack
+        # tests (see gap-assessment.md). Remove continue-on-error at baseline.
+        continue-on-error: true
+        run: python3 scripts/qms/trace.py --check
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qms-records
+          path: sbom.cdx.json

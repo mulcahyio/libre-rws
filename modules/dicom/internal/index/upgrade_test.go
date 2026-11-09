@@ -9,6 +9,7 @@ import (
 
 // TestUpgradeFromV1 opens an index created by 0.1.x (schema v1: no outbox,
 // no folded name column) and checks it is upgraded in place.
+// Verifies: DCM-SRS-021
 func TestUpgradeFromV1(t *testing.T) {
 	ctx := context.Background()
 	path := filepath.Join(t.TempDir(), "old.db")

@@ -21,6 +21,7 @@
     activate KEY            Activate this PC online with a license key
     license-request [KEY]   Write an activation request (PC without internet)
     license-install FILE    Install a license file from the LibreKey portal
+    license-ack NAME        Acknowledge the unlicensed notice (lifts the configuration block for 24 hours)
     uninstall  Remove containers and image. Data is kept unless -RemoveData.
 
   -Yes takes the values in .env without asking (unattended installs).
@@ -33,7 +34,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('install', 'configure', 'upgrade', 'verify', 'status', 'logs', 'start', 'stop', 'restart', 'backup', 'uninstall', 'license', 'activate', 'license-request', 'license-install')]
+    [ValidateSet('install', 'configure', 'upgrade', 'verify', 'status', 'logs', 'start', 'stop', 'restart', 'backup', 'uninstall', 'license', 'activate', 'license-request', 'license-install', 'license-ack')]
     [string]$Command = 'install',
     [Parameter(Position = 1)]
     [string]$Arg,
@@ -472,6 +473,7 @@ switch ($Command) {
     }
     'license-request' { & docker compose -f docker-compose.yml run --rm --no-deps -T dicom -license-request -license-key "$Arg" -license-site (Read-Env)['LIBRE_DCM_AE_TITLE'] }
     'license-install' { Install-LicenseFile $Arg; & docker compose -f docker-compose.yml restart dicom 2>$null | Out-Null; Ok 'License installed' }
+    'license-ack' { if (-not $Arg) { Fail 'usage: .\LibreDCM.ps1 license-ack "YOUR NAME"' }; & docker compose -f docker-compose.yml run --rm --no-deps -T dicom -license-ack $Arg }
     'uninstall' {
         if ($RemoveData) {
             $c = Read-Host '  This permanently deletes all stored images and the index in the Docker volumes. Type DELETE to confirm'

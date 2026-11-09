@@ -2,6 +2,7 @@ package main
 
 import "testing"
 
+// Verifies: DCM-SRS-013
 func TestParseRemoteAEs(t *testing.T) {
 	m, err := parseRemoteAEs(" VIEWER1=host.docker.internal:11113 ; PACS_B=10.0.0.5:104:PACSB,")
 	if err != nil {

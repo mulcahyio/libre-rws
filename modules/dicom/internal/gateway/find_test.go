@@ -14,6 +14,7 @@ import (
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
 )
 
+// Verifies: DCM-SRS-008
 func TestTimeBounds(t *testing.T) {
 	cases := []struct{ in, lo, hi string }{
 		{"08", "080000", "085959.999999"},
@@ -32,6 +33,7 @@ func TestTimeBounds(t *testing.T) {
 	}
 }
 
+// Verifies: DCM-SRS-006
 func TestBuildFilterKinds(t *testing.T) {
 	on := queryOptions{caseInsensitivePN: true}
 	f, _ := buildFilter(queryKeys["PatientName"], []string{"müller*"}, on)
@@ -48,6 +50,7 @@ func TestBuildFilterKinds(t *testing.T) {
 	}
 }
 
+// Verifies: DCM-SRS-009
 func TestResponseCharset(t *testing.T) {
 	if got := responseCharset(nil, []string{"DOE^JANE"}); got != nil {
 		t.Errorf("ASCII result changed charset: %v", got)
@@ -65,6 +68,7 @@ func TestResponseCharset(t *testing.T) {
 
 // TestFindRefinementsEndToEnd stores a Latin-1 encoded study over the network
 // and checks case-insensitive names, time ranges and the response charset.
+// Verifies: DCM-SRS-007, DCM-SRS-008, DCM-SRS-009
 func TestFindRefinementsEndToEnd(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

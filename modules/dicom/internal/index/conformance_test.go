@@ -48,6 +48,7 @@ func uids(rows []Row, key string) []string {
 	return out
 }
 
+// Verifies: DCM-SRS-006, DCM-SRS-020
 func TestConformance(t *testing.T) {
 	cases := []struct {
 		name    string

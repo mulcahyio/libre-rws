@@ -8,6 +8,7 @@ import (
 	"testing"
 )
 
+// Verifies: DCM-SRS-042
 func TestGenCert(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "tls")
 	if err := genCert(dir, "pacs.clinic.local, 192.168.1.50", false); err != nil {

@@ -1,0 +1,24 @@
+name: Requirement / feature
+description: A new or changed requirement (design input)
+labels: ["type:requirement"]
+body:
+  - type: input
+    id: module
+    attributes: {label: Module, placeholder: "LibreDCM / Libre WT / LibreKey client / platform"}
+    validations: {required: true}
+  - type: textarea
+    id: need
+    attributes: {label: User need, description: "Who needs what, and why? (clinical or operational context)"}
+    validations: {required: true}
+  - type: textarea
+    id: requirement
+    attributes: {label: Proposed requirement text, description: "Testable 'The system shall…' statements. IDs are assigned in the SRS PR."}
+    validations: {required: true}
+  - type: textarea
+    id: acceptance
+    attributes: {label: Acceptance criteria / how it will be verified}
+    validations: {required: true}
+  - type: textarea
+    id: risk
+    attributes: {label: First risk and security impact note, description: "Could this cause or control a hazard? Does it touch network, auth, patient data?"}
+    validations: {required: true}

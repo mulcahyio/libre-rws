@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -9,6 +10,9 @@ import (
 
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway"
 )
+
+// errReloadBlocked: an unlicensed node needs an administrator acknowledgement first.
+var errReloadBlocked = errors.New("config reload blocked until the license notice is acknowledged")
 
 // reloadTarget is the part of the gateway that can change without a restart.
 type reloadTarget interface {
@@ -24,6 +28,7 @@ type reloader struct {
 	path string
 	gw   reloadTarget
 	log  *slog.Logger
+	gate func() (bool, string) // nil: always allowed; licensing blocks reloads while unacknowledged
 }
 
 func (r *reloader) Name() string { return "config-reload" }
@@ -43,6 +48,12 @@ func (r *reloader) Run(ctx context.Context) error {
 }
 
 func (r *reloader) reload() error {
+	if r.gate != nil {
+		if ok, why := r.gate(); !ok {
+			r.log.Error("config reload blocked; keeping current settings", "reason", why)
+			return errReloadBlocked
+		}
+	}
 	cfg, err := loadConfig(r.path)
 	if err != nil {
 		r.log.Error("config reload failed; keeping current settings", "err", err)

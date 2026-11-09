@@ -3,7 +3,7 @@
 # Libre RWS (Radiology Workflow System) - developed by Patrick Mulcahy, Mulcahy.io <dev@mulcahy.io>
 #
 #   ./LibreDCM.sh install | configure | upgrade | verify | status | logs | start | stop | restart | backup | uninstall [--remove-data]
-#   ./LibreDCM.sh license | activate KEY | license-request [KEY] | license-install FILE   (official builds)
+#   ./LibreDCM.sh license | activate KEY | license-request [KEY] | license-install FILE | license-ack NAME   (official builds)
 #
 # install asks the install-time questions (storage, TLS, patient IDs) the first
 # time; `configure` asks them again. Set LIBREDCM_YES=1 to take the values in
@@ -311,6 +311,7 @@ case "$CMD" in
   activate) [ -n "${2:-}" ] || fail "usage: ./LibreDCM.sh activate KEY"; setenv LIBRE_DCM_LICENSE_KEY "$2"; ensure_license; compose restart dicom 2>/dev/null || true ;;
   license-request) lic -license-request -license-key "${2:-}" -license-site "$(envval LIBRE_DCM_AE_TITLE)" ;;
   license-install) license_install "${2:-}" && { compose restart dicom 2>/dev/null || true; } ;;
+  license-ack) [ -n "${2:-}" ] || fail "usage: ./LibreDCM.sh license-ack \"YOUR NAME\""; lic -license-ack "$2" ;;
   uninstall)
     if [ "${2:-}" = --remove-data ]; then
       read -rp "  This permanently deletes all stored images and the index. Type DELETE to confirm: " c

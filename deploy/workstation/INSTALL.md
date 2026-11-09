@@ -78,11 +78,17 @@ Source builds (compiled yourself from the open-source code) need none.
   download the license file, then run `license-install <file>` and `install`.
 - **Renewal:** annual licenses renew automatically when the PC can reach the
   LibreKey server in the last 30 days; offline PCs need a new license file.
-- **Expiry:** after the expiry date LibreDCM keeps working for the grace
-  period (30 days), with warnings in the log. Then it **stops receiving new
-  studies** (C-STORE is refused with "out of resources", so modalities keep
-  the images and retry). C-ECHO, C-FIND, C-MOVE and C-GET keep working, so
-  all existing studies stay available.
+- **Expiry:** licensing **never stops DICOM services**. Receiving, searching
+  and retrieving images keep working in every license state, so patient care
+  is never interrupted. After the expiry date there is a 30-day grace period
+  with a daily warning in the log. After that, LibreDCM is *unlicensed*:
+  - an error is logged **every hour**;
+  - configuration reloads are blocked;
+  - `/version` and the metrics report the state.
+  This continues until an administrator acknowledges it with
+  `license-ack "YOUR NAME"`. The acknowledgement is written to the audit log
+  and silences the reminders for 24 hours; then they start again until the
+  license is renewed. Updates and support need a valid license.
 - **Moving to another PC:** deactivate the old PC in the portal, then
   activate the new one.
 
@@ -91,10 +97,11 @@ Source builds (compiled yourself from the open-source code) need none.
 .\LibreDCM.ps1 activate LK-XXXXX-...      # activate online
 .\LibreDCM.ps1 license-request            # request file for offline activation
 .\LibreDCM.ps1 license-install FILE       # install a license file
+.\LibreDCM.ps1 license-ack "Jane Admin"   # acknowledge the unlicensed notice (24 hours)
 ```
 
-Metrics: `libre_dcm_license_state` (0 valid, 1 grace, 2 not receiving) and
-`libre_dcm_license_days_left`.
+Metrics: `libre_dcm_license_state` (0 valid, 1 grace, 2 unlicensed),
+`libre_dcm_license_days_left` and `libre_dcm_license_ack_required`.
 
 ## Other settings
 

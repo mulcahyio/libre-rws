@@ -32,12 +32,6 @@ func (g *Gateway) onCStore(ctx context.Context, req ae.StoreRequest) uint16 {
 	}
 	log := g.log.With("sop_instance_uid", req.AffectedSOPInstanceUID)
 
-	if g.receiveGate != nil {
-		if ok, why := g.receiveGate(); !ok {
-			log.Warn("C-STORE refused: not receiving new studies", "reason", why)
-			return result(status.OutOfResources, "license")
-		}
-	}
 	if len(req.Dataset) == 0 || req.TransferSyntax == "" {
 		log.Warn("C-STORE without dataset")
 		return result(status.CannotUnderstand, "invalid")

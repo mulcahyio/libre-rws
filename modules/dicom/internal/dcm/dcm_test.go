@@ -9,6 +9,7 @@ import (
 
 // The archived file must be a valid Part 10 file whose dataset bytes are
 // exactly what was received on the wire.
+// Verifies: DCM-SRS-004
 func TestPart10RoundTrip(t *testing.T) {
 	ds := godicom.NewDataset()
 	_ = ds.SetString(godicom.MustTag("SOPClassUID"), "1.2.840.10008.5.1.4.1.1.7")
@@ -41,6 +42,7 @@ func TestPart10RoundTrip(t *testing.T) {
 	}
 }
 
+// Verifies: DCM-SRS-004
 func TestStringsHandlesRawAndMultiValues(t *testing.T) {
 	ds := godicom.NewDataset()
 	_ = ds.SetStrings(godicom.MustTag("StudyInstanceUID"), "1.2", "1.3")
@@ -53,6 +55,7 @@ func TestStringsHandlesRawAndMultiValues(t *testing.T) {
 	}
 }
 
+// Verifies: DCM-SRS-003
 func TestSelectStorageSyntaxKeepsSenderPreference(t *testing.T) {
 	// A modality offering JPEG 2000 first, with native fallbacks in the same
 	// context, must be allowed to send compressed (upstream picked Implicit).

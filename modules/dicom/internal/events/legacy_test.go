@@ -14,6 +14,7 @@ func (c *capPub) Publish(_ context.Context, subject, id string, _ any) error {
 func (c *capPub) Check(context.Context) error { return nil }
 func (c *capPub) Close() error                { return nil }
 
+// Verifies: DCM-SRS-031
 func TestLegacySubjects(t *testing.T) {
 	c := &capPub{}
 	p := legacyPub{c}

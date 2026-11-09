@@ -103,6 +103,7 @@ func startGateway(t *testing.T, ctx context.Context, remotes map[string]RemoteAE
 	return ln.Addr().String(), gw, pub
 }
 
+// Verifies: DCM-SRS-001, DCM-SRS-002, DCM-SRS-006, DCM-SRS-010, DCM-SRS-011, DCM-SRS-012
 func TestEndToEnd(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
