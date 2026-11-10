@@ -19,12 +19,26 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
   associations, rejections, stores, the outbox and the licence state
   (DCM-SRS-054). The trace matrix now shows 38 of 38 active requirements
   verified, so the CI trace check is now blocking.
+- Static analysis in CI: gosec v2.30.0, blocking for Libre RWS code,
+  report-only for `third_party/`; the gonetdicom fork and LibreKey client
+  copy tests now run in CI too. Triage in `docs/dhf/libredcm/cybersecurity.md` §6.
+- Anomaly list `docs/dhf/libredcm/anomalies.md` (ANOM-001…007).
+
+### Fixed
+- Part 10 writer refuses File Meta values too long to encode (or empty
+  identifiers) instead of writing an unreadable file (DCM-SRS-018,
+  ANOM-001, found by gosec). Over-long but encodable UIDs from
+  non-conformant senders are still archived as received.
 
 ### Tested (2026-11-10)
 - New tests pass with `-race`, 15 repeated runs without a flake. Mutation
   checks: allowing TLS 1.0, dropping the rejected-association counter and
   acknowledging a store whose index write failed each make the matching test
   fail (the last one is timing-dependent: caught in 2 of 3 runs).
+- gosec: 15 findings in Libre RWS code triaged to 0 open (1 fixed defect,
+  13 annotated, 1 cosmetic fix); CI scan commands run locally in the
+  golang:1.26 image. Probe: before the fix an 84-byte SOP Instance UID was
+  archived and a 70,000-byte one refused by the filesystem store (A700).
 
 ## LibreDCM 0.2.0-beta.1 (2026-11-09)
 

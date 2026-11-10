@@ -27,7 +27,7 @@ import (
 // overrides. dst must be a pointer to a struct already populated with defaults.
 func Load(path string, dst any) error {
 	if path != "" {
-		b, err := os.ReadFile(path)
+		b, err := os.ReadFile(path) // #nosec G304 -- path is the administrator's -config flag
 		switch {
 		case err == nil:
 			if err := yaml.Unmarshal(b, dst); err != nil {

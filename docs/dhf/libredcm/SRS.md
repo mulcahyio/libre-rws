@@ -34,6 +34,7 @@ builds the trace matrix.
 | DCM-SRS-015 | When a calling-AE allow-list (`AE`, `AE@IP`, `AE@CIDR`) is configured, associations from other peers shall be rejected; an invalid list shall reject all peers rather than allow all. | Active | HAZ-007 |
 | DCM-SRS-016 | On SIGHUP, LibreDCM shall reload remote destinations and the allow-list without dropping open associations; a configuration that fails to load shall leave the running settings unchanged. | Active | HAZ-005, HAZ-007 |
 | DCM-SRS-017 | LibreDCM shall record the calling AE title of the sender with each stored instance. | Active | HAZ-008 |
+| DCM-SRS-018 | LibreDCM shall refuse to archive an instance (failure status, nothing written) when its SOP Class UID, SOP Instance UID or transfer syntax UID is empty, or when any File Meta value is too long to encode (over 65,534 bytes), instead of writing a Part 10 file that cannot be read back. Values longer than PS3.5 allows but still encodable are archived as received. Added 2026-11-10 (gosec G115 finding, ANOM-001). | Active | HAZ-003 |
 
 ## 2. Index and data management
 

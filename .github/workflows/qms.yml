@@ -24,6 +24,19 @@ jobs:
         run: go vet ./...
       - name: Unit and integration tests (race detector)
         run: go test -race -count=1 ./...
+      - name: Fork and client-copy tests (LibreDCM software items, not SOUP)
+        run: |
+          (cd third_party/gonetdicom && go test -race -count=1 ./...)
+          (cd third_party/librekey && go test -race -count=1 ./...)
+      - name: SAST (gosec), blocking for Libre RWS code
+        # Every finding is fixed or carries a "#nosec <rule> -- reason" note;
+        # triage in docs/dhf/libredcm/cybersecurity.md.
+        run: go run github.com/securego/gosec/v2/cmd/gosec@v2.30.0 -exclude-dir=third_party ./...
+      - name: SAST (gosec) on third_party, report-only
+        # Findings are triaged in cybersecurity.md; the report is kept as a CI artifact.
+        run: |
+          (cd third_party/gonetdicom && go run github.com/securego/gosec/v2/cmd/gosec@v2.30.0 -no-fail -fmt text -out ../../gosec-gonetdicom.txt ./...)
+          (cd third_party/librekey && go run github.com/securego/gosec/v2/cmd/gosec@v2.30.0 -no-fail -fmt text -out ../../gosec-librekey.txt ./...)
       - name: Vulnerability scan (govulncheck)
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
       - name: SBOM (CycloneDX)
@@ -35,4 +48,6 @@ jobs:
         if: always()
         with:
           name: qms-records
-          path: sbom.cdx.json
+          path: |
+            sbom.cdx.json
+            gosec-*.txt

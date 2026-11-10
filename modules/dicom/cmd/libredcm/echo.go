@@ -26,7 +26,7 @@ func echo(addr, calledAE string, useTLS bool) int {
 	defer cancel()
 	var tlsCfg *tls.Config
 	if useTLS {
-		tlsCfg = &tls.Config{InsecureSkipVerify: true, MinVersion: tls.VersionTLS12} //nolint:gosec // reachability check only
+		tlsCfg = &tls.Config{InsecureSkipVerify: true, MinVersion: tls.VersionTLS12} // #nosec G402 -- reachability check of a (often self-signed) install, not a trust decision
 	}
 	scu, err := ae.Dial(ctx, ae.Config{
 		TLS:     tlsCfg,

@@ -6,3 +6,6 @@ deploy/workstation/backups/
 deploy/workstation/tls/*
 !deploy/workstation/tls/.gitkeep
 deploy/workstation/.env.bak-*
+
+# CI scan reports (artifacts, not records)
+gosec-*.txt

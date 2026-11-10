@@ -23,7 +23,7 @@ func (a Ack) ValidAt(now time.Time) bool {
 
 func readAck(path string) (Ack, error) {
 	var a Ack
-	b, err := os.ReadFile(path)
+	b, err := os.ReadFile(path) // #nosec G304 -- path comes from the licence configuration, not from the network
 	if err != nil {
 		return a, err
 	}
@@ -42,11 +42,11 @@ func writeAck(path string, a Ack) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil { // #nosec G301 -- data directory shared with the licence file; holds no secrets
 		return err
 	}
 	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, append(b, '\n'), 0o644); err != nil {
+	if err := os.WriteFile(tmp, append(b, '\n'), 0o644); err != nil { // #nosec G306 -- administrator name, time and state only; no secrets
 		return err
 	}
 	return os.Rename(tmp, path)

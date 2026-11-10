@@ -64,3 +64,39 @@ security use cases); security risk assessment with scoring and transfer into
 Semgrep); fuzzing; independent penetration test; customer security
 documentation and MDS2 form; patch and end-of-support policy; postmarket
 metrics (time to patch).
+
+## 6. Static analysis (SAST), gosec v2.30.0 (added 2026-11-10)
+
+CI runs gosec on every pull request. Libre RWS code (`modules/`, `platform/`)
+is **blocking**: the build fails on any finding that is neither fixed nor
+annotated `#nosec <rule> -- <reason>`. `third_party/` is scanned
+report-only and the report is kept as a CI artifact.
+
+Baseline run on branch `qms/retro-dcm` (2026-11-10), Libre RWS code, 24
+files: 15 findings, all triaged below; result after triage 0 open, 13
+annotated.
+
+| Rule | Where | Verdict | Action |
+|---|---|---|---|
+| G115 int→uint16/uint32 | `dcm.Part10` / `writeMeta` | **Real defect (latent).** A File Meta value over 65,535 bytes would wrap the 16-bit length and produce an unreadable file. Not reachable through the filesystem store today (the file name would exceed the OS limit first, so the store fails), but reachable in principle with S3 keys or future callers | Fixed: Part10 refuses values that cannot be encoded (DCM-SRS-018, ANOM-001); remaining conversions annotated as bounded |
+| G115 int→uint16 | `retrieve.go` `clamp16` | False positive: value clamped to 65,535 the line before | Annotated |
+| G402 InsecureSkipVerify | `-echo` (TLS) and `-healthcheck` | Accepted: reachability check of an often self-signed install, and the container probe of its own loopback port. Neither carries data or makes a trust decision | Annotated |
+| G304 file path from variable | config loader, licence ack, licence install, `blob.FS.Get` | Accepted: paths come from the administrator (flags, configuration). Blob keys pass `FS.path`, which rejects `..` and anchors under the root | Annotated |
+| G301/G306 0755/0644 | licence acknowledgement file, `-gen-cert` certificate | Accepted: the acknowledgement holds a name, time and state; the certificate is public (its key is written 0600) | Annotated |
+| G104 unhandled error | `index.backfillFold` `rows.Close()` | Cosmetic | Fixed (`_ =`) |
+
+`third_party/gonetdicom` (fork, a LibreDCM software item) 22 findings:
+
+| Rule | Count | Verdict |
+|---|---|---|
+| G115 decode side (`pdu/pdata.go`, `dimse/command.go`, uint64→int) | 4 | False positive: lengths are compared in uint64 against the buffer length before conversion (comments in the code explain why); fuzz targets cover these paths (see §7 once added) |
+| G115 encode side (PDU/command/associate lengths, int→uint16/uint32) | 14 | Bounded: values are built locally and limited by the negotiated PDU size or by configuration (UIDs, AE titles, user identity). Track: add explicit length checks when the fork is next changed |
+| G115 message ID (`ae/assoc.go`, uint32→uint16) | 1 | Intended wrap-around of the DIMSE message ID counter (zero skipped) |
+| G118 goroutine with context.Background | 1 | N-EVENT-REPORT on a new association (`scp.go`); not used by LibreDCM |
+| G705 XSS taint (`dicomweb/server.go`) | 3 | Not compiled into LibreDCM (the DICOMweb package is not imported) |
+
+`third_party/librekey` (client copy) 7 findings: G204 subprocess with
+variable arguments in `fingerprint` (fixed command names, arguments are not
+user input), G304/G301/G306 for the licence and activation files (paths
+from configuration; licence files are signed and not secret). Accepted; to
+be annotated in the LibreKey repository and re-synced.
