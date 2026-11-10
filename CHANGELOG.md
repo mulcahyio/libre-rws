@@ -14,6 +14,12 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- Release verification (`scripts/qms/release-verify.sh`) now also runs
+  LibreDVT: its engine positive controls (forced to re-run, never taken from
+  the build cache) and the bundled LibreDCM conformance plan against the
+  source-build and the unlicensed official-build containers, next to the
+  DCMTK script; both must pass (Patrick, 2026-11-10, issue #16). JUnit and
+  HTML reports are kept in the verification output.
 - **LibreDVT 0.1 (DICOM Validation & Test)**, a new standalone module
   (`modules/dvt`, image `libre/dvt`, issue #12): web UI and command line to
   validate DICOM objects (dicom3tools `dciodvfy`/`dcentvfy`, pydicom

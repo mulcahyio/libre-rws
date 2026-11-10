@@ -15,7 +15,7 @@ and tick each item. A release without a complete record is not a release.
 ## Verification of the exact build
 - [ ] Container image built from the tag; image digest recorded
 - [ ] `make vet test` and `make test-postgres` (and S3 suite) pass on the tag; logs archived
-- [ ] System tests: DCMTK conformance (incl. JPEG, JPEG 2000, RLE, JPEG-LS), cluster failover, NATS outage, installer upgrade from previous release (Linux and Windows)
+- [ ] System tests: DCMTK conformance and LibreDVT conformance plan, both passing (incl. JPEG, JPEG 2000, RLE, JPEG-LS); LibreDVT engine positive controls pass, cluster failover, NATS outage, installer upgrade from previous release (Linux and Windows)
 - [ ] Signed test report written
 
 ## Review and release

@@ -2,7 +2,9 @@
 # Release verification for LibreDCM (docs/qms/release-checklist.md).
 # Usage: scripts/qms/release-verify.sh VERSION [OUTDIR]
 # Runs against the current checkout (needs Docker, the rws-gocache volume and
-# the rws-e2e-dcmtk image); logs to OUTDIR. Copy the logs into
+# the rws-e2e-dcmtk image); logs to OUTDIR. Conformance runs twice per
+# container: DCMTK (scripts/conformance.sh) and LibreDVT (independent engines,
+# bundled LibreDCM plan); both must pass (Patrick, 2026-11-10, issue #16). Copy the logs into
 # docs/releases/v<VERSION>-verification/ for the release record.
 set -uo pipefail
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
@@ -54,6 +56,14 @@ docker build -q -f deploy/docker/Dockerfile.dicom --build-arg VERSION=$VER --bui
 step "image build (official build)"
 docker build -q -f deploy/docker/Dockerfile.dicom --build-arg VERSION=$VER --build-arg BUILD_DATE=$DATE --build-arg BUILD_TAGS=official -t libre/dcm:$VER-official . > "$OUT/build-official.log" 2>&1 && res "PASS image id $(docker inspect -f '{{.Id}}' libre/dcm:$VER-official)" || res FAIL
 
+step "LibreDVT engine positive controls (tool validation, QMS-SOP-011)"
+# --no-cache-filter: the tests must really run for the record, not come from the build cache.
+docker build --progress plain --no-cache-filter test -f deploy/docker/Dockerfile.dvt --target test . > "$OUT/libredvt-engine-tests.log" 2>&1; rc=$?
+n=$(grep -cE '^#[0-9]+ [0-9.]+ ok ' "$OUT/libredvt-engine-tests.log")
+[ $rc -eq 0 ] && [ "$n" -gt 0 ] && res "PASS ($n packages ok)" || res "FAIL (exit $rc, $n packages ok)"
+step "LibreDVT image build"
+docker build -q -f deploy/docker/Dockerfile.dvt --build-arg VERSION=$VER -t libre/dvt:$VER . > "$OUT/build-libredvt.log" 2>&1 && res "PASS image id $(docker inspect -f '{{.Id}}' libre/dvt:$VER)" || res FAIL
+
 # ---- system tests on a Docker network ----
 NET=rel-net; docker network rm $NET >/dev/null 2>&1; docker network create $NET >/dev/null
 SAMPLES='CT_small.dcm MR_small_RLE.dcm MR_small_jp2klossless.dcm JPEG2000.dcm MR_small_jpeg_ls_lossless.dcm SC_rgb_jpeg_dcmtk.dcm'
@@ -61,21 +71,29 @@ conf() { # $1 = gateway container
   docker run --rm --name dcmtk-runner --network $NET -v "$REPO/scripts":/scripts:ro --entrypoint bash rws-e2e-dcmtk -c \
     "set -e; D=\$(python3 -c 'import pydicom,os;print(os.path.join(os.path.dirname(pydicom.__file__),\"data\",\"test_files\"))'); mkdir -p /tmp/s; for f in $SAMPLES; do cp \$D/\$f /tmp/s/ 2>/dev/null || true; done; ls /tmp/s; bash /scripts/conformance.sh /tmp/s $1 11112 LIBREDCM"
 }
+dvt() { # $1 = gateway container, $2 = report name; LibreDVT plan, reports kept as records
+  mkdir -p "$OUT/libredvt"; chmod 777 "$OUT/libredvt"
+  docker run --rm --name dvt-runner --network $NET -v "$OUT/libredvt":/out libre/dvt:$VER run \
+    -host $1 -port 11112 -called-aet LIBREDCM -lab \
+    -junit /out/$2-junit.xml -html /out/$2-report.html -json /out/$2-run.json /opt/libredvt/plans/libredcm-conformance.yaml
+}
 start_gw() { # $1 name $2 image
   docker rm -f $1 >/dev/null 2>&1
-  docker run -d --name $1 --network $NET -e LIBRE_DCM_REMOTE_AES=STORESCP=dcmtk-runner:11113 -e LIBRE_DCM_LOG_FORMAT=text $2 >/dev/null
+  docker run -d --name $1 --network $NET -e LIBRE_DCM_REMOTE_AES=STORESCP=dcmtk-runner:11113,LIBREDVT=dvt-runner:11115 -e LIBRE_DCM_LOG_FORMAT=text $2 >/dev/null
   for i in $(seq 1 40); do [ "$(docker inspect -f '{{.State.Health.Status}}' $1 2>/dev/null)" = healthy ] && return 0; sleep 1; done; return 1
 }
 
 step "DCMTK conformance (source build container)"
 start_gw rel-gw libre/dcm:$VER && res "container healthy" || res "container NOT healthy"
 conf rel-gw > "$OUT/conformance-source.log" 2>&1 && res "PASS: $(grep -ciE 'pass|ok' "$OUT/conformance-source.log") pass lines" || res "FAIL (see conformance-source.log)"
+dvt rel-gw source > "$OUT/libredvt-source.log" 2>&1 && res "LibreDVT PASS: $(tail -1 "$OUT/libredvt-source.log")" || res "LibreDVT FAIL (see libredvt-source.log)"
 docker run --rm --network $NET curlimages/curl:latest -s http://rel-gw:8081/version > "$OUT/version-source.json" 2>&1; res "/version: $(cat "$OUT/version-source.json")"
 docker rm -f rel-gw >/dev/null
 
 step "Official build, NO licence: DICOM must keep working (DCM-SRS-058..061)"
 start_gw rel-off libre/dcm:$VER-official && res "container healthy without a licence" || res "container NOT healthy"
 conf rel-off > "$OUT/conformance-official-unlicensed.log" 2>&1 && res "PASS: C-ECHO/STORE/FIND/MOVE all work while unlicensed" || res "FAIL (see conformance-official-unlicensed.log)"
+dvt rel-off official-unlicensed > "$OUT/libredvt-official-unlicensed.log" 2>&1 && res "LibreDVT PASS while unlicensed: $(tail -1 "$OUT/libredvt-official-unlicensed.log")" || res "LibreDVT FAIL (see libredvt-official-unlicensed.log)"
 docker run --rm --network $NET curlimages/curl:latest -s http://rel-off:8081/version > "$OUT/version-official.json" 2>&1; res "/version: $(cat "$OUT/version-official.json")"
 docker logs rel-off > "$OUT/official.log" 2>&1
 res "unlicensed error lines: $(grep -c 'LibreDCM is unlicensed' "$OUT/official.log")"
