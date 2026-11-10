@@ -114,7 +114,7 @@ func clamp16(n int) uint16 {
 	if n > 65535 {
 		return 65535
 	}
-	return uint16(n)
+	return uint16(n) // #nosec G115 -- clamped above; n is a non-negative count
 }
 
 func isWarning(code uint16) bool { return code == 0x0001 || code>>12 == 0xB }

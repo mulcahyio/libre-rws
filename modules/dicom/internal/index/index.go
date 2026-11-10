@@ -279,12 +279,12 @@ func backfillFold(ctx context.Context, conn *sql.Conn, s *SQL) error {
 	for rows.Next() {
 		var p pair
 		if err := rows.Scan(&p.uid, &p.name); err != nil {
-			rows.Close()
+			_ = rows.Close()
 			return err
 		}
 		all = append(all, p)
 	}
-	rows.Close()
+	_ = rows.Close()
 	if err := rows.Err(); err != nil {
 		return err
 	}

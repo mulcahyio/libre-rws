@@ -2,6 +2,8 @@ package dcm
 
 import (
 	"bytes"
+	"errors"
+	"strings"
 	"testing"
 
 	"github.com/godicom-dev/godicom"
@@ -68,5 +70,40 @@ func TestSelectStorageSyntaxKeepsSenderPreference(t *testing.T) {
 	}
 	if got, _ := SelectNativeSyntax([]string{ImplicitVRLittleEndian, ExplicitVRLittleEndian}); got != ExplicitVRLittleEndian {
 		t.Fatalf("native = %q", got)
+	}
+}
+
+// Identifiers that cannot be encoded in the File Meta group are refused
+// rather than written as an unreadable file (gosec G115 finding, 2026-11-10).
+// Over-long but encodable values (non-conformant senders) are still kept.
+// Verifies: DCM-SRS-018
+func TestPart10RefusesUnencodableMeta(t *testing.T) {
+	huge := strings.Repeat("9", 70000)
+	const ct = "1.2.840.10008.5.1.4.1.1.2"
+	cases := []struct{ class, inst, ts, ae string }{
+		{"", "1.2.3", ExplicitVRLittleEndian, ""},
+		{ct, "", ExplicitVRLittleEndian, ""},
+		{ct, "1.2.3", "", ""},
+		{ct, huge, ExplicitVRLittleEndian, ""},
+		{huge, "1.2.3", ExplicitVRLittleEndian, ""},
+		{ct, "1.2.3", huge, ""},
+		{ct, "1.2.3", ExplicitVRLittleEndian, huge},
+	}
+	for i, c := range cases {
+		if f, err := Part10(c.class, c.inst, c.ts, c.ae, []byte{0x08, 0x00, 0x05, 0x00, 0, 0, 0, 0}); !errors.Is(err, ErrInvalidMeta) || f != nil {
+			t.Errorf("case %d: err = %v, file %d bytes; want ErrInvalidMeta", i, err, len(f))
+		}
+	}
+	// The longest encodable value, and a non-conformant 84-byte UID, are
+	// written and read back unchanged.
+	for _, inst := range []string{"1." + strings.Repeat("2", maxMetaValueLen-2), "1.2." + strings.Repeat("3", 80)} {
+		f, err := Part10(ct, inst, ExplicitVRLittleEndian, "SIXTEEN_CHARS_AE", nil)
+		if err != nil {
+			t.Fatalf("%d-byte UID: %v", len(inst), err)
+		}
+		fd, err := godicom.ReadBytes(f, nil)
+		if err != nil || String(fd.FileMeta.Dataset, "MediaStorageSOPInstanceUID") != inst {
+			t.Fatalf("%d-byte UID not round-tripped: %v", len(inst), err)
+		}
 	}
 }

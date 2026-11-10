@@ -72,7 +72,7 @@ func genCert(dir, hosts string, force bool) error {
 	if err := os.WriteFile(key, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: kb}), 0o600); err != nil {
 		return err
 	}
-	if err := os.WriteFile(crt, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}), 0o644); err != nil {
+	if err := os.WriteFile(crt, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}), 0o644); err != nil { // #nosec G306 -- public certificate; the key is written 0600
 		return err
 	}
 	fmt.Println("self-signed certificate written:", crt)

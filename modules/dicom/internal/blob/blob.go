@@ -85,7 +85,7 @@ func (f *FS) Get(_ context.Context, key string) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	fh, err := os.Open(p)
+	fh, err := os.Open(p) // #nosec G304 -- p comes from FS.path, which rejects ".." and anchors keys under Root
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, ErrNotFound
 	}

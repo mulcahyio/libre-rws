@@ -34,6 +34,21 @@ func IsUncompressed(ts string) bool {
 // Little Endian File Meta group with a correct group length, then the dataset
 // bytes exactly as received.
 func Part10(sopClass, sopInstance, transferSyntax, sourceAE string, dataset []byte) ([]byte, error) {
+	// Refuse values the File Meta group cannot carry instead of writing a file
+	// with a wrapped 16-bit length that no reader can parse (HAZ-003). Values
+	// longer than the standard allows (UI 64, AE 16 bytes) but still encodable
+	// are kept as received: refusing them is a product decision (ANOM-001).
+	for _, u := range []struct{ name, v string }{
+		{"SOP Class UID", sopClass}, {"SOP Instance UID", sopInstance},
+		{"Transfer Syntax UID", transferSyntax}, {"source AE title", sourceAE},
+	} {
+		if len(u.v) > maxMetaValueLen {
+			return nil, fmt.Errorf("%w: %s has %d bytes (max %d)", ErrInvalidMeta, u.name, len(u.v), maxMetaValueLen)
+		}
+	}
+	if sopClass == "" || sopInstance == "" || transferSyntax == "" {
+		return nil, fmt.Errorf("%w: SOP Class, SOP Instance and Transfer Syntax UIDs are required", ErrInvalidMeta)
+	}
 	// File Meta is always Explicit VR Little Endian (PS3.10 7.1). It is a
 	// handful of elements, so it is encoded directly rather than through the
 	// general encoder.
@@ -55,7 +70,7 @@ func Part10(sopClass, sopInstance, transferSyntax, sourceAE string, dataset []by
 	buf.WriteString("DICM")
 	// (0002,0000) UL FileMetaInformationGroupLength, explicit VR LE.
 	gl := []byte{0x02, 0x00, 0x00, 0x00, 'U', 'L', 0x04, 0x00, 0, 0, 0, 0}
-	binary.LittleEndian.PutUint32(gl[8:], uint32(len(body)))
+	binary.LittleEndian.PutUint32(gl[8:], uint32(len(body))) // #nosec G115 -- meta group is a few hundred bytes (values bounded above)
 	buf.Write(gl)
 	buf.Write(body)
 	buf.Write(dataset)
@@ -68,10 +83,10 @@ func writeMeta(b *bytes.Buffer, elem uint16, vr string, val []byte) {
 	binary.LittleEndian.PutUint16(hdr[2:], elem)
 	copy(hdr[4:6], vr)
 	if vr == "OB" { // OB: 2 reserved bytes + 32-bit length
-		binary.LittleEndian.PutUint32(hdr[8:], uint32(len(val)))
+		binary.LittleEndian.PutUint32(hdr[8:], uint32(len(val))) // #nosec G115 -- only the 2-byte version value is OB
 		b.Write(hdr[:12])
 	} else {
-		binary.LittleEndian.PutUint16(hdr[6:], uint16(len(val)))
+		binary.LittleEndian.PutUint16(hdr[6:], uint16(len(val))) // #nosec G115 -- values bounded by Part10 (maxMetaValueLen)
 		b.Write(hdr[:8])
 	}
 	b.Write(val)
@@ -92,6 +107,14 @@ func padText(s string) []byte {
 	}
 	return b
 }
+
+// ErrInvalidMeta is returned by Part10 for identifiers that cannot be written
+// into a valid File Meta Information group.
+var ErrInvalidMeta = errors.New("dcm: invalid file meta value")
+
+// maxMetaValueLen is the longest value a 16-bit explicit-VR length can hold
+// after padding to an even length.
+const maxMetaValueLen = 0xFFFE
 
 // ErrNotPart10 is returned when a stored object is not a file written by Part10.
 var ErrNotPart10 = errors.New("dcm: not a Part 10 file with group length")

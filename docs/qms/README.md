@@ -15,8 +15,11 @@ its design file can support the system's 510(k).
 |---|---|
 | [SDP.md](SDP.md): software development plan, change workflow, rules for AI agents | Draft |
 | [release-checklist.md](release-checklist.md): release / design transfer | Draft |
-| Quality manual, SOPs (document control, CAPA, complaints/MDR, supplier control, training, audits, management review, UDI/labeling) | Not started |
-| `tool-validation/` | Not started |
+| [quality-manual.md](quality-manual.md): scope, quality policy, roles, process map, ISO 13485/QMSR cross-reference | Draft for approval (2026-11-10) |
+| [sop-001-document-record-control.md](sop-001-document-record-control.md) with [validation/part11-github-drive.md](validation/part11-github-drive.md) (VAL-0001, executed) | Draft for approval (2026-11-10) |
+| Other SOPs (design control, risk management, CAPA, complaints/MDR, supplier control, training, audits and management review, labeling/UDI, cybersecurity, tool validation) | See the procedure index in the quality manual §7.1 |
+| [sop-010-vulnerability-management.md](sop-010-vulnerability-management.md) | Draft; mailbox, response times, ISAO and support policy need approval |
+| [sop-011-tool-validation.md](sop-011-tool-validation.md) and [tool-validation/README.md](tool-validation/README.md) (executed 2026-11-10) | Draft for approval |
 
 ## Design files (`docs/dhf/<module>/`)
 
@@ -26,13 +29,17 @@ its design file can support the system's 510(k).
 |---|---|
 | [gap-assessment.md](../dhf/libredcm/gap-assessment.md) | Done 2026-11-09 |
 | [SRS.md](../dhf/libredcm/SRS.md) | Retrospective draft |
-| [risk-management.md](../dhf/libredcm/risk-management.md) | Initial hazard list |
-| [cybersecurity.md](../dhf/libredcm/cybersecurity.md) | Seed threat model + baseline scan |
+| [risk-management.md](../dhf/libredcm/risk-management.md): plan, hazard analysis with initial/residual risk, report | Draft for approval (2026-11-10); residual risk not yet acceptable overall (HAZ-013) |
+| [cybersecurity.md](../dhf/libredcm/cybersecurity.md): security architecture views, scored threat model, SAST, fuzzing record | Draft for approval (2026-11-10) |
 | [soup.md](../dhf/libredcm/soup.md) | Generated, draft evaluation |
 | [manual-verification.md](../dhf/libredcm/manual-verification.md) | Pre-QMS evidence only |
 | [generated/trace-matrix.md](../dhf/libredcm/generated/trace-matrix.md) | Generated |
 | [generated/sbom.cdx.json](../dhf/libredcm/generated/sbom.cdx.json) | Generated |
-| intended-use.md, architecture.md, design/, DICOM Conformance Statement | Not started |
+| [intended-use.md](../dhf/libredcm/intended-use.md): intended use, limitations, users, use specification, user needs | Draft for approval (2026-11-10) |
+| [anomalies.md](../dhf/libredcm/anomalies.md): known anomalies with safety impact | Draft, living list (2026-11-10) |
+| [architecture.md](../dhf/libredcm/architecture.md): software items, interfaces, data flows, SOUP, topologies, segregation | Draft (2026-11-10), verified against the import graph |
+| [detailed-design.md](../dhf/libredcm/detailed-design.md): class-C-depth units (store path, index/patient association, pixel-data integrity) | Draft for approval (2026-11-10) |
+| DICOM Conformance Statement | Not started |
 
 ### Libre WT, future modules
 
@@ -43,6 +50,9 @@ documents and its own requirement prefix.
 
 ```sh
 python3 scripts/qms/trace.py --write     # trace matrix; --check fails on gaps
+python3 scripts/qms/needs.py             # every requirement serves a user need
+python3 scripts/qms/mdlinks.py           # relative Markdown links resolve
+python3 scripts/qms/part11_check.py      # GitHub settings vs. the Part 11 validation (needs gh)
 python3 scripts/qms/soup.py              # SOUP list from go.mod + SBOM
 # SBOM and vulnerability scan (dev machine has no host Go; rws-go runs Go in Docker)
 rws-go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.12.0 mod -licenses -json -output docs/dhf/libredcm/generated/sbom.cdx.json .

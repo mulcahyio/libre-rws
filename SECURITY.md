@@ -29,6 +29,13 @@ software (FD&C Act §524B, FDA cybersecurity guidance).
 Customers are told about vulnerabilities that affect them, with the fix or a
 mitigation, through release notes and security advisories.
 
+## How we look for vulnerabilities
+
+Every change is scanned (gosec, govulncheck), the default branch is
+re-scanned weekly against new advisories, parsers are fuzzed weekly, and
+each release ships an SBOM. The full process is
+[QMS-SOP-010](docs/qms/sop-010-vulnerability-management.md).
+
 ## Supported versions
 
 Only the latest release receives security fixes during the beta period.

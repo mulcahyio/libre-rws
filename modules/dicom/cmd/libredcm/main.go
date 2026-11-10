@@ -232,7 +232,7 @@ func probe(addr string) int {
 	scheme, tr := "http", http.DefaultTransport
 	if config.Getenv("LIBRE_DCM_ADMIN_TLS_CERT") != "" {
 		scheme = "https"
-		tr = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}} //nolint:gosec // loopback self-probe
+		tr = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}} // #nosec G402 -- loopback self-probe of this node's own admin port
 	}
 	c := http.Client{Timeout: 3 * time.Second, Transport: tr}
 	resp, err := c.Get(scheme + "://" + addr + "/readyz")

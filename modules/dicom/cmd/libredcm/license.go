@@ -58,7 +58,7 @@ func licenseCommand(cfgPath string, status, request bool, activateKey, installFi
 		fmt.Println("activated:", st.Message)
 		return 0
 	case installFile != "":
-		b, err := os.ReadFile(installFile)
+		b, err := os.ReadFile(installFile) // #nosec G304 -- file named by the administrator on the command line
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 1

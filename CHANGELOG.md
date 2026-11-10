@@ -9,7 +9,106 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 
 ## Unreleased
 
-_Nothing yet._
+QMS and retrospective design-file work for LibreDCM (Kanban board
+`libre-qms`), and the new LibreDVT module (board `libredvt`). No change to
+LibreDCM's behaviour unless stated.
+
+### Added
+- **LibreDVT 0.1 (DICOM Validation & Test)**, a new standalone module
+  (`modules/dvt`, image `libre/dvt`, issue #12): web UI and command line to
+  validate DICOM objects (dicom3tools `dciodvfy`/`dcentvfy`, pydicom
+  `dicom-validator` with the 2026d standard built in) and to test DICOM
+  services (C-ECHO, C-STORE, C-FIND, C-MOVE to a built-in Storage SCP with
+  pixel comparison, association rejection) from strict YAML test plans, with
+  JUnit XML and HTML reports. Store and move steps only run against targets
+  classed `lab`. Engines are independent of LibreDCM's DICOM libraries. Login
+  with CSRF protection and a login rate limit; published on 127.0.0.1 by
+  default (`deploy/compose/docker-compose.dvt.yml`). Design file
+  `docs/dhf/libredvt/`; validated as a high-risk QMS tool (positive
+  controls in the new CI job `libredvt`). New tool configuration items (in
+  the LibreDVT image only, not in LibreDCM): dicom3tools 20260927 (BSD),
+  dicom-validator 0.9.0 (MIT), pydicom 3.0.2 (MIT), pynetdicom 3.0.4 (MIT),
+  lxml 6.1.3 (BSD-3), pyparsing 3.3.3 (MIT). No new Go dependency.
+- Automated verification for the last three untested active requirements:
+  DICOM TLS only, TLS 1.2+ (DCM-SRS-043), graceful shutdown never acknowledges
+  an instance that was not stored (DCM-SRS-053), and Prometheus metrics for
+  associations, rejections, stores, the outbox and the licence state
+  (DCM-SRS-054). The trace matrix now shows 38 of 38 active requirements
+  verified, so the CI trace check is now blocking.
+- Static analysis in CI: gosec v2.30.0, blocking for Libre RWS code,
+  report-only for `third_party/`; the gonetdicom fork and LibreKey client
+  copy tests now run in CI too. Triage in `docs/dhf/libredcm/cybersecurity.md` §6.
+- Anomaly list `docs/dhf/libredcm/anomalies.md` (ANOM-001…007).
+- LibreDCM intended use, limitations, user profiles, use specification and
+  16 user needs (`docs/dhf/libredcm/intended-use.md`), with
+  `scripts/qms/needs.py` (in CI) checking that every requirement serves a
+  user need.
+- LibreDCM architecture document (`docs/dhf/libredcm/architecture.md`):
+  12 software items, interfaces, data flows, SOUP requirements, deployment
+  topologies and risk-control segregation.
+- Quality manual (QMS-QM-001) and SOP-001 document and record control with
+  an executed Part 11 validation of the GitHub + Drive record system
+  (VAL-0001); `scripts/qms/part11_check.py` re-checks the GitHub settings,
+  `scripts/qms/mdlinks.py` (in CI) checks document links.
+- SOPs 002–009 and 011 (design control, risk management, CAPA,
+  complaints/MDR/corrections, suppliers, training, audit and management
+  review, labeling/UDI, tool validation) with templates; completed SDP.
+- Tool validation notes (`docs/qms/tool-validation/`) and scripted tests
+  for the QMS scripts (`scripts/qms/test_qms_tools.py`, in CI).
+- Go native fuzzing: five new targets for Part 10 writing/reading, dataset
+  decoding and C-FIND identifiers, plus the four fork targets;
+  `scripts/qms/fuzz.sh` and a weekly `fuzz` workflow. Record run in
+  `cybersecurity.md` §7.
+- Risk management file scored against SOP-003 (risk management plan, hazard
+  analysis with residual risk, report); tests for the store-failure and
+  called-AE risk controls.
+- Threat model with exploitability and severity, security architecture
+  views (global, multi-patient harm, updatability, security use cases) and
+  the FDA security control categories in `cybersecurity.md`.
+- Detailed design for the class-C-depth units (store path, index and
+  patient association, pixel-data integrity) and a pixel-data integrity test
+  across transfer syntaxes (`TestPixelDataIntegrity`). Anomalies ANOM-009
+  (series moved between studies) and ANOM-010 (C-GET completed count) added.
+- SOP-010 vulnerability management; `qms` workflow re-scans `master` weekly.
+- Container image scan (Trivy 0.76.2) in CI, blocking for fixed HIGH/CRITICAL
+  OS-package vulnerabilities; justified exceptions expire (`.trivyignore.yaml`).
+
+### Changed
+- Configuration parsing uses `go.yaml.in/yaml/v3` v3.0.5 (maintained by the
+  YAML organisation) instead of the archived `gopkg.in/yaml.v3`. No
+  behaviour change: the example configuration decodes identically with both.
+
+### Fixed
+- C-FIND: an identifier containing a command (0000) or file-meta (0002)
+  group element made the response unencodable and dropped the association;
+  such elements are now ignored (found by fuzzing, ANOM-008).
+- `scripts/qms/soup.py` wrote a stale runtime-image path; `soup.md` still
+  described the LibreKey client risk as "C-STORE refused" (changed by issue
+  #5).
+- Part 10 writer refuses File Meta values too long to encode (or empty
+  identifiers) instead of writing an unreadable file (DCM-SRS-018,
+  ANOM-001, found by gosec). Over-long but encodable UIDs from
+  non-conformant senders are still archived as received.
+
+### Tested (2026-11-10)
+- New tests pass with `-race`, 15 repeated runs without a flake. Mutation
+  checks: allowing TLS 1.0, dropping the rejected-association counter and
+  acknowledging a store whose index write failed each make the matching test
+  fail (the last one is timing-dependent: caught in 2 of 3 runs).
+- gosec: 15 findings in Libre RWS code triaged to 0 open (1 fixed defect,
+  13 annotated, 1 cosmetic fix); CI scan commands run locally in the
+  golang:1.26 image. Probe: before the fix an 84-byte SOP Instance UID was
+  archived and a 70,000-byte one refused by the filesystem store (A700).
+- LibreDVT 0.1: unit tests with fake engines pass with `-race`; engine
+  positive controls pass in the test image (real dicom3tools,
+  dicom-validator, pynetdicom against a fake archive that refuses stores,
+  withholds instances, alters pixels or accepts any AE title: each failure
+  detected); 6 of 6 mutation checks caught; the bundled LibreDCM plan passed
+  against a LibreDCM container and agreed with `scripts/conformance.sh`
+  (DCMTK) on the same fixtures; web UI flow exercised over HTTP; image works
+  with `--network none`; gosec 0 open (22 annotated), govulncheck clean,
+  Trivy 0 fixed HIGH/CRITICAL in `libre/dvt`. Trace: 34 of 34 DVT
+  requirements verified.
 
 ## LibreDCM 0.2.0-beta.1 (2026-11-09)
 

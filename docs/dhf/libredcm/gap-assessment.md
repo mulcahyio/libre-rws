@@ -20,7 +20,7 @@ pre-QMS history.
 | Architecture | Architecture doc with SOUP and interfaces | `docs/DEVELOPMENT.md`, vault design notes | Medium | Write `architecture.md` from these |
 | Detailed design | Unit-level design (needed for Enhanced level) | Code comments, fork notes | Medium | `design/` notes for gateway, index, outbox, storage |
 | Risk management | Plan, analysis, controls, report | Initial hazard list `risk-management.md` (12 hazards) | High | Score, trace, report |
-| SOUP | List + evaluation | `soup.md` generated, 10 direct items evaluated in draft | Low | Review; fix yaml.v3 (archived upstream) |
+| SOUP | List + evaluation | `soup.md` generated, 10 direct items evaluated in draft | Low | Review; yaml.v3 (archived upstream) replaced 2026-11-10 |
 | Traceability | Requirement ↔ test ↔ risk control | 31 of 35 active requirements traced to tests (31 test functions tagged) | Medium | Tests for DCM-SRS-043, -053, -054, -057 |
 | Verification records | Signed reports against tagged builds | CI-less; pre-QMS test runs recorded in vault and CHANGELOG | High | CI (this branch) + signed system test report at baseline |
 | Configuration management | Controlled branches, tags, reproducible builds | Git, tags; repo public since 2026-11-09 with `master` protection and protected `v*` tags; base image not pinned | Low | Digest pinning; required status checks |

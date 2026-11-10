@@ -1,0 +1,13 @@
+# Trivy ignore list for the LibreDCM container image (QMS-SOP-010 §5).
+# Each entry needs a reason (why LibreDCM is not affected) and an expiry date,
+# after which CI fails again and the entry must be re-assessed.
+vulnerabilities:
+  - id: CVE-2026-84782
+    statement: >-
+      libssl3 3.0.20-1~deb12u2 in gcr.io/distroless/base-debian12 (fix 3.0.22-1~deb12u2
+      not yet in any distroless build as of 2026-11-10). Not reachable: LibreDCM is
+      pure Go with crypto/tls and does not load libssl (the binary references only
+      libc, libdl, libm, libpthread, libgcc_s, libstdc++ and the codec libraries);
+      the issue is in DTLS, which LibreDCM does not use. Assessed 2026-11-10,
+      Hermes/Claude, for approval. Remove when the base image digest is updated.
+    expired_at: 2026-12-15

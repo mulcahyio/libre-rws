@@ -6,6 +6,10 @@ on:
   pull_request:
   push:
     branches: [master, "release/**"]
+  schedule:
+    # Weekly re-scan of master against the latest vulnerability data
+    # (QMS-SOP-010 §3): new advisories appear without any code change.
+    - cron: "41 5 * * 1"   # Mondays 05:41 UTC
 
 permissions:
   contents: read
@@ -24,17 +28,102 @@ jobs:
         run: go vet ./...
       - name: Unit and integration tests (race detector)
         run: go test -race -count=1 ./...
+      - name: Fork and client-copy tests (LibreDCM software items, not SOUP)
+        run: |
+          (cd third_party/gonetdicom && go test -race -count=1 ./...)
+          (cd third_party/librekey && go test -race -count=1 ./...)
+      - name: SAST (gosec), blocking for Libre RWS code
+        # Every finding is fixed or carries a "#nosec <rule> -- reason" note;
+        # triage in docs/dhf/libredcm/cybersecurity.md.
+        run: go run github.com/securego/gosec/v2/cmd/gosec@v2.30.0 -exclude-dir=third_party ./...
+      - name: SAST (gosec) on third_party, report-only
+        # Findings are triaged in cybersecurity.md; the report is kept as a CI artifact.
+        run: |
+          (cd third_party/gonetdicom && go run github.com/securego/gosec/v2/cmd/gosec@v2.30.0 -no-fail -fmt text -out ../../gosec-gonetdicom.txt ./...)
+          (cd third_party/librekey && go run github.com/securego/gosec/v2/cmd/gosec@v2.30.0 -no-fail -fmt text -out ../../gosec-librekey.txt ./...)
       - name: Vulnerability scan (govulncheck)
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
       - name: SBOM (CycloneDX)
         run: go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.12.0 mod -licenses -json -output sbom.cdx.json .
       - name: Trace check (requirements to tests)
-        # Report-only until the QMS baseline: 4 active requirements still lack
-        # tests (see gap-assessment.md). Remove continue-on-error at baseline.
-        continue-on-error: true
+        # Blocking since 2026-11-10: every active requirement has verification.
         run: python3 scripts/qms/trace.py --check
+      - name: User-need check (requirements to user needs)
+        run: python3 scripts/qms/needs.py
+      - name: LibreDVT trace and user-need checks
+        run: |
+          python3 scripts/qms/trace.py --module libredvt --prefix DVT --check
+          python3 scripts/qms/needs.py --module libredvt --prefix DVT
+      - name: Document link check
+        run: python3 scripts/qms/mdlinks.py
+      - name: QMS script validation tests (QMS-SOP-011)
+        run: python3 -m unittest scripts/qms/test_qms_tools.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: qms-records
-          path: sbom.cdx.json
+          path: |
+            sbom.cdx.json
+            gosec-*.txt
+
+  image-scan:
+    # Container image scan (Trivy) for OS packages of the runtime image
+    # (QMS-SOP-010 §3). Blocking: fixed HIGH/CRITICAL OS vulnerabilities not
+    # justified in .trivyignore.yaml (entries expire). Go libraries are gated
+    # by govulncheck (with reachability) in the verify job; Trivy's full
+    # report is kept as a record.
+    runs-on: ubuntu-latest
+    env:
+      TRIVY: aquasec/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb  # 0.76.2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the LibreDCM image
+        run: docker build -f deploy/docker/Dockerfile.dicom --build-arg VERSION=ci -t libre/dcm:ci .
+      - name: Trivy, OS packages (blocking)
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD":/repo:ro -w /repo "$TRIVY"
+          image --quiet --pkg-types os --severity HIGH,CRITICAL --ignore-unfixed
+          --ignorefile .trivyignore.yaml --exit-code 1 libre/dcm:ci
+      - name: Trivy, full report (record)
+        if: always()
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD":/repo -w /repo "$TRIVY"
+          image --quiet --ignorefile .trivyignore.yaml --format table --output trivy-image.txt libre/dcm:ci
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: image-scan-records
+          path: trivy-image.txt
+
+  libredvt:
+    # LibreDVT (DICOM Validation & Test) is a high-risk QMS tool (QMS-SOP-011):
+    # its positive-control tests run against the real engines on every change.
+    runs-on: ubuntu-latest
+    env:
+      TRIVY: aquasec/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb  # 0.76.2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Engine positive controls (real dicom3tools, dicom-validator, pynetdicom)
+        run: docker build -f deploy/docker/Dockerfile.dvt --target test --progress plain . 2>&1 | tee libredvt-engine-tests.txt; test "${PIPESTATUS[0]}" -eq 0
+        shell: bash
+      - name: Build the LibreDVT image
+        run: docker build -f deploy/docker/Dockerfile.dvt --build-arg VERSION=ci -t libre/dvt:ci .
+      - name: Offline check (built-in DICOM standard, no network)
+        run: docker run --rm --network none libre/dvt:ci validate /opt/libredvt/plans/fixtures/ct_explicit_le.dcm
+      - name: Trivy, OS packages (blocking)
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD":/repo:ro -w /repo "$TRIVY"
+          image --quiet --pkg-types os --severity HIGH,CRITICAL --ignore-unfixed
+          --ignorefile .trivyignore.yaml --exit-code 1 libre/dvt:ci
+      - name: Trivy, full report (record)
+        if: always()
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD":/repo -w /repo "$TRIVY"
+          image --quiet --ignorefile .trivyignore.yaml --format table --output trivy-libredvt.txt libre/dvt:ci
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: libredvt-records
+          path: |
+            libredvt-engine-tests.txt
+            trivy-libredvt.txt
