@@ -259,6 +259,12 @@ func buildResponse(ident *godicom.Dataset, level string, row index.Row) *godicom
 	out := godicom.NewDataset()
 	var texts []string
 	for _, el := range ident.Iter() {
+		if g := el.Tag.Group(); g == 0x0000 || g == 0x0002 {
+			// Command and file-meta elements cannot appear in a dataset; echoing
+			// one made the response unencodable and dropped the association
+			// (found by fuzzing, ANOM-008).
+			continue
+		}
 		kw := el.Keyword()
 		switch kw {
 		case "QueryRetrieveLevel":

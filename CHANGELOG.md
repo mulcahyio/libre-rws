@@ -39,8 +39,26 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
   review, labeling/UDI, tool validation) with templates; completed SDP.
 - Tool validation notes (`docs/qms/tool-validation/`) and scripted tests
   for the QMS scripts (`scripts/qms/test_qms_tools.py`, in CI).
+- Go native fuzzing: five new targets for Part 10 writing/reading, dataset
+  decoding and C-FIND identifiers, plus the four fork targets;
+  `scripts/qms/fuzz.sh` and a weekly `fuzz` workflow. Record run in
+  `cybersecurity.md` §7.
+- Risk management file scored against SOP-003 (risk management plan, hazard
+  analysis with residual risk, report); tests for the store-failure and
+  called-AE risk controls.
+- Threat model with exploitability and severity, security architecture
+  views (global, multi-patient harm, updatability, security use cases) and
+  the FDA security control categories in `cybersecurity.md`.
+- Detailed design for the class-C-depth units (store path, index and
+  patient association, pixel-data integrity) and a pixel-data integrity test
+  across transfer syntaxes (`TestPixelDataIntegrity`). Anomalies ANOM-009
+  (series moved between studies) and ANOM-010 (C-GET completed count) added.
+- SOP-010 vulnerability management; `qms` workflow re-scans `master` weekly.
 
 ### Fixed
+- C-FIND: an identifier containing a command (0000) or file-meta (0002)
+  group element made the response unencodable and dropped the association;
+  such elements are now ignored (found by fuzzing, ANOM-008).
 - `scripts/qms/soup.py` wrote a stale runtime-image path; `soup.md` still
   described the LibreKey client risk as "C-STORE refused" (changed by issue
   #5).
