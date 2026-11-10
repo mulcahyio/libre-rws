@@ -281,7 +281,7 @@ func writeOutputs(r *result.Run, junit, htmlOut, jsonOut string) error {
 		if err != nil {
 			return err
 		}
-		if err := os.WriteFile(junit, b, 0o644); err != nil { // #nosec G306 -- CI artifact, no patient data
+		if err := os.WriteFile(junit, b, 0o644); err != nil { // #nosec G306 G703 -- output path given by the operator; CI artifact, no patient data
 			return err
 		}
 	}
@@ -290,7 +290,7 @@ func writeOutputs(r *result.Run, junit, htmlOut, jsonOut string) error {
 		if err != nil {
 			return err
 		}
-		if err := os.WriteFile(htmlOut, b, 0o644); err != nil { // #nosec G306 -- CI artifact, no patient data
+		if err := os.WriteFile(htmlOut, b, 0o644); err != nil { // #nosec G306 G703 -- output path given by the operator; CI artifact, no patient data
 			return err
 		}
 	}
@@ -299,7 +299,7 @@ func writeOutputs(r *result.Run, junit, htmlOut, jsonOut string) error {
 		if err != nil {
 			return err
 		}
-		if err := os.WriteFile(jsonOut, b, 0o644); err != nil { // #nosec G306 -- CI artifact, no patient data
+		if err := os.WriteFile(jsonOut, b, 0o644); err != nil { // #nosec G306 G703 -- output path given by the operator; CI artifact, no patient data
 			return err
 		}
 	}
@@ -360,7 +360,7 @@ func validateCmd(args []string) int {
 	if *jsonOut != "" {
 		b, err := jsonMarshal(&v)
 		if err == nil {
-			err = os.WriteFile(*jsonOut, b, 0o644) // #nosec G306 -- CI artifact
+			err = os.WriteFile(*jsonOut, b, 0o644) // #nosec G306 G703 -- output path given by the operator; CI artifact
 		}
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -370,7 +370,7 @@ func validateCmd(args []string) int {
 	if *htmlOut != "" {
 		b, err := report.ValidationHTML(&v)
 		if err == nil {
-			err = os.WriteFile(*htmlOut, b, 0o644) // #nosec G306 -- CI artifact
+			err = os.WriteFile(*htmlOut, b, 0o644) // #nosec G306 G703 -- output path given by the operator; CI artifact
 		}
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)

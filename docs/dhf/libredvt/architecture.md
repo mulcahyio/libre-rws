@@ -96,7 +96,9 @@ SHA-256 goes into every report.
 
 - Image `libre/dvt`, built by `deploy/docker/Dockerfile.dvt`: Go build stage
   (pinned `golang` image), runtime on a pinned `python:3.12-slim-bookworm`
-  with pinned engine versions (`modules/dvt/worker/requirements.txt`). The
+  with every Python package pinned, indirect ones included, installed with
+  `pip install --no-deps` and checked with `pip check`
+  (`modules/dvt/worker/requirements.txt`). The
   DICOM standard edition for `dicom-validator` is downloaded at build time
   and stored in the image (DVT-SRS-064). Runs as uid 10001 (DVT-SRS-065).
 - A `test` build target runs the engine integration tests
@@ -120,7 +122,8 @@ LibreDVT is a QMS tool, so these are recorded as tool configuration items
 | DICOM standard (DocBook, parts 3, 4, 6) | 2026d | rule source for dicom-validator | NEMA, free use |
 | pydicom | 3.0.2 | read/compare DICOM | MIT |
 | pynetdicom | 3.0.4 | DIMSE SCU/SCP | MIT |
-| PyYAML | 6.0.3 | (dependency of tooling) | MIT |
+| lxml | 6.1.3 | indirect, dicom-validator (DocBook parsing at build time) | BSD-3 |
+| pyparsing | 3.3.3 | indirect, dicom-validator | MIT |
 | go.yaml.in/yaml/v3 | already a libre-rws dependency | plan parsing | MIT/Apache-2.0 |
 
 All are compatible with LibreDVT's Apache-2.0 licence. DVTk (LGPL) and

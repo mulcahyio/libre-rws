@@ -50,6 +50,10 @@ jobs:
         run: python3 scripts/qms/trace.py --check
       - name: User-need check (requirements to user needs)
         run: python3 scripts/qms/needs.py
+      - name: LibreDVT trace and user-need checks
+        run: |
+          python3 scripts/qms/trace.py --module libredvt --prefix DVT --check
+          python3 scripts/qms/needs.py --module libredvt --prefix DVT
       - name: Document link check
         run: python3 scripts/qms/mdlinks.py
       - name: QMS script validation tests (QMS-SOP-011)
@@ -90,3 +94,36 @@ jobs:
         with:
           name: image-scan-records
           path: trivy-image.txt
+
+  libredvt:
+    # LibreDVT (DICOM Validation & Test) is a high-risk QMS tool (QMS-SOP-011):
+    # its positive-control tests run against the real engines on every change.
+    runs-on: ubuntu-latest
+    env:
+      TRIVY: aquasec/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb  # 0.76.2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Engine positive controls (real dicom3tools, dicom-validator, pynetdicom)
+        run: docker build -f deploy/docker/Dockerfile.dvt --target test --progress plain . 2>&1 | tee libredvt-engine-tests.txt; test "${PIPESTATUS[0]}" -eq 0
+        shell: bash
+      - name: Build the LibreDVT image
+        run: docker build -f deploy/docker/Dockerfile.dvt --build-arg VERSION=ci -t libre/dvt:ci .
+      - name: Offline check (built-in DICOM standard, no network)
+        run: docker run --rm --network none libre/dvt:ci validate /opt/libredvt/plans/fixtures/ct_explicit_le.dcm
+      - name: Trivy, OS packages (blocking)
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD":/repo:ro -w /repo "$TRIVY"
+          image --quiet --pkg-types os --severity HIGH,CRITICAL --ignore-unfixed
+          --ignorefile .trivyignore.yaml --exit-code 1 libre/dvt:ci
+      - name: Trivy, full report (record)
+        if: always()
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD":/repo -w /repo "$TRIVY"
+          image --quiet --ignorefile .trivyignore.yaml --format table --output trivy-libredvt.txt libre/dvt:ci
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: libredvt-records
+          path: |
+            libredvt-engine-tests.txt
+            trivy-libredvt.txt

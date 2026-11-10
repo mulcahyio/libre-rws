@@ -10,9 +10,25 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 ## Unreleased
 
 QMS and retrospective design-file work for LibreDCM (Kanban board
-`libre-qms`). No change to LibreDCM's behaviour unless stated.
+`libre-qms`), and the new LibreDVT module (board `libredvt`). No change to
+LibreDCM's behaviour unless stated.
 
 ### Added
+- **LibreDVT 0.1 (DICOM Validation & Test)**, a new standalone module
+  (`modules/dvt`, image `libre/dvt`, issue #12): web UI and command line to
+  validate DICOM objects (dicom3tools `dciodvfy`/`dcentvfy`, pydicom
+  `dicom-validator` with the 2026d standard built in) and to test DICOM
+  services (C-ECHO, C-STORE, C-FIND, C-MOVE to a built-in Storage SCP with
+  pixel comparison, association rejection) from strict YAML test plans, with
+  JUnit XML and HTML reports. Store and move steps only run against targets
+  classed `lab`. Engines are independent of LibreDCM's DICOM libraries. Login
+  with CSRF protection and a login rate limit; published on 127.0.0.1 by
+  default (`deploy/compose/docker-compose.dvt.yml`). Design file
+  `docs/dhf/libredvt/`; validated as a high-risk QMS tool (positive
+  controls in the new CI job `libredvt`). New tool configuration items (in
+  the LibreDVT image only, not in LibreDCM): dicom3tools 20260927 (BSD),
+  dicom-validator 0.9.0 (MIT), pydicom 3.0.2 (MIT), pynetdicom 3.0.4 (MIT),
+  lxml 6.1.3 (BSD-3), pyparsing 3.3.3 (MIT). No new Go dependency.
 - Automated verification for the last three untested active requirements:
   DICOM TLS only, TLS 1.2+ (DCM-SRS-043), graceful shutdown never acknowledges
   an instance that was not stored (DCM-SRS-053), and Prometheus metrics for
@@ -83,6 +99,16 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
   13 annotated, 1 cosmetic fix); CI scan commands run locally in the
   golang:1.26 image. Probe: before the fix an 84-byte SOP Instance UID was
   archived and a 70,000-byte one refused by the filesystem store (A700).
+- LibreDVT 0.1: unit tests with fake engines pass with `-race`; engine
+  positive controls pass in the test image (real dicom3tools,
+  dicom-validator, pynetdicom against a fake archive that refuses stores,
+  withholds instances, alters pixels or accepts any AE title: each failure
+  detected); 6 of 6 mutation checks caught; the bundled LibreDCM plan passed
+  against a LibreDCM container and agreed with `scripts/conformance.sh`
+  (DCMTK) on the same fixtures; web UI flow exercised over HTTP; image works
+  with `--network none`; gosec 0 open (22 annotated), govulncheck clean,
+  Trivy 0 fixed HIGH/CRITICAL in `libre/dvt`. Trace: 34 of 34 DVT
+  requirements verified.
 
 ## LibreDCM 0.2.0-beta.1 (2026-11-09)
 

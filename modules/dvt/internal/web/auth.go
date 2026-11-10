@@ -119,6 +119,7 @@ func (a *auth) logout(t string) {
 }
 
 func (a *auth) setCookie(w http.ResponseWriter, value string, maxAge int) {
+	// #nosec G124 -- Secure is set whenever the UI is served over TLS (LIBRE_DVT_TLS_CERT or LIBRE_DVT_SECURE_COOKIES); plain HTTP is bound to 127.0.0.1 by default
 	http.SetCookie(w, &http.Cookie{Name: cookieName, Value: value, Path: "/", HttpOnly: true,
 		Secure: a.secure, SameSite: http.SameSiteStrictMode, MaxAge: maxAge})
 }
@@ -154,7 +155,7 @@ func (a *auth) require(next http.Handler) http.Handler {
 
 func csrfFromForm(r *http.Request) string {
 	if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
-		if err := r.ParseMultipartForm(32 << 20); err != nil {
+		if err := r.ParseMultipartForm(32 << 20); err != nil { // #nosec G120 -- body capped by MaxBytesReader in Handler
 			return ""
 		}
 	}

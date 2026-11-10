@@ -116,7 +116,7 @@ func writeJSON(path string, v any) error {
 		return err
 	}
 	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, b, 0o640); err != nil {
+	if err := os.WriteFile(tmp, b, 0o600); err != nil {
 		return err
 	}
 	return os.Rename(tmp, path)
@@ -362,7 +362,7 @@ func writeLimited(dst string, r io.Reader, budget *int64) error {
 	if err := os.MkdirAll(filepath.Dir(dst), 0o750); err != nil {
 		return err
 	}
-	f, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o640) // #nosec G304 -- dst is under the upload dir, name checked by SafeName
+	f, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600) // #nosec G304 -- dst is under the upload dir, name checked by SafeName
 	if err != nil {
 		return err
 	}
@@ -407,7 +407,7 @@ func expandZip(path, dir, display string, budget *int64) (map[string]string, err
 		}
 		dst := filepath.Join(dir, safe)
 		err = writeLimited(dst, rc, budget)
-		rc.Close()
+		_ = rc.Close()
 		if err != nil {
 			return nil, fmt.Errorf("%s: %s: %w", display, zf.Name, err)
 		}

@@ -17,7 +17,20 @@ the controls below apply.
 | Engine execution | Command injection through file names or plan values | Engines run with `exec` argument vectors, never a shell; arguments come from stored file paths under the data directory and validated plan fields (AE titles ≤ 16 chars, ports 1–65535, hosts without spaces) |
 | Built-in Storage SCP (port 11115) | Unsolicited stores filling the disk | Runs only during a move step (DVT-SRS-026); accepts only the AE titles of the step's target; published on 127.0.0.1 by default |
 | Test targets | Tests run against a clinical PACS | Production guard (DVT-SRS-028) |
-| Supply chain | Vulnerable engine or base image | Pinned versions and digests (DVT-SRS-065); image scanned with Trivy in CI like the LibreDCM image |
+| Data at rest | Other local users reading results | Data directory files written 0600 and directories 0750, owned by the container user (uid 10001) |
+| Supply chain | Vulnerable engine or base image | Every Python package pinned (indirect ones too) and base images by digest (DVT-SRS-065); image scanned with Trivy in CI (blocking for fixed HIGH/CRITICAL OS packages, CI job `libredvt`) |
 
 DICOM TLS to targets is not in v0.1 (planned for v0.2 with the association
 and security tests).
+
+## Static analysis (2026-11-10)
+
+gosec v2.30.0 on `modules/dvt`: 26 findings, triaged to 0 open. Fixed: file
+modes tightened to 0600 (G306/G302), unchecked `Close` errors (G104).
+Annotated with reasons (22 `#nosec` in total, including engine `exec`
+calls): path findings on paths built from validated IDs, fixed names or the
+operator's own command-line arguments (G703/G304), multipart parsing whose
+body is capped by `http.MaxBytesReader` (G120), downloads of LibreDVT's own
+escaped reports (G705), the embedded stylesheet (G203), and the session
+cookie's `Secure` flag, which is set whenever the UI is served over TLS
+(G124).

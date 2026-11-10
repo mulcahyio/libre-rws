@@ -156,19 +156,22 @@ var Funcs = template.FuncMap{
 	},
 }
 
+// cssSafe marks the embedded stylesheet as trusted CSS for the template.
+var cssSafe = template.CSS(CSS) // #nosec G203 -- compile-time embedded constant, never user input
+
 var tmpl = template.Must(template.New("report").Funcs(Funcs).Parse(reportTmpl))
 
 // HTML renders a run as one self-contained HTML page.
 func HTML(r *result.Run) ([]byte, error) {
 	var b bytes.Buffer
-	err := tmpl.ExecuteTemplate(&b, "run-page", map[string]any{"Run": r, "CSS": template.CSS(CSS)})
+	err := tmpl.ExecuteTemplate(&b, "run-page", map[string]any{"Run": r, "CSS": cssSafe})
 	return b.Bytes(), err
 }
 
 // ValidationHTML renders a validation as one self-contained HTML page.
 func ValidationHTML(v *result.Validation) ([]byte, error) {
 	var b bytes.Buffer
-	err := tmpl.ExecuteTemplate(&b, "validation-page", map[string]any{"V": v, "CSS": template.CSS(CSS)})
+	err := tmpl.ExecuteTemplate(&b, "validation-page", map[string]any{"V": v, "CSS": cssSafe})
 	return b.Bytes(), err
 }
 
