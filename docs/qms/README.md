@@ -18,6 +18,7 @@ its design file can support the system's 510(k).
 | [quality-manual.md](quality-manual.md): scope, quality policy, roles, process map, ISO 13485/QMSR cross-reference | Draft for approval (2026-11-10) |
 | [sop-001-document-record-control.md](sop-001-document-record-control.md) with [validation/part11-github-drive.md](validation/part11-github-drive.md) (VAL-0001, executed) | Draft for approval (2026-11-10) |
 | Other SOPs (design control, risk management, CAPA, complaints/MDR, supplier control, training, audits and management review, labeling/UDI, cybersecurity, tool validation) | See the procedure index in the quality manual §7.1 |
+| [sop-010-vulnerability-management.md](sop-010-vulnerability-management.md) | Draft; mailbox, response times, ISAO and support policy need approval |
 | [sop-011-tool-validation.md](sop-011-tool-validation.md) and [tool-validation/README.md](tool-validation/README.md) (executed 2026-11-10) | Draft for approval |
 
 ## Design files (`docs/dhf/<module>/`)
@@ -28,8 +29,8 @@ its design file can support the system's 510(k).
 |---|---|
 | [gap-assessment.md](../dhf/libredcm/gap-assessment.md) | Done 2026-11-09 |
 | [SRS.md](../dhf/libredcm/SRS.md) | Retrospective draft |
-| [risk-management.md](../dhf/libredcm/risk-management.md) | Initial hazard list |
-| [cybersecurity.md](../dhf/libredcm/cybersecurity.md) | Seed threat model + baseline scan |
+| [risk-management.md](../dhf/libredcm/risk-management.md): plan, hazard analysis with initial/residual risk, report | Draft for approval (2026-11-10); residual risk not yet acceptable overall (HAZ-013) |
+| [cybersecurity.md](../dhf/libredcm/cybersecurity.md): security architecture views, scored threat model, SAST, fuzzing record | Draft for approval (2026-11-10) |
 | [soup.md](../dhf/libredcm/soup.md) | Generated, draft evaluation |
 | [manual-verification.md](../dhf/libredcm/manual-verification.md) | Pre-QMS evidence only |
 | [generated/trace-matrix.md](../dhf/libredcm/generated/trace-matrix.md) | Generated |
@@ -37,7 +38,8 @@ its design file can support the system's 510(k).
 | [intended-use.md](../dhf/libredcm/intended-use.md): intended use, limitations, users, use specification, user needs | Draft for approval (2026-11-10) |
 | [anomalies.md](../dhf/libredcm/anomalies.md): known anomalies with safety impact | Draft, living list (2026-11-10) |
 | [architecture.md](../dhf/libredcm/architecture.md): software items, interfaces, data flows, SOUP, topologies, segregation | Draft (2026-11-10), verified against the import graph |
-| design/, DICOM Conformance Statement | Not started |
+| [detailed-design.md](../dhf/libredcm/detailed-design.md): class-C-depth units (store path, index/patient association, pixel-data integrity) | Draft for approval (2026-11-10) |
+| DICOM Conformance Statement | Not started |
 
 ### Libre WT, future modules
 

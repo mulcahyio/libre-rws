@@ -6,6 +6,10 @@ on:
   pull_request:
   push:
     branches: [master, "release/**"]
+  schedule:
+    # Weekly re-scan of master against the latest vulnerability data
+    # (QMS-SOP-010 §3): new advisories appear without any code change.
+    - cron: "41 5 * * 1"   # Mondays 05:41 UTC
 
 permissions:
   contents: read
