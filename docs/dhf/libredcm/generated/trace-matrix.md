@@ -7,23 +7,23 @@ Requirements: 43 (39 active). Active with verification: 39. Active without verif
 | Requirement | Status | Verified by |
 |---|---|---|
 | DCM-SRS-001 | Active | `modules/dicom/internal/gateway/gateway_e2e_test.go:TestEndToEnd` |
-| DCM-SRS-002 | Active | `modules/dicom/internal/gateway/gateway_e2e_test.go:TestEndToEnd` |
+| DCM-SRS-002 | Active | `modules/dicom/internal/gateway/gateway_e2e_test.go:TestEndToEnd`<br>`modules/dicom/internal/gateway/riskcontrol_test.go:TestStoreFailureNeverAcknowledged` |
 | DCM-SRS-003 | Active | `modules/dicom/internal/dcm/dcm_test.go:TestSelectStorageSyntaxKeepsSenderPreference`<br>`manual: scripts/conformance.sh (DCMTK 3.6.7) C-STORE/C-MOVE of JPEG Baseline, JPEG-LS, RLE, JPEG 2000; compressed pixel data byte-identical (pre-QMS run 2026-11-07)` |
-| DCM-SRS-004 | Active | `modules/dicom/internal/dcm/dcm_test.go:TestPart10RoundTrip`<br>`modules/dicom/internal/dcm/dcm_test.go:TestStringsHandlesRawAndMultiValues` |
+| DCM-SRS-004 | Active | `modules/dicom/internal/dcm/dcm_test.go:TestPart10RoundTrip`<br>`modules/dicom/internal/dcm/dcm_test.go:TestStringsHandlesRawAndMultiValues`<br>`modules/dicom/internal/dcm/fuzz_test.go:FuzzPart10RoundTrip`<br>`modules/dicom/internal/gateway/pixelintegrity_test.go:TestPixelDataIntegrity` |
 | DCM-SRS-005 | Active | `modules/dicom/internal/blob/blob_test.go:TestStoreContract` |
-| DCM-SRS-006 | Active | `modules/dicom/internal/gateway/find_test.go:TestBuildFilterKinds`<br>`modules/dicom/internal/gateway/gateway_e2e_test.go:TestEndToEnd`<br>`modules/dicom/internal/index/conformance_test.go:TestConformance` |
+| DCM-SRS-006 | Active | `modules/dicom/internal/gateway/find_test.go:TestBuildFilterKinds`<br>`modules/dicom/internal/gateway/fuzz_test.go:FuzzCFindKeys`<br>`modules/dicom/internal/gateway/fuzz_test.go:FuzzCFindIdentifierBytes`<br>`modules/dicom/internal/gateway/gateway_e2e_test.go:TestEndToEnd`<br>`modules/dicom/internal/index/conformance_test.go:TestConformance` |
 | DCM-SRS-007 | Active | `modules/dicom/internal/gateway/find_test.go:TestFindRefinementsEndToEnd` |
 | DCM-SRS-008 | Active | `modules/dicom/internal/gateway/find_test.go:TestTimeBounds`<br>`modules/dicom/internal/gateway/find_test.go:TestFindRefinementsEndToEnd` |
 | DCM-SRS-009 | Active | `modules/dicom/internal/gateway/find_test.go:TestResponseCharset`<br>`modules/dicom/internal/gateway/find_test.go:TestFindRefinementsEndToEnd` |
-| DCM-SRS-010 | Active | `modules/dicom/internal/gateway/gateway_e2e_test.go:TestEndToEnd` |
+| DCM-SRS-010 | Active | `modules/dicom/internal/gateway/gateway_e2e_test.go:TestEndToEnd`<br>`modules/dicom/internal/gateway/pixelintegrity_test.go:TestPixelDataIntegrity` |
 | DCM-SRS-011 | Active | `modules/dicom/internal/gateway/gateway_e2e_test.go:TestEndToEnd` |
 | DCM-SRS-012 | Active | `modules/dicom/internal/gateway/gateway_e2e_test.go:TestEndToEnd` |
 | DCM-SRS-013 | Active | `modules/dicom/cmd/libredcm/remoteaes_test.go:TestParseRemoteAEs` |
-| DCM-SRS-014 | Active | `manual: DCMTK echoscu with a wrong called AE title, rejected "Called AE Title Not Recognized" (pre-QMS run 2026-10-11)` |
+| DCM-SRS-014 | Active | `modules/dicom/internal/gateway/riskcontrol_test.go:TestWrongCalledAERejected`<br>`manual: DCMTK echoscu with a wrong called AE title, rejected "Called AE Title Not Recognized" (pre-QMS run 2026-10-11)` |
 | DCM-SRS-015 | Active | `modules/dicom/internal/gateway/allow_test.go:TestParseAllowRule`<br>`modules/dicom/internal/gateway/allow_test.go:TestAllowListEndToEnd` |
 | DCM-SRS-016 | Active | `modules/dicom/cmd/libredcm/reload_test.go:TestReloadAppliesLiveSettings` |
 | DCM-SRS-017 | Active | `modules/dicom/internal/gateway/allow_test.go:TestAllowListEndToEnd` |
-| DCM-SRS-018 | Active | `modules/dicom/internal/dcm/dcm_test.go:TestPart10RefusesUnencodableMeta` |
+| DCM-SRS-018 | Active | `modules/dicom/internal/dcm/dcm_test.go:TestPart10RefusesUnencodableMeta`<br>`modules/dicom/internal/dcm/fuzz_test.go:FuzzPart10RoundTrip` |
 | DCM-SRS-020 | Active | `modules/dicom/internal/index/conformance_test.go:TestConformance` |
 | DCM-SRS-021 | Active | `modules/dicom/internal/index/upgrade_test.go:TestUpgradeFromV1` |
 | DCM-SRS-022 | Active | `modules/dicom/internal/index/index_test.go:TestBackupWhileWriting`<br>`modules/dicom/internal/index/index_test.go:TestBackupRejectsEmptyDest` |
