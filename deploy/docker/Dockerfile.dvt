@@ -1,0 +1,74 @@
+# syntax=docker/dockerfile:1
+# LibreDVT container image (DICOM Validation & Test, a Libre RWS module).
+# Libre Systems - dev@LibreSystems.org
+#
+# Build from the repository root:
+#   docker build -f deploy/docker/Dockerfile.dvt --build-arg VERSION=0.1.0-dev -t libre/dvt:0.1.0-dev .
+# Engine integration tests against the real engines (used by CI):
+#   docker build -f deploy/docker/Dockerfile.dvt --target test .
+#
+# Base images are pinned by digest and engine versions by
+# modules/dvt/worker/requirements.txt (DVT-SRS-065). Changing either needs
+# the LibreDVT tool validation re-run (QMS-SOP-011).
+
+ARG GO_VERSION=1.26.10
+ARG DICOM_EDITION=2026d
+
+# ---- Go build -----------------------------------------------------------------
+FROM golang:${GO_VERSION}-bookworm@sha256:5de7c99eb78ca5e515a4c340235d0955ec5964a5071c492c15503d7c267da473 AS build
+WORKDIR /src
+ENV CGO_ENABLED=0 GOFLAGS=-trimpath GOTOOLCHAIN=auto
+COPY go.mod go.sum ./
+COPY third_party/ third_party/
+RUN go mod download
+COPY platform/ platform/
+COPY modules/ modules/
+ARG VERSION=dev
+RUN go build -ldflags "-s -w -X main.version=${VERSION}" -o /out/libredvt ./modules/dvt/cmd/libredvt
+
+# ---- engines ------------------------------------------------------------------
+FROM python:3.12-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df AS engines
+ARG DICOM_EDITION
+ENV PYTHONDONTWRITEBYTECODE=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+COPY modules/dvt/worker/requirements.txt /opt/libredvt/worker/requirements.txt
+RUN pip install -r /opt/libredvt/worker/requirements.txt
+# Build the DICOM standard into the image so LibreDVT needs no internet at
+# runtime (DVT-SRS-064); keep only the parsed JSON.
+COPY modules/dvt/worker/build_assets.py /opt/libredvt/worker/build_assets.py
+RUN python /opt/libredvt/worker/build_assets.py /opt/libredvt "${DICOM_EDITION}"
+COPY modules/dvt/worker/libredvt_worker.py /opt/libredvt/worker/libredvt_worker.py
+COPY modules/dvt/plans/ /opt/libredvt/plans/
+
+# ---- engine integration tests ---------------------------------------------------
+FROM engines AS test
+COPY --from=build /usr/local/go /usr/local/go
+COPY --from=build /go/pkg/mod /go/pkg/mod
+ENV PATH=/usr/local/go/bin:$PATH GOPATH=/go GOFLAGS=-mod=mod CGO_ENABLED=0 GOTOOLCHAIN=local \
+    LIBRE_DVT_TEST_ASSETS=/opt/libredvt
+WORKDIR /src
+COPY go.mod go.sum ./
+COPY third_party/ third_party/
+COPY platform/ platform/
+COPY modules/ modules/
+COPY deploy/ deploy/
+RUN go test -count=1 -v -tags engines ./modules/dvt/...
+
+# ---- runtime ------------------------------------------------------------------
+FROM engines
+ARG VERSION=dev
+LABEL org.opencontainers.image.title="LibreDVT" \
+      org.opencontainers.image.description="LibreDVT - DICOM Validation & Test" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.vendor="Libre Systems" \
+      org.opencontainers.image.licenses="Apache-2.0"
+RUN useradd --system --uid 10001 --home-dir /var/lib/libredvt --shell /usr/sbin/nologin libredvt \
+ && mkdir -p /var/lib/libredvt && chown 10001:10001 /var/lib/libredvt
+COPY --from=build /out/libredvt /usr/local/bin/libredvt
+ENV LIBRE_DVT_DATA=/var/lib/libredvt LIBRE_DVT_LISTEN=:8095 LIBRE_DVT_SCP_PORT=11115 \
+    LIBRE_DVT_EDITION=${DICOM_EDITION}
+USER 10001:10001
+VOLUME /var/lib/libredvt
+EXPOSE 8095 11115
+HEALTHCHECK --interval=30s --timeout=5s CMD ["python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8095/healthz', timeout=4).status == 200 else 1)"]
+ENTRYPOINT ["/usr/local/bin/libredvt"]
+CMD ["serve"]

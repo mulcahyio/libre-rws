@@ -1,0 +1,42 @@
+# LibreDCM DICOM conformance plan (DVT-SRS-081). Covers the checks of
+# scripts/conformance.sh (DCMTK) with LibreDVT's independent engines, plus
+# called-AE rejection. Fixtures are public pydicom sample files baked into
+# the image (synthetic/public test data, no patient data).
+#
+# Target: register LibreDCM as "libredcm-lab" with class "lab" (store and
+# move steps are refused otherwise), and add LibreDVT's Storage SCP to
+# LibreDCM's move destinations, e.g. LIBRE_DCM_REMOTE_AES=LIBREDVT=libredvt:11115.
+name: LibreDCM conformance
+target: libredcm-lab
+timeout: 30s
+steps:
+  - id: validate-fixtures
+    type: validate
+    files: [fixtures/*.dcm]
+    # Positive control for the fixtures themselves; pydicom samples carry
+    # some warnings, which do not fail the step.
+
+  - id: echo
+    type: echo
+    verifies: [DCM-SRS-001]
+
+  - id: reject-wrong-called-ae
+    type: reject
+    called_aet: NOT-LIBREDCM
+    verifies: [DCM-SRS-014]
+
+  - id: store-native-and-compressed
+    type: store
+    files: [fixtures/*.dcm]
+    verifies: [DCM-SRS-002, DCM-SRS-003]
+
+  - id: find-stored-studies
+    type: find
+    from_store: true
+    verifies: [DCM-SRS-006]
+
+  - id: move-and-compare-pixels
+    type: move
+    from_store: true
+    compare_pixels: true
+    verifies: [DCM-SRS-003, DCM-SRS-010]

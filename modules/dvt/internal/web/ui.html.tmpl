@@ -1,0 +1,152 @@
+{{define "head"}}<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+{{if .Refresh}}<meta http-equiv="refresh" content="3">{{end}}
+<title>{{.Title}} · LibreDVT</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<header class="top">
+  <a class="brand" href="/">Libre<span>DVT</span></a>
+  {{if .CSRF}}<nav>
+    <a href="/" {{if eq .Nav "home"}}class="active"{{end}}>Results</a>
+    <a href="/validate" {{if eq .Nav "validate"}}class="active"{{end}}>Validate objects</a>
+    <a href="/plans" {{if eq .Nav "plans"}}class="active"{{end}}>Test plans</a>
+    <a href="/targets" {{if eq .Nav "targets"}}class="active"{{end}}>Targets</a>
+  </nav>
+  <form class="inline" method="post" action="/logout"><input type="hidden" name="csrf" value="{{.CSRF}}"><button class="secondary" type="submit">Log out</button></form>{{end}}
+</header>
+<main>
+<div class="notice"><b>Test data only.</b> Do not upload real patient data. LibreDVT is a test tool; files and reports are stored on this server until you delete them.</div>
+{{if .Flash}}<div class="notice flash">{{.Flash}}</div>{{end}}
+{{end}}
+
+{{define "foot"}}
+</main>
+<footer>LibreDVT {{.Version}} · DICOM Validation &amp; Test · Libre Systems</footer>
+</body></html>{{end}}
+
+{{define "csrf"}}<input type="hidden" name="csrf" value="{{.}}">{{end}}
+
+{{define "login"}}{{template "head" .}}
+<div class="card" style="max-width:420px">
+<h1>Log in</h1>
+<form method="post" action="/login">
+  <label for="password">Admin password</label>
+  <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+  <p><button type="submit">Log in</button></p>
+</form>
+</div>
+{{template "foot" .}}{{end}}
+
+{{define "home"}}{{template "head" .}}{{$csrf := .CSRF}}
+<h1>Results</h1>
+<div class="grid">
+  <div class="card"><h2>Validate objects</h2><p class="muted">Check DICOM files against the standard with dciodvfy, dicom-validator and dcentvfy.</p><a class="button" href="/validate">Validate files</a></div>
+  <div class="card"><h2>Run a test plan</h2><p class="muted">Test DICOM services (C-ECHO, C-STORE, C-FIND, C-MOVE, association rejection) on a registered target.</p><a class="button" href="/plans">Test plans</a></div>
+</div>
+<h2>Recent test runs</h2>
+{{template "runs-table" (dict2 "Runs" .Data.Runs "CSRF" $csrf)}}
+<h2>Recent validations</h2>
+{{if .Data.Validations}}
+<table><tr><th>Started</th><th>Label</th><th>Files</th><th>Verdict</th><th></th></tr>
+{{range .Data.Validations}}<tr><td><a href="/validations/{{.ID}}">{{ts .Created}}</a></td><td>{{.Label}}</td><td>{{len .Files}}</td>
+<td>{{if .Running}}<span class="badge muted">running…</span>{{else}}<span class="badge {{verdictClass .Verdict}}">{{.Verdict}}</span>{{end}}</td>
+<td><form class="inline" method="post" action="/validations/{{.ID}}/delete">{{template "csrf" $csrf}}<button class="secondary" type="submit">Delete</button></form></td></tr>{{end}}
+</table>{{else}}<p class="muted">No validations yet.</p>{{end}}
+{{template "foot" .}}{{end}}
+
+{{define "runs-table"}}{{$csrf := .CSRF}}
+{{if .Runs}}
+<table><tr><th>Started</th><th>Plan</th><th>Target</th><th>Verdict</th><th></th></tr>
+{{range .Runs}}<tr><td><a href="/runs/{{.ID}}">{{ts .Started}}</a></td><td>{{.Plan}}</td><td>{{.Target}}</td>
+<td>{{if .Running}}<span class="badge muted">running…</span>{{else}}<span class="badge {{verdictClass .Verdict}}">{{.Verdict}}</span>{{end}}</td>
+<td><form class="inline" method="post" action="/runs/{{.ID}}/delete">{{template "csrf" $csrf}}<button class="secondary" type="submit">Delete</button></form></td></tr>{{end}}
+</table>{{else}}<p class="muted">No test runs yet.</p>{{end}}
+{{end}}
+
+{{define "validate"}}{{template "head" .}}
+<h1>Validate objects</h1>
+<div class="card">
+<form method="post" action="/validate" enctype="multipart/form-data">
+  {{template "csrf" .CSRF}}
+  <label for="files">DICOM files or zip archives</label>
+  <input id="files" name="files" type="file" multiple required>
+  <label for="label">Label (optional)</label>
+  <input id="label" name="label" type="text" maxlength="120" placeholder="e.g. CT export from modality X">
+  <p><button type="submit">Validate</button></p>
+</form>
+<p class="muted">Each file is checked with dciodvfy (IOD, encoding, VR/VM) and dicom-validator (IOD rules from the DICOM standard); all files together are checked with dcentvfy (consistent patient, study and series attributes). If an engine cannot check a file, the file fails.</p>
+</div>
+{{template "foot" .}}{{end}}
+
+{{define "validation"}}{{template "head" .}}{{$v := .Data}}
+<h1>Validation {{if $v.Label}}“{{$v.Label}}”{{end}}</h1>
+<p>{{if not $v.Running}}<a class="button" href="/validations/{{$v.ID}}/report.html">Download HTML report</a>{{end}}</p>
+{{template "validation-body" $v}}
+<form method="post" action="/validations/{{$v.ID}}/delete">{{template "csrf" .CSRF}}<button class="secondary" type="submit">Delete this validation and its files</button></form>
+{{template "foot" .}}{{end}}
+
+{{define "targets"}}{{template "head" .}}{{$csrf := .CSRF}}
+<h1>Targets</h1>
+<p class="muted">Systems under test. Store and move steps only run against targets of class <b>lab</b>; anything else, including a target without a class, is treated as <b>production</b> and protected.</p>
+{{if .Data}}
+<table><tr><th>Name</th><th>Host</th><th>Port</th><th>Called AE</th><th>Calling AE</th><th>Class</th><th></th></tr>
+{{range .Data}}<tr><td class="mono">{{.Name}}</td><td class="mono">{{.Host}}</td><td>{{.Port}}</td><td class="mono">{{.CalledAET}}</td><td class="mono">{{.CallingAET}}</td>
+<td><span class="badge {{if eq .Class "lab"}}pass{{else}}warn{{end}}">{{.Class}}</span></td>
+<td><form class="inline" method="post" action="/targets/{{.Name}}/delete">{{template "csrf" $csrf}}<button class="secondary" type="submit">Delete</button></form></td></tr>{{end}}
+</table>{{else}}<p class="muted">No targets yet.</p>{{end}}
+<h2>Add or replace a target</h2>
+<div class="card">
+<form method="post" action="/targets">
+  {{template "csrf" .CSRF}}
+  <div class="grid">
+  <div><label for="name">Name</label><input id="name" name="name" type="text" required pattern="[A-Za-z0-9._\-]{1,64}" placeholder="libredcm-lab"></div>
+  <div><label for="host">Host</label><input id="host" name="host" type="text" required placeholder="libredcm"></div>
+  <div><label for="port">Port</label><input id="port" name="port" type="number" min="1" max="65535" required value="11112"></div>
+  <div><label for="called_aet">Called AE title (target)</label><input id="called_aet" name="called_aet" type="text" maxlength="16" required placeholder="LIBREDCM"></div>
+  <div><label for="calling_aet">Calling AE title (LibreDVT)</label><input id="calling_aet" name="calling_aet" type="text" maxlength="16" required value="LIBREDVT"></div>
+  <div><label for="class">Class</label><select id="class" name="class"><option value="production">production (protected)</option><option value="lab">lab (test system)</option></select></div>
+  </div>
+  <p><button type="submit">Save target</button></p>
+</form>
+</div>
+{{template "foot" .}}{{end}}
+
+{{define "plans"}}{{template "head" .}}{{$csrf := .CSRF}}{{$targets := .Data.Targets}}
+<h1>Test plans</h1>
+<div class="grid">
+<div class="card">
+<h2>Bundled plans</h2>
+{{if .Data.Bundled}}
+<form method="post" action="/plans/run" enctype="multipart/form-data">
+  {{template "csrf" .CSRF}}
+  <label for="bundled">Plan</label>
+  <select id="bundled" name="bundled">{{range .Data.Bundled}}<option value="{{.File}}" {{if .Err}}disabled{{end}}>{{if .Name}}{{.Name}}{{else}}{{.File}}{{end}} ({{.Steps}} steps){{if .Err}} – invalid{{end}}</option>{{end}}</select>
+  <label for="target1">Target</label>
+  <select id="target1" name="target"><option value="">as named in the plan</option>{{range $targets}}<option value="{{.Name}}">{{.Name}} ({{.Class}})</option>{{end}}</select>
+  <p><button type="submit">Run</button></p>
+</form>
+{{else}}<p class="muted">No bundled plans.</p>{{end}}
+</div>
+<div class="card">
+<h2>Upload a plan</h2>
+<form method="post" action="/plans/run" enctype="multipart/form-data">
+  {{template "csrf" .CSRF}}
+  <label for="plan">Plan (YAML)</label>
+  <input id="plan" name="plan" type="file" accept=".yaml,.yml" required>
+  <label for="fixtures">Files the plan refers to (optional; files or zip)</label>
+  <input id="fixtures" name="fixtures" type="file" multiple>
+  <label for="target2">Target</label>
+  <select id="target2" name="target"><option value="">as named in the plan</option>{{range $targets}}<option value="{{.Name}}">{{.Name}} ({{.Class}})</option>{{end}}</select>
+  <p><button type="submit">Run</button></p>
+</form>
+</div>
+</div>
+<h2>Test runs</h2>
+{{template "runs-table" (dict2 "Runs" .Data.Runs "CSRF" $csrf)}}
+{{template "foot" .}}{{end}}
+
+{{define "run"}}{{template "head" .}}{{$r := .Data}}
+<h1>Test run: {{$r.Plan}}</h1>
+{{if not $r.Running}}<p><a class="button" href="/runs/{{$r.ID}}/report.html">HTML report</a> <a class="button" href="/runs/{{$r.ID}}/junit.xml">JUnit XML</a> <a class="button" href="/runs/{{$r.ID}}/plan.yaml">Plan</a></p>{{end}}
+{{template "run-body" $r}}
+<form method="post" action="/runs/{{$r.ID}}/delete">{{template "csrf" .CSRF}}<button class="secondary" type="submit">Delete this run</button></form>
+{{template "foot" .}}{{end}}

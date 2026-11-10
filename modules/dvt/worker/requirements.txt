@@ -1,0 +1,6 @@
+# LibreDVT engine versions (tool configuration items, see docs/dhf/libredvt/architecture.md §6).
+# Changing a version here requires re-running the LibreDVT tool validation (QMS-SOP-011).
+dicom3tools==20260927
+dicom-validator==0.9.0
+pydicom==3.0.2
+pynetdicom==3.0.4
