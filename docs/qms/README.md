@@ -34,7 +34,8 @@ its design file can support the system's 510(k).
 | [generated/sbom.cdx.json](../dhf/libredcm/generated/sbom.cdx.json) | Generated |
 | [intended-use.md](../dhf/libredcm/intended-use.md): intended use, limitations, users, use specification, user needs | Draft for approval (2026-11-10) |
 | [anomalies.md](../dhf/libredcm/anomalies.md): known anomalies with safety impact | Draft, living list (2026-11-10) |
-| architecture.md, design/, DICOM Conformance Statement | Not started |
+| [architecture.md](../dhf/libredcm/architecture.md): software items, interfaces, data flows, SOUP, topologies, segregation | Draft (2026-11-10), verified against the import graph |
+| design/, DICOM Conformance Statement | Not started |
 
 ### Libre WT, future modules
 

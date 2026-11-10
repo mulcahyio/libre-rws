@@ -27,6 +27,9 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
   16 user needs (`docs/dhf/libredcm/intended-use.md`), with
   `scripts/qms/needs.py` (in CI) checking that every requirement serves a
   user need.
+- LibreDCM architecture document (`docs/dhf/libredcm/architecture.md`):
+  12 software items, interfaces, data flows, SOUP requirements, deployment
+  topologies and risk-control segregation.
 
 ### Fixed
 - Part 10 writer refuses File Meta values too long to encode (or empty
