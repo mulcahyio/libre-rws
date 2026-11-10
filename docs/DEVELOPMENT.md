@@ -185,7 +185,9 @@ lands; use C-MOVE for compressed data.
 | `studies` | `study_uid` | patient ID, name, birth date, sex, study date/time, accession, study ID, description, referring physician |
 | `series` | `series_uid` | study UID, modality, series number, description |
 | `instances` | `sop_instance_uid` | series/study UID, SOP class, instance number, transfer syntax, blob key, size, source AE, received at |
-| `schema_version` | | current schema version |
+| `conflicts` (v4) | `id` | kind, state, active, study/series UID, indexed and incoming Patient ID, stored (possibly `B000_`) Patient ID, incoming demographics and study attributes, source AE, first/last seen, resolution (who, action, reason, when); one active row per kind + study + incoming Patient ID (partial unique index) |
+| `conflict_instances` (v4) | `conflict_id`, `sop_instance_uid` | series/study UID, SOP class, instance number, transfer syntax, blob key (`conflicts/...`), size, source AE, received at, series attributes, stored Patient ID |
+| `schema_version` | | current schema version (4) |
 
 Migrations run at startup under a PostgreSQL advisory lock, so several nodes
 can start at the same moment safely.

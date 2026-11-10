@@ -31,6 +31,7 @@ flowchart LR
   DCM -- "libre.dcm.instance.stored" --> BUS[NATS JetStream]
   BUS --> MODS[Other Libre RWS modules<br/>routing, worklist, viewer]
   ADM[Administrator / Prometheus /<br/>orchestrator] -- "HTTP(S) :8081<br/>/healthz /readyz /metrics /version" --> DCM
+  WT[Libre WT] -- "HTTP(S) :8081<br/>/control/v1 (token required)" --> DCM
   DCM -. "HTTPS activation (official builds,<br/>optional) or licence files" .-> LK[LibreKey server]
   DCM -- "JSON logs incl. audit records (stdout)" --> LOG[Log collector]
 ```
@@ -68,7 +69,8 @@ the functions and types documented in `design/` for the class-C-depth items.
 | SI-06 | `modules/dicom/internal/events` | Event publishers (none, log, NATS JetStream) and the outbox relay | Own | nats.go |
 | SI-07 | `modules/dicom/internal/licensing` | Licence state, reminders, acknowledgement, licence metrics (official builds only; nil in source builds) | Own | LibreKey client (SI-11) |
 | SI-08 | `platform/config` | YAML + environment-variable configuration loader with legacy names | Own | go.yaml.in/yaml/v3 |
-| SI-09 | `platform/runtime` | Shared chassis: logging, admin endpoints, readiness checks, component lifecycle and shutdown | Own | prometheus client, x/sync |
+| SI-09 | `platform/runtime` | Shared chassis: logging, admin endpoints, control-API registration (token required), readiness checks, component lifecycle and shutdown | Own | prometheus client, x/sync |
+| SI-12 | `modules/dicom/internal/control` | REST control API for Libre WT: list, detail, plan and resolve patient-association conflicts (DCM-SRS-077) | Own | — |
 | SI-10 | `third_party/gonetdicom` | DICOM upper layer, PDU and DIMSE codec, association state machine, SCP/SCU | **Own (fork of gonetdicom v0.17.0, MIT)**; verified as LibreDCM code, changes listed in `RWS_FORK.md` | godicom |
 | SI-11 | `third_party/librekey` | LibreKey licence client (verification of signed licences, machine fingerprint, activation) | **Own (copy of the Libre Systems client, Apache-2.0)** | standard library |
 | SI-12 | `deploy/` | Container image (`Dockerfile.dicom`), Compose files, HAProxy config, workstation installer scripts | Own | Docker, distroless base image, HAProxy, NATS, PostgreSQL images (SOUP at system level) |

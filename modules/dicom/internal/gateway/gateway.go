@@ -62,6 +62,21 @@ type Config struct {
 	// records. Both default to including it; the installer asks.
 	EventsOmitPatientID bool `yaml:"events_omit_patient_id" env:"LIBRE_DCM_EVENTS_OMIT_PATIENT_ID"`
 	AuditOmitPatientID  bool `yaml:"audit_omit_patient_id" env:"LIBRE_DCM_AUDIT_OMIT_PATIENT_ID"`
+	// PatientConflictPolicy says what C-STORE does with an instance whose
+	// study is indexed under another Patient ID, or whose series or SOP
+	// instance is indexed under another study: "quarantine" (default: store,
+	// hold, wait for an administrator), "reject" (refuse with A778) or
+	// "accept_separate" (store as a separate, visible patient/study entry).
+	// Existing associations never change (DCM-SRS-070…072).
+	PatientConflictPolicy string `yaml:"patient_conflict_policy" env:"LIBRE_DCM_PATIENT_CONFLICT_POLICY"`
+	// PatientConflictVisibility: "hidden" (default) keeps held instances out
+	// of C-FIND/C-MOVE/C-GET; "flagged" returns them under their own Patient
+	// ID (DCM-SRS-073).
+	PatientConflictVisibility string `yaml:"patient_conflict_visibility" env:"LIBRE_DCM_PATIENT_CONFLICT_VISIBILITY"`
+	// PatientConflictCoercePatientID stores a conflicting instance's Patient
+	// ID as "B000_" + received ID, recorded in the Original Attributes
+	// Sequence, and answers C-STORE with Warning B000 (DCM-SRS-075).
+	PatientConflictCoercePatientID bool `yaml:"patient_conflict_coerce_patient_id" env:"LIBRE_DCM_PATIENT_CONFLICT_COERCE_PATIENT_ID"`
 }
 
 func (g *Gateway) queryOptions() queryOptions {
@@ -80,6 +95,9 @@ func DefaultConfig() Config {
 		FindLimit:        1000,
 		GetMaxBytes:      1 << 30, // C-GET buffers the response set in memory; see retrieve.go
 		RemoteAEs:        map[string]RemoteAE{},
+
+		PatientConflictPolicy:     PolicyQuarantine,
+		PatientConflictVisibility: VisibilityHidden,
 	}
 }
 
@@ -92,6 +110,7 @@ type Gateway struct {
 	idx    index.Index
 	events events.Publisher
 	m      *metrics
+	cm     *conflictMetrics
 
 	mu        sync.RWMutex
 	remoteAEs map[string]RemoteAE
@@ -116,6 +135,8 @@ func New(cfg Config, node string, log *slog.Logger, reg prometheus.Registerer,
 		blobs: blobs, idx: idx, events: pub, m: newMetrics(reg),
 		remoteAEs: map[string]RemoteAE{},
 	}
+	g.registerConflictMetrics(reg)
+	g.validateConflictConfig()
 	g.SetRemoteAEs(cfg.RemoteAEs)
 	if err := g.SetAllowedAEs(cfg.AllowedAEs); err != nil {
 		// Fail closed: a typo in the allow-list must not open the gateway.

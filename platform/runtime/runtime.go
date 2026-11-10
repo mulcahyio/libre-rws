@@ -80,7 +80,23 @@ type Runtime struct {
 	mu      sync.RWMutex
 	checks  map[string]CheckFunc
 	info    []func() map[string]any
+	control []controlRoute
 	started time.Time
+}
+
+type controlRoute struct {
+	pattern string
+	h       http.Handler
+}
+
+// HandleControl registers a control-API handler on the admin listener (e.g.
+// "GET /control/v1/conflicts"). Control endpoints can change data, so unlike
+// /metrics and /version they are refused unless an admin token is configured
+// and presented (fail closed). Call before Run.
+func (r *Runtime) HandleControl(pattern string, h http.Handler) {
+	r.mu.Lock()
+	r.control = append(r.control, controlRoute{pattern, h})
+	r.mu.Unlock()
 }
 
 // AddVersionInfo adds module-specific fields (e.g. license state) to the
@@ -258,6 +274,25 @@ func (r *Runtime) adminMux() *http.ServeMux {
 		writeJSON(w, http.StatusOK, body)
 	})))
 	mux.Handle("GET /metrics", protect(promhttp.HandlerFor(r.Registry, promhttp.HandlerOpts{})))
+	strict := func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			if token == "" || !authorized(req) {
+				w.Header().Set("WWW-Authenticate", `Bearer realm="libre-admin"`)
+				msg := "unauthorized"
+				if token == "" {
+					msg = "control API disabled: no admin token configured"
+				}
+				writeJSON(w, http.StatusUnauthorized, map[string]any{"error": msg})
+				return
+			}
+			h.ServeHTTP(w, req)
+		})
+	}
+	r.mu.RLock()
+	for _, c := range r.control {
+		mux.Handle(c.pattern, strict(c.h))
+	}
+	r.mu.RUnlock()
 	return mux
 }
 

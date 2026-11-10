@@ -104,3 +104,26 @@ func TestVersionInfo(t *testing.T) {
 		}
 	}
 }
+
+// Control endpoints are refused without a configured token (unlike /metrics),
+// refused with a wrong token, and served with the right one.
+// Verifies: DCM-SRS-077
+func TestControlRequiresToken(t *testing.T) {
+	ok := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusTeapot) })
+	open := newTestRuntime(DefaultAdmin())
+	open.HandleControl("GET /control/v1/x", ok)
+	if code, body := get(t, open.adminMux(), "/control/v1/x", ""); code != http.StatusUnauthorized || !strings.Contains(body, "no admin token") {
+		t.Fatalf("no token configured: %d %s", code, body)
+	}
+	cfg := DefaultAdmin()
+	cfg.Token = "s3cret"
+	r := newTestRuntime(cfg)
+	r.HandleControl("GET /control/v1/x", ok)
+	h := r.adminMux()
+	if code, _ := get(t, h, "/control/v1/x", "wrong"); code != http.StatusUnauthorized {
+		t.Fatalf("wrong token = %d", code)
+	}
+	if code, _ := get(t, h, "/control/v1/x", "s3cret"); code != http.StatusTeapot {
+		t.Fatalf("right token = %d", code)
+	}
+}

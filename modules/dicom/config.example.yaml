@@ -5,7 +5,7 @@ admin:
   addr: ":8081"              # LIBRE_DCM_ADMIN_ADDR   health, readiness, metrics, version
   log_level: info            # LIBRE_DCM_LOG_LEVEL    debug | info | warn | error
   log_format: json           # LIBRE_DCM_LOG_FORMAT   json | text
-  # token: change-me         # LIBRE_DCM_ADMIN_TOKEN  bearer token for /metrics, /version
+  # token: change-me         # LIBRE_DCM_ADMIN_TOKEN  bearer token for /metrics, /version; required for the control API (Libre WT)
   # tls_cert_file: /etc/libredcm/tls/tls.crt  # LIBRE_DCM_ADMIN_TLS_CERT  serve admin over HTTPS
   # tls_key_file:  /etc/libredcm/tls/tls.key  # LIBRE_DCM_ADMIN_TLS_KEY
   shutdown_timeout: 30s      # LIBRE_DCM_SHUTDOWN_TIMEOUT
@@ -24,6 +24,11 @@ dicom:
   get_max_bytes: 1073741824  # C-GET buffers in memory (library limit) - cap it
   # tls_cert_file: /etc/libredcm/tls/dicom.crt   # DICOM TLS (port 2762 by convention)
   # tls_key_file:  /etc/libredcm/tls/dicom.key
+  # Study already stored under another Patient ID, or series under another
+  # study (DCM-SRS-070…079). Existing associations never change.
+  patient_conflict_policy: quarantine      # LIBRE_DCM_PATIENT_CONFLICT_POLICY  quarantine | reject | accept_separate
+  patient_conflict_visibility: hidden      # LIBRE_DCM_PATIENT_CONFLICT_VISIBILITY  hidden | flagged
+  patient_conflict_coerce_patient_id: false # LIBRE_DCM_PATIENT_CONFLICT_COERCE_PATIENT_ID  store held images as B000_<id> (Warning B000)
   remote_aes:                # C-MOVE destinations
     VIEWER1: {host: 10.0.0.20, port: 11112}
     # PACS_B: {host: pacs-b.example, port: 104, ae_title: PACSB}

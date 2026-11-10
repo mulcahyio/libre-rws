@@ -40,18 +40,29 @@ func (g *Gateway) resolveRetrieve(ctx context.Context, ident *godicom.Dataset, m
 	if err != nil {
 		return nil, status.IdentifierDoesNotMatchSOPClass
 	}
-	hasKey := false
+	hasKey, hasPatient := false, false
 	for _, f := range q.filters {
 		switch f.Column {
 		case "st.patient_id", "st.study_uid", "se.series_uid", "i.sop_instance_uid":
 			hasKey = true
+		}
+		if f.Column == "st.patient_id" && f.Op == index.OpEq && f.Values[0] != "" {
+			hasPatient = true
 		}
 	}
 	if !hasKey {
 		g.log.Warn("refusing retrieve without unique keys", "err", errUniversalRetrieve)
 		return nil, status.IdentifierDoesNotMatchSOPClass
 	}
-	rows, err := g.idx.Find(ctx, index.Image, q.filters, 0)
+	// Visible conflict instances share UIDs with indexed ones under another
+	// patient. They are only retrieved when the request names their Patient
+	// ID, so a retrieve by Study UID alone never mixes two patients
+	// (DCM-SRS-073).
+	var opts index.FindOptions
+	if hasPatient {
+		opts = g.findOptions()
+	}
+	rows, err := g.idx.FindWith(ctx, index.Image, q.filters, 0, opts)
 	if err != nil {
 		g.log.Error("retrieve lookup failed", "err", err)
 		return nil, status.UnableToCalculateNumberOfMatches

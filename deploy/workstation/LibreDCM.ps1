@@ -211,6 +211,23 @@ function Invoke-Configure {
     Set-EnvValue 'LIBRE_DCM_EVENTS_OMIT_PATIENT_ID' $(if ((Ask 'Include patient IDs in event-bus messages? (y/n)' $d) -match '^[Nn]') { 'true' } else { 'false' })
     $d = if ($e['LIBRE_DCM_AUDIT_OMIT_PATIENT_ID'] -eq 'true') { 'n' } else { 'y' }
     Set-EnvValue 'LIBRE_DCM_AUDIT_OMIT_PATIENT_ID' $(if ((Ask 'Include patient IDs in the audit log? (y/n)' $d) -match '^[Nn]') { 'true' } else { 'false' })
+
+    Write-Host ''
+    Write-Host 'When images arrive for a study that is stored under a different patient ID:'
+    Write-Host '  1) hold them for an administrator to review in Libre WT (recommended)'
+    Write-Host '  2) refuse them (the sender keeps them queued)'
+    Write-Host '  3) accept them as a separate study'
+    $d = switch ($e['LIBRE_DCM_PATIENT_CONFLICT_POLICY']) { 'reject' { '2' } 'accept_separate' { '3' } default { '1' } }
+    switch (Ask 'Choice' $d) {
+        '1' { Set-EnvValue 'LIBRE_DCM_PATIENT_CONFLICT_POLICY' 'quarantine' }
+        '2' { Set-EnvValue 'LIBRE_DCM_PATIENT_CONFLICT_POLICY' 'reject' }
+        '3' { Set-EnvValue 'LIBRE_DCM_PATIENT_CONFLICT_POLICY' 'accept_separate' }
+        default { Fail 'Choose 1, 2 or 3' }
+    }
+    $d = if ($e['LIBRE_DCM_PATIENT_CONFLICT_VISIBILITY'] -eq 'flagged') { 'y' } else { 'n' }
+    Set-EnvValue 'LIBRE_DCM_PATIENT_CONFLICT_VISIBILITY' $(if ((Ask 'Show held images to viewers, flagged, instead of hiding them? (y/n)' $d) -match '^[Yy]') { 'flagged' } else { 'hidden' })
+    $d = if ($e['LIBRE_DCM_PATIENT_CONFLICT_COERCE_PATIENT_ID'] -eq 'true') { 'y' } else { 'n' }
+    Set-EnvValue 'LIBRE_DCM_PATIENT_CONFLICT_COERCE_PATIENT_ID' $(if ((Ask 'Prefix the patient ID of held images with B000_? (y/n)' $d) -match '^[Yy]') { 'true' } else { 'false' })
     Set-EnvValue 'LIBRE_DCM_CONFIGURED' '1'
 }
 

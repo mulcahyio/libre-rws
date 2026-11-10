@@ -1,0 +1,8 @@
+{{define "title"}}{{.Title}}{{end}}
+{{define "content"}}
+<section class="card narrow">
+<h1>{{.Title}}</h1>
+<p class="msg error" role="alert">{{.Message}}</p>
+<p><a href="{{if .Back}}{{.Back}}{{else}}/exceptions{{end}}">Back</a></p>
+</section>
+{{end}}

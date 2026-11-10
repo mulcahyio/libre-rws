@@ -214,7 +214,7 @@ func (g *Gateway) onCFind(ctx context.Context, req ae.FindRequest) []ae.FindMatc
 	}
 	lvl := string(q.level)
 
-	rows, err := g.idx.Find(ctx, q.level, q.filters, g.cfg.FindLimit)
+	rows, err := g.idx.FindWith(ctx, q.level, q.filters, g.cfg.FindLimit, g.findOptions())
 	if err != nil {
 		g.log.Error("C-FIND query failed", "level", lvl, "err", err)
 		g.m.finds.WithLabelValues(lvl, "error").Inc()

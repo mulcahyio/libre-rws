@@ -1,0 +1,51 @@
+{{define "title"}}Exception {{.C.ID}}{{end}}
+{{define "content"}}
+<p><a href="/exceptions">← Study Exceptions</a></p>
+<h1>{{kindLabel .C.Kind}} <span class="state {{.C.State}}">{{stateLabel .C.State}}</span></h1>
+<p class="lead">Study <code class="uid">{{.C.StudyUID}}</code>{{if .C.SeriesUID}}, series <code class="uid">{{.C.SeriesUID}}</code>{{end}}. Received from <b>{{.C.SourceAE}}</b>, first {{fmtTime .C.FirstSeen}}, last {{fmtTime .C.LastSeen}}.</p>
+<div class="compare">
+<section class="card">
+<h2>In the archive</h2>
+{{with .D.IndexedPatient}}
+<dl>
+<dt>Patient ID</dt><dd><code>{{orDash .PatientID}}</code></dd>
+<dt>Name</dt><dd>{{orDash .PatientName}}</dd>
+<dt>Birth date</dt><dd>{{orDash .PatientBirthDate}}</dd>
+<dt>Sex</dt><dd>{{orDash .PatientSex}}</dd>
+</dl>
+<p><small>{{$.D.IndexedInstances}} archived image(s) in {{if $.C.ExistingStudyUID}}study <code class="uid">{{$.C.ExistingStudyUID}}</code>{{end}}</small></p>
+{{else}}<p>The archived study is no longer indexed.</p>{{end}}
+</section>
+<section class="card held">
+<h2>Incoming (held)</h2>
+<dl>
+<dt>Patient ID</dt><dd><code class="{{if .D.IndexedPatient}}{{if differs .C.IncomingPatientID .D.IndexedPatient.PatientID}}diff{{end}}{{end}}">{{orDash .C.IncomingPatientID}}</code>{{if .C.Coerced}} <small>(stored as <code>{{.C.DisplayPatientID}}</code>)</small>{{end}}</dd>
+<dt>Name</dt><dd class="{{if .D.IndexedPatient}}{{if differs .C.PatientName .D.IndexedPatient.PatientName}}diff{{end}}{{end}}">{{orDash .C.PatientName}}</dd>
+<dt>Birth date</dt><dd class="{{if .D.IndexedPatient}}{{if differs .C.PatientBirthDate .D.IndexedPatient.PatientBirthDate}}diff{{end}}{{end}}">{{orDash .C.PatientBirthDate}}</dd>
+<dt>Sex</dt><dd class="{{if .D.IndexedPatient}}{{if differs .C.PatientSex .D.IndexedPatient.PatientSex}}diff{{end}}{{end}}">{{orDash .C.PatientSex}}</dd>
+</dl>
+<p><small>Accession {{orDash .C.AccessionNumber}} · {{.C.StudyDate}} {{.C.StudyDescription}}</small></p>
+</section>
+</div>
+
+<h2>Held images ({{len .D.IncomingInstances}})</h2>
+<table>
+<thead><tr><th>Series</th><th>Modality</th><th>Image</th><th>SOP Instance UID</th><th>Stored Patient ID</th><th>Received</th></tr></thead>
+<tbody>{{range .D.IncomingInstances}}<tr><td>{{.SeriesNumber}} {{.SeriesDescription}}</td><td>{{.Modality}}</td><td>{{.InstanceNumber}}</td><td><code class="uid">{{.SOPInstanceUID}}</code></td><td><code>{{.StoredPatientID}}</code></td><td>{{fmtTime .ReceivedAt}}</td></tr>{{end}}</tbody>
+</table>
+
+{{if .C.Active}}
+  {{if .IsAdmin}}
+  <h2>Resolve</h2>
+  <p>Each action first shows exactly what will change and asks you to approve the edit.</p>
+  <div class="actions">{{range .Actions}}<a class="button {{if eq . "reject"}}danger{{end}}" href="/exceptions/{{$.C.ID}}/review?action={{.}}">{{actionLabel .}}</a>{{end}}</div>
+  {{if ne .C.Kind "patient_id"}}<p><small>This kind of conflict can only be rejected in this version; correct the source and resend.</small></p>{{end}}
+  {{else}}<p class="msg info">Only an administrator can resolve exceptions.</p>{{end}}
+{{else}}
+<section class="card">
+<h2>Resolution</h2>
+<p>{{stateLabel .C.State}} by <b>{{.C.ResolvedBy}}</b> on {{fmtTimeP .C.ResolvedAt}} ({{actionLabel .C.ResolutionAction}}).</p>
+<p>Reason: {{.C.ResolutionReason}}</p>
+</section>
+{{end}}
+{{end}}

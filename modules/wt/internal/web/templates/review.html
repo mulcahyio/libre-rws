@@ -1,0 +1,35 @@
+{{define "title"}}Review edit{{end}}
+{{define "content"}}
+<p><a href="/exceptions/{{.C.ID}}">← Back to the exception</a></p>
+<h1>Review: {{actionLabel .Action}}</h1>
+<section class="warning" role="alert">
+<h2>⚠ Warning: this changes patient data</h2>
+<p>{{.P.Summary}}</p>
+{{range .P.Warnings}}<p>{{.}}</p>{{end}}
+<p>Check the patient details against the order or the patient record before you approve. The previous values are kept in each image (Original Attributes Sequence) and the change is recorded in the audit logs of Libre WT and LibreDCM.</p>
+</section>
+
+{{if .P.ExistingChanges}}
+<h2>Archived images: {{.P.ExistingInstances}} file(s) will be rewritten</h2>
+<table><thead><tr><th>Attribute</th><th>From</th><th>To</th></tr></thead>
+<tbody>{{range .P.ExistingChanges}}<tr><td>{{.Attribute}}</td><td><code>{{orDash .From}}</code></td><td><code class="diff">{{orDash .To}}</code></td></tr>{{end}}</tbody></table>
+{{end}}
+{{if .P.IncomingChanges}}
+<h2>Incoming images: {{.P.IncomingInstances}} file(s) will be rewritten</h2>
+<table><thead><tr><th>Attribute</th><th>From</th><th>To</th></tr></thead>
+<tbody>{{range .P.IncomingChanges}}<tr><td>{{.Attribute}}</td><td><code>{{orDash .From}}</code></td><td><code class="diff">{{orDash .To}}</code></td></tr>{{end}}</tbody></table>
+{{end}}
+
+<form method="post" action="/exceptions/{{.C.ID}}/resolve" class="card">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<input type="hidden" name="confirm" value="{{.Confirm}}">
+<input type="hidden" name="action" value="{{.Action}}">
+<label>Reason (recorded in the audit trail) <textarea name="reason" required maxlength="500" rows="3"></textarea></label>
+<label class="check"><input type="checkbox" name="approve" value="yes" required> I have checked the patient details and approve this edit</label>
+<div class="actions">
+<button class="primary {{if eq .Action "reject"}}danger{{end}}">Approve edit</button>
+<a class="button" href="/exceptions/{{.C.ID}}">Cancel</a>
+</div>
+<p><small>This approval is valid for 10 minutes and for this change only.</small></p>
+</form>
+{{end}}

@@ -135,6 +135,25 @@ configure() {
   [[ $yn =~ ^[Nn] ]] && setenv LIBRE_DCM_EVENTS_OMIT_PATIENT_ID true || setenv LIBRE_DCM_EVENTS_OMIT_PATIENT_ID false
   yn=$(ask 'Include patient IDs in the audit log? (y/n)' "$([ "$(envval LIBRE_DCM_AUDIT_OMIT_PATIENT_ID)" = true ] && echo n || echo y)")
   [[ $yn =~ ^[Nn] ]] && setenv LIBRE_DCM_AUDIT_OMIT_PATIENT_ID true || setenv LIBRE_DCM_AUDIT_OMIT_PATIENT_ID false
+
+  echo
+  echo "When images arrive for a study that is stored under a different patient ID:"
+  echo "  1) hold them for an administrator to review in Libre WT (recommended)"
+  echo "  2) refuse them (the sender keeps them queued)"
+  echo "  3) accept them as a separate study"
+  local cur def
+  cur=$(envval LIBRE_DCM_PATIENT_CONFLICT_POLICY)
+  case "$cur" in reject) def=2 ;; accept_separate) def=3 ;; *) def=1 ;; esac
+  case "$(ask 'Choice' "$def")" in
+    1) setenv LIBRE_DCM_PATIENT_CONFLICT_POLICY quarantine ;;
+    2) setenv LIBRE_DCM_PATIENT_CONFLICT_POLICY reject ;;
+    3) setenv LIBRE_DCM_PATIENT_CONFLICT_POLICY accept_separate ;;
+    *) fail "Choose 1, 2 or 3" ;;
+  esac
+  yn=$(ask 'Show held images to viewers, flagged, instead of hiding them? (y/n)' "$([ "$(envval LIBRE_DCM_PATIENT_CONFLICT_VISIBILITY)" = flagged ] && echo y || echo n)")
+  [[ $yn =~ ^[Yy] ]] && setenv LIBRE_DCM_PATIENT_CONFLICT_VISIBILITY flagged || setenv LIBRE_DCM_PATIENT_CONFLICT_VISIBILITY hidden
+  yn=$(ask 'Prefix the patient ID of held images with B000_? (y/n)' "$([ "$(envval LIBRE_DCM_PATIENT_CONFLICT_COERCE_PATIENT_ID)" = true ] && echo y || echo n)")
+  [[ $yn =~ ^[Yy] ]] && setenv LIBRE_DCM_PATIENT_CONFLICT_COERCE_PATIENT_ID true || setenv LIBRE_DCM_PATIENT_CONFLICT_COERCE_PATIENT_ID false
   setenv LIBRE_DCM_CONFIGURED 1
 }
 

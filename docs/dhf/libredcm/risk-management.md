@@ -68,7 +68,8 @@ far as possible (accept only with rationale), U unacceptable.
 | HAZ-010 | Licence problem stops or interrupts image flow | Delayed diagnosis; repeat exams if modality storage overflows | Expired/missing licence, hardware change, clock problems | S3 | P5 | U | DCM-SRS-058 (architecture test: gateway cannot reach licensing), -059–061 (admin-side reminders) | P1 | A | Residual: blocked config reloads can delay adding a modality; acknowledgement is one command |
 | HAZ-011 | Stale demographics after a patient update/merge in the RIS | Images filed under outdated demographics; wrong-patient confusion | No HL7 ADT / IHE PIR | S3 | P3 | R | Information for safety only: limitation L3 | P3 | R | Planned IHE PIR (RAD-12). Information for safety alone gives little reduction |
 | HAZ-012 | Vulnerable SOUP or own code exploited | Privacy harm; archive unavailable (ransomware) | Known CVEs, injection, parser bugs | S4 | P3 | U | govulncheck, gosec (blocking) and fuzzing in CI; SBOM; SECURITY.md patch targets; pinned base images | P2 | R | Independent penetration test still to do |
-| HAZ-013 | **Study silently reassigned to another patient** when instances of one Study UID arrive with different Patient IDs (ANOM-002), or a series UID arrives under another study (ANOM-009) | Wrong-patient diagnosis; prior missing under the right patient | Mis-registration corrected at the modality and re-sent; UID collision | S4 | P3 | U | **None in LibreDCM today**; external: the viewer shows the file's own header (differs from the index) | P2 | R | Control needed (detect, audit, alert, keep first demographics); decision for Patrick |
+| HAZ-014 | **Administrator correction applied to the wrong patient or study** (Libre WT / control API resolve action) | Wrong-patient diagnosis for every image of the study | Wrong conflict chosen, wrong action (correct_existing vs correct_incoming), misread demographics | S4 | P3 | U | DCM-SRS-077 (plan shown before any change, mandatory operator + reason + confirmation, token-protected API, audit), DCM-SRS-078 (Original Attributes Sequence in every rewritten file keeps the previous values, so a correction can be traced and reversed), WT-SRS (Admin role only, warning dialog with the planned changes, approve-edit confirmation) | P2 | R | Reversal is manual in v0.1 (previous values are in each file). IOCM propagation to peers that already received the study is not implemented (warning shown in the plan) |
+| HAZ-013 | **Study silently reassigned to another patient** when instances of one Study UID arrive with different Patient IDs (ANOM-002), or a series UID arrives under another study (ANOM-009) | Wrong-patient diagnosis; prior missing under the right patient | Mis-registration corrected at the modality and re-sent; UID collision | S4 | P3 | U | DCM-SRS-070–079 (2026-11-10, issue #14): conflicts detected in the index transaction, existing associations never change, conflicting instances held under their own storage key and hidden by default, audit + metrics, administrator resolution in Libre WT | P1 | R | Residuals: (a) visibility `flagged` / `accept_separate` show a second entry with the same Study UID; retrieve without Patient ID returns only the indexed patient (DCM-SRS-073), viewers that ignore Patient ID could still confuse the two; default `hidden` avoids it. (b) Race between pre-check and index transaction on two nodes receiving the same SOP instance for different patients within milliseconds can overwrite that file (`lateConflict`, store.go). (c) Conflicts with the indexed Patient ID empty vs. filled are treated as conflicts (safe, may add review work) |
 
 ## 3. Risk controls and verification of their effectiveness
 
@@ -99,6 +100,11 @@ far as possible (accept only with rationale), U unacceptable.
 | HAZ-009 | Admin token, HTTPS, patient-ID omission (DCM-SRS-041, -042, -032) | Protective | `TestAdminToken`, `TestAdminTokenFile`, `TestAdminNoTokenIsOpen`, `TestGenCert`, `TestOmitPatientID` |
 | HAZ-010 | No licence dependency in the gateway (DCM-SRS-058); reminders (-059–061) | Inherent (architecture) | `TestGatewayHasNoLicenseDependency`; licensing tests; reload test |
 | HAZ-012 | SCA, SAST, fuzzing in CI; SBOM | Protective | CI `verify` job (govulncheck, gosec blocking, fuzz seed corpus), `generated/sbom.cdx.json` |
+| HAZ-013 | Conflict detection in the index transaction; existing associations never change (DCM-SRS-070) | Design | `TestUpsertNeverReassignsStudy`, `TestUpsertNeverMovesSeriesOrInstance` (the ANOM-002/009 probes), `TestConcurrentFirstRegistration` (8 writers, SQLite and PostgreSQL); mutation-checked (removing the check fails them) |
+| HAZ-013 | Quarantine / reject / accept_separate, separate storage key, hidden by default, retrieve only with Patient ID (DCM-SRS-071–073) | Design | `TestConflictQuarantineHidden` (archived file of a resent SOP instance not overwritten), `TestConflictReject`, `TestConflictAcceptSeparate`, `TestConflictFlaggedCoerced`, `TestConflictRecordAndVisibility`; mutation-checked |
+| HAZ-013 | Audit, log, metrics (DCM-SRS-074); first demographics kept (-076) | Protective (detection) | `TestConflictQuarantineHidden`, `TestDemographicsMismatchKeepsFirst`, `TestFirstDemographicsKept` |
+| HAZ-013, -003 | B000_ coercion by byte splicing, pixel data unchanged (DCM-SRS-075) | Design | `TestCoercePatientID`, `TestCoerceKeepsHistoryAndSkipsNoop`, `TestCoerceUndefinedLengthHistoryAndEncapsulated`, `TestCoerceRefusesInvalid`; mutation-checked |
+| HAZ-014 | Token-only control API, plan before change, operator/reason/confirmation, audit (DCM-SRS-077); corrections recorded in the object (-078); reject keeps data (-079) | Design / protective | `TestControlRequiresToken`, `TestControlAPI`, `TestResolveValidation`, `TestResolveCorrectIncoming`, `TestResolveCorrectExisting`, `TestResolveReject` |
 
 **New risks introduced by controls** (ISO 14971 §7.5), checked 2026-11-10:
 the fail-closed allow-list can stop all traffic after a typo (mitigated:
@@ -106,6 +112,13 @@ audit record, metric and log name the cause; reload keeps the last good
 list); the Part 10 guard can refuse an instance (only values that cannot be
 written correctly); the licence reminders can block a configuration reload
 (HAZ-010 residual). None creates an unacceptable risk.
+
+Added 2026-11-10 (issue #14): the HAZ-013 controls introduce (1) images held
+back from viewers (delayed availability, HAZ-004 class): mitigated by the
+open-conflicts metric and the Libre WT queue; (2) a data-modifying
+administrator function: analysed as HAZ-014; (3) the `reject` policy can
+make a modality hold images: chosen per site, A7xx keeps them queued at the
+sender.
 
 ## 4. Use-related risks (IEC 62366-1)
 
@@ -129,8 +142,8 @@ claimed for it. This is consistent with the current labeling: beta releases
 are not for clinical use (limitation L7).
 
 **Before the QMS baseline / first clinical release:**
-1. Control HAZ-013 (ANOM-002, ANOM-009): detect demographic conflicts, audit and alert,
-   do not silently overwrite (decision needed).
+1. ~~Control HAZ-013 (ANOM-002, ANOM-009)~~: implemented 2026-11-10 (DCM-SRS-070…079, issue #14);
+   HAZ-014 added for the correction function.
 2. Close ANOM-003 (directory fsync) and ANOM-004 (SQLite durability).
 3. Add checksum storage and verification on retrieve (HAZ-003).
 4. Ship a tested restore procedure and alert rules incl. free disk space

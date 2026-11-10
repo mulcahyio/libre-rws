@@ -39,7 +39,7 @@ C-GET, optionally over DICOM TLS.
 
 ## Install-time choices
 
-The first `install` asks four questions and writes the answers to `.env`:
+The first `install` asks five groups of questions and writes the answers to `.env`:
 
 | Question | Choices | Settings |
 |---|---|---|
@@ -47,6 +47,7 @@ The first `install` asks four questions and writes the answers to `.env`:
 | Storage | this PC (Docker volume), this PC (a folder), S3 / S3-compatible (AWS, MinIO, Ceph, NAS) | `LIBRE_DCM_STORAGE_DRIVER`, `LIBRE_DCM_DATA`, `LIBRE_DCM_STORAGE_S3_*` |
 | TLS | off, self-signed (created by the installer), your own certificate files | `LIBRE_DCM_TLS_MODE`, `LIBRE_DCM_TLS_HOSTS`, `LIBRE_DCM_TLS_DIR` |
 | Patient IDs | include or leave out of event-bus messages, and of the audit log | `LIBRE_DCM_EVENTS_OMIT_PATIENT_ID`, `LIBRE_DCM_AUDIT_OMIT_PATIENT_ID` |
+| Patient ID conflicts | hold for review (default), refuse, or accept as a separate study; hide held images (default) or show them flagged; prefix their patient ID with `B000_` or not (default) | `LIBRE_DCM_PATIENT_CONFLICT_POLICY`, `LIBRE_DCM_PATIENT_CONFLICT_VISIBILITY`, `LIBRE_DCM_PATIENT_CONFLICT_COERCE_PATIENT_ID` |
 
 Run `configure` to answer them again. For unattended installs, fill in `.env`
 (copy it from `.env.example`) and run `install -Yes` (Windows) or
@@ -57,6 +58,14 @@ Run `configure` to answer them again. For unattended installs, fill in `.env`
   peers that trusted the certificate keep working. Add the names and IPs
   other devices use in `LIBRE_DCM_TLS_HOSTS`. *Files* copies your certificate
   (PEM, full chain) and key into `.\tls`.
+- **Patient ID conflicts**: when images arrive for a study that is already
+  stored under a different patient ID (for example the technologist picked
+  the wrong worklist entry, corrected it and sent again), LibreDCM never moves
+  the stored study to the new patient. By default it keeps the new images
+  apart and hidden until an administrator resolves them in Libre WT (correct
+  the new images, correct the stored study, or reject). Libre WT needs
+  `LIBRE_DCM_ADMIN_TOKEN` to be set; the control API refuses every request
+  without it.
 - **S3**: the index still lives on this PC; only images go to the bucket.
   `backup` then copies the index; use the store's own versioning for images.
 - An **admin token** is generated on first install (`LIBRE_DCM_ADMIN_TOKEN`).

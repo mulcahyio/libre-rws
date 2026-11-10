@@ -1,0 +1,27 @@
+{{define "title"}}Study Exceptions{{end}}
+{{define "content"}}
+<h1>Study Exceptions</h1>
+<p class="lead">Images LibreDCM held because they contradict the patient, study or series already in the archive. Nothing here changes until an administrator resolves it.</p>
+<nav class="tabs">{{range .Filters}}<a href="/exceptions?state={{.}}" {{if eq . $.State}}aria-current="page"{{end}}>{{.}}</a>{{end}}</nav>
+{{if .Error}}<p class="msg error" role="alert">Can't reach LibreDCM: {{.Error}}</p>{{end}}
+{{if .Conflicts}}
+<table>
+<thead><tr><th>Last received</th><th>Problem</th><th>State</th><th>Archived patient</th><th>Incoming patient</th><th>Study</th><th>Images</th><th>From</th><th></th></tr></thead>
+<tbody>
+{{range .Conflicts}}
+<tr>
+<td>{{fmtTime .LastSeen}}</td>
+<td>{{kindLabel .Kind}}</td>
+<td><span class="state {{.State}}">{{stateLabel .State}}</span></td>
+<td><code>{{orDash .ExistingPatientID}}</code></td>
+<td><code>{{orDash .IncomingPatientID}}</code><br><small>{{.PatientName}}</small>{{if .Coerced}}<br><small>stored as <code>{{.DisplayPatientID}}</code></small>{{end}}</td>
+<td><small>{{.StudyDate}} {{.StudyDescription}}<br><code class="uid">{{.StudyUID}}</code></small></td>
+<td>{{.Instances}}</td>
+<td>{{.SourceAE}}</td>
+<td><a class="button" href="/exceptions/{{.ID}}">Open</a></td>
+</tr>
+{{end}}
+</tbody>
+</table>
+{{else if not .Error}}<p class="empty">No exceptions in this view.</p>{{end}}
+{{end}}

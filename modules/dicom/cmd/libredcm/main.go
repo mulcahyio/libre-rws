@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/blob"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/control"
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/events"
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway"
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/index"
@@ -198,6 +199,8 @@ func run(cfgPath string) error {
 	rt.AddReadinessCheck("events", pub.Check)
 
 	gw := gateway.New(cfg.DICOM, rt.NodeID, log, rt.Registry, blobs, idx, pub)
+	// Control API for Libre WT (DCM-SRS-077); refused unless an admin token is set.
+	(&control.API{Index: idx, Resolver: gw}).Register(rt)
 	lic, err := licensing.New(cfg.License, version, parseBuildDate(), log, rt.Registry)
 	if err != nil {
 		return fmt.Errorf("license: %w", err)

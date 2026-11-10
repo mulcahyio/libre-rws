@@ -35,6 +35,45 @@ LibreDCM's behaviour unless stated.
   the LibreDVT image only, not in LibreDCM): dicom3tools 20260927 (BSD),
   dicom-validator 0.9.0 (MIT), pydicom 3.0.2 (MIT), pynetdicom 3.0.4 (MIT),
   lxml 6.1.3 (BSD-3), pyparsing 3.3.3 (MIT). No new Go dependency.
+- **Patient ID conflict control (issue #14, HAZ-013, fixes ANOM-002 and
+  ANOM-009; behaviour change).** A study no longer moves to another patient
+  when instances arrive with a different Patient ID, and a series no longer
+  moves to another study. LibreDCM detects the conflict inside the index
+  transaction and, by default, stores the new instances under their own key
+  (`conflicts/...`), holds them out of C-FIND/C-MOVE/C-GET and records them
+  for review. Settings (asked by the workstation installer):
+  `patient_conflict_policy` `quarantine` | `reject` (C-STORE A778) |
+  `accept_separate`; `patient_conflict_visibility` `hidden` | `flagged`;
+  `patient_conflict_coerce_patient_id` stores held instances as
+  `B000_<Patient ID>` with an Original Attributes Sequence item and answers
+  Warning B000 (byte splicing: pixel data and all other elements unchanged).
+  Same Patient ID with another name, birth date or sex keeps the first
+  registration. New audit records `PatientRecord.conflict-detected` /
+  `-resolved` and metrics `libre_dcm_patient_conflicts_total`,
+  `libre_dcm_patient_conflicts_open`,
+  `libre_dcm_patient_demographics_mismatch_total`,
+  `libre_dcm_patient_id_coercions_total`,
+  `libre_dcm_patient_conflict_resolutions_total`. Requirements
+  DCM-SRS-070…079, user need UN-17, hazard HAZ-014 (administrator correction).
+- **Control API for Libre WT** on the admin listener: `GET /control/v1/conflicts`,
+  `GET /control/v1/conflicts/{id}`, `POST .../plan`, `POST .../resolve`
+  (`correct_incoming`, `correct_existing`, `reject`). Refused unless an admin
+  token is configured and presented; resolve needs operator, reason and
+  `confirm: true`. Corrections write an Original Attributes Sequence item
+  (reason CORRECT) into every rewritten file.
+- Index schema v4 (`conflicts`, `conflict_instances`); upgrades in place.
+- **Libre WT 0.1 (new module, issue #15)**: web management console for
+  LibreDCM (`modules/wt`, image `libre/wt` from `deploy/docker/Dockerfile.wt`).
+  Local accounts with argon2id password hashes, roles Viewer / Operator /
+  Admin, first-run administrator creation (no default credentials), session
+  timeouts, CSRF protection, login rate limiting, strict Content Security
+  Policy (no scripts). Connects to one LibreDCM through the control API. Study
+  Exceptions queue with side-by-side detail; every edit shows LibreDCM's plan
+  on a warning page and needs a single-use approval, the "I approve this edit"
+  box and a reason; the plan is re-checked before the edit is sent. Audit log
+  of logins, user changes, reviews and edits. Design file `docs/dhf/librewt/`
+  (WT-SRS-001…012). New direct dependency `golang.org/x/crypto` v0.57.0
+  (BSD-3-Clause, argon2), already in the module graph as indirect.
 - Automated verification for the last three untested active requirements:
   DICOM TLS only, TLS 1.2+ (DCM-SRS-043), graceful shutdown never acknowledges
   an instance that was not stored (DCM-SRS-053), and Prometheus metrics for
@@ -95,6 +134,21 @@ LibreDCM's behaviour unless stated.
   identifiers) instead of writing an unreadable file (DCM-SRS-018,
   ANOM-001, found by gosec). Over-long but encodable UIDs from
   non-conformant senders are still archived as received.
+
+### Tested (2026-11-10, patient conflicts and Libre WT)
+- `go test -race` all packages; PostgreSQL 16 index and gateway suites;
+  `-tags official`; gosec and govulncheck clean on the new code; mutation
+  checks on the conflict check, the store pre-check, retrieve gating, byte
+  splicing, Libre WT's role check, CSRF, session epoch, edit confirmation and
+  plan digest (each mutation makes a test fail).
+- End to end with DCMTK `storescu`/`findscu` and synthetic data: conflict held
+  with Warning B000, `B000_` Patient ID and Original Attributes Sequence,
+  pixel data identical, `dciodvfy` output unchanged; resolved in Libre WT in
+  a browser ("correct the archived study"); study then under the new patient
+  with 4 instances and CORRECT history in every file; both audit logs name
+  the operator and reason.
+- Not tested: Windows installer questions (PowerShell not run), HTTPS for
+  Libre WT, cluster (several LibreDCM nodes) with conflicts.
 
 ### Tested (2026-11-10)
 - New tests pass with `-race`, 15 repeated runs without a flake. Mutation
