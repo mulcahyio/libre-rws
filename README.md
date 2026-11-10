@@ -26,6 +26,7 @@ modules/dicom/       Libre DCM (DIMSE gateway, binary LibreDCM)
   internal/index/    metadata index (SQLite or PostgreSQL)
   internal/events/   event bus (NATS JetStream)
   internal/dcm/      Part 10 wrapping, transfer-syntax policy, value helpers
+modules/wt/          Libre WT (management console, binary LibreWT)
 third_party/gonetdicom/  Libre RWS fork of the DICOM networking library (see LIBRE_DCM_FORK.md)
 deploy/              Dockerfile, compose (single node + cluster), HAProxy,
   workstation/       one-step local install (Windows/macOS/Linux)
@@ -122,7 +123,7 @@ The product family is **Libre**: "Libre" plus a short code for each module.
 |---|---|---|
 | **Libre RWS** | The platform. RWS = Radiology Workflow System. | RWS |
 | **Libre DCM** | The DICOM module (program `LibreDCM`). DCM = DICOM. | RWS DICOM (`rws-dicom`) |
-| **Libre WT** | Libre Watch Tower, the web management console (planned). WT = Watch Tower. | RWS DICOM management console |
+| **Libre WT** | Libre Watch Tower, the web management console (v0.1: accounts, Study Exceptions queue, audit log; see `modules/wt/README.md`). WT = Watch Tower. | RWS DICOM management console |
 
 New modules follow the same pattern, e.g. Libre MWL for the modality
 worklist. Since 0.2.0 the code uses the new names: the `LibreDCM` binary, the

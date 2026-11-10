@@ -1,0 +1,14 @@
+{{define "title"}}First-run setup{{end}}
+{{define "content"}}
+<section class="card narrow">
+<h1>Create the first administrator</h1>
+<p>Libre WT ships without any account or default password. The account you create here is an <b>Admin</b>: it can resolve study exceptions, manage users and read the audit log.</p>
+{{if .Error}}<p class="msg error" role="alert">{{.Error}}</p>{{end}}
+<form method="post" action="/setup">
+<label>Username <input name="username" value="{{.Username}}" required autocomplete="username" autofocus></label>
+<label>Password (at least 12 characters) <input name="password" type="password" required minlength="12" autocomplete="new-password"></label>
+<label>Repeat password <input name="password2" type="password" required minlength="12" autocomplete="new-password"></label>
+<button class="primary">Create administrator</button>
+</form>
+</section>
+{{end}}

@@ -1,0 +1,35 @@
+{{define "title"}}Users{{end}}
+{{define "content"}}
+<h1>Users</h1>
+{{if .Notice}}<p class="msg info">{{.Notice}}</p>{{end}}
+{{if .Error}}<p class="msg error" role="alert">{{.Error}}</p>{{end}}
+<table>
+<thead><tr><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th>Change</th></tr></thead>
+<tbody>
+{{range .Users}}
+<tr>
+<td>{{.Username}}</td><td>{{.Role}}</td><td>{{if .Disabled}}disabled{{else}}active{{end}}</td><td>{{fmtTime .CreatedAt}}</td>
+<td class="ops">
+<form method="post" action="/users/{{.ID}}" class="inline"><input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="op" value="role">
+<select name="role" aria-label="Role">{{$r := .Role}}{{range $.Roles}}<option value="{{.}}" {{if eq . $r}}selected{{end}}>{{.}}</option>{{end}}</select><button>Set role</button></form>
+<form method="post" action="/users/{{.ID}}" class="inline"><input type="hidden" name="csrf" value="{{$.CSRF}}">
+{{if .Disabled}}<input type="hidden" name="op" value="enable"><button>Enable</button>{{else}}<input type="hidden" name="op" value="disable"><button class="danger">Disable</button>{{end}}</form>
+<form method="post" action="/users/{{.ID}}" class="inline"><input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="op" value="password">
+<input name="password" type="password" minlength="12" placeholder="new password" aria-label="New password" autocomplete="new-password"><button>Reset password</button></form>
+</td>
+</tr>
+{{end}}
+</tbody>
+</table>
+<section class="card narrow">
+<h2>Add a user</h2>
+<form method="post" action="/users">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<label>Username <input name="username" required autocomplete="off"></label>
+<label>Initial password (at least 12 characters) <input name="password" type="password" required minlength="12" autocomplete="new-password"></label>
+<label>Role <select name="role">{{range .Roles}}<option value="{{.}}">{{.}}</option>{{end}}</select></label>
+<p><small>Viewer and Operator can see the Study Exceptions queue. Only Admin can resolve exceptions, manage users and read the audit log.</small></p>
+<button class="primary">Add user</button>
+</form>
+</section>
+{{end}}

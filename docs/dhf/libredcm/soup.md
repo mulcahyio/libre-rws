@@ -19,10 +19,11 @@ Go language version: `1.26.0`. Runtime image: see `deploy/docker/Dockerfile.dico
 | `github.com/prometheus/client_golang` | v1.24.1 | Apache-2.0 | SOUP | Metrics exposition | Fault → missing monitoring signal (HAZ-004 detection) | govulncheck 2026-11-09: none called | Active; CNCF project |
 | `github.com/prometheus/client_model` | v0.6.2 | Apache-2.0 | SOUP | Prometheus metric data model; used directly only by tests (reading gauge values) | None at runtime beyond client_golang's own use; test-only direct use | govulncheck 2026-11-09: none. Was already an indirect dependency at the same version | Active; Prometheus/CNCF project |
 | `go.yaml.in/yaml/v3` | v3.0.5 | Apache-2.0 | SOUP | Configuration file parsing (replaced the archived `gopkg.in/yaml.v3` on 2026-11-10; same code line, drop-in API) | Mis-parse → wrong configuration (HAZ-005) | govulncheck 2026-11-10: none. Already in the build as a dependency of minio-go. The example configuration decodes to an identical Config with the old and the new library (probe 2026-11-10); config and reload tests pass | Maintained by the YAML organisation (repository active, not archived, checked 2026-11-10). v4.0.0 released 2026-11-04: evaluate later as a separate change |
+| `golang.org/x/crypto` | v0.57.0 | BSD-3-Clause | SOUP | Not called by LibreDCM code. Direct in the shared `go.mod` since 2026-11-10 because Libre WT uses `argon2` (password hashing); in LibreDCM's binary only as an indirect dependency (pgx SCRAM, minio) as before | Unchanged from the indirect use: fault in pgx/minio authentication → index or storage unavailable (HAZ-004) | govulncheck 2026-11-10: none called. Same version as the previous indirect dependency | Go project, follows Go support policy |
 | `golang.org/x/sync` | v0.23.0 | BSD-3-Clause | SOUP | errgroup/semaphore concurrency helpers | Concurrency fault → failed association handling (HAZ-004) | govulncheck 2026-11-09: none | Go project, follows Go support policy |
 | `modernc.org/sqlite` | v1.60.1 | Apache-2.0 | SOUP | Embedded SQLite index (single node) | Fault → index corruption or wrong results (HAZ-001, HAZ-002) | govulncheck 2026-11-09: none. Pure-Go transpilation of SQLite; track upstream SQLite CVEs | Active, single primary maintainer |
 
-## Indirect dependencies (37)
+## Indirect dependencies (36)
 
 Covered through the direct dependency that pulls them in, the SBOM and the vulnerability scan.
 
@@ -56,7 +57,6 @@ Covered through the direct dependency that pulls them in, the SBOM and the vulne
 | github.com/rs/xid | v1.6.0 | MIT |
 | github.com/tinylib/msgp | v1.6.4 | not detected |
 | github.com/zeebo/xxh3 | v1.1.0 | BSD-2-Clause |
-| golang.org/x/crypto | v0.57.0 | BSD-3-Clause |
 | golang.org/x/net | v0.60.0 | BSD-3-Clause |
 | golang.org/x/sys | v0.48.0 | BSD-3-Clause |
 | golang.org/x/text | v0.42.0 | BSD-3-Clause |

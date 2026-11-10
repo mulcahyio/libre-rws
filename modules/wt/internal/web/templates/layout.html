@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{block "title" .}}Libre WT{{end}} · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  {{if .User}}
+  <nav>
+    <a href="/exceptions">Study Exceptions</a>
+    {{if .IsAdmin}}<a href="/users">Users</a><a href="/audit">Audit log</a>{{end}}
+    <a href="/account">{{.User.Username}} <span class="role">{{.User.Role}}</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="{{.CSRF}}"><button class="link">Log out</button></form>
+  </nav>
+  {{end}}
+</header>
+<main>
+{{block "content" .}}{{end}}
+</main>
+<footer>Libre WT {{.Version}} · connected to LibreDCM at <code>{{.DCMURL}}</code> · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

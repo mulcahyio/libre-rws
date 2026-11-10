@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "serialNumber": "urn:uuid:b2c629bd-cfa7-4df9-ae72-d5510736bdca",
+  "serialNumber": "urn:uuid:b4f62025-ba41-4ac4-87e3-98d9200de2f5",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-11-10T07:09:13Z",
+    "timestamp": "2026-11-10T17:59:14Z",
     "tools": [
       {
         "vendor": "CycloneDX",
@@ -46,11 +46,10 @@
       }
     ],
     "component": {
-      "bom-ref": "pkg:golang/github.com/mulcahyio/libre-rws@v0.2.0-beta.1.0.20261109225137-5a5135ce5569?type=module",
+      "bom-ref": "pkg:golang/github.com/mulcahyio/libre-rws?type=module",
       "type": "application",
       "name": "github.com/mulcahyio/libre-rws",
-      "version": "v0.2.0-beta.1.0.20261109225137-5a5135ce5569",
-      "purl": "pkg:golang/github.com/mulcahyio/libre-rws@v0.2.0-beta.1.0.20261109225137-5a5135ce5569?goarch=amd64\u0026goos=linux\u0026type=module",
+      "purl": "pkg:golang/github.com/mulcahyio/libre-rws?goarch=amd64\u0026goos=linux\u0026type=module",
       "externalReferences": [
         {
           "url": "https://github.com/mulcahyio/libre-rws",
@@ -244,18 +243,17 @@
       }
     },
     {
-      "bom-ref": "pkg:golang/github.com/godicom-dev/gonetdicom@v0.2.0-beta.1.0.20261109225137-5a5135ce5569?type=module",
+      "bom-ref": "pkg:golang/github.com/godicom-dev/gonetdicom?type=module",
       "type": "library",
       "name": "github.com/godicom-dev/gonetdicom",
-      "version": "v0.2.0-beta.1.0.20261109225137-5a5135ce5569",
       "scope": "required",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "711f1f754ddfebfe0602b09d3b67e2a91a96de0719564c17cc2b41a318728826"
+          "content": "4091c8222f5444d7b0fde354e5c8c24be53da09c556e25c44e0fe1c1ea33e53d"
         }
       ],
-      "purl": "pkg:golang/github.com/godicom-dev/gonetdicom@v0.2.0-beta.1.0.20261109225137-5a5135ce5569?goarch=amd64\u0026goos=linux\u0026type=module",
+      "purl": "pkg:golang/github.com/godicom-dev/gonetdicom?goarch=amd64\u0026goos=linux\u0026type=module",
       "externalReferences": [
         {
           "url": "https://github.com/godicom-dev/gonetdicom",
@@ -679,18 +677,17 @@
       }
     },
     {
-      "bom-ref": "pkg:golang/github.com/mulcahyio/librekey@v0.2.0-beta.1.0.20261109225137-5a5135ce5569?type=module",
+      "bom-ref": "pkg:golang/github.com/mulcahyio/librekey?type=module",
       "type": "library",
       "name": "github.com/mulcahyio/librekey",
-      "version": "v0.2.0-beta.1.0.20261109225137-5a5135ce5569",
       "scope": "required",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "402ea58918fbbcd51cd1be4da3d8c57b93b10fad4a8302c7041aa4f4d0bc1f2e"
+          "content": "ba57f0dacf009642521393f9c5b41e8e103a43f17eeb50c72f3a07d66e7f8502"
         }
       ],
-      "purl": "pkg:golang/github.com/mulcahyio/librekey@v0.2.0-beta.1.0.20261109225137-5a5135ce5569?goarch=amd64\u0026goos=linux\u0026type=module",
+      "purl": "pkg:golang/github.com/mulcahyio/librekey?goarch=amd64\u0026goos=linux\u0026type=module",
       "externalReferences": [
         {
           "url": "https://github.com/mulcahyio/librekey",
@@ -1389,17 +1386,18 @@
   ],
   "dependencies": [
     {
-      "ref": "pkg:golang/github.com/mulcahyio/libre-rws@v0.2.0-beta.1.0.20261109225137-5a5135ce5569?type=module",
+      "ref": "pkg:golang/github.com/mulcahyio/libre-rws?type=module",
       "dependsOn": [
         "pkg:golang/github.com/godicom-dev/godicom@v0.30.0?type=module",
-        "pkg:golang/github.com/godicom-dev/gonetdicom@v0.2.0-beta.1.0.20261109225137-5a5135ce5569?type=module",
+        "pkg:golang/github.com/godicom-dev/gonetdicom?type=module",
         "pkg:golang/github.com/jackc/pgx/v5@v5.11.0?type=module",
         "pkg:golang/github.com/minio/minio-go/v7@v7.4.1?type=module",
-        "pkg:golang/github.com/mulcahyio/librekey@v0.2.0-beta.1.0.20261109225137-5a5135ce5569?type=module",
+        "pkg:golang/github.com/mulcahyio/librekey?type=module",
         "pkg:golang/github.com/nats-io/nats.go@v1.54.0?type=module",
         "pkg:golang/github.com/prometheus/client_golang@v1.24.1?type=module",
         "pkg:golang/github.com/prometheus/client_model@v0.6.2?type=module",
         "pkg:golang/go.yaml.in/yaml/v3@v3.0.5?type=module",
+        "pkg:golang/golang.org/x/crypto@v0.57.0?type=module",
         "pkg:golang/golang.org/x/sync@v0.23.0?type=module",
         "pkg:golang/modernc.org/sqlite@v1.60.1?type=module"
       ]
@@ -1435,7 +1433,7 @@
       ]
     },
     {
-      "ref": "pkg:golang/github.com/godicom-dev/gonetdicom@v0.2.0-beta.1.0.20261109225137-5a5135ce5569?type=module",
+      "ref": "pkg:golang/github.com/godicom-dev/gonetdicom?type=module",
       "dependsOn": [
         "pkg:golang/github.com/godicom-dev/godicom@v0.30.0?type=module",
         "pkg:golang/github.com/ebitengine/purego@v0.10.1?type=module",
@@ -1547,7 +1545,7 @@
       ]
     },
     {
-      "ref": "pkg:golang/github.com/mulcahyio/librekey@v0.2.0-beta.1.0.20261109225137-5a5135ce5569?type=module"
+      "ref": "pkg:golang/github.com/mulcahyio/librekey?type=module"
     },
     {
       "ref": "pkg:golang/github.com/munnerz/goautoneg@v0.0.0-20191010083416-a7dc8b61c822?type=module"
