@@ -148,3 +148,42 @@ func TestRenewalClearsBlock(t *testing.T) {
 		t.Fatal("source builds must never be gated")
 	}
 }
+
+// The licence state is exposed through the registry as
+// libre_dcm_license_state (0 valid, 1 grace, 2 unlicensed),
+// libre_dcm_license_days_left and libre_dcm_license_ack_required.
+// Verifies: DCM-SRS-054
+func TestLicenseStateMetrics(t *testing.T) {
+	reg := prometheus.NewRegistry()
+	st := client.StateValid
+	clk := &fakeClock{t: time.Date(2027, 3, 1, 9, 0, 0, 0, time.UTC)}
+	l := newLicensing(func() client.Status { return client.Status{State: st, DaysLeft: 12} },
+		filepath.Join(t.TempDir(), "license-ack.json"), clk.now,
+		slog.New(slog.NewTextHandler(&logBuf{}, nil)), reg)
+	read := func() map[string]float64 {
+		mfs, err := reg.Gather()
+		if err != nil {
+			t.Fatal(err)
+		}
+		out := map[string]float64{}
+		for _, mf := range mfs {
+			out[mf.GetName()] = mf.GetMetric()[0].GetGauge().GetValue()
+		}
+		return out
+	}
+	for _, c := range []struct {
+		state      client.State
+		want, ackd float64
+	}{
+		{client.StateValid, 0, 0}, {client.StateGrace, 1, 0}, {client.StateExpired, 2, 1},
+		{client.StateMissing, 2, 1}, {client.StateWrongMachine, 2, 1}, {client.StateValid, 0, 0},
+	} {
+		st = c.state
+		l.tick()
+		m := read()
+		if m["libre_dcm_license_state"] != c.want || m["libre_dcm_license_ack_required"] != c.ackd ||
+			m["libre_dcm_license_days_left"] != 12 {
+			t.Fatalf("%s: metrics %v, want state %v ack_required %v days_left 12", c.state, m, c.want, c.ackd)
+		}
+	}
+}

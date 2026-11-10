@@ -29,9 +29,7 @@ jobs:
       - name: SBOM (CycloneDX)
         run: go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.12.0 mod -licenses -json -output sbom.cdx.json .
       - name: Trace check (requirements to tests)
-        # Report-only until the QMS baseline: 4 active requirements still lack
-        # tests (see gap-assessment.md). Remove continue-on-error at baseline.
-        continue-on-error: true
+        # Blocking since 2026-11-10: every active requirement has verification.
         run: python3 scripts/qms/trace.py --check
       - uses: actions/upload-artifact@v4
         if: always()

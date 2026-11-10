@@ -9,7 +9,22 @@ Libre RWS is developed by Patrick Mulcahy, Mulcahy.io (dev@mulcahy.io).
 
 ## Unreleased
 
-_Nothing yet._
+QMS and retrospective design-file work for LibreDCM (Kanban board
+`libre-qms`). No change to LibreDCM's behaviour unless stated.
+
+### Added
+- Automated verification for the last three untested active requirements:
+  DICOM TLS only, TLS 1.2+ (DCM-SRS-043), graceful shutdown never acknowledges
+  an instance that was not stored (DCM-SRS-053), and Prometheus metrics for
+  associations, rejections, stores, the outbox and the licence state
+  (DCM-SRS-054). The trace matrix now shows 38 of 38 active requirements
+  verified, so the CI trace check is now blocking.
+
+### Tested (2026-11-10)
+- New tests pass with `-race`, 15 repeated runs without a flake. Mutation
+  checks: allowing TLS 1.0, dropping the rejected-association counter and
+  acknowledging a store whose index write failed each make the matching test
+  fail (the last one is timing-dependent: caught in 2 of 3 runs).
 
 ## LibreDCM 0.2.0-beta.1 (2026-11-09)
 
