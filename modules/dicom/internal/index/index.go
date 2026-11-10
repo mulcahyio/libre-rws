@@ -97,6 +97,7 @@ type Index interface {
 	ModalitiesForStudies(ctx context.Context, studyUIDs []string) (map[string][]string, error)
 	Ping(ctx context.Context) error
 	Close() error
+	Conflicts
 }
 
 // SQL implements Index over database/sql.
@@ -147,7 +148,7 @@ func Open(ctx context.Context, driver, dsn string) (*SQL, error) {
 }
 
 // schemaVersion is bumped when migrations are appended below.
-const schemaVersion = 3
+const schemaVersion = 4
 
 var migrations = []string{
 	`CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL)`,
@@ -202,6 +203,60 @@ var migrations = []string{
 		last_error      TEXT NOT NULL DEFAULT ''
 	)`,
 	`CREATE INDEX IF NOT EXISTS idx_outbox_due ON event_outbox(next_attempt_at)`,
+	// v4: patient association conflicts (DCM-SRS-070…079). Times are Unix ms.
+	`CREATE TABLE IF NOT EXISTS conflicts (
+		id                  TEXT PRIMARY KEY,
+		group_key           TEXT NOT NULL,
+		kind                TEXT NOT NULL,
+		active              INTEGER NOT NULL DEFAULT 1,
+		state               TEXT NOT NULL,
+		study_uid           TEXT NOT NULL,
+		series_uid          TEXT NOT NULL DEFAULT '',
+		sop_instance_uid    TEXT NOT NULL DEFAULT '',
+		existing_patient_id TEXT NOT NULL DEFAULT '',
+		existing_study_uid  TEXT NOT NULL DEFAULT '',
+		existing_series_uid TEXT NOT NULL DEFAULT '',
+		incoming_patient_id TEXT NOT NULL DEFAULT '',
+		display_patient_id  TEXT NOT NULL DEFAULT '',
+		patient_name        TEXT NOT NULL DEFAULT '',
+		patient_name_fold   TEXT NOT NULL DEFAULT '',
+		patient_birth_date  TEXT NOT NULL DEFAULT '',
+		patient_sex         TEXT NOT NULL DEFAULT '',
+		study_date          TEXT NOT NULL DEFAULT '',
+		study_time          TEXT NOT NULL DEFAULT '',
+		accession_number    TEXT NOT NULL DEFAULT '',
+		study_id            TEXT NOT NULL DEFAULT '',
+		study_description   TEXT NOT NULL DEFAULT '',
+		referring_physician TEXT NOT NULL DEFAULT '',
+		source_ae           TEXT NOT NULL DEFAULT '',
+		coerced             INTEGER NOT NULL DEFAULT 0,
+		first_seen          BIGINT NOT NULL,
+		last_seen           BIGINT NOT NULL,
+		resolved_at         BIGINT NOT NULL DEFAULT 0,
+		resolved_by         TEXT NOT NULL DEFAULT '',
+		resolution_action   TEXT NOT NULL DEFAULT '',
+		resolution_reason   TEXT NOT NULL DEFAULT ''
+	)`,
+	`CREATE UNIQUE INDEX IF NOT EXISTS idx_conflicts_group ON conflicts(group_key) WHERE active = 1`,
+	`CREATE INDEX IF NOT EXISTS idx_conflicts_active ON conflicts(active, state)`,
+	`CREATE TABLE IF NOT EXISTS conflict_instances (
+		conflict_id         TEXT NOT NULL,
+		sop_instance_uid    TEXT NOT NULL,
+		series_uid          TEXT NOT NULL,
+		study_uid           TEXT NOT NULL,
+		sop_class_uid       TEXT NOT NULL,
+		instance_number     TEXT NOT NULL DEFAULT '',
+		transfer_syntax     TEXT NOT NULL,
+		blob_key            TEXT NOT NULL,
+		size_bytes          BIGINT NOT NULL DEFAULT 0,
+		source_ae           TEXT NOT NULL DEFAULT '',
+		received_at         BIGINT NOT NULL,
+		modality            TEXT NOT NULL DEFAULT '',
+		series_number       TEXT NOT NULL DEFAULT '',
+		series_description  TEXT NOT NULL DEFAULT '',
+		patient_id          TEXT NOT NULL DEFAULT '',
+		PRIMARY KEY (conflict_id, sop_instance_uid)
+	)`,
 }
 
 // versionedMigrations run once, when upgrading from an older schema version.
@@ -315,7 +370,11 @@ func (s *SQL) rebind(q string) string {
 }
 
 // Upsert writes study, series and instance rows in one transaction. A resent
-// instance (same SOP Instance UID) replaces the previous metadata.
+// instance (same SOP Instance UID, same study and series) replaces the
+// previous metadata. A record that conflicts with the indexed patient, study
+// or series association is not written: Upsert returns *ConflictError and the
+// existing associations stay as they are (DCM-SRS-070). For the same Patient
+// ID, the first-registered name, birth date and sex are kept (DCM-SRS-076).
 func (s *SQL) Upsert(ctx context.Context, r Record) error { return s.UpsertWithEvent(ctx, r, nil) }
 
 // UpsertWithEvent writes the instance and, when ev is not nil, its outbox
@@ -331,29 +390,43 @@ func (s *SQL) UpsertWithEvent(ctx context.Context, r Record, ev *OutboxEvent) er
 	}
 	defer func() { _ = tx.Rollback() }()
 
+	// Insert the study if it is new; an existing row keeps its patient. The
+	// check below then reads the row that won (locked on PostgreSQL), so two
+	// nodes storing different patients for one new study can't both succeed.
 	if _, err := tx.ExecContext(ctx, s.rebind(`
 		INSERT INTO studies (study_uid, patient_id, patient_name, patient_birth_date, patient_sex,
 			study_date, study_time, accession_number, study_id, study_description, referring_physician, updated_at,
 			patient_name_fold)
 		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
-		ON CONFLICT (study_uid) DO UPDATE SET
-			patient_id=excluded.patient_id, patient_name=excluded.patient_name, patient_name_fold=excluded.patient_name_fold,
-			patient_birth_date=excluded.patient_birth_date, patient_sex=excluded.patient_sex,
-			study_date=excluded.study_date, study_time=excluded.study_time,
-			accession_number=excluded.accession_number, study_id=excluded.study_id,
-			study_description=excluded.study_description, referring_physician=excluded.referring_physician,
-			updated_at=excluded.updated_at`),
+		ON CONFLICT (study_uid) DO NOTHING`),
 		r.StudyUID, r.PatientID, r.PatientName, r.PatientBirthDate, r.PatientSex,
 		r.StudyDate, r.StudyTime, r.AccessionNumber, r.StudyID, r.StudyDescription, r.ReferringPhysician, now,
 		Fold(r.PatientName),
 	); err != nil {
 		return fmt.Errorf("index: upsert study: %w", err)
 	}
+	chk, err := s.check(ctx, tx, r, true)
+	if err != nil {
+		return fmt.Errorf("index: conflict check: %w", err)
+	}
+	if chk.Conflict != nil {
+		return &ConflictError{Conflict: *chk.Conflict}
+	}
+	// Study-level attributes follow the newest instance; patient attributes don't.
+	if _, err := tx.ExecContext(ctx, s.rebind(`
+		UPDATE studies SET study_date = ?, study_time = ?, accession_number = ?, study_id = ?,
+			study_description = ?, referring_physician = ?, updated_at = ?
+		WHERE study_uid = ?`),
+		r.StudyDate, r.StudyTime, r.AccessionNumber, r.StudyID, r.StudyDescription, r.ReferringPhysician, now,
+		r.StudyUID,
+	); err != nil {
+		return fmt.Errorf("index: update study: %w", err)
+	}
 	if _, err := tx.ExecContext(ctx, s.rebind(`
 		INSERT INTO series (series_uid, study_uid, modality, series_number, series_description, updated_at)
 		VALUES (?,?,?,?,?,?)
 		ON CONFLICT (series_uid) DO UPDATE SET
-			study_uid=excluded.study_uid, modality=excluded.modality,
+			modality=excluded.modality,
 			series_number=excluded.series_number, series_description=excluded.series_description,
 			updated_at=excluded.updated_at`),
 		r.SeriesUID, r.StudyUID, r.Modality, r.SeriesNumber, r.SeriesDescription, now,
@@ -365,7 +438,7 @@ func (s *SQL) UpsertWithEvent(ctx context.Context, r Record, ev *OutboxEvent) er
 			transfer_syntax, blob_key, size_bytes, source_ae, received_at)
 		VALUES (?,?,?,?,?,?,?,?,?,?)
 		ON CONFLICT (sop_instance_uid) DO UPDATE SET
-			series_uid=excluded.series_uid, study_uid=excluded.study_uid, sop_class_uid=excluded.sop_class_uid,
+			sop_class_uid=excluded.sop_class_uid,
 			instance_number=excluded.instance_number, transfer_syntax=excluded.transfer_syntax,
 			blob_key=excluded.blob_key, size_bytes=excluded.size_bytes, source_ae=excluded.source_ae,
 			received_at=excluded.received_at`),
@@ -390,6 +463,9 @@ func (s *SQL) UpsertWithEvent(ctx context.Context, r Record, ev *OutboxEvent) er
 // column maps result columns to DICOM keywords per level.
 type column struct{ expr, keyword string }
 
+// Column expressions may hold placeholders that differ when recorded
+// conflicts are included (see sources): {SERIES}, {INSTANCES} name the series
+// and instance sources, {CID_ST}/{CID_SE} add the conflict-id join condition.
 var levelColumns = map[Level][]column{
 	Patient: {
 		{"st.patient_id", "PatientID"}, {"MAX(st.patient_name)", "PatientName"},
@@ -402,14 +478,14 @@ var levelColumns = map[Level][]column{
 		{"st.study_uid", "StudyInstanceUID"}, {"st.study_date", "StudyDate"}, {"st.study_time", "StudyTime"},
 		{"st.accession_number", "AccessionNumber"}, {"st.study_id", "StudyID"},
 		{"st.study_description", "StudyDescription"}, {"st.referring_physician", "ReferringPhysicianName"},
-		{"(SELECT COUNT(*) FROM series x WHERE x.study_uid = st.study_uid)", "NumberOfStudyRelatedSeries"},
-		{"(SELECT COUNT(*) FROM instances x WHERE x.study_uid = st.study_uid)", "NumberOfStudyRelatedInstances"},
+		{"(SELECT COUNT(*) FROM {SERIES} x WHERE x.study_uid = st.study_uid{CID_ST})", "NumberOfStudyRelatedSeries"},
+		{"(SELECT COUNT(*) FROM {INSTANCES} x WHERE x.study_uid = st.study_uid{CID_ST})", "NumberOfStudyRelatedInstances"},
 	},
 	Series: {
 		{"st.patient_id", "PatientID"}, {"st.study_uid", "StudyInstanceUID"},
 		{"se.series_uid", "SeriesInstanceUID"}, {"se.modality", "Modality"},
 		{"se.series_number", "SeriesNumber"}, {"se.series_description", "SeriesDescription"},
-		{"(SELECT COUNT(*) FROM instances x WHERE x.series_uid = se.series_uid)", "NumberOfSeriesRelatedInstances"},
+		{"(SELECT COUNT(*) FROM {INSTANCES} x WHERE x.series_uid = se.series_uid{CID_SE})", "NumberOfSeriesRelatedInstances"},
 	},
 	Image: {
 		{"st.patient_id", "PatientID"}, {"st.study_uid", "StudyInstanceUID"},
@@ -421,25 +497,79 @@ var levelColumns = map[Level][]column{
 }
 
 var levelFrom = map[Level]string{
-	Patient: `studies st`,
-	Study:   `studies st`,
-	Series:  `series se JOIN studies st ON st.study_uid = se.study_uid`,
-	Image: `instances i JOIN series se ON se.series_uid = i.series_uid
-	        JOIN studies st ON st.study_uid = i.study_uid`,
+	Patient: `{STUDIES} st`,
+	Study:   `{STUDIES} st`,
+	Series:  `{SERIES} se JOIN {STUDIES} st ON st.study_uid = se.study_uid{CID_SE_ST}`,
+	Image: `{INSTANCES} i JOIN {SERIES} se ON se.series_uid = i.series_uid{CID_I_SE}
+	        JOIN {STUDIES} st ON st.study_uid = i.study_uid{CID_I_ST}`,
 }
 
-// Find runs a query at level with the given filters (AND-ed).
+// sources returns the placeholder replacer. Without conflicts it yields the
+// plain tables, so the SQL is exactly what it was before conflicts existed.
+// With conflicts, each source is the table UNION ALL the visible conflict
+// rows, tagged with a cid column (” for indexed rows) that keeps a held
+// instance with its conflict's patient even when it shares a Study UID.
+func sources(states []string) *strings.Replacer {
+	if len(states) == 0 {
+		return strings.NewReplacer("{STUDIES}", "studies", "{SERIES}", "series", "{INSTANCES}", "instances",
+			"{CID_ST}", "", "{CID_SE}", "", "{CID_SE_ST}", "", "{CID_I_SE}", "", "{CID_I_ST}", "")
+	}
+	cond := "c.active = 1 AND c.state IN (" + quoteList(states) + ")"
+	studies := `(SELECT study_uid, patient_id, patient_name, patient_name_fold, patient_birth_date, patient_sex,
+			study_date, study_time, accession_number, study_id, study_description, referring_physician, '' AS cid
+		FROM studies
+		UNION ALL SELECT c.study_uid, c.display_patient_id, c.patient_name, c.patient_name_fold, c.patient_birth_date,
+			c.patient_sex, c.study_date, c.study_time, c.accession_number, c.study_id, c.study_description,
+			c.referring_physician, c.id FROM conflicts c WHERE ` + cond + `)`
+	series := `(SELECT series_uid, study_uid, modality, series_number, series_description, '' AS cid FROM series
+		UNION ALL SELECT ci.series_uid, ci.study_uid, MAX(ci.modality), MAX(ci.series_number),
+			MAX(ci.series_description), ci.conflict_id
+		FROM conflict_instances ci JOIN conflicts c ON c.id = ci.conflict_id WHERE ` + cond + `
+		GROUP BY ci.conflict_id, ci.series_uid, ci.study_uid)`
+	instances := `(SELECT sop_instance_uid, series_uid, study_uid, sop_class_uid, instance_number, transfer_syntax,
+			blob_key, '' AS cid FROM instances
+		UNION ALL SELECT ci.sop_instance_uid, ci.series_uid, ci.study_uid, ci.sop_class_uid, ci.instance_number,
+			ci.transfer_syntax, ci.blob_key, ci.conflict_id
+		FROM conflict_instances ci JOIN conflicts c ON c.id = ci.conflict_id WHERE ` + cond + `)`
+	return strings.NewReplacer("{STUDIES}", studies, "{SERIES}", series, "{INSTANCES}", instances,
+		"{CID_ST}", " AND x.cid = st.cid", "{CID_SE}", " AND x.cid = se.cid",
+		"{CID_SE_ST}", " AND st.cid = se.cid", "{CID_I_SE}", " AND se.cid = i.cid", "{CID_I_ST}", " AND st.cid = i.cid")
+}
+
+// Find runs a query at level with the given filters (AND-ed). Recorded
+// conflicts are not included; the gateway uses FindWith.
 func (s *SQL) Find(ctx context.Context, level Level, filters []Filter, limit int) ([]Row, error) {
+	return s.FindWith(ctx, level, filters, limit, FindOptions{})
+}
+
+// FindWith is Find, optionally including held or accepted conflict instances
+// as separate patient/study entries (DCM-SRS-073). Rows from a conflict carry
+// its id in "_ConflictID".
+func (s *SQL) FindWith(ctx context.Context, level Level, filters []Filter, limit int, opts FindOptions) ([]Row, error) {
 	cols, ok := levelColumns[level]
 	if !ok {
 		return nil, fmt.Errorf("index: unsupported level %q", level)
 	}
+	states := opts.states()
+	if len(states) > 0 {
+		visible, err := s.hasVisibleConflicts(ctx, states)
+		if err != nil {
+			return nil, fmt.Errorf("index: find: %w", err)
+		}
+		if !visible {
+			states = nil
+		}
+	}
+	rep := sources(states)
+	if len(states) > 0 && level != Patient {
+		cols = append(append([]column(nil), cols...), column{"st.cid", "_ConflictID"})
+	}
 	exprs := make([]string, len(cols))
 	for i, c := range cols {
-		exprs[i] = c.expr
+		exprs[i] = rep.Replace(c.expr)
 	}
-	where, args := buildWhere(filters)
-	q := "SELECT " + strings.Join(exprs, ", ") + " FROM " + levelFrom[level] + where
+	where, args := buildWhere(filters, rep)
+	q := "SELECT " + strings.Join(exprs, ", ") + " FROM " + rep.Replace(levelFrom[level]) + where
 	switch level {
 	case Patient:
 		q += " GROUP BY st.patient_id ORDER BY st.patient_id"
@@ -449,6 +579,9 @@ func (s *SQL) Find(ctx context.Context, level Level, filters []Filter, limit int
 		q += " ORDER BY se.series_number, se.series_uid"
 	case Image:
 		q += " ORDER BY se.series_uid, i.instance_number, i.sop_instance_uid"
+	}
+	if len(states) > 0 && level != Patient {
+		q += ", st.cid"
 	}
 	if limit > 0 {
 		q += " LIMIT " + strconv.Itoa(limit)
@@ -479,7 +612,7 @@ func (s *SQL) Find(ctx context.Context, level Level, filters []Filter, limit int
 	return out, rows.Err()
 }
 
-func buildWhere(filters []Filter) (string, []any) {
+func buildWhere(filters []Filter, rep *strings.Replacer) (string, []any) {
 	if len(filters) == 0 {
 		return "", nil
 	}
@@ -509,7 +642,7 @@ func buildWhere(filters []Filter) (string, []any) {
 			args = append(args, Fold(f.Values[0]))
 		case OpStudyHasModality:
 			ph := strings.TrimSuffix(strings.Repeat("?,", len(f.Values)), ",")
-			parts = append(parts, "EXISTS (SELECT 1 FROM series m WHERE m.study_uid = st.study_uid AND m.modality IN ("+ph+"))")
+			parts = append(parts, rep.Replace("EXISTS (SELECT 1 FROM {SERIES} x WHERE x.study_uid = st.study_uid{CID_ST} AND x.modality IN (")+ph+"))")
 			for _, v := range f.Values {
 				args = append(args, v)
 			}

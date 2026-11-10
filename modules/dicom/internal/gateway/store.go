@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/godicom-dev/gonetdicom/ae"
@@ -17,6 +19,26 @@ import (
 // blobKey is the storage layout: one folder per study, one per series.
 func blobKey(study, series, sop string) string {
 	return study + "/" + series + "/" + sop + ".dcm"
+}
+
+func asConflict(err error) (index.Conflict, bool) {
+	var ce *index.ConflictError
+	if errors.As(err, &ce) {
+		return ce.Conflict, true
+	}
+	return index.Conflict{}, false
+}
+
+// lateConflict handles a conflict that appeared between the pre-check and the
+// index transaction (another node indexed the study first). The file already
+// written under the normal key belongs to no index row; it is replaced by a
+// held copy. If the SOP Instance UID was already archived under that same key
+// it has been overwritten: this needs two nodes to receive the same SOP
+// instance for different patients within milliseconds (residual risk,
+// risk-management.md HAZ-013).
+func (g *Gateway) lateConflict(ctx context.Context, req ae.StoreRequest, rec index.Record, c index.Conflict, log *slog.Logger) (uint16, string) {
+	log.Warn("conflict detected inside the index transaction", "study", rec.StudyUID)
+	return g.storeConflict(ctx, req, rec, c, log)
 }
 
 // onCStore archives the instance exactly as received, indexes it, then
@@ -54,20 +76,6 @@ func (g *Gateway) onCStore(ctx context.Context, req ae.StoreRequest) uint16 {
 		return result(status.DataSetDoesNotMatchSOPClassError, "invalid")
 	}
 
-	file, err := dcm.Part10(req.AffectedSOPClassUID, req.AffectedSOPInstanceUID, req.TransferSyntax, "", req.Dataset)
-	if err != nil {
-		log.Error("build Part 10 file", "err", err)
-		return result(status.OutOfResources, "error")
-	}
-
-	key := blobKey(inst.StudyInstanceUID, inst.SeriesInstanceUID, inst.SOPInstanceUID)
-	n, err := g.blobs.Put(ctx, key, bytes.NewReader(file))
-	if err != nil {
-		log.Error("archive instance", "key", key, "err", err)
-		return result(status.OutOfResources, "error")
-	}
-
-	receivedAt := time.Now().UTC()
 	var sourceAE string
 	if a, ok := ae.AssociationFromContext(ctx); ok {
 		sourceAE = a.CallingAE
@@ -82,8 +90,40 @@ func (g *Gateway) onCStore(ctx context.Context, req ae.StoreRequest) uint16 {
 		SeriesNumber: inst.SeriesNumber, SeriesDescription: inst.SeriesDescription,
 		SOPInstanceUID: inst.SOPInstanceUID, SOPClassUID: inst.SOPClassUID,
 		InstanceNumber: inst.InstanceNumber, TransferSyntaxUID: req.TransferSyntax,
-		BlobKey: key, SourceAE: sourceAE, SizeBytes: n, ReceivedAt: receivedAt,
+		SourceAE: sourceAE,
 	}
+
+	// Patient association check before the file is written, so a conflicting
+	// instance can never overwrite an archived file (DCM-SRS-070, -072).
+	chk, err := g.idx.CheckConflict(ctx, rec)
+	if err != nil {
+		log.Error("conflict check", "err", err)
+		return result(status.OutOfResources, "error")
+	}
+	if chk.Conflict != nil {
+		return result(g.storeConflict(ctx, req, rec, *chk.Conflict, log))
+	}
+	if chk.DemographicsMismatch {
+		g.cm.mismatches.Inc()
+		log.Warn("patient demographics differ from the first registration; first registration kept",
+			"study", inst.StudyInstanceUID, "patient_id", g.auditPatientID(inst.PatientID))
+	}
+
+	file, err := dcm.Part10(req.AffectedSOPClassUID, req.AffectedSOPInstanceUID, req.TransferSyntax, "", req.Dataset)
+	if err != nil {
+		log.Error("build Part 10 file", "err", err)
+		return result(status.OutOfResources, "error")
+	}
+
+	key := blobKey(inst.StudyInstanceUID, inst.SeriesInstanceUID, inst.SOPInstanceUID)
+	n, err := g.blobs.Put(ctx, key, bytes.NewReader(file))
+	if err != nil {
+		log.Error("archive instance", "key", key, "err", err)
+		return result(status.OutOfResources, "error")
+	}
+
+	receivedAt := time.Now().UTC()
+	rec.BlobKey, rec.SizeBytes, rec.ReceivedAt = key, n, receivedAt
 	ev := events.InstanceStored{
 		EventID:    inst.SOPInstanceUID + "@" + receivedAt.Format(time.RFC3339Nano),
 		OccurredAt: receivedAt, Node: g.node, SourceAE: sourceAE,
@@ -106,12 +146,18 @@ func (g *Gateway) onCStore(ctx context.Context, req ae.StoreRequest) uint16 {
 		if err := g.idx.UpsertWithEvent(ctx, rec, &index.OutboxEvent{
 			MsgID: ev.EventID, Subject: events.SubjectInstanceStored, Payload: payload,
 		}); err != nil {
+			if c, ok := asConflict(err); ok {
+				return result(g.lateConflict(ctx, req, rec, c, log))
+			}
 			log.Error("index instance", "err", err)
 			return result(status.OutOfResources, "error")
 		}
 		g.outbox.Nudge()
 	} else {
 		if err := g.idx.Upsert(ctx, rec); err != nil {
+			if c, ok := asConflict(err); ok {
+				return result(g.lateConflict(ctx, req, rec, c, log))
+			}
 			log.Error("index instance", "err", err)
 			return result(status.OutOfResources, "error")
 		}

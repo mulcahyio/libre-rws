@@ -173,6 +173,7 @@ requirements on to tests.
 | UN-14 | A licence problem never stops patient care; it is my problem as administrator, not the technologist's | U1, U3 | DCM-SRS-058, -059, -060, -061 |
 | UN-15 | I know exactly which version (and later, which UDI) is running | U1, U5 | DCM-SRS-057 |
 | UN-16 | Modality and viewer engineers can tell what LibreDCM supports before connecting | U2 | DICOM Conformance Statement (planned, blocked on the UID root) |
+| UN-17 | A study never silently changes patient; images that contradict the stored patient are held for me to review and correct deliberately, with a record of what was changed (added 2026-11-10, issue #14) | U1, U4, U5 | DCM-SRS-070, -071, -072, -073, -074, -075, -076, -077, -078, -079 |
 
 Requirements that serve no listed user need: none (checked 2026-11-10; see §9).
 

@@ -27,7 +27,7 @@ func openTestIndexes(t *testing.T) map[string]*SQL {
 		if err != nil {
 			t.Fatal(err)
 		}
-		for _, tbl := range []string{"event_outbox", "instances", "series", "studies"} {
+		for _, tbl := range []string{"event_outbox", "instances", "series", "studies", "conflict_instances", "conflicts"} {
 			if _, err := pg.db.ExecContext(ctx, "DELETE FROM "+tbl); err != nil {
 				t.Fatal(err)
 			}

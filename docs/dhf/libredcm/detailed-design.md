@@ -120,9 +120,21 @@ name/birth date/sex = `MAX` over that patient's studies).
 
 | Table | On conflict | Effect |
 |---|---|---|
-| studies | `ON CONFLICT (study_uid) DO UPDATE` with all patient and study attributes of the newest instance | Last instance received defines the study's patient. **ANOM-002 / HAZ-013**: instances of one study arriving with a different Patient ID move the whole study to the new patient without any record |
-| series | `ON CONFLICT (series_uid) DO UPDATE` incl. `study_uid` | A series UID arriving under another study moves to that study (ANOM-009) |
-| instances | `ON CONFLICT (sop_instance_uid) DO UPDATE` | Resend replaces the row (see §2.3) |
+| studies | `ON CONFLICT (study_uid) DO NOTHING`, then the row is read back (`FOR UPDATE` on PostgreSQL) and compared; only study-level attributes are updated afterwards | The first-registered patient owns the study. A different Patient ID returns `*ConflictError` and nothing is written (DCM-SRS-070, fixes ANOM-002). Same Patient ID with other name/birth date/sex keeps the first values (DCM-SRS-076) |
+| series | existing `study_uid` compared; `ON CONFLICT (series_uid) DO UPDATE` without `study_uid` | A series UID under another study returns `*ConflictError` (fixes ANOM-009) |
+| instances | existing study/series compared; `ON CONFLICT (sop_instance_uid) DO UPDATE` without study/series | Resend to the same study and series replaces the row (see §2.3); under another study or series returns `*ConflictError` |
+
+Conflict handling (2026-11-10, DCM-SRS-070…079). The gateway runs the same
+check read-only (`CheckConflict`) before writing the file, so a conflicting
+instance is written under `conflicts/<study>/<sop>-<time>.dcm` and can never
+overwrite an archived file; the transaction check is authoritative
+(`lateConflict` handles the race). Held instances live in `conflicts` (one
+active row per kind + study + incoming Patient ID, enforced by a partial
+unique index) and `conflict_instances`. Queries include them only when asked
+(`FindWith`): each source becomes the table `UNION ALL` the visible conflict
+rows, tagged with `cid`, and every join and count also matches `cid`, so a
+held instance stays with its own patient even when it shares the Study UID.
+When no visible conflict exists the SQL is exactly the old one.
 
 All three upserts and the outbox insert run in one transaction: either all
 are stored or none.
@@ -136,8 +148,8 @@ are stored or none.
   the response is truncated with only a log warning (HAZ-002 residual risk,
   noted in the risk file).
 - At the patient level, if studies of one Patient ID carry different names,
-  one of them (`MAX`) is returned. Demographic conflicts are not reported
-  (part of the ANOM-002 decision).
+  one of them (`MAX`) is returned. Within a study the first-registered
+  demographics are kept and later differences are counted (DCM-SRS-076).
 - Instances with an empty Patient ID are grouped under an empty patient at
   the patient level; they remain findable at the study level.
 
@@ -149,7 +161,7 @@ are stored or none.
 | Wildcards, ranges, lists, case folding, character sets behave as specified | `TestBuildFilterKinds`, `TestTimeBounds`, `TestResponseCharset`, `TestFindRefinementsEndToEnd` |
 | No identifier (any bytes) makes the SQL fail or the association drop | `FuzzCFindKeys`, `FuzzCFindIdentifierBytes` (found ANOM-008, fixed) |
 | Atomic multi-table write | `TestOutboxLifecycle`; schema upgrade `TestUpgradeFromV1` |
-| **Patient-ID conflict detected and recorded** | **Not met today** (ANOM-002, decision pending) |
+| Patient-ID conflict detected and recorded; no reassignment | `TestUpsertNeverReassignsStudy`, `TestUpsertNeverMovesSeriesOrInstance`, `TestConcurrentFirstRegistration`, `TestConflictRecordAndVisibility` (both engines), gateway `TestConflict*` |
 
 ## 4. Pixel-data integrity
 
