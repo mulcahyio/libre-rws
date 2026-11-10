@@ -27,6 +27,7 @@ command output from 2026-11-10 unless stated.
 | `scripts/qms/part11_check.py` | repo version | Medium | Live run (10/10) and negative test | Fit |
 | `scripts/qms/release-verify.sh` | repo version | High | Used for 0.2.0-beta.1; review of the script | Fit with findings |
 | DCMTK | 3.6.7 (image `rws-e2e-dcmtk`) | Medium | Reference implementation; behaviour cross-checked by Go end-to-end tests | Fit |
+| LibreDVT | 0.1.0-dev (branch `feat/libredvt-v0.1`; engines pinned in `modules/dvt/worker/requirements.txt`) | High | Scripted positive controls with the real engines (CI job `libredvt`), failure injection, mutation check, end-to-end comparison with DCMTK | Fit for v0.1 use, pending review |
 | AI coding tools | Claude (Hermes, Claude Code) | Low | Output controlled by review, CI and tests (SOP-011 §3) | Fit |
 
 ## Go toolchain
@@ -162,6 +163,61 @@ command output from 2026-11-10 unless stated.
   are cross-checked by our own Go end-to-end tests over real associations,
   and pixel data is compared byte for byte after retrieval.
 - **Re-validate:** on a version change of the test image.
+
+## LibreDVT 0.1 (DICOM Validation & Test)
+
+(added 2026-11-10 by Hermes/Claude; design file `docs/dhf/libredvt/`)
+
+- **Intended use:** validate DICOM objects and test DICOM services of
+  LibreDCM (later other archives); its plan runs are verification records
+  (`docs/dhf/libredvt/intended-use.md`).
+- **Risk: high.** A silent false pass could release a defective LibreDCM
+  build (DVT-HAZ-001). Controls: DVT-SRS-007/-009/-042 (engine errors and
+  steps not run always fail), DVT-SRS-080 (engines independent of LibreDCM's
+  godicom/gonetdicom), strict plans (DVT-SRS-040).
+- **Configuration:** dicom3tools 20260927 (1.00.snapshot.20260927113651),
+  dicom-validator 0.9.0 with DICOM 2026d built in, pydicom 3.0.2,
+  pynetdicom 3.0.4, lxml 6.1.3, pyparsing 3.3.3; base images by digest.
+- **Activities and results (2026-11-10, real output):**
+  1. *Object positive controls* (`internal/engine/integration_test.go`, real
+     engines): missing Type 1 attribute, invalid enumerated value and an
+     over-long LO value each fail with the expected dciodvfy and/or
+     dicom-validator finding; conflicting Patient IDs across two files fail
+     with a dcentvfy finding; a text file fails as "not a DICOM file" and is
+     not passed to dciodvfy; the known-good CT file passes. All passed.
+  2. *Failure injection* (`internal/engine/engine_test.go`, fake engines):
+     missing binary, crash (SIGSEGV), hang past the timeout, garbage output,
+     worker crash/garbage/hang, worker dropping results: every case gives an
+     engine error and a failed verdict. All passed.
+  3. *Service positive controls* (`internal/runner/integration_test.go`, real
+     pynetdicom against `worker/testdata/fake_scp.py`): correct archive →
+     every step passes; C-STORE refused (0xA700) → store fails; one instance
+     per study withheld on C-MOVE → move fails ("4 expected instance(s) not
+     received"); one pixel byte flipped → move fails ("pixel data differs",
+     6 of 6); archive accepting any called AE → reject step fails; no
+     listener → echo fails within the timeout; production-class target →
+     store and move refused. All passed.
+  4. *Mutation check* (code deliberately broken, tests re-run): ignoring
+     engine errors in the verdict, removing the production guard, lenient
+     YAML parsing, ignoring unknown dciodvfy output, disabling the login
+     rate limit, ignoring missing C-MOVE instances: each made at least one
+     test fail (6 of 6 mutants caught).
+  5. *End-to-end:* the bundled LibreDCM plan passed against a LibreDCM
+     container, and `scripts/conformance.sh` (DCMTK 3.6.7) passed on the same
+     fixtures and LibreDCM; the image validated files with `--network none`.
+- **Findings during validation:** the worker's pixel comparison crashed on
+  its first real run (`'bytes' object has no attribute 'value'`); LibreDVT
+  reported it as an engine error and failed the step, as designed, and the
+  bug was fixed. An Explicit VR Little Endian instance came back as Implicit
+  VR Little Endian: LibreDCM proposes [Explicit, Implicit] for native data
+  and LibreDVT's pynetdicom Storage SCP, as acceptor, chose Implicit. DICOM
+  leaves that choice to the acceptor and the pixel data was identical, so it
+  is not a LibreDCM defect; LibreDVT now notes native re-encodings and fails
+  only when compressed data is transcoded.
+- **Conclusion:** fit for its intended use in v0.1, pending human review.
+- **Re-validate:** any change under `modules/dvt/` or `Dockerfile.dvt`
+  (CI job `libredvt` re-runs activities 1–3 automatically), any engine or
+  base-image version change, or a new step type.
 
 ## AI coding tools
 

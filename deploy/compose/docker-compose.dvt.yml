@@ -1,0 +1,46 @@
+# LibreDVT (DICOM Validation & Test), standalone.
+#
+#   printf '%s' 'a-long-admin-password' > deploy/compose/libredvt-admin-password.txt
+#   docker compose -f deploy/compose/docker-compose.dvt.yml up -d --build
+#   open http://127.0.0.1:8095
+#
+# The web UI (8095) and the built-in Storage SCP (11115) are published on
+# 127.0.0.1 only (DVT-SRS-063). Set LIBRE_DVT_BIND_IP to expose them on a
+# network, and put TLS in front of the web UI when you do.
+#
+# To test a LibreDCM running in another compose project, attach both to a
+# shared network (see modules/dvt/README.md).
+name: libredvt
+services:
+  libredvt:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.dvt
+      args:
+        VERSION: ${LIBRE_DVT_VERSION:-dev}
+    image: libre/dvt:${LIBRE_DVT_VERSION:-dev}
+    container_name: libredvt
+    restart: unless-stopped
+    ports:
+      - "${LIBRE_DVT_BIND_IP:-127.0.0.1}:8095:8095"
+      - "${LIBRE_DVT_BIND_IP:-127.0.0.1}:11115:11115"
+    environment:
+      LIBRE_DVT_ADMIN_PASSWORD_FILE: /run/secrets/libredvt_admin_password
+      LIBRE_DVT_SCP_AE: ${LIBRE_DVT_SCP_AE:-LIBREDVT}
+    secrets:
+      - libredvt_admin_password
+    volumes:
+      - libredvt-data:/var/lib/libredvt
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+
+secrets:
+  libredvt_admin_password:
+    file: ./libredvt-admin-password.txt
+
+volumes:
+  libredvt-data:
