@@ -67,7 +67,7 @@ the functions and types documented in `design/` for the class-C-depth items.
 | SI-05 | `modules/dicom/internal/index` | Index contract (`index.Index`): schema and migrations, transactional upsert of patient/study/series/instance rows with the outbox event, queries, outbox claim/ack, SQLite backup | Own | modernc sqlite, pgx |
 | SI-06 | `modules/dicom/internal/events` | Event publishers (none, log, NATS JetStream) and the outbox relay | Own | nats.go |
 | SI-07 | `modules/dicom/internal/licensing` | Licence state, reminders, acknowledgement, licence metrics (official builds only; nil in source builds) | Own | LibreKey client (SI-11) |
-| SI-08 | `platform/config` | YAML + environment-variable configuration loader with legacy names | Own | yaml.v3 |
+| SI-08 | `platform/config` | YAML + environment-variable configuration loader with legacy names | Own | go.yaml.in/yaml/v3 |
 | SI-09 | `platform/runtime` | Shared chassis: logging, admin endpoints, readiness checks, component lifecycle and shutdown | Own | prometheus client, x/sync |
 | SI-10 | `third_party/gonetdicom` | DICOM upper layer, PDU and DIMSE codec, association state machine, SCP/SCU | **Own (fork of gonetdicom v0.17.0, MIT)**; verified as LibreDCM code, changes listed in `RWS_FORK.md` | godicom |
 | SI-11 | `third_party/librekey` | LibreKey licence client (verification of signed licences, machine fingerprint, activation) | **Own (copy of the Libre Systems client, Apache-2.0)** | standard library |
@@ -228,7 +228,7 @@ SBOM). Architecture-relevant SOUP and what LibreDCM requires of it
 | nats.go v1.54.0 | SI-06 | JetStream publish with message-ID de-duplication, stream creation | NATS 2.11 with JetStream |
 | prometheus client_golang v1.24.1 | SI-02, SI-06, SI-07, SI-09 | Counters, gauges, histograms, text exposition | — |
 | golang.org/x/sync v0.23.0 | SI-09 | errgroup | — |
-| gopkg.in/yaml.v3 v3.0.1 | SI-08 | YAML decoding into structs | — (upstream archived; replacement card open) |
+| go.yaml.in/yaml/v3 v3.0.5 | SI-08 | YAML decoding into structs | — (replaced the archived gopkg.in/yaml.v3 on 2026-11-10) |
 | distroless base image (Debian 12, pinned by digest) | SI-12 | glibc loader for the dynamically linked binary (purego codecs), non-root user, CA certificates | Docker or OCI runtime |
 
 ## 7. Deployment topologies

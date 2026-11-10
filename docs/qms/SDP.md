@@ -116,7 +116,7 @@ the PR names the tool, and a human reviews and approves it.
   (their tests run in CI); every fork change is recorded in `RWS_FORK.md`.
 - **Selection:** prefer maintained projects with a compatible licence; an
   archived or unmaintained project is a risk to be planned out (example:
-  `gopkg.in/yaml.v3`).
+  `gopkg.in/yaml.v3`, replaced by `go.yaml.in/yaml/v3` on 2026-11-10).
 - **Updates:** a SOUP update is a change (issue + PR) with the SOUP list
   re-run, release notes of the new version reviewed for anomalies, and the
   full test suite green.

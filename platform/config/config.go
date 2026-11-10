@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // Load reads path (if non-empty and present) into dst, then applies env

@@ -57,6 +57,11 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 - Container image scan (Trivy 0.76.2) in CI, blocking for fixed HIGH/CRITICAL
   OS-package vulnerabilities; justified exceptions expire (`.trivyignore.yaml`).
 
+### Changed
+- Configuration parsing uses `go.yaml.in/yaml/v3` v3.0.5 (maintained by the
+  YAML organisation) instead of the archived `gopkg.in/yaml.v3`. No
+  behaviour change: the example configuration decodes identically with both.
+
 ### Fixed
 - C-FIND: an identifier containing a command (0000) or file-meta (0002)
   group element made the response unencodable and dropped the association;
