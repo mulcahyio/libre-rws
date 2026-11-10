@@ -251,6 +251,12 @@ func TestStoreMoveCompareFailures(t *testing.T) {
 				return []engine.CompareFile{{File: sent[0], Match: true}, {File: sent[1], Match: false, Error: "pixel data differs"}}
 			}
 		},
+		"compressed instance transcoded": func(f *fake) {
+			f.compare = func(sent []string) []engine.CompareFile {
+				return []engine.CompareFile{{File: sent[0], Match: true}, {File: sent[1], Match: true,
+					SentTransferSyntax: "1.2.840.10008.1.2.4.50", ReceivedTransferSyntax: "1.2.840.10008.1.2.1"}}
+			}
+		},
 		"compare drops a file": func(f *fake) {
 			f.compare = func(sent []string) []engine.CompareFile { return []engine.CompareFile{{File: sent[0], Match: true}} }
 		},
@@ -279,5 +285,19 @@ func TestUnknownTargetMeansStepsNotRun(t *testing.T) {
 	}
 	if len(f.calls) != 0 {
 		t.Fatalf("engines called: %v", f.calls)
+	}
+}
+
+// Verifies: DVT-SRS-025
+func TestNativeReencodingIsNotedNotFailed(t *testing.T) {
+	f := &fake{echo: engine.EchoResult{Associated: true, Status: ip(0)}, reject: engine.RejectResult{Rejected: true}}
+	f.compare = func(sent []string) []engine.CompareFile {
+		return []engine.CompareFile{{File: sent[0], Match: true}, {File: sent[1], Match: true,
+			SentTransferSyntax: "1.2.840.10008.1.2.1", ReceivedTransferSyntax: "1.2.840.10008.1.2"}}
+	}
+	r := run(t, f, setup(t, fullPlan), lab())
+	s := stepOf(r, "move")
+	if s.Status != result.StepPassed || !strings.Contains(strings.Join(s.Messages, " "), "re-encoded") {
+		t.Fatalf("%s %v", s.Status, s.Messages)
 	}
 }

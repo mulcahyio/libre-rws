@@ -382,11 +382,12 @@ def cmd_compare(args):
         else:
             (rdig, rts), rpath = recv[uid]
             sdig, sts = dig
+            # Facts only; Go decides whether a transfer syntax change matters.
             r.update(received=rpath, sent_pixel_sha256=sdig, received_pixel_sha256=rdig,
                      sent_transfer_syntax=sts, received_transfer_syntax=rts,
-                     match=(sdig == rdig and sts == rts))
+                     match=(sdig == rdig))
             if not r["match"]:
-                r["error"] = "transfer syntax changed" if sdig == rdig else "pixel data differs"
+                r["error"] = "pixel data differs"
         results.append(r)
     out({"files": results})
 

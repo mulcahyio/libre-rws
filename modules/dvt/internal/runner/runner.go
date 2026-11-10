@@ -353,13 +353,39 @@ func (rn *Runner) move(ctx context.Context, p *plan.Plan, ps plan.Step, t *store
 		for _, c := range cmp {
 			rel, _ := filepath.Rel(p.Dir, c.File)
 			if !c.Match {
-				s.Failf(fmt.Sprintf("%s: %s", rel, c.Error))
+				s.Failf(fmt.Sprintf("%s: %s", rel, firstNonEmpty(c.Error, "pixel data differs")))
 				continue
+			}
+			if c.SentTransferSyntax != c.ReceivedTransferSyntax {
+				if !nativeTS[c.SentTransferSyntax] || !nativeTS[c.ReceivedTransferSyntax] {
+					// Compressed data arriving in another syntax was transcoded.
+					s.Failf(fmt.Sprintf("%s: transcoded from %s to %s", rel, c.SentTransferSyntax, c.ReceivedTransferSyntax))
+					continue
+				}
+				s.Messages = append(s.Messages, fmt.Sprintf("note: %s re-encoded from %s to %s (uncompressed; pixel data identical)", rel, c.SentTransferSyntax, c.ReceivedTransferSyntax))
 			}
 			same++
 		}
 		s.Messages = append(s.Messages, fmt.Sprintf("pixel data identical for %d of %d sent files", same, len(cmp)))
 	}
+}
+
+// nativeTS are the uncompressed transfer syntaxes; switching between them
+// keeps pixel values (a little-endian switch keeps the bytes too).
+var nativeTS = map[string]bool{
+	"1.2.840.10008.1.2":      true, // Implicit VR Little Endian
+	"1.2.840.10008.1.2.1":    true, // Explicit VR Little Endian
+	"1.2.840.10008.1.2.1.99": true, // Deflated Explicit VR Little Endian
+	"1.2.840.10008.1.2.2":    true, // Explicit VR Big Endian (retired)
+}
+
+func firstNonEmpty(a ...string) string {
+	for _, x := range a {
+		if x != "" {
+			return x
+		}
+	}
+	return ""
 }
 
 func rawJSON(raw string) any {

@@ -6,16 +6,16 @@
 # Target: register LibreDCM as "libredcm-lab" with class "lab" (store and
 # move steps are refused otherwise), and add LibreDVT's Storage SCP to
 # LibreDCM's move destinations, e.g. LIBRE_DCM_REMOTE_AES=LIBREDVT=libredvt:11115.
+#
+# The fixtures are not validated here: they are public samples, and three of
+# them have known IOD defects (dciodvfy and dicom-validator agree: missing
+# Frame of Reference UID and de-identification attributes in ct_j2k.dcm, OW
+# instead of OB for encapsulated pixel data, YBR_FULL in an SC image). An
+# archive must store such objects as received, which is what this plan checks.
 name: LibreDCM conformance
 target: libredcm-lab
 timeout: 30s
 steps:
-  - id: validate-fixtures
-    type: validate
-    files: [fixtures/*.dcm]
-    # Positive control for the fixtures themselves; pydicom samples carry
-    # some warnings, which do not fail the step.
-
   - id: echo
     type: echo
     verifies: [DCM-SRS-001]
