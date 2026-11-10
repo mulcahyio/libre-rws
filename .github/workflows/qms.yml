@@ -44,6 +44,8 @@ jobs:
       - name: Trace check (requirements to tests)
         # Blocking since 2026-11-10: every active requirement has verification.
         run: python3 scripts/qms/trace.py --check
+      - name: User-need check (requirements to user needs)
+        run: python3 scripts/qms/needs.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

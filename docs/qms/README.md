@@ -32,7 +32,9 @@ its design file can support the system's 510(k).
 | [manual-verification.md](../dhf/libredcm/manual-verification.md) | Pre-QMS evidence only |
 | [generated/trace-matrix.md](../dhf/libredcm/generated/trace-matrix.md) | Generated |
 | [generated/sbom.cdx.json](../dhf/libredcm/generated/sbom.cdx.json) | Generated |
-| intended-use.md, architecture.md, design/, DICOM Conformance Statement | Not started |
+| [intended-use.md](../dhf/libredcm/intended-use.md): intended use, limitations, users, use specification, user needs | Draft for approval (2026-11-10) |
+| [anomalies.md](../dhf/libredcm/anomalies.md): known anomalies with safety impact | Draft, living list (2026-11-10) |
+| architecture.md, design/, DICOM Conformance Statement | Not started |
 
 ### Libre WT, future modules
 
@@ -43,6 +45,7 @@ documents and its own requirement prefix.
 
 ```sh
 python3 scripts/qms/trace.py --write     # trace matrix; --check fails on gaps
+python3 scripts/qms/needs.py             # every requirement serves a user need
 python3 scripts/qms/soup.py              # SOUP list from go.mod + SBOM
 # SBOM and vulnerability scan (dev machine has no host Go; rws-go runs Go in Docker)
 rws-go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.12.0 mod -licenses -json -output docs/dhf/libredcm/generated/sbom.cdx.json .

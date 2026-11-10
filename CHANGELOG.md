@@ -23,6 +23,10 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
   report-only for `third_party/`; the gonetdicom fork and LibreKey client
   copy tests now run in CI too. Triage in `docs/dhf/libredcm/cybersecurity.md` §6.
 - Anomaly list `docs/dhf/libredcm/anomalies.md` (ANOM-001…007).
+- LibreDCM intended use, limitations, user profiles, use specification and
+  16 user needs (`docs/dhf/libredcm/intended-use.md`), with
+  `scripts/qms/needs.py` (in CI) checking that every requirement serves a
+  user need.
 
 ### Fixed
 - Part 10 writer refuses File Meta values too long to encode (or empty
