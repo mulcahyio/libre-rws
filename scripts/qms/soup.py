@@ -83,7 +83,7 @@ def main():
         "columns are maintained by hand and preserved on regeneration. IEC 62304 §5.3.3, §5.3.4, §7.1.3;",
         "FDA *Off-The-Shelf Software Use in Medical Devices* (2023).",
         "",
-        f"Go language version: `{go_ver}`" + (f", toolchain `{toolchain}`" if toolchain else "") + ". Runtime image: see `deploy/Dockerfile` (pin by digest).",
+        f"Go language version: `{go_ver}`" + (f", toolchain `{toolchain}`" if toolchain else "") + ". Runtime image: see `deploy/docker/Dockerfile.dicom` (base images pinned by digest).",
         "",
         "## Direct dependencies",
         "",

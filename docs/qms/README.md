@@ -18,7 +18,7 @@ its design file can support the system's 510(k).
 | [quality-manual.md](quality-manual.md): scope, quality policy, roles, process map, ISO 13485/QMSR cross-reference | Draft for approval (2026-11-10) |
 | [sop-001-document-record-control.md](sop-001-document-record-control.md) with [validation/part11-github-drive.md](validation/part11-github-drive.md) (VAL-0001, executed) | Draft for approval (2026-11-10) |
 | Other SOPs (design control, risk management, CAPA, complaints/MDR, supplier control, training, audits and management review, labeling/UDI, cybersecurity, tool validation) | See the procedure index in the quality manual §7.1 |
-| `tool-validation/` | Not started |
+| [sop-011-tool-validation.md](sop-011-tool-validation.md) and [tool-validation/README.md](tool-validation/README.md) (executed 2026-11-10) | Draft for approval |
 
 ## Design files (`docs/dhf/<module>/`)
 

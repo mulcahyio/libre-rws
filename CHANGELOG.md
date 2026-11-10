@@ -34,8 +34,16 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
   an executed Part 11 validation of the GitHub + Drive record system
   (VAL-0001); `scripts/qms/part11_check.py` re-checks the GitHub settings,
   `scripts/qms/mdlinks.py` (in CI) checks document links.
+- SOPs 002–009 and 011 (design control, risk management, CAPA,
+  complaints/MDR/corrections, suppliers, training, audit and management
+  review, labeling/UDI, tool validation) with templates; completed SDP.
+- Tool validation notes (`docs/qms/tool-validation/`) and scripted tests
+  for the QMS scripts (`scripts/qms/test_qms_tools.py`, in CI).
 
 ### Fixed
+- `scripts/qms/soup.py` wrote a stale runtime-image path; `soup.md` still
+  described the LibreKey client risk as "C-STORE refused" (changed by issue
+  #5).
 - Part 10 writer refuses File Meta values too long to encode (or empty
   identifiers) instead of writing an unreadable file (DCM-SRS-018,
   ANOM-001, found by gosec). Over-long but encodable UIDs from
