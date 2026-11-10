@@ -30,6 +30,10 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 - LibreDCM architecture document (`docs/dhf/libredcm/architecture.md`):
   12 software items, interfaces, data flows, SOUP requirements, deployment
   topologies and risk-control segregation.
+- Quality manual (QMS-QM-001) and SOP-001 document and record control with
+  an executed Part 11 validation of the GitHub + Drive record system
+  (VAL-0001); `scripts/qms/part11_check.py` re-checks the GitHub settings,
+  `scripts/qms/mdlinks.py` (in CI) checks document links.
 
 ### Fixed
 - Part 10 writer refuses File Meta values too long to encode (or empty

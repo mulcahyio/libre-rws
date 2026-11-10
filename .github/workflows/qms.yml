@@ -46,6 +46,8 @@ jobs:
         run: python3 scripts/qms/trace.py --check
       - name: User-need check (requirements to user needs)
         run: python3 scripts/qms/needs.py
+      - name: Document link check
+        run: python3 scripts/qms/mdlinks.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -15,7 +15,9 @@ its design file can support the system's 510(k).
 |---|---|
 | [SDP.md](SDP.md): software development plan, change workflow, rules for AI agents | Draft |
 | [release-checklist.md](release-checklist.md): release / design transfer | Draft |
-| Quality manual, SOPs (document control, CAPA, complaints/MDR, supplier control, training, audits, management review, UDI/labeling) | Not started |
+| [quality-manual.md](quality-manual.md): scope, quality policy, roles, process map, ISO 13485/QMSR cross-reference | Draft for approval (2026-11-10) |
+| [sop-001-document-record-control.md](sop-001-document-record-control.md) with [validation/part11-github-drive.md](validation/part11-github-drive.md) (VAL-0001, executed) | Draft for approval (2026-11-10) |
+| Other SOPs (design control, risk management, CAPA, complaints/MDR, supplier control, training, audits and management review, labeling/UDI, cybersecurity, tool validation) | See the procedure index in the quality manual §7.1 |
 | `tool-validation/` | Not started |
 
 ## Design files (`docs/dhf/<module>/`)
@@ -47,6 +49,8 @@ documents and its own requirement prefix.
 ```sh
 python3 scripts/qms/trace.py --write     # trace matrix; --check fails on gaps
 python3 scripts/qms/needs.py             # every requirement serves a user need
+python3 scripts/qms/mdlinks.py           # relative Markdown links resolve
+python3 scripts/qms/part11_check.py      # GitHub settings vs. the Part 11 validation (needs gh)
 python3 scripts/qms/soup.py              # SOUP list from go.mod + SBOM
 # SBOM and vulnerability scan (dev machine has no host Go; rws-go runs Go in Docker)
 rws-go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.12.0 mod -licenses -json -output docs/dhf/libredcm/generated/sbom.cdx.json .
