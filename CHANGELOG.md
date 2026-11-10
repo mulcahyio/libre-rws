@@ -56,6 +56,18 @@ LibreDCM's behaviour unless stated.
   `confirm: true`. Corrections write an Original Attributes Sequence item
   (reason CORRECT) into every rewritten file.
 - Index schema v4 (`conflicts`, `conflict_instances`); upgrades in place.
+- **Libre WT 0.1 (new module, issue #15)**: web management console for
+  LibreDCM (`modules/wt`, image `libre/wt` from `deploy/docker/Dockerfile.wt`).
+  Local accounts with argon2id password hashes, roles Viewer / Operator /
+  Admin, first-run administrator creation (no default credentials), session
+  timeouts, CSRF protection, login rate limiting, strict Content Security
+  Policy (no scripts). Connects to one LibreDCM through the control API. Study
+  Exceptions queue with side-by-side detail; every edit shows LibreDCM's plan
+  on a warning page and needs a single-use approval, the "I approve this edit"
+  box and a reason; the plan is re-checked before the edit is sent. Audit log
+  of logins, user changes, reviews and edits. Design file `docs/dhf/librewt/`
+  (WT-SRS-001…012). New direct dependency `golang.org/x/crypto` v0.57.0
+  (BSD-3-Clause, argon2), already in the module graph as indirect.
 - Automated verification for the last three untested active requirements:
   DICOM TLS only, TLS 1.2+ (DCM-SRS-043), graceful shutdown never acknowledges
   an instance that was not stored (DCM-SRS-053), and Prometheus metrics for
@@ -116,6 +128,21 @@ LibreDCM's behaviour unless stated.
   identifiers) instead of writing an unreadable file (DCM-SRS-018,
   ANOM-001, found by gosec). Over-long but encodable UIDs from
   non-conformant senders are still archived as received.
+
+### Tested (2026-11-10, patient conflicts and Libre WT)
+- `go test -race` all packages; PostgreSQL 16 index and gateway suites;
+  `-tags official`; gosec and govulncheck clean on the new code; mutation
+  checks on the conflict check, the store pre-check, retrieve gating, byte
+  splicing, Libre WT's role check, CSRF, session epoch, edit confirmation and
+  plan digest (each mutation makes a test fail).
+- End to end with DCMTK `storescu`/`findscu` and synthetic data: conflict held
+  with Warning B000, `B000_` Patient ID and Original Attributes Sequence,
+  pixel data identical, `dciodvfy` output unchanged; resolved in Libre WT in
+  a browser ("correct the archived study"); study then under the new patient
+  with 4 instances and CORRECT history in every file; both audit logs name
+  the operator and reason.
+- Not tested: Windows installer questions (PowerShell not run), HTTPS for
+  Libre WT, cluster (several LibreDCM nodes) with conflicts.
 
 ### Tested (2026-11-10)
 - New tests pass with `-race`, 15 repeated runs without a flake. Mutation

@@ -1,0 +1,17 @@
+{{define "title"}}Account{{end}}
+{{define "content"}}
+<section class="card narrow">
+<h1>{{.User.Username}}</h1>
+<p>Role: <b>{{.User.Role}}</b></p>
+{{if .Notice}}<p class="msg info">{{.Notice}}</p>{{end}}
+{{if .Error}}<p class="msg error" role="alert">{{.Error}}</p>{{end}}
+<h2>Change password</h2>
+<form method="post" action="/account/password">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<label>Current password <input name="current" type="password" required autocomplete="current-password"></label>
+<label>New password (at least 12 characters) <input name="password" type="password" required minlength="12" autocomplete="new-password"></label>
+<label>Repeat new password <input name="password2" type="password" required minlength="12" autocomplete="new-password"></label>
+<button class="primary">Change password</button>
+</form>
+</section>
+{{end}}

@@ -3,8 +3,9 @@ VERSION ?= $(patsubst v%,%,$(shell git describe --tags --always 2>/dev/null || e
 export CGO_ENABLED=0
 
 .PHONY: build test test-postgres test-s3 vet image up cluster down conformance workstation
-build:        ## static binary in ./bin
+build:        ## static binaries in ./bin
 	go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o bin/LibreDCM ./modules/dicom/cmd/libredcm
+	go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o bin/LibreWT ./modules/wt/cmd/librewt
 test:         ## unit + end-to-end DIMSE tests
 	go test ./modules/... ./platform/... -count=1
 test-postgres: ## same tests, index suites also against a throwaway PostgreSQL (needs Docker)

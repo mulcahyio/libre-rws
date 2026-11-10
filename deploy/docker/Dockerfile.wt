@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1
+# Libre WT (Watch Tower) container image - management console of Libre RWS
+#
+# Build from the repository root:
+#   docker build -f deploy/docker/Dockerfile.wt --build-arg VERSION=0.1.0-dev -t libre/wt:0.1.0-dev .
+
+ARG GO_VERSION=1.26.10
+# Base images pinned by digest (same as Dockerfile.dicom); update deliberately.
+FROM golang:${GO_VERSION}-bookworm@sha256:5de7c99eb78ca5e515a4c340235d0955ec5964a5071c492c15503d7c267da473 AS build
+WORKDIR /src
+ENV CGO_ENABLED=0 GOFLAGS=-trimpath GOTOOLCHAIN=auto
+COPY go.mod go.sum ./
+COPY third_party/ third_party/
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
+COPY platform/ platform/
+COPY modules/ modules/
+ARG VERSION=dev
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
+    go build -ldflags "-s -w -X main.version=${VERSION}" -o /out/LibreWT ./modules/wt/cmd/librewt
+RUN mkdir -p /out/var/lib/librewt
+
+# Libre WT is pure Go with no native libraries: distroless/static is enough.
+FROM gcr.io/distroless/static-debian12:nonroot
+ARG VERSION=dev
+LABEL org.opencontainers.image.title="LibreWT" \
+      org.opencontainers.image.description="Libre WT - management console for LibreDCM (Study Exceptions)" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.vendor="Libre Systems"
+COPY --from=build /out/LibreWT /LibreWT
+COPY --from=build --chown=65532:65532 /out/var/lib/librewt /var/lib/librewt
+ENV LIBRE_WT_LISTEN=:8090 \
+    LIBRE_WT_DATA_DIR=/var/lib/librewt
+USER 65532:65532
+EXPOSE 8090
+VOLUME ["/var/lib/librewt"]
+ENTRYPOINT ["/LibreWT"]

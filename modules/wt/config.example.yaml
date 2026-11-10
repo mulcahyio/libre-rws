@@ -1,0 +1,15 @@
+# Libre WT configuration. Every value can also be set by environment
+# variable (shown on the right); environment wins over this file.
+
+listen: "127.0.0.1:8090"          # LIBRE_WT_LISTEN       keep on 127.0.0.1 unless TLS is configured
+data_dir: ./data-wt               # LIBRE_WT_DATA_DIR     accounts and audit log (librewt.db)
+# tls_cert_file: /etc/librewt/tls.crt   # LIBRE_WT_TLS_CERT   serve HTTPS (recommended on a network)
+# tls_key_file:  /etc/librewt/tls.key   # LIBRE_WT_TLS_KEY
+session_idle_timeout: 30m         # LIBRE_WT_SESSION_IDLE_TIMEOUT
+session_max_age: 12h              # LIBRE_WT_SESSION_MAX_AGE
+log_level: info                   # LIBRE_WT_LOG_LEVEL
+
+dcm:                              # the LibreDCM instance this console manages
+  url: http://127.0.0.1:8081      # LIBRE_WT_DCM_URL        LibreDCM admin listener
+  token_file: ./dcm-admin-token   # LIBRE_WT_DCM_TOKEN_FILE LibreDCM's admin token (or token: / LIBRE_WT_DCM_TOKEN)
+  # ca_file: ./libredcm-tls.crt   # LIBRE_WT_DCM_CA_FILE    trust LibreDCM's self-signed certificate

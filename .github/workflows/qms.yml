@@ -54,6 +54,10 @@ jobs:
         run: |
           python3 scripts/qms/trace.py --module libredvt --prefix DVT --check
           python3 scripts/qms/needs.py --module libredvt --prefix DVT
+      - name: Libre WT trace and user-need checks
+        run: |
+          python3 scripts/qms/trace.py --module librewt --prefix WT --check
+          python3 scripts/qms/needs.py --module librewt --prefix WT
       - name: Document link check
         run: python3 scripts/qms/mdlinks.py
       - name: QMS script validation tests (QMS-SOP-011)
