@@ -61,3 +61,32 @@ jobs:
           path: |
             sbom.cdx.json
             gosec-*.txt
+
+  image-scan:
+    # Container image scan (Trivy) for OS packages of the runtime image
+    # (QMS-SOP-010 §3). Blocking: fixed HIGH/CRITICAL OS vulnerabilities not
+    # justified in .trivyignore.yaml (entries expire). Go libraries are gated
+    # by govulncheck (with reachability) in the verify job; Trivy's full
+    # report is kept as a record.
+    runs-on: ubuntu-latest
+    env:
+      TRIVY: aquasec/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb  # 0.76.2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the LibreDCM image
+        run: docker build -f deploy/docker/Dockerfile.dicom --build-arg VERSION=ci -t libre/dcm:ci .
+      - name: Trivy, OS packages (blocking)
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD":/repo:ro -w /repo "$TRIVY"
+          image --quiet --pkg-types os --severity HIGH,CRITICAL --ignore-unfixed
+          --ignorefile .trivyignore.yaml --exit-code 1 libre/dcm:ci
+      - name: Trivy, full report (record)
+        if: always()
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD":/repo -w /repo "$TRIVY"
+          image --quiet --ignorefile .trivyignore.yaml --format table --output trivy-image.txt libre/dcm:ci
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: image-scan-records
+          path: trivy-image.txt

@@ -54,6 +54,8 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
   across transfer syntaxes (`TestPixelDataIntegrity`). Anomalies ANOM-009
   (series moved between studies) and ANOM-010 (C-GET completed count) added.
 - SOP-010 vulnerability management; `qms` workflow re-scans `master` weekly.
+- Container image scan (Trivy 0.76.2) in CI, blocking for fixed HIGH/CRITICAL
+  OS-package vulnerabilities; justified exceptions expire (`.trivyignore.yaml`).
 
 ### Fixed
 - C-FIND: an identifier containing a command (0000) or file-meta (0002)

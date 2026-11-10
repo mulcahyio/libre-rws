@@ -98,7 +98,7 @@ controlled, **P** partly controlled, **O** open.
 | TM-06 | I | Disclosure via admin API, readiness details or logs | PHI, configuration | M | S3 | Bearer token for `/metrics`, `/version`; `/readyz` hides details; token file fails closed (-041); HTTPS (-042); patient-ID omission (-032); admin bound to 127.0.0.1 by the workstation installer | `TestAdminToken*`, `TestOmitPatientID`, `TestGenCert` | P | User accounts/RBAC (Libre WT); log redaction review | HAZ-009 |
 | TM-07 | D | Association floods, slow peers, huge objects | Availability | H | S3 | `max_associations`, handshake and idle timeouts, PDU limit, streaming C-MOVE, `get_max_bytes` | gonetdicom limit tests; `TestGracefulShutdown` | P | Per-peer rate limits; object size limit; free-disk alerting | HAZ-004 |
 | TM-08 | D/T | Malformed DICOM or identifiers crash the parser, exhaust memory or corrupt output | Availability, integrity | H | S3 | Bounds-checked decoders (uint64 length checks); Part 10 guard (-018); fuzzing in CI (seed corpora) and before release | Fuzz targets (§7), `TestPart10RefusesUnencodableMeta` | C | Keep fuzzing; add more targets as code grows | HAZ-004, HAZ-003 |
-| TM-09 | E/T | Known vulnerability in a dependency or the Go runtime exploited | All | M | S4 | govulncheck in CI; SBOM; pinned versions; gosec (blocking); quarterly review | CI `verify` job; tool validation (positive controls) | C | Trivy for OS packages of the image (card) | HAZ-012 |
+| TM-09 | E/T | Known vulnerability in a dependency or the Go runtime exploited | All | M | S4 | govulncheck in CI; Trivy image scan of OS packages (blocking, justified exceptions expire); SBOM; pinned versions; gosec (blocking); quarterly review | CI `verify` and `image-scan` jobs; tool validation (positive controls) | C | Weekly scheduled scans | HAZ-012 |
 | TM-10 | T | Tampered image, installer or release (supply chain) | All | L | S4 | Base images pinned by digest; release checksums (SHA256SUMS) on GitHub releases; protected tags | Release record | P | Signed tags and images (cosign/SSH), provenance (card) | HAZ-012 |
 | TM-11 | D | Ransomware encrypts the host and archive | Availability | M | S3 | `-backup` (index snapshot while running); S3 option with versioning | `TestBackupWhileWriting` | P | Documented, tested restore; immutable/offline backup guidance | HAZ-001, HAZ-004 |
 | TM-12 | E | Injection through query keys (SQL) | Index integrity, PHI | L | S4 | Column names from a fixed table; values always bound parameters | `TestConformance`, C-FIND fuzzers (no query error for any parsed identifier) | C | — | HAZ-002 |
@@ -137,6 +137,26 @@ there with the common matrix.
 | GO-2026-5932 | golang.org/x/crypto v0.57.0 | No | Upgrade when a tagged release containing the fix exists |
 
 SBOM: CycloneDX 1.x, 49 components, `generated/sbom.cdx.json` (cyclonedx-gomod v1.12.0). One component without a detected licence: `github.com/tinylib/msgp` v1.6.4 (check by hand).
+
+## 5a. Container image scan (Trivy 0.76.2, added 2026-11-10)
+
+CI job `image-scan` builds the release image and scans it. OS packages with a
+fixed HIGH/CRITICAL vulnerability **block** the build unless justified in
+`.trivyignore.yaml`, where every entry has a reason and an expiry date. Go
+libraries in the binary are reported only: govulncheck (with reachability)
+is the gate for them.
+
+First scan, 2026-11-10 (`gcr.io/distroless/base-debian12:nonroot` digest
+`7f0c72cd…`, also the newest published build that day):
+
+| Finding | Verdict |
+|---|---|
+| CVE-2026-84782, libssl3 3.0.20 (HIGH, fixed in 3.0.22) | Not reachable: the binary does not load libssl (checked: it references only libc, libdl, libm, libpthread, libgcc_s, libstdc++ and the codec libraries), and the flaw is in DTLS. Accepted until 2026-12-15 or the next base-image update |
+| 40 OS findings below HIGH | Report only (CI artifact) |
+| Go binary: GO-2026-5932 (x/crypto openpgp), CVE-2026-78661 / -97045 (x/net/html) | Same as govulncheck §5: modules required but vulnerable code not called; upgrades planned |
+
+Checks: without the ignore entry, and with an expired entry, the blocking
+step fails (rc 1); with it, rc 0.
 
 ## 6. Static analysis (SAST), gosec v2.30.0 (added 2026-11-10)
 
@@ -222,8 +242,7 @@ DCM-SRS-004, -006, -018` in the trace matrix. They support the risk controls for
 ## 8. Still required before a 510(k)
 
 Independent penetration test; mutual TLS and per-peer permissions; ATNA
-audit transport; signed releases and images; image OS-package scanning
-(Trivy); customer security documentation and MDS2 form; documented restore
+audit transport; signed releases and images; customer security documentation and MDS2 form; documented restore
 and immutable-backup guidance; secrets handling for S3/PostgreSQL/NATS
 credentials; patch and end-of-support policy; postmarket metrics (time to
 patch).

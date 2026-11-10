@@ -18,6 +18,7 @@ command output from 2026-11-10 unless stated.
 | GitHub Actions (`qms.yml`) | `ubuntu-latest`, `actions/checkout@v4`, `actions/setup-go@v5` | Medium | Every step run locally in the same Go image with the same commands; results match | Fit; new steps not yet run on GitHub (branch not pushed) |
 | gosec | v2.30.0 | Medium | Positive control | Fit |
 | govulncheck | v1.9.0 | Medium | Positive control | Fit |
+| Trivy | 0.76.2 (image pinned by digest) | Medium | Positive control (finds the known libssl3 CVE); ignore-file expiry check | Fit |
 | cyclonedx-gomod | v1.12.0 | Medium | Completeness check against the compiled module list | Fit, with note |
 | `scripts/qms/trace.py` | repo version | High | Scripted tests (`test_qms_tools.py`), mutation check | Fit |
 | `scripts/qms/needs.py` | repo version | High | Scripted tests | Fit |
@@ -83,6 +84,17 @@ command output from 2026-11-10 unless stated.
   and calling `language.Parse` → `Vulnerability #1: GO-2021-0113 ... Your
   code is affected by 1 vulnerability from 1 module` ✓. On 2026-11-09 it
   found the reachable GO-2026-6809 in the Go standard library.
+- **Re-validate:** on a version change.
+
+## Trivy 0.76.2
+
+- **Intended use:** scan OS packages of the LibreDCM image in CI (blocking)
+  and record a full report.
+- **Risk: medium** (could miss an OS vulnerability; the base image is
+  minimal distroless and rebuilt deliberately).
+- **Positive control (2026-11-10):** scanning the release image without an
+  ignore file reported `CVE-2026-84782 libssl3 HIGH fixed` and exited 1 ✓;
+  with an expired ignore entry it exited 1 again ✓; with the valid entry 0 ✓.
 - **Re-validate:** on a version change.
 
 ## cyclonedx-gomod v1.12.0

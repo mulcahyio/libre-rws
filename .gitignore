@@ -10,3 +10,4 @@ deploy/workstation/.env.bak-*
 # CI scan reports (artifacts, not records)
 gosec-*.txt
 __pycache__/
+trivy-image.txt
