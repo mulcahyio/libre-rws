@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Document | DHF-WT-SRS |
-| Status | **DRAFT** (2026-11-10, v0.1 scope approved by Patrick Mulcahy in chat, recorded in issue #15). Must be reviewed and approved at the QMS baseline |
+| Status | **DRAFT** (2026-11-10, v0.1 scope approved by Patrick Mulcahy in chat, recorded in issue #15). §5 added 2026-11-14 for v0.2 (issue #20), rows `Draft`, **DRAFT for approval**. Must be reviewed and approved at the QMS baseline |
 | Software item | Libre WT (Watch Tower): management console of the Libre RWS PACS; v0.1 covers the Study Exceptions queue for LibreDCM |
 | Safety class | B with class-C depth for the resolve path (it changes patient identity on stored images through LibreDCM; HAZ-013, HAZ-014 in `../libredcm/risk-management.md`) |
 
@@ -50,3 +50,70 @@ OIDC/LDAP and TOTP come later.
 |---|---|---|---|
 | WT-SRS-011 | Libre WT shall keep an audit log of logins (success, failure, rate limited), logouts, first-run setup, user changes, password changes, edit reviews, approvals and resolve results (who, address, action, target, outcome, detail). The approval shall be recorded before the edit is sent; if it can't be written, the edit shall not be sent. Admins can read the log in the interface. | Active | HAZ-008, HAZ-014 |
 | WT-SRS-012 | Administrators shall be able to add users with a role, change roles, disable and enable users and reset passwords; every user can change their own password after entering the current one. | Active | WT-HAZ-02 |
+
+## 5. Libre WT 0.2: all LibreDCM functions (Draft)
+
+Added 2026-11-14 as **Draft** (issue #20). Scope approved by Patrick Mulcahy
+on 2026-11-14: "Build Libre WT to support all LibreDCM functions developed to
+date. Do not stop until done. Document and test along the way to stay
+compliant with FDA 510(k)." Each row becomes `Active` in the pull request
+that implements and verifies it. The defaults chosen by Hermes where the
+instruction left room are listed as open decisions D1…D16 in
+`architecture.md` §8. LibreDCM's side of the interface is
+`../libredcm/control-api-v1.md` (DCM-SRS-080…097). Hazards WT-HAZ-05…17 are
+in `risk-management.md`; HAZ-015 and HAZ-016 in
+`../libredcm/risk-management.md` §2a.
+
+### 5.1 Connections and instance identity
+
+| ID | Requirement | Status | Risk control for |
+|---|---|---|---|
+| WT-SRS-013 | Libre WT shall connect to one or more LibreDCM instances, each configured with a unique name, the address of that node's admin listener, its own admin token (value or token file), an optional CA certificate and an optional cluster label. The single-instance `dcm:` setting of 0.1 shall keep working as one instance. Libre WT shall refuse to start when two instances share a name, a name has characters outside letters, digits, `-` and `_`, or an instance has no token. | Draft | WT-HAZ-05, HAZ-009 |
+| WT-SRS-014 | Every page that shows or changes data of a LibreDCM instance shall carry the instance name in its address (`/i/{instance}/…`) and shall show a banner with the instance name, AE title, node ID and cluster label. Libre WT shall keep no "currently selected instance" in the session: a request acts on the instance named in its own address only. | Draft | WT-HAZ-05 |
+| WT-SRS-015 | Libre WT shall remember the node ID and AE title each instance reported first and shall show a warning on that instance's pages when they change, until an Admin accepts the new identity with a reason. Every state-changing request to LibreDCM shall carry the expected node ID and AE title, so LibreDCM refuses it when the address now reaches another node. | Draft | WT-HAZ-05, HAZ-015, HAZ-016 |
+| WT-SRS-036 | Libre WT shall show a warning on an instance's pages, and log it at startup, when the connection uses plain HTTP to an address that is not a loopback address. | Draft | WT-HAZ-08, HAZ-009 |
+
+### 5.2 Overview and status
+
+| ID | Requirement | Status | Risk control for |
+|---|---|---|---|
+| WT-SRS-016 | The fleet page shall list all configured instances, grouped by cluster label, each with: reachable or not, ready or not, version, uptime, licence state, open associations, stored and rejected counts, pending outbox events and open study exceptions. An instance that cannot be reached shall be shown as unreachable with the time of the last successful contact, never with old values shown as current. | Draft | WT-HAZ-11, HAZ-004 |
+| WT-SRS-017 | The instance dashboard and status page shall show the values of LibreDCM's status endpoint: identity, uptime, backends, each readiness check with its result, licence state, counters per DICOM service (associations, C-STORE by result, C-FIND, C-MOVE and C-GET sub-operations), outbox and conflicts, with the time the data was read. The page shall state that container start, stop and restart are done on the host and name the documented procedure; Libre WT shall offer no such action. | Draft | WT-HAZ-11, HAZ-004 |
+| WT-SRS-018 | Libre WT shall ask each instance which control functions it supports and shall show a function that an instance does not support as unavailable for that instance, without error pages. | Draft | WT-HAZ-11 |
+| WT-SRS-023 | Within one cluster label, the fleet page shall flag instances whose digest of live-reloadable settings differs, and instances whose LibreDCM version differs. | Draft | WT-HAZ-12, HAZ-015 |
+| WT-SRS-035 | The about page shall show the Libre WT version and, per instance, the LibreDCM version, node ID and AE title. | Draft | WT-HAZ-11 |
+
+### 5.3 Configuration
+
+| ID | Requirement | Status | Risk control for |
+|---|---|---|---|
+| WT-SRS-019 | The configuration page shall show the instance's running settings with source and whether each can change without a restart. Settings LibreDCM marks as redacted shall be shown only as "set" or "not set". Settings that need a restart shall be read-only, with a note on how to change them on the host. | Draft | WT-HAZ-08, WT-HAZ-06 |
+| WT-SRS-020 | The pages for C-MOVE destinations and for the calling-AE allow-list shall show the entries in force now with their source, and shall state clearly when the allow-list is empty (every calling AE may connect). | Draft | WT-HAZ-06, HAZ-005, HAZ-007 |
+| WT-SRS-021 | An Admin shall be able to add, change and remove C-MOVE destinations and allow-list rules. Libre WT shall send the change to LibreDCM as a plan first and show a warning page with the exact difference (added, removed, changed entries), the instance banner and LibreDCM's warnings. Each warning that LibreDCM marks as needing acknowledgement shall have its own box that must be ticked. A change LibreDCM refuses as invalid shall be shown with LibreDCM's reason and not applied. | Draft | WT-HAZ-06, HAZ-015 |
+| WT-SRS-022 | An Admin shall be able to reload the configuration of an instance and to roll back to the previous version of the console-made settings, each through a plan page that shows the difference and the general action rule (WT-SRS-031). When LibreDCM blocks the reload until the licence notice is acknowledged, Libre WT shall say so and link to the licence page. | Draft | WT-HAZ-06, WT-HAZ-15, HAZ-015 |
+
+### 5.4 DICOM functions
+
+| ID | Requirement | Status | Risk control for |
+|---|---|---|---|
+| WT-SRS-024 | Operators and Admins shall be able to run a C-ECHO test from an instance to one of its configured C-MOVE destinations and see success, or the stage that failed, and the duration. Only an Admin shall be able to test a free host, port and AE title. | Draft | WT-HAZ-14, HAZ-005 |
+| WT-SRS-025 | Operators and Admins shall be able to search the studies of an instance by Patient ID, patient name, study date, accession number, modality or Study Instance UID, and open a study to see its series and instance counts. A search without a search value shall not be sent. The page shall show when more results exist than are shown. Libre WT shall display what LibreDCM returns and shall not add held conflict instances. Each search shall be recorded in the Libre WT audit log and sent to LibreDCM with the user's name. | Draft | WT-HAZ-13, HAZ-002, HAZ-009 |
+| WT-SRS-026 | An Admin shall be able to send a study, or chosen series of it, to one of the instance's configured C-MOVE destinations. The destination shall be chosen from that list only. The warning page shall show the patient (ID, name, birth date), the study (date, description, accession number), the number of series and instances, and the destination name, address and AE title, as planned by LibreDCM. After the send, the page shall show how many instances were sent and which failed. | Draft | WT-HAZ-07, HAZ-016 |
+
+### 5.5 Licence, backup, audit records and logs
+
+| ID | Requirement | Status | Risk control for |
+|---|---|---|---|
+| WT-SRS-027 | The licence page shall show the licence state of an instance, its message, machine fingerprint, customer, term and acknowledgement, with licence keys masked. It shall always state that DICOM services keep running whatever the licence state. Operators and Admins shall be able to acknowledge the unlicensed notice (recorded under their user name). Only an Admin shall be able to create an activation request, install a licence file and activate online. A licence that LibreDCM refuses shall be reported and the installed licence shall stay. A licence key typed into Libre WT shall not be written to its audit log or its log. | Draft | WT-HAZ-09, HAZ-010 |
+| WT-SRS-028 | Operators and Admins shall be able to start an online backup of the index of an instance and see the list of backups (file name, size, time, checksum). Libre WT shall offer no field for a path or file name and no download or delete. The page shall state that the backup holds the index only and that images must be backed up separately. | Draft | WT-HAZ-10, HAZ-001 |
+| WT-SRS-029 | An Admin shall be able to read the recent audit records of an instance, filtered by event type, outcome and time. The page shall state that it shows only the most recent records kept in memory and that the site's log collector holds the full record. | Draft | WT-HAZ-17, HAZ-008, WT-HAZ-13 |
+| WT-SRS-030 | Operators and Admins shall be able to read the recent log lines of an instance, filtered by minimum level. | Draft | WT-HAZ-11, WT-HAZ-13 |
+
+### 5.6 Rules for all functions
+
+| ID | Requirement | Status | Risk control for |
+|---|---|---|---|
+| WT-SRS-031 | Every action that changes something on a LibreDCM instance (configuration change, reload, rollback, send, licence action, backup, C-ECHO test, accepting a new instance identity) shall be sent only when: the user's role allows it; the request carries the session's CSRF token; the user was shown a plan or warning page for it; the request carries a single-use confirmation issued with that page for the same session, instance, action and plan, less than 10 minutes old; the approval box is ticked; and a reason is given. For actions with a LibreDCM plan, the plan digest shown shall be sent with the action so LibreDCM refuses it when the state has changed. The request to LibreDCM shall name the logged-in user as operator and carry the reason and a request ID. | Draft | WT-HAZ-05, WT-HAZ-06, WT-HAZ-07, WT-HAZ-09, WT-HAZ-10, HAZ-015, HAZ-016 |
+| WT-SRS-032 | Libre WT shall never display, log or write to its audit log an admin token, a licence key in full or any value LibreDCM marks as redacted, and shall not put them in page addresses. Error messages from LibreDCM shall be shown as text, never interpreted as markup. | Draft | WT-HAZ-08, WT-HAZ-04, HAZ-009 |
+| WT-SRS-033 | The Libre WT audit log shall record, for every action of WT-SRS-031 and for every opening of a page that shows patient data, audit records or logs of an instance: who, from which address, which instance, which action, the target, the reason, the outcome and LibreDCM's answer. The approval shall be recorded before the action is sent; when it cannot be written, the action shall not be sent. The audit page shall filter by instance. | Draft | WT-HAZ-17, HAZ-008 |
+| WT-SRS-034 | Roles shall apply as follows, checked on the server for every request. Viewer: fleet, dashboard, status, licence state, about, Study Exceptions (as in 0.1). Operator: also configuration view, destinations, allow-list, logs, study search, C-ECHO to configured destinations, backup, licence acknowledgement. Admin: also configuration change, reload, rollback, send, licence request, install and activation, C-ECHO to a free address, LibreDCM audit records, accepting an instance identity, and everything Admin could do in 0.1. A page shall not show a control the user's role cannot use. | Draft | WT-HAZ-02, WT-HAZ-13 |
