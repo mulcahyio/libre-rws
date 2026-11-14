@@ -71,6 +71,48 @@ far as possible (accept only with rationale), U unacceptable.
 | HAZ-014 | **Administrator correction applied to the wrong patient or study** (Libre WT / control API resolve action) | Wrong-patient diagnosis for every image of the study | Wrong conflict chosen, wrong action (correct_existing vs correct_incoming), misread demographics | S4 | P3 | U | DCM-SRS-077 (plan shown before any change, mandatory operator + reason + confirmation, token-protected API, audit), DCM-SRS-078 (Original Attributes Sequence in every rewritten file keeps the previous values, so a correction can be traced and reversed), WT-SRS (Admin role only, warning dialog with the planned changes, approve-edit confirmation) | P2 | R | Reversal is manual in v0.1 (previous values are in each file). IOCM propagation to peers that already received the study is not implemented (warning shown in the plan) |
 | HAZ-013 | **Study silently reassigned to another patient** when instances of one Study UID arrive with different Patient IDs (ANOM-002), or a series UID arrives under another study (ANOM-009) | Wrong-patient diagnosis; prior missing under the right patient | Mis-registration corrected at the modality and re-sent; UID collision | S4 | P3 | U | DCM-SRS-070–079 (2026-11-10, issue #14): conflicts detected in the index transaction, existing associations never change, conflicting instances held under their own storage key and hidden by default, audit + metrics, administrator resolution in Libre WT | P1 | R | Residuals: (a) visibility `flagged` / `accept_separate` show a second entry with the same Study UID; retrieve without Patient ID returns only the indexed patient (DCM-SRS-073), viewers that ignore Patient ID could still confuse the two; default `hidden` avoids it. (b) Race between pre-check and index transaction on two nodes receiving the same SOP instance for different patients within milliseconds can overwrite that file (`lateConflict`, store.go). (c) Conflicts with the indexed Patient ID empty vs. filled are treated as conflicts (safe, may add review work) |
 
+## 2a. Planned control API v1 extension (Draft, issue #20, 2026-11-14)
+
+**DRAFT for approval.** Libre WT 0.2 adds remote administration through the
+control API (`control-api-v1.md`). The functions are not implemented yet.
+This section is the risk analysis done before coding (design input). The
+controls are `Draft` requirements; "Target residual" is what is expected
+once they are implemented and verified. The hazards below move into §2 and
+§3, with their verification evidence, in the pull requests that implement
+them. They are **not** counted in the report of §6 yet. Console-side hazards
+are in `../librewt/risk-management.md` (WT-HAZ-05…17).
+
+### New hazards
+
+| ID | Hazardous situation | Harm | Main causes | S | Initial P | Initial | Risk controls (Draft requirements) | Target residual P | Target residual | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|
+| HAZ-015 | **Remote configuration change breaks or opens DICOM traffic**: a change to the allow-list or the C-MOVE destinations, a reload or a rollback made through the control API is wrong, or is made on the wrong node | Delayed diagnosis (modality refused, images queue or are lost at the modality; study cannot be moved to the reader); wrong-patient or privacy harm when the allow-list is opened (HAZ-007) or a destination is pointed elsewhere (HAZ-005) | Typo; wrong node chosen; stale page; file edited by hand between plan and apply; nodes of a cluster drifting apart; stolen admin token | S4 | P3 | U | DCM-SRS-093 (only live-reloadable settings; validated by the normal loader; overlay file, atomic write; failed reload changes nothing; settings fixed by environment refused), -094 (previous version kept, rollback), -095 (weakening changes need an acknowledged warning), -088 (reload plan shows the difference), -097 (node identity check, settings digest), -086 (operator, reason, audit), -080 (token) | P2 | R | S4 is taken from HAZ-007 (opened allow-list). Restart-required settings cannot be changed remotely at all (inherent safety). Residual: a valid but wrong entry (the right syntax and the wrong IP) cannot be detected by LibreDCM; the C-ECHO test (-087) and rollback limit how long it lasts |
+| HAZ-016 | **Study sent from the console to the wrong destination, or the wrong study sent** | Privacy harm (patient data at a system that should not have it); wrong-patient confusion at the receiver; the intended reader does not get the study (delay) | Wrong study or destination picked; similar names; double submit; wrong node | S3 | P3 | R | DCM-SRS-092 (configured destinations only; Patient ID must be given and must match; plan shows patient, study, count and destination address; digest of an unchanged plan and confirmation; held conflict instances never sent; audit), -097 (identity), -086 (request ID stops a double send) | P2 | R | The receiving system decides what it does with the images. A recall is not possible in DICOM; the audit record shows what was sent where |
+
+### Effect on existing hazards
+
+| Hazard | New cause from the extension | Controls (Draft) | Assessment |
+|---|---|---|---|
+| HAZ-001 (image lost) | Backup overwrites the index or an older backup; the administrator believes images are backed up | DCM-SRS-090 (no client path, name made by LibreDCM, exclusive create, snapshot method of DCM-SRS-022 unchanged; note that images are not included) | No increase expected. The existing backup control is reused, not changed |
+| HAZ-002 (wrong query result) | The console's study search gives other results than C-FIND | DCM-SRS-091 (one shared matching function; "more rows exist" is stated) | No increase expected |
+| HAZ-004 (unavailable) | A backup fills the disk; large queries, sends or log reads load the node; a remote stop | DCM-SRS-090 (free-space check, one at a time), -096 (bounds, timeouts), -084 and -085 (fixed-size buffers); no stop or restart endpoint exists (inherent safety) | No increase expected |
+| HAZ-005 (wrong destination) | See HAZ-015, HAZ-016 | | Analysed there |
+| HAZ-007 (unauthorised peer) | Allow-list emptied or widened from the console | DCM-SRS-095, -093 | Analysed in HAZ-015 |
+| HAZ-008 (not traceable) | Administrative actions without a named person | DCM-SRS-086 (operator and reason required; audit before acting); -084 does not replace the log | Improves traceability of administration. Residual: the operator name is asserted by Libre WT (shared token) |
+| HAZ-009 (disclosure) | Configuration, log or audit endpoints return secrets or more patient data; study search widens who can read patient data | DCM-SRS-082 (redaction from a list of safe settings: unknown settings are hidden), -084 (no more patient data than the audit log, omission honoured), -091 (no listing without a key, audited), -090 (no download), -080 (token, no-store) | The risk grows with the number of endpoints; controlled by the listed requirements. A test that searches every response for the configured secrets is required (card WT-0.2/2) |
+| HAZ-010 (licence stops image flow) | Licence actions through the control API change DICOM behaviour | DCM-SRS-089 (existing licensing code, outside the gateway), -058 with `TestGatewayHasNoLicenseDependency` | No increase allowed: the architecture test must keep passing in every PR |
+| HAZ-012 (exploited vulnerability) | More attack surface on the admin listener; C-ECHO test used to probe the network | DCM-SRS-080, -087 (Verification only, result reduced to success or stage), -096; gosec, govulncheck, fuzzing of request decoding | Slight increase, controlled; see `cybersecurity.md` §3a |
+| HAZ-013 (wrong patient association) | Held conflict instances shown or sent through the new endpoints | DCM-SRS-091 (same visibility rules as C-FIND), -092 (held instances never sent) | No increase expected; mutation check of the hidden-conflict filter required (card WT-0.2/4) |
+| HAZ-014 (wrong correction) | Resolve sent to the wrong node | DCM-SRS-097 (identity check, also offered to the conflict resolve endpoint) | Improves |
+
+**New risks from the new controls** (ISO 14971 §7.5): the identity check and
+the plan digest can refuse a correct action after a harmless change (the
+administrator repeats it: inconvenience only); the overlay file adds a
+second place where settings live (controlled: `GET /control/v1/config` shows
+the source of every setting, and the overlay never touches restart-required
+settings); the audit-before-action rule blocks actions when logging fails
+(safe direction).
+
 ## 3. Risk controls and verification of their effectiveness
 
 | Hazard | Control (requirement) | Type | Verification evidence (automated unless stated) |

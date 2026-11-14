@@ -214,6 +214,53 @@ de-duplicates on the message ID within 10 minutes.
 - **Backup:** `-backup PATH` snapshots the SQLite index with `VACUUM INTO`
   while the node runs.
 
+### 5.6 Control API v1 extension (planned, Draft, issue #20)
+
+**DRAFT for approval (2026-11-14).** Not implemented yet. Contract:
+`control-api-v1.md`. Requirements: DCM-SRS-080…097 (Draft). It extends
+interface IF-06 (admin endpoint) with more `/control/v1` endpoints for
+Libre WT; the admin token is always required there.
+
+Planned changes to the software items:
+
+| Item | Change |
+|---|---|
+| `internal/control` | New handlers for status, configuration view, remote AEs, allow-list, audit and log buffers, C-ECHO test, reload, licence, backup, study query, send, configuration edit and rollback. Shared helpers: action envelope (operator, reason, request ID), plan digest, identity check, redaction |
+| `platform/runtime` | Fixed-size buffers fed by the logger (one for audit records, one for other lines); readiness results and metric values offered to `internal/control` |
+| `cmd/libredcm` | Overlay file in the loading order (defaults, file, overlay, environment); the reloader gains "plan" (difference without applying) and is called by both SIGHUP and the API; backup directory setting |
+| `internal/gateway` | One query function shared by C-FIND and the study endpoint; the C-MOVE send path offered as a function to the send endpoint. No licensing dependency is added (DCM-SRS-058) |
+| `internal/licensing` | No behaviour change. Its existing functions are called by the control handlers, never by the gateway |
+
+Dependency rules that stay enforced: the gateway does not import licensing
+(`TestGatewayHasNoLicenseDependency`); the control package reaches the
+gateway only through small interfaces (as `Resolver` today), so the DIMSE
+services do not depend on the control package.
+
+```mermaid
+sequenceDiagram
+  participant WT as Libre WT
+  participant C as internal/control
+  participant R as reloader (cmd/libredcm)
+  participant G as gateway
+  WT->>C: POST /control/v1/config/plan (new allow-list)
+  C->>R: validate with the normal loader
+  R-->>C: difference, warnings
+  C-->>WT: plan, plan_digest, instance identity
+  Note over WT: administrator reads the plan and approves
+  WT->>C: POST /control/v1/config (plan_digest, confirm, operator, reason, request_id)
+  C->>C: identity check, rebuild plan, compare digest
+  C->>C: write audit record (before acting)
+  C->>R: keep previous overlay, write new overlay (atomic), reload
+  R->>G: SetAllowedAEs / SetRemoteAEs
+  alt reload fails
+    R-->>C: error
+    C->>R: put previous overlay back
+    C-->>WT: 422, running settings unchanged
+  else reload works
+    C-->>WT: 200, new config_digest
+  end
+```
+
 ## 6. SOUP items
 
 The full list with evaluation is `soup.md` (generated from `go.mod` and the

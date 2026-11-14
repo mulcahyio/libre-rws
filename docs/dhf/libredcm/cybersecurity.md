@@ -114,6 +114,27 @@ All threats with possible patient harm are carried into `risk-management.md`
 (HAZ-003, -004, -007, -008, -009, -012, -013, -014); the security risk is evaluated
 there with the common matrix.
 
+## 3a. Planned control API v1 extension: threats (Draft, issue #20, 2026-11-14)
+
+**DRAFT for approval.** The endpoints are not implemented yet
+(`control-api-v1.md`). Status of every row is **O** (open) until the
+implementing pull request adds the verification. Same scales as §3.
+
+| ID | STRIDE | Threat | Asset | E | S | Planned controls (Draft requirement / mechanism) | Planned verification | Status | Gap that stays | Risk file |
+|---|---|---|---|---|---|---|---|---|---|---|
+| TM-19 | I | Configuration endpoint returns secrets (S3 keys, database password, admin token, TLS key, licence key) | Credentials, then all data | M | S4 | Redaction from a list of safe settings, unknown settings hidden; DSN and URL reduced to host; error texts without secrets (DCM-SRS-082, -080) | Test that sets known secret values and searches every control response for them; test that a new unlisted setting is redacted | O | — | HAZ-009 |
+| TM-20 | I | Audit and log endpoints widen access to patient data | PHI | M | S3 | Same records as the log, no added fields; patient-ID omission honoured; fixed-size buffers; token required (DCM-SRS-084, -085) | Test with omission on: no Patient ID in the response; bounds test | O | Log lines hold what LibreDCM logs today (a conflict warning may name a Patient ID) | HAZ-009 |
+| TM-21 | T/E | Stolen admin token used to open the allow-list or redirect C-MOVE destinations | Archive integrity, PHI | M | S4 | Token required; only two settings editable; weakening changes need an acknowledged warning; audit record `SecurityAlert.configuration-changed`; previous version kept (DCM-SRS-093…095, -086) | Tests for refused keys, unacknowledged warnings, audit record content; mutation check of the plan and confirm guard | O | The token is one shared secret; no per-user authentication on LibreDCM; rotation guidance | HAZ-015, HAZ-007 |
+| TM-22 | I/E | Stolen admin token used to send studies out | PHI | M | S4 | Send only to configured destinations (no free address), so data can leave only towards systems the site configured; plan, confirm, audit (DCM-SRS-092) | Unknown destination refused; audit record test | O | An attacker who can also edit destinations (TM-21) can combine both; both steps are audited | HAZ-016 |
+| TM-23 | T | Path traversal or overwrite through the backup endpoint | Host files, index | L | S3 | No path in the request; directory from the node's configuration; name made by LibreDCM; exclusive create (DCM-SRS-090) | Negative tests: a `path` field is refused as unknown; an existing file is not overwritten | O | — | HAZ-001 |
+| TM-24 | D | Disk filled with backups; node loaded with queries, sends or log reads | Availability | M | S3 | Free-space check; one backup and one send at a time; bounded and paged results; timeouts (DCM-SRS-090, -096) | Bounds and concurrency tests | O | No automatic removal of old backups (deliberate) | HAZ-004 |
+| TM-25 | E | C-ECHO test used to scan the hospital network from the LibreDCM host (server-side request forgery) | Other hosts | M | S2 | Token required; DICOM association for Verification only; answer reduced to success or failed stage; timeout; audited with target (DCM-SRS-087). Libre WT lets only Admin enter a free address | Test that the response holds no peer bytes; audit test | O | A token holder can learn whether a DICOM port is open at an address | HAZ-012 |
+| TM-26 | S/R | Operator name in an action is false | Accountability | M | S2 | Operator and reason required; request ID; audit on both sides (DCM-SRS-086); Libre WT sends the logged-in user | Audit tests | O | LibreDCM cannot verify the name (shared token) | HAZ-008 |
+| TM-27 | T | Replay or double submit of an action (send twice, apply an old plan) | Data flow, configuration | M | S3 | Request ID remembered for 10 minutes; plan digest must match the present state (DCM-SRS-086, -092, -093) | Repeat-request test; changed-state test (409) | O | — | HAZ-015, HAZ-016 |
+| TM-28 | T | Forged or wrong licence installed through the API; licence key captured | Licence enforcement only | M | S1 | Signed licences (Ed25519) checked by the existing code; invalid licence refused and the old one kept; key never logged or returned in full; licensing cannot affect DICOM (DCM-SRS-089, -058) | Invalid-licence test; search of responses and logs for the key; `TestGatewayHasNoLicenseDependency` | O | — (commercial, not safety) | HAZ-010 |
+| TM-29 | T | Action reaches another node than the administrator meant (load balancer in front of the admin port, changed DNS, reused address) | Configuration of the wrong node | M | S3 | Node ID and AE title in every response; expected identity checked on every state change (DCM-SRS-097); guidance: connect Libre WT to each node's admin port directly, not through a load balancer | Mismatch test (409, nothing changed) | O | — | HAZ-015 |
+| TM-30 | I | Token and data in clear text between Libre WT and LibreDCM | Admin token, PHI | M | S4 | Admin HTTPS when a certificate is configured (DCM-SRS-042); Libre WT warns on plain HTTP to a non-loopback address (WT-SRS-036) | Existing `TestGenCert`; Libre WT test | O | HTTPS is optional; mutual TLS not available | HAZ-009 |
+
 ## 4. FDA security control categories (Appendix 1 of the 2026 guidance)
 
 | Category | LibreDCM today | Gap |

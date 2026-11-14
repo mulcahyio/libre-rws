@@ -14,6 +14,22 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **Design inputs for Libre WT 0.2 (documents only, no behaviour change;
+  issue #20).** Scope approved by Patrick Mulcahy on 2026-11-14: Libre WT is
+  to support all LibreDCM functions developed to date. Added as drafts for
+  approval: intended use, users and the use of each function
+  (`docs/dhf/librewt/intended-use.md` §3); requirements WT-SRS-013…036 and
+  DCM-SRS-080…097 (all `Draft` until implemented); the Libre WT 0.2
+  architecture with screens, action flow and multi-instance connections; the
+  LibreDCM control API v1 extension contract
+  (`docs/dhf/libredcm/control-api-v1.md`); the risk analysis of every new
+  function (WT-HAZ-05…17, new system hazards HAZ-015 remote configuration
+  change and HAZ-016 study sent wrongly); and the threat tables for the new
+  endpoints and pages (TM-19…30, WT-TM-09…19). Sixteen defaults chosen by
+  Hermes are listed as open decisions (`docs/dhf/librewt/architecture.md`
+  §8). Not offered by design: remote start/stop/restart, editing settings
+  that need a restart, certificate generation, a free send address, a
+  client-chosen backup path.
 - Release verification (`scripts/qms/release-verify.sh`) now also runs
   LibreDVT: its engine positive controls (forced to re-run, never taken from
   the build cache) and the bundled LibreDCM conformance plan against the

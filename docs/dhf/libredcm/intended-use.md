@@ -134,6 +134,10 @@ the installer and documentation design.
 | US-08 | Handle licence expiry (U1) | Ignoring warnings | HAZ-010 | Licence state never affects DICOM services (DCM-SRS-058); hourly reminders and blocked reloads until acknowledged (DCM-SRS-059–061) |
 | US-09 | Configure a modality to send (U2) | Wrong called AE, port or TLS setting | HAZ-001 (images stay on the modality) | Association is rejected visibly (DCM-SRS-014); troubleshooting table in INSTALL.md |
 | US-10 | Read audit records (U5) | Patient IDs disclosed in logs against site policy | HAZ-009 | Installer asks whether to include patient IDs (DCM-SRS-032) |
+| US-11 | Change C-MOVE destinations or the allow-list from Libre WT (U1). **Planned, issue #20** | Change made on the wrong node; allow-list emptied or a working modality removed; destination pointed at the wrong host | HAZ-015, HAZ-005, HAZ-007 | Planned: node identity check, plan with the exact difference, warnings that must be acknowledged, rollback (DCM-SRS-093…095, -097, Draft) |
+| US-12 | Send a study to another system from Libre WT (U1). **Planned** | Wrong study or patient chosen; wrong destination chosen | HAZ-016 | Planned: only configured destinations, Patient ID must match, plan shows patient, study and destination, confirmation (DCM-SRS-092, Draft) |
+| US-13 | Back up the index from Libre WT (U1). **Planned** | Believing the images are backed up too; filling the disk | HAZ-001, HAZ-004 | Planned: note in every response that images are not included; free-space check; no overwrite (DCM-SRS-090, Draft) |
+| US-14 | Install or activate a licence from Libre WT (U1). **Planned** | Installing a licence for another machine; expecting DICOM to stop | HAZ-010 | Planned: invalid licence refused and the old one kept; licence state never affects DICOM (DCM-SRS-089, -058) |
 
 ### 6.2 Reasonably foreseeable misuse (ISO 14971 §5.2)
 
@@ -174,6 +178,7 @@ requirements on to tests.
 | UN-15 | I know exactly which version (and later, which UDI) is running | U1, U5 | DCM-SRS-057 |
 | UN-16 | Modality and viewer engineers can tell what LibreDCM supports before connecting | U2 | DICOM Conformance Statement (planned, blocked on the UID root) |
 | UN-17 | A study never silently changes patient; images that contradict the stored patient are held for me to review and correct deliberately, with a record of what was changed (added 2026-11-10, issue #14) | U1, U4, U5 | DCM-SRS-070, -071, -072, -073, -074, -075, -076, -077, -078, -079 |
+| UN-18 | I can watch and administer LibreDCM from the Libre WT console (status, settings, connectivity tests, licence, backup, finding and sending a study) without logging in to the host, and the console can't break image traffic, send images to the wrong place or show secrets (added 2026-11-14, issue #20; requirements are Draft) | U1, U5 | DCM-SRS-080, -081, -082, -083, -084, -085, -086, -087, -088, -089, -090, -091, -092, -093, -094, -095, -096, -097 |
 
 Requirements that serve no listed user need: none (checked 2026-11-10; see §9).
 
