@@ -161,6 +161,18 @@ Health endpoints: `/readyz`, `/healthz` (open), `/metrics`, `/version` (need
 the admin token) on `127.0.0.1:8081`, over HTTPS when TLS is on. The
 container restarts on its own after a crash or a reboot.
 
+**Control API (for Libre WT):** with the admin token, `/control/v1` on the
+same port shows the node's status and counters (`/control/v1/status`), the
+running settings with every secret hidden (`/control/v1/config`), the remote
+AEs and the allow-list in force, and the most recent audit records and log
+lines held in memory (`/control/v1/audit`, `/control/v1/logs`). These views
+only read. The in-memory records are lost at restart; the container log stays
+the full record. Example:
+
+```powershell
+curl.exe -s -H "Authorization: Bearer $env:LIBRE_DCM_ADMIN_TOKEN" http://127.0.0.1:8081/control/v1/status
+```
+
 ## Upgrade
 
 Update the source (`git pull`, or unpack the new release over the old one),

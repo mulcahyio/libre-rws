@@ -9,7 +9,8 @@
 | Related | `architecture.md` §5.6, `risk-management.md` §2a, `cybersecurity.md` §3a, `../librewt/architecture.md` |
 
 This is the interface contract between LibreDCM and Libre WT. It is a design
-input: the endpoints below marked **planned** do not exist yet. Each becomes
+input: the endpoints below marked **planned** do not exist yet; those
+marked **implemented** are in the code. Each becomes
 real in the pull request that turns its requirement from `Draft` to `Active`.
 
 Words used: **shall** is a requirement (it has an ID in the SRS). **Client**
@@ -46,7 +47,7 @@ mismatch), `422` request understood but not allowed, `423` blocked by the
 licence acknowledgement rule (DCM-SRS-060), `429` busy (another action of
 this kind is running), `500` internal error.
 
-### 2.1 Discovery (planned)
+### 2.1 Discovery (implemented, card WT-0.2/2)
 
 `GET /control/v1`
 
@@ -119,7 +120,7 @@ bounded and paged. At most one backup and one send run at a time per node; a
 second request gets `429`. Ring buffers have fixed sizes. An action has a
 timeout and is cancelled when it expires.
 
-## 3. Read-only endpoints (planned, card WT-0.2/2)
+## 3. Read-only endpoints (implemented, card WT-0.2/2)
 
 ### 3.1 Status: `GET /control/v1/status` (DCM-SRS-081)
 

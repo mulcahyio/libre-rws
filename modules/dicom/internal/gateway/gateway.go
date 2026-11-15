@@ -160,6 +160,17 @@ func (g *Gateway) SetRemoteAEs(m map[string]RemoteAE) {
 	g.mu.Unlock()
 }
 
+// RemoteAEs returns a copy of the C-MOVE destinations that are in force now.
+func (g *Gateway) RemoteAEs() map[string]RemoteAE {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	cp := make(map[string]RemoteAE, len(g.remoteAEs))
+	for k, v := range g.remoteAEs {
+		cp[k] = v
+	}
+	return cp
+}
+
 func (g *Gateway) remoteAE(name string) (RemoteAE, bool) {
 	g.mu.RLock()
 	defer g.mu.RUnlock()

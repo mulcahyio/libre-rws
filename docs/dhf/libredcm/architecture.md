@@ -261,6 +261,31 @@ sequenceDiagram
   end
 ```
 
+#### 5.6.1 Read-only endpoints (implemented, card WT-0.2/2)
+
+**DRAFT for approval (2026-11-14).** DCM-SRS-080…085 are `Active`. What
+the code does now:
+
+| Item | Change made |
+|---|---|
+| `internal/control/readonly.go` | `GET /control/v1`, `/status`, `/config`, `/remote-aes`, `/allow-list`, `/audit`, `/logs`. Every response holds the `instance` block (node ID, AE title, version, SHA-256 over the live settings in force). None of them changes state or writes a log line |
+| `internal/control/redact.go` | Two independent secret controls. (1) Settings are shown from an allow-list of safe keys; any other key is returned as `redacted` with only `set: true/false`; URL and DSN settings are reduced to scheme, host and path. (2) Every response body (also errors and the conflict endpoints) passes a filter that replaces known secret values, URL user info and `password=`/`token=`-style pairs before it is written. If the filter cannot read the body, a plain `500` is sent instead (fail closed) |
+| `internal/control/control.go` | One `writeJSON` for every endpoint, so no response can skip the filter |
+| `platform/runtime/logring.go` | `LogBuffer`: fixed-size rings (2000 log lines, 1000 audit records, 8 KiB per line). The ring handler writes the real log first and keeps a copy; the ring can never stop or change a log line. Records with `audit=true` go to the audit ring only |
+| `platform/runtime/runtime.go` | Exposes `Logs`, `Audit`, `Readiness`, `Started`, `AdminTLS`, `AdminSecrets` (token values, so the filter can remove them) and `AdminHandler` (for tests) |
+| `platform/config/describe.go` | `Describe` lists every setting with its value and source (default, file, environment); `FileKeys` reads which keys the file sets. Values include secrets; only `internal/control` decides what is shown |
+| `internal/gateway` | `RemoteAEs()` and `AllowedAEs()` return copies of the settings in force (read lock). No licensing dependency |
+| `internal/licensing` | `Summary()`: licence state without any key |
+| `cmd/libredcm` | `run` split into `build` (wiring, no listener) and `Run`, so a test exercises the real wiring |
+
+The audit ring holds the records the gateway writes, so it honours
+`audit_omit_patient_id` (DCM-SRS-032) by construction. With
+`audit_log_off` the gateway writes none and the response says so.
+
+Counters are read from the node's Prometheus registry at request time;
+`conflicts_open` is counted in the index. If a value cannot be read, it is
+left out and `counters_incomplete: true` is set.
+
 ## 6. SOUP items
 
 The full list with evaluation is `soup.md` (generated from `go.mod` and the
@@ -318,6 +343,12 @@ retention cover (HAZ-004).
   `get_max_bytes` (default 1 GiB).
 - Configuration that can change at run time (remote AEs, allow-list) is
   guarded by a read/write mutex.
+- Control API rings (DCM-SRS-084, -085, -096): fixed sizes (2000 log lines,
+  1000 audit records, 8 KiB per stored line); a request returns at most 1000
+  lines or 500 records. A select holds the ring lock while it scans at most
+  2000 records in memory (no I/O under the lock), so a log write waits at
+  most that long; the real log is written before the ring is touched.
+  Readiness checks in `GET /control/v1/status` run with a 3 s timeout.
 
 ## 10. Verification of this architecture (IEC 62304 §5.3.6)
 

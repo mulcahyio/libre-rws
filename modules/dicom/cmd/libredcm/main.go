@@ -155,12 +155,46 @@ func backup(cfgPath, dest string) error {
 	return idx.Backup(ctx, dest)
 }
 
+// app is a built, not yet running, node: the chassis, its components and
+// what must be closed when it stops.
+type app struct {
+	rt         *runtime.Runtime
+	gw         *gateway.Gateway
+	components []runtime.Component
+	closers    []func()
+}
+
+func (a *app) close() {
+	for i := len(a.closers) - 1; i >= 0; i-- {
+		a.closers[i]()
+	}
+}
+
 func run(cfgPath string) error {
-	cfg, err := loadConfig(cfgPath)
+	a, err := build(cfgPath)
+	if a != nil {
+		defer a.close()
+	}
 	if err != nil {
 		return err
 	}
+	return a.rt.Run(context.Background(), a.components...)
+}
+
+// build loads the configuration and wires the node together without
+// starting any listener (tests use it to exercise the real wiring).
+func build(cfgPath string) (*app, error) {
+	cfg, err := loadConfig(cfgPath)
+	if err != nil {
+		return nil, err
+	}
+	fileKeys, err := config.FileKeys(cfgPath)
+	if err != nil {
+		return nil, err
+	}
+	a := &app{}
 	rt := runtime.New("LibreDCM", version, cfg.Admin)
+	a.rt = rt
 	log := rt.Logger
 	ctx := context.Background()
 
@@ -174,7 +208,7 @@ func run(cfgPath string) error {
 		err = fmt.Errorf("storage driver %q not supported (fs, s3)", cfg.Storage.Driver)
 	}
 	if err != nil {
-		return err
+		return a, err
 	}
 
 	if cfg.Index.Driver == "sqlite" {
@@ -184,27 +218,41 @@ func run(cfgPath string) error {
 	}
 	idx, err := index.Open(ctx, cfg.Index.Driver, cfg.Index.DSN)
 	if err != nil {
-		return err
+		return a, err
 	}
-	defer idx.Close()
+	a.closers = append(a.closers, func() { _ = idx.Close() })
 
 	pub, err := events.New(ctx, cfg.Events, log)
 	if err != nil {
-		return err
+		return a, err
 	}
-	defer pub.Close()
+	a.closers = append(a.closers, func() { _ = pub.Close() })
 
 	rt.AddReadinessCheck("storage", blobs.Check)
 	rt.AddReadinessCheck("index", idx.Ping)
 	rt.AddReadinessCheck("events", pub.Check)
 
 	gw := gateway.New(cfg.DICOM, rt.NodeID, log, rt.Registry, blobs, idx, pub)
-	// Control API for Libre WT (DCM-SRS-077); refused unless an admin token is set.
-	(&control.API{Index: idx, Resolver: gw}).Register(rt)
+	a.gw = gw
 	lic, err := licensing.New(cfg.License, version, parseBuildDate(), log, rt.Registry)
 	if err != nil {
-		return fmt.Errorf("license: %w", err)
+		return a, fmt.Errorf("license: %w", err)
 	}
+	// Control API for Libre WT (DCM-SRS-077, -080…085); refused unless an
+	// admin token is set. It reads the licence state but lives outside the
+	// gateway: licensing never touches DICOM services (DCM-SRS-058).
+	settings := config.Describe(&cfg, fileKeys)
+	(&control.API{
+		Index: idx, Resolver: gw, Live: gw,
+		Node: control.Node{ID: rt.NodeID, AETitle: cfg.DICOM.AETitle, Version: version, Started: rt.Started(),
+			DICOMListen: cfg.DICOM.Listen, DICOMTLS: cfg.DICOM.TLSCertFile != "", AdminTLS: rt.AdminTLS(),
+			Storage: cfg.Storage.Driver, Index: cfg.Index.Driver, Events: cfg.Events.Driver,
+			AuditLogOff: cfg.DICOM.AuditLogOff},
+		Ready: rt.Readiness, Metrics: rt.Registry, License: lic.Summary,
+		Settings: settings, RemoteAEEnv: remoteAEsFromEnv(),
+		Secrets: append(control.SecretValues(settings), rt.AdminSecrets()...),
+		Logs:    rt.Logs, Audit: rt.Audit,
+	}).Register(rt)
 	// Licensing never touches the DICOM gateway (DCM-SRS-058). An unlicensed,
 	// unacknowledged node only blocks configuration reloads (DCM-SRS-060).
 	rl := &reloader{path: cfgPath, gw: gw, log: log}
@@ -225,7 +273,23 @@ func run(cfgPath string) error {
 	}
 	log.Info("LibreDCM starting", "version", version,
 		"storage", cfg.Storage.Driver, "index", cfg.Index.Driver, "events", cfg.Events.Driver)
-	return rt.Run(ctx, components...)
+	a.components = components
+	return a, nil
+}
+
+// remoteAEsFromEnv names the destinations that LIBRE_DCM_REMOTE_AES (or its
+// old name) supplies. The environment is fixed while the process runs, so
+// this also holds after a reload.
+func remoteAEsFromEnv() map[string]bool {
+	out := map[string]bool{}
+	if v := config.Getenv("LIBRE_DCM_REMOTE_AES", "RWS_DICOM_REMOTE_AES"); v != "" {
+		if aes, err := parseRemoteAEs(v); err == nil {
+			for name := range aes {
+				out[name] = true
+			}
+		}
+	}
+	return out
 }
 
 // probe lets distroless images (no curl/wget) run a container health check.
