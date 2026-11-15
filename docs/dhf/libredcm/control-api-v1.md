@@ -5,7 +5,7 @@
 | Document | DHF-DCM-CTRL |
 | Status | **DRAFT for approval** (2026-11-14, written by Hermes/Claude for human review; scope approved by Patrick Mulcahy on 2026-11-14, issue #20) |
 | Software item | LibreDCM, package `internal/control` (served on the admin listener by `platform/runtime`) |
-| Requirements | DCM-SRS-077 (existing, Active), DCM-SRS-080…097 (Draft) in `SRS.md` §7 |
+| Requirements | DCM-SRS-077 (existing, Active); DCM-SRS-080…090 and -097 (Active); DCM-SRS-091…096 (Draft) in `SRS.md` §7 |
 | Related | `architecture.md` §5.6, `risk-management.md` §2a, `cybersecurity.md` §3a, `../librewt/architecture.md` |
 
 This is the interface contract between LibreDCM and Libre WT. It is a design
@@ -42,10 +42,32 @@ means Libre WT or any other holder of the admin token.
 | Discovery | `GET /control/v1` lists the features this LibreDCM supports, so an older LibreDCM and a newer Libre WT can work together |
 
 Status codes: `200` done, `400` malformed request, `401` no or wrong token,
-`404` unknown item, `409` state changed since the plan (or identity
-mismatch), `422` request understood but not allowed, `423` blocked by the
+`404` unknown item, `409` state changed since the plan, identity mismatch,
+or a request ID that is still running or was used for another request,
+`422` request understood but not allowed, `423` blocked by the
 licence acknowledgement rule (DCM-SRS-060), `429` busy (another action of
 this kind is running), `500` internal error.
+
+Machine codes used by the action endpoints (the `code` field):
+
+| Code | Status | Meaning |
+|---|---|---|
+| `invalid_body` | 400 | Not JSON, unknown field, wrong type, text after the object, or too large |
+| `operator_required`, `operator_invalid`, `reason_required`, `reason_invalid`, `request_id_invalid` | 422 | Action envelope (§2.3) |
+| `instance_mismatch` | 409 | §2.2 |
+| `request_in_progress`, `request_id_reused` | 409 | §2.3 |
+| `busy` | 429 | Another action of this kind runs, or too many recent actions |
+| `audit_unavailable` | 500 | The audit record could not be written; the action was not done |
+| `unknown_remote_ae` | 404 | C-ECHO test |
+| `invalid_target` | 422 | C-ECHO test |
+| `not_confirmed`, `plan_digest_required`, `warning_not_acknowledged` | 422 | Reload |
+| `plan_changed` | 409 | Reload |
+| `invalid_config` | 422 | Reload: the configuration does not load or validate |
+| `license_ack_required` | 423 | Reload |
+| `license_not_enforced`, `license_key_required`, `license_key_invalid`, `license_site_invalid`, `license_required`, `license_invalid`, `activation_failed` | 422 | Licence |
+| `backup_not_configured`, `backup_unsupported`, `insufficient_space`, `space_check_failed` | 422 | Backup |
+| `backup_exists` | 409 | Backup |
+| `backup_failed` | 500 | Backup |
 
 ### 2.1 Discovery (implemented, card WT-0.2/2)
 
@@ -59,6 +81,9 @@ this kind is running), `500` internal error.
                "studies", "send", "config-edit"]
 }
 ```
+
+A node lists a feature only when it serves it. Today the list ends at
+`backup`; `studies`, `send` and `config-edit` come with card WT-0.2/4.
 
 ### 2.2 Instance identity (DCM-SRS-097)
 
@@ -74,9 +99,11 @@ running now (remote AEs and allow-list, in a fixed order). Two nodes with the
 same digest run the same live settings.
 
 Every `POST` may carry `expect_node_id` and `expect_ae_title`. When either is
-present and does not match this node, LibreDCM refuses with `409` and code
-`instance_mismatch`, and changes nothing. This is the control for "wrong
-instance targeted" (HAZ-015, WT-HAZ-05).
+present and does not match this node exactly, LibreDCM refuses with `409` and
+code `instance_mismatch`, and changes nothing. This is the control for "wrong
+instance targeted" (HAZ-015, WT-HAZ-05). **Implemented** (card WT-0.2/3) for
+every action and plan endpoint of §4 and for the two conflict `POST`
+endpoints of v0.1, which accept the two fields as an addition.
 
 ### 2.3 Action envelope (DCM-SRS-086)
 
@@ -84,13 +111,42 @@ Every `POST` in §4 and §5 carries these fields next to its own:
 
 | Field | Required | Meaning |
 |---|---|---|
-| `operator` | yes | Name of the person, as logged in to Libre WT. Empty: `422` |
-| `reason` | yes | Free text, 1 to 500 characters. Empty: `422` |
-| `request_id` | yes | Random ID made by the client, 16 to 64 characters. The same `request_id` sent again within 10 minutes returns the first result and does nothing again |
+| `operator` | yes | Name of the person, as logged in to Libre WT, 1 to 128 characters. Empty: `422`. Control characters are replaced by spaces |
+| `reason` | yes | Free text, 1 to 500 characters. Empty: `422`. Control characters are replaced by spaces |
+| `request_id` | yes | Random ID made by the client, 16 to 64 characters from `A-Z a-z 0-9 . _ -`. The same `request_id` sent again within 10 minutes returns the first result and does nothing again |
 | `expect_node_id`, `expect_ae_title` | no | See §2.2 |
 
-Every action writes one audit record (§6), also when it is refused or fails.
-If the audit record cannot be written, the action is not done.
+**Implemented** (card WT-0.2/3). Details:
+
+- **Repeat.** A repeated request gets the stored status and body of the
+  first one, with the response header `Idempotent-Replay: true`. This holds
+  for failures too: the first result is the result. While the first request
+  still runs, the repeat gets `409`, code `request_in_progress`. The same
+  `request_id` with another endpoint or another body gets `409`, code
+  `request_id_reused`. Exception: the answer of `license/request` holds a
+  licence key inside its text and is not kept; a repeat makes a new request
+  text (it changes nothing on the node).
+- **Bounds.** A node remembers at most 1000 request IDs. When all 1000 are
+  still inside their 10 minutes, a new action gets `429`; no result is
+  forgotten early. The table is in memory: it is empty after a restart.
+- **Audit.** Each action writes two audit records (§6): one before it
+  starts (`phase: start`, `outcome: pending`) and one with the outcome
+  (`phase: result`). If the first cannot be written, the action is not done
+  (`500`, code `audit_unavailable`) and the request may be sent again. A
+  request refused before it starts (bad envelope, wrong node, reused ID,
+  busy) writes one `SecurityAlert.control-refused` record. These records
+  are written at every log level, also with `audit_log_off` (that setting
+  is about DICOM traffic records).
+- **Unexpected failure.** If an action stops with an internal fault, the
+  answer is `500`, code `internal`, without the fault text. The outcome
+  record is written with `outcome: serious-failure`. The result is kept like
+  any other, so the same `request_id` does not run the action again.
+- **The action outlives the request.** When the client goes away, the action
+  still finishes and its result is kept for the repeat.
+- **Plan endpoints** (`…/plan`) change nothing. They need no operator,
+  reason or request ID and write no audit record. They accept those fields,
+  so a client may send one body shape, and they check `expect_node_id` and
+  `expect_ae_title`.
 
 The operator name is asserted by the client. LibreDCM cannot check it: there
 is one shared admin token. This is a known residual risk (see
@@ -207,46 +263,94 @@ Query: `level` (minimum: `debug`, `info`, `warn`, `error`), `since`, `limit`
 records are left out (use §3.4). Lines are returned as written to the log.
 LibreDCM does not log secrets; the endpoint adds no new data.
 
-## 4. Actions (planned, card WT-0.2/3)
+## 4. Actions (implemented, card WT-0.2/3)
 
-All use the action envelope (§2.3).
+All use the action envelope (§2.3). Every response holds the `instance`
+block (§2.2).
 
 ### 4.1 C-ECHO test: `POST /control/v1/echo` (DCM-SRS-087)
 
 Request: `{"remote_ae": "VIEWER1"}` or `{"host": "10.0.0.20", "port": 104, "ae_title": "VIEWER1", "tls": false}`, plus the envelope.
 
-Response: `{"ok": true, "duration_ms": 42, "target": "10.0.0.20:104", "called_ae": "VIEWER1"}` or `{"ok": false, "stage": "association", "error": "connection refused"}`.
+Response: `{"ok": true, "duration_ms": 42, "target": "10.0.0.20:104", "called_ae": "VIEWER1", "calling_ae": "LIBREDCM", "tls": false, "source": "configured"}` or `{"ok": false, "stage": "connect", "error": "connection refused", …}`.
 
-Timeout 15 seconds. An unknown `remote_ae` name is `404`. The test opens an
-association for the Verification SOP class only and sends no patient data.
-The response gives the result and the stage that failed, not raw bytes from
-the peer.
+- A test that ran and failed is a result: status `200` with `ok: false`.
+- `stage` is `connect` (TCP or TLS), `association` (DICOM negotiation) or
+  `echo` (the C-ECHO exchange). `error` is one of a fixed set of short
+  texts (for example "connection refused", "no answer (timed out)",
+  "association rejected or aborted by the peer"). The peer's own bytes and
+  the operating system's error text are never returned or audited.
+- The calling AE title is this node's AE title: the test shows what the
+  peer will see on a C-MOVE.
+- Timeout 15 seconds. At most two tests run at once on a node (`429`).
+- An unknown `remote_ae` name is `404`, and no connection is made.
+- Give either `remote_ae` or `host`, `port`, `ae_title` (and `tls`), not
+  both (`422`, `invalid_target`). `host` is a host name or IP address
+  (letters, digits, `.`, `-`, `_`, or an IP literal; no port, path or
+  user); `port` 1 to 65535; `ae_title` 1 to 16 printable characters.
+- `tls` applies to the free target only (configured remote AEs have no TLS
+  setting today). The peer certificate is not checked: the test shows that
+  the peer can be reached, not who it is. The response says
+  `"tls_verified": false`.
+- The test opens an association for the Verification SOP class only and
+  sends no data set, so no patient data.
 
 ### 4.2 Reload: `POST /control/v1/reload/plan` and `POST /control/v1/reload` (DCM-SRS-088)
 
 Same code path as SIGHUP (DCM-SRS-016), including the licence
-acknowledgement block (DCM-SRS-060, answered as `423`). The plan shows the
-difference between the running live settings and what a reload would load
-(added, removed and changed remote AEs and allow-list rules). A
-configuration that fails to load or validate returns `422` with the
-validation error and leaves the running settings unchanged. A reload that
-changes nothing answers `200` with `"changed": false`.
+acknowledgement block (DCM-SRS-060, answered as `423` by plan and by
+reload). There is one reloader in the node; SIGHUP and this endpoint both
+call it, one at a time.
+
+Plan response:
+
+```json
+{"plan": {
+  "changed": true,
+  "remote_aes": {"added": [{"name": "VIEWER2", "host": "10.1.2.3", "port": 104, "ae_title": "VIEWER2", "source": "file"}],
+                 "removed": [], "changed": [{"name": "VIEWER1", "from": {"…": "…"}, "to": {"…": "…"}}]},
+  "allow_list": {"added": ["US1@192.168.7.0/24"], "removed": [], "enforced_before": true, "enforced_after": true},
+  "warnings": [{"code": "remote_ae_retargeted", "message": "…", "must_acknowledge": true}],
+  "plan_digest": "sha256:…"}}
+```
+
+- `plan_digest` is a SHA-256 over the settings that run now and the
+  settings the file would load. It changes when either changes.
+- Reload request: the envelope plus `"confirm": true`, `"plan_digest"` and,
+  when the plan has warnings, `"acknowledge_warnings": ["code", …]`.
+  Without `confirm`: `422`. Without the digest: `422`. Digest of another
+  state: `409`, `plan_changed`. Load, digest check and apply are one step
+  inside the reloader: no other reload can come in between.
+- Warnings that must be acknowledged (DCM-SRS-095, the part built so far):
+  `allow_list_emptied`, `remote_ae_removed`, `remote_ae_retargeted`. A
+  SIGHUP on the host is not asked for an acknowledgement: the person at
+  the host edited the file and sent the signal.
+- A configuration that fails to load or validate returns `422`,
+  `invalid_config`, with the loader's error text, from plan and from
+  reload, and leaves the running settings unchanged.
+- A reload that changes nothing answers `200` with `"changed": false`.
+- Reload response: `applied`, `changed`, the plan, `config_digest_before`
+  and `config_digest_after`.
 
 ### 4.3 Licence (DCM-SRS-089)
 
 | Endpoint | Does | Notes |
 |---|---|---|
-| `GET /control/v1/license` | Status: state, message, machine fingerprint, customer, term, key (last four characters), acknowledgement (who, when, valid until) | Source builds answer `{"enforced": false}` |
-| `POST /control/v1/license/ack` | Records the acknowledgement by `operator` | Same effect as `-license-ack NAME` (DCM-SRS-061) |
-| `POST /control/v1/license/request` | Returns an activation request text for offline activation | Body: optional `key`, `site` |
-| `POST /control/v1/license/install` | Installs a licence file sent as text in `license` | Signature checked; an invalid, expired or wrong-machine licence is refused with `422` and the installed licence stays |
-| `POST /control/v1/license/activate` | Online activation with `key`, `site` | 30-second timeout |
+| `GET /control/v1/license` | Status under `license`: `enforced`, `state`, `licensed`, `ack_required`, `message`, `days_left`, `machine_fingerprint`, `customer`, `site`, `term`, `expires`, `key_last4`, `acknowledgement` (`by`, `at`, `valid_until`, `valid`) | Source builds answer `{"enforced": false}` |
+| `POST /control/v1/license/ack` | Records the acknowledgement by `operator` | Same effect as `-license-ack NAME` (DCM-SRS-061); the node reports it at once |
+| `POST /control/v1/license/request` | Returns an activation request text for offline activation in `request` | Body: optional `key`, `site`. The text holds the key in its encoded block (the licence portal needs it); the answer is not kept for a repeat |
+| `POST /control/v1/license/install` | Installs a licence file sent as text in `license` (body limit 256 KiB) | Signature, product, machine and dates checked by the existing code; a refused licence answers `422`, `license_invalid`, and the installed licence file is not touched |
+| `POST /control/v1/license/activate` | Online activation with `key`, `site` | 30-second timeout; one at a time (`429`); a refusal or an unreachable server answers `422`, `activation_failed`, and nothing changes |
 
 A licence key in a request is never logged, never written to an audit
-record and never echoed back in full. These endpoints reuse the existing
-licensing code. They live outside the DIMSE gateway: no licence endpoint and
-no licence state can refuse, delay or interrupt DICOM services (DCM-SRS-058,
-`TestGatewayHasNoLicenseDependency` must keep passing).
+record and never echoed back in full (`key_last4` only; a key that an error
+text of the licence server repeats is removed from the response and the
+audit record). The licence file content is never returned. These endpoints
+call the existing licensing code. They live outside the DIMSE gateway: no
+licence endpoint and no licence state can refuse, delay or interrupt DICOM
+services (DCM-SRS-058). `TestGatewayHasNoLicenseDependency` now also refuses
+an import of the control package by the gateway. In a source build every
+licence action answers `422`, `license_not_enforced`.
 
 ### 4.4 Backup: `GET /control/v1/backups` and `POST /control/v1/backup` (DCM-SRS-090)
 
@@ -254,19 +358,28 @@ no licence state can refuse, delay or interrupt DICOM services (DCM-SRS-058,
 
 - LibreDCM writes the snapshot into the directory set in its own
   configuration (`control.backup_dir`). Not configured: `422`.
+  The setting is `control.backup_dir` in the file or
+  `LIBRE_DCM_CONTROL_BACKUP_DIR`. It needs a restart to change.
 - LibreDCM makes the file name: `index-<node_id>-<UTC yyyymmddThhmmssZ>.db`.
-  The file is created exclusively: an existing file is never overwritten.
+  In the node ID every character other than a letter, a digit, `_` and `-`
+  becomes `_`, so the name can never hold a path element.
+  The file is created exclusively (`O_EXCL`, mode `0600`): an existing file
+  or symbolic link with that name is never written to or replaced (`409`,
+  `backup_exists`).
 - SQLite index only. With PostgreSQL the answer is `422` with a pointer to
   the database's own tools.
 - Before starting, LibreDCM checks free space in the directory (at least the
-  current index size plus 10 %). Too little: `422`, nothing written.
-- One backup at a time (`429`).
-- Response: `{"file": "index-dcm-1-20261114T150405Z.db", "bytes": 1048576, "sha256": "…", "duration_ms": 900}`.
+  current index size plus 10 %). Too little, or not readable: `422`,
+  nothing written.
+- One backup at a time (`429`). Timeout 10 minutes. A snapshot that fails or
+  does not finish leaves no file.
+- Response: `{"file": "index-dcm-1-20261114T150405Z.db", "bytes": 1048576, "sha256": "…", "duration_ms": 900, "note": "…"}`.
+  The checksum is computed from the finished file.
 
-`GET /control/v1/backups` lists the files in that directory that match the
-name pattern: name, size, time. No download and no delete endpoint exist: a
-backup holds patient data, and removing backups is a deliberate act on the
-host.
+`GET /control/v1/backups` lists the regular files in that directory that
+match the name pattern, newest first, at most 500: name, size, time. No
+download and no delete endpoint exist: a backup holds patient data, and
+removing backups is a deliberate act on the host.
 
 The snapshot covers the index. Images must be backed up by the site
 (limitation L5 in `intended-use.md`). The response repeats this note.
@@ -358,11 +471,15 @@ All are structured log lines with `audit=true`, like the existing ones.
 | `PatientRecord.conflict-resolved` | conflict resolve (existing) | action, conflict |
 | `Query` | `GET /studies` | level, keys (values honour patient-ID omission), rows |
 | `DICOMInstancesTransferred.sent` | send | destination, study, patient ID, counts |
-| `SecurityAlert.configuration-changed` | config apply, rollback, reload | difference, digests before and after, acknowledged warnings |
-| `SecurityAlert.license-action` | licence ack, install, activate, request | action, licence state before and after (never the key) |
+| `SecurityAlert.configuration-changed` | config apply, rollback, reload | difference (names added, removed, changed), digests before and after, acknowledged warnings |
+| `SecurityAlert.license-action` | licence ack, install, activate, request | `license_action`, licence state before and after, `key_last4` (never the key) |
 | `SecurityAlert.backup` | backup | file name, bytes, checksum |
-| `NetworkEntry.verification` | C-ECHO test | target, result |
-| `SecurityAlert.control-refused` | any refused `POST` (identity mismatch, plan changed, missing operator or reason, unacknowledged warning) | endpoint, code |
+| `NetworkEntry.verification` | C-ECHO test | target, called AE, source (configured or ad-hoc), stage, result |
+| `SecurityAlert.control-refused` | any refused `POST` (identity mismatch, plan changed, missing operator or reason, unacknowledged warning, reused request ID, busy, malformed body) | endpoint, code |
+
+Every record of an action endpoint also carries `component: control`,
+`endpoint`, `phase` (`start` or `result`) and `action`. Text values pass
+the secret filter of §3.2 before they are written.
 
 Reads of status, configuration, audit and logs are not audited by LibreDCM
 (they are frequent and hold no more than the token holder can already read).
@@ -383,7 +500,11 @@ Libre WT audits who opened which page.
 ## 8. Open decisions for Patrick
 
 Listed with the Libre WT decisions in `../librewt/architecture.md` §8
-(D1…D16). Those that shape this API: D3 (editable settings), D4 (no remote
+(D1…D22). Those that shape this API: D3 (editable settings), D4 (no remote
 restart), D6 (send only to configured destinations; ad hoc C-ECHO target),
 D8 (backup directory, no download), D9 (in-memory rings), D10 (shared token,
 operator asserted), D12 (plan digest and request ID), D15 (no `-gen-cert`).
+Added while building the actions (card WT-0.2/3): D17 (reload needs a plan),
+D18 (two audit records per action), D19 (plan endpoints need no operator),
+D20 (backup directory off by default), D21 (C-ECHO TLS without certificate
+check), D22 (licence acknowledgement through the API).

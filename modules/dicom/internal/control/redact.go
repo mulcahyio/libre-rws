@@ -83,6 +83,8 @@ var settingClass = map[string]string{
 	"events.max_age_days":    classPlain,
 	"events.legacy_subjects": classPlain,
 
+	"control.backup_dir": classPlain,
+
 	"license.file":     classPlain,
 	"license.server":   classURL,
 	"license.data_dir": classPlain,

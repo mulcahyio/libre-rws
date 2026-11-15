@@ -14,6 +14,49 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **LibreDCM control API: actions for Libre WT (card WT-0.2/3, issue #20;
+  DCM-SRS-086…090 and -097 now `Active`).** New endpoints on the admin
+  listener, all behind the admin token:
+  - `POST /control/v1/echo`: C-ECHO test to a configured remote AE by name,
+    or to a given host, port and AE title. 15 s limit, two tests at a time.
+    The answer says success or the stage that failed (connect, association,
+    echo) and the duration. It never carries text from the peer or the
+    operating system. Only the Verification class is proposed; no patient
+    data is sent.
+  - `POST /control/v1/reload/plan` and `POST /control/v1/reload`: the reload
+    goes through the same reloader as `SIGHUP`, one at a time, including the
+    licence acknowledgement block (answer `423`). The plan shows what would
+    change. The reload needs `confirm` and the digest of an unchanged plan.
+    A plan that empties the allow-list or removes or retargets a destination
+    carries a warning that must be acknowledged by its code. A configuration
+    that fails to load is reported and changes nothing.
+  - `GET /control/v1/license`, `POST /control/v1/license/ack`, `/request`,
+    `/install`, `/activate`: the same functions as the `-license-*` flags,
+    through the existing licensing code. An invalid licence is refused and
+    the installed one stays. A licence key is shown only by its last four
+    characters and is never logged or audited. A source build says that no
+    licence is needed and refuses the licence actions. Licensing still
+    cannot reach the DICOM gateway: the architecture test now also forbids
+    the gateway to import the control package.
+  - `POST /control/v1/backup` and `GET /control/v1/backups`: online snapshot
+    of the SQLite index into one directory set on the node
+    (`control.backup_dir`, `LIBRE_DCM_CONTROL_BACKUP_DIR`; empty = off, the
+    default). The request has no path or file name field. LibreDCM makes the
+    name (`index-<node>-<UTC time>.db`), creates the file exclusively (no
+    file is ever replaced), mode 0600, and returns name, size and SHA-256.
+    Refused when free space is below the index size plus 10 % or cannot be
+    read, when another backup runs, or when the index is PostgreSQL. No
+    endpoint downloads or deletes a snapshot.
+
+  Every action needs `operator`, `reason` and `request_id`. It writes one
+  audit record before it starts (no record, no action) and one with the
+  outcome; a refused request writes a refusal record. These records are
+  written at every log level. A `request_id` sent again within 10 minutes
+  returns the first result and does nothing twice; the same ID for another
+  request is refused. Every `POST`, including the two conflict endpoints of
+  0.1, accepts `expect_node_id` and `expect_ae_title` and answers `409`
+  without any change when they name another node. No change to DICOM
+  services. No new dependency.
 - **LibreDCM control API: read-only views for Libre WT (card WT-0.2/2,
   issue #20; DCM-SRS-080…085 now `Active`).** New endpoints on the admin
   listener, all behind the admin token: `GET /control/v1` (features),

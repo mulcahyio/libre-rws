@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"io"
 	"log/slog"
 	"os"
@@ -77,7 +78,7 @@ func TestReloadBlockedUntilLicenseAcknowledged(t *testing.T) {
 	ft := &fakeTarget{}
 	r := &reloader{path: p, gw: ft, log: slog.New(slog.NewTextHandler(io.Discard, nil)),
 		gate: func() (bool, string) { return acked, "unlicensed" }}
-	if err := r.reload(); err != errReloadBlocked || ft.allowed != nil {
+	if err := r.reload(); !errors.Is(err, errReloadBlocked) || ft.allowed != nil {
 		t.Fatalf("reload while unacknowledged: err=%v allowed=%v", err, ft.allowed)
 	}
 	acked = true

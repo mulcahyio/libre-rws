@@ -82,6 +82,12 @@ once they are implemented and verified. The hazards below move into §2 and
 them. They are **not** counted in the report of §6 yet. Console-side hazards
 are in `../librewt/risk-management.md` (WT-HAZ-05…17).
 
+**State after card WT-0.2/3 (2026-11-14).** The action endpoints exist:
+C-ECHO test, reload, licence, backup. DCM-SRS-086…090 and -097 are `Active`
+and verified; see "Verification of the implemented controls" below. HAZ-015
+and HAZ-016 stay in this section until the configuration edit and the send
+function (card WT-0.2/4) are built.
+
 ### New hazards
 
 | ID | Hazardous situation | Harm | Main causes | S | Initial P | Initial | Risk controls (Draft requirements) | Target residual P | Target residual | Notes |
@@ -103,7 +109,38 @@ are in `../librewt/risk-management.md` (WT-HAZ-05…17).
 | HAZ-010 (licence stops image flow) | Licence actions through the control API change DICOM behaviour | DCM-SRS-089 (existing licensing code, outside the gateway), -058 with `TestGatewayHasNoLicenseDependency` | No increase allowed: the architecture test must keep passing in every PR |
 | HAZ-012 (exploited vulnerability) | More attack surface on the admin listener; C-ECHO test used to probe the network | DCM-SRS-080, -087 (Verification only, result reduced to success or stage), -096; gosec, govulncheck, fuzzing of request decoding | Slight increase, controlled; see `cybersecurity.md` §3a |
 | HAZ-013 (wrong patient association) | Held conflict instances shown or sent through the new endpoints | DCM-SRS-091 (same visibility rules as C-FIND), -092 (held instances never sent) | No increase expected; mutation check of the hidden-conflict filter required (card WT-0.2/4) |
-| HAZ-014 (wrong correction) | Resolve sent to the wrong node | DCM-SRS-097 (identity check, also offered to the conflict resolve endpoint) | Improves |
+| HAZ-014 (wrong correction) | Resolve sent to the wrong node | DCM-SRS-097 (identity check, also offered to the conflict resolve endpoint) | Improves. Implemented (card WT-0.2/3): the conflict plan and resolve endpoints accept `expect_node_id` and `expect_ae_title` |
+
+### Verification of the implemented controls (card WT-0.2/3)
+
+| Hazard | Control now implemented | Type | Verification of effectiveness |
+|---|---|---|---|
+| HAZ-015 | Reload through the node's one reloader; plan with the difference; confirmation and digest of an unchanged plan; warnings for an emptied allow-list and a removed or retargeted destination must be acknowledged; invalid configuration changes nothing (DCM-SRS-088, part of -095) | Protective | `TestReloadPlanAndApply`, `TestReloadRefusesAStalePlan`, `TestReloadWithBadConfigKeepsRunningSettings`, `TestReloadWarningsMustBeAcknowledged`, `TestNormalizeAllowedAEsMatchesSetAllowedAEs`; through the real reloader and gateway: `TestControlActionsWiring` (three bad files, each refused by plan, by reload and by the SIGHUP path; gateway settings unchanged; C-ECHO still answered). Mutation-checked |
+| HAZ-015, -016, -014 | Expected node ID and AE title checked on every action, plan and conflict `POST` (DCM-SRS-097) | Protective | `TestActionsRefuseWrongInstance`, `TestConflictEndpointsRefuseWrongInstance` (plan and resolve: 409, conflict still open) |
+| HAZ-008 | Operator, reason and request ID required; audit record before the action, no record no action; outcome record; refusal record (DCM-SRS-086) | Protective | `TestActionsRequireTokenOperatorReasonAndRequestID`, `TestActionAuditRecords`, `TestActionNotDoneWhenAuditCannotBeWritten` |
+| HAZ-015, -016 | Request ID remembered for 10 minutes: a double submit acts once (DCM-SRS-086) | Protective | `TestActionRequestIDIsRememberedForTenMinutes`, `TestActionInProgressAndBoundedMemory` |
+| HAZ-001, -009 | Backup only into the configured directory, name made by LibreDCM, exclusive create, no download or delete (DCM-SRS-090) | Design | `TestBackupAction` (snapshot opens as an index with the data; checksum matches), `TestBackupAcceptsNoPathFromTheClient`, `TestBackupRefusals`, `TestBackupListAndNoDownloadOrDelete` |
+| HAZ-004 | Free-space check; one backup, one activation and two C-ECHO tests at a time; timeouts; bounded request-ID table (DCM-SRS-090, part of -096) | Protective | `TestBackupRefusals`, `TestBackupTimeout`, `TestEchoConcurrencyLimit`, `TestLicenceActivateOneAtATime`, `TestActionInProgressAndBoundedMemory` |
+| HAZ-010 | Licence endpoints call the licensing code from the control package only; the gateway imports neither (DCM-SRS-089, -058) | Inherent (architecture) | `TestGatewayHasNoLicenseDependency` (extended to the control package); `TestControlActionsWiring` runs a real C-ECHO against the node's DICOM listener while reloads are blocked by the licence, after a refused licence install and after a failed activation, in the source build and in the official build |
+| HAZ-012 | C-ECHO: Verification only, validated target, fixed error texts (DCM-SRS-087) | Protective | `TestDICOMEchoProposesVerificationOnlyAndNamesTheStage`, `TestEchoAction`, `TestEchoRefusesUnknownAndMalformedTargets` |
+
+**Risks from these controls, found while building them** (ISO 14971 §7.5):
+
+- An action that stops with an internal fault could leave its request ID
+  "in progress" for good and fill the table. Controlled: the fault is
+  caught, recorded as a serious failure and remembered as the result
+  (`TestActionPanicIsRecordedAndNotRepeated`).
+- The request-ID table is bounded (1000). When it is full, new actions are
+  refused for up to 10 minutes. Safe direction: DICOM services are not
+  touched, and SIGHUP and the command line still work on the host.
+- A reload through the API asks for acknowledged warnings; SIGHUP does not.
+  This is deliberate: the person at the host edited the file. The plan
+  digest makes the API reload apply exactly what the administrator saw.
+- The backup refuses when free space cannot be read (for example on a file
+  system that does not report it). The command-line `-backup` stays
+  available on the host.
+- A licence acknowledgement through the API lifts the reload block as the
+  command line does. No new path to DICOM services was added.
 
 **New risks from the new controls** (ISO 14971 §7.5): the identity check and
 the plan digest can refuse a correct action after a harmless change (the
