@@ -14,6 +14,22 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **LibreDCM control API: read-only views for Libre WT (card WT-0.2/2,
+  issue #20; DCM-SRS-080…085 now `Active`).** New endpoints on the admin
+  listener, all behind the admin token: `GET /control/v1` (features),
+  `/control/v1/status` (identity, uptime, backends, readiness per check,
+  licence state, live counters), `/control/v1/config` (running settings with
+  source and whether they reload live; secrets hidden), `/control/v1/remote-aes`
+  and `/control/v1/allow-list` (what is in force now, also after a reload),
+  `/control/v1/audit` (recent audit records, filters `type`, `outcome`,
+  `since`, `limit` ≤ 500) and `/control/v1/logs` (recent log lines, filters
+  `level`, `since`, `limit` ≤ 1000). Records come from fixed-size in-memory
+  rings (1000 audit records, 2000 log lines), fed by the logger after the
+  real log line is written. Every response names the node and carries a
+  digest of the live settings. Secrets are kept out by two independent
+  controls: settings are shown from an allow-list (anything unlisted is
+  redacted), and every control response, including the conflict endpoints,
+  passes a secret filter before it is sent. No change to DICOM services.
 - **Design inputs for Libre WT 0.2 (documents only, no behaviour change;
   issue #20).** Scope approved by Patrick Mulcahy on 2026-11-14: Libre WT is
   to support all LibreDCM functions developed to date. Added as drafts for
@@ -150,6 +166,29 @@ LibreDCM's behaviour unless stated.
   identifiers) instead of writing an unreadable file (DCM-SRS-018,
   ANOM-001, found by gosec). Over-long but encodable UIDs from
   non-conformant senders are still archived as received.
+
+### Tested (2026-11-14, control API read-only views, card WT-0.2/2)
+- Go 1.26.11 in Docker (`rws-go`): `vet` (plain and `-tags official`),
+  `test -race` 22 packages ok, `-tags official` 20 packages ok, gosec
+  v2.30.0 0 issues (48 files), govulncheck v1.9.0 no called
+  vulnerabilities, trace/needs/mdlinks clean, 13 QMS tool tests ok. The new
+  tests also ran 5 times in a row with `-race` without a flake.
+- 20 new tests (plus an oversized-body check in the existing conflict
+  test), among them: every endpoint without, with a wrong and with
+  the right token, and with no token configured; every endpoint searched for
+  every configured secret (also secrets planted in log lines, audit
+  records, readiness errors and query values); real wiring through
+  `build()` with secrets from the file and the environment; audit ring with
+  patient-ID omission on and off through the real gateway; ring bounds,
+  filters and limits; concurrent logging.
+- Mutation check: 11 mutations of the risk controls (setting allow-list,
+  response filter, admin secrets passed to the filter, token comparison,
+  ring bound, limit cap, outcome and level filters, audit routing, live
+  allow-list, patient-ID omission); each made a test fail. One mutation
+  (filter failure after a successful encode) cannot be reached and was
+  left out.
+- Not tested: HTTPS admin listener with the new endpoints (unchanged TLS
+  code path); PowerShell `curl.exe` example in INSTALL.md not run.
 
 ### Tested (2026-11-10, patient conflicts and Libre WT)
 - `go test -race` all packages; PostgreSQL 16 index and gateway suites;

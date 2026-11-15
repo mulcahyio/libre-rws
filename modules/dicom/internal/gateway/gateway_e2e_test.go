@@ -93,6 +93,12 @@ func startGateway(t *testing.T, ctx context.Context, remotes map[string]RemoteAE
 	cfg.AETitle = "RWS_TEST"
 	cfg.RemoteAEs = remotes
 	log := slog.New(slog.NewTextHandler(testWriter(), nil))
+	if testLogger != nil {
+		log = testLogger
+	}
+	if testConfig != nil {
+		testConfig(&cfg)
+	}
 	gw := New(cfg, "test-node", log, prometheus.NewRegistry(), blobs, idx, pub)
 
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
@@ -278,6 +284,13 @@ func TestEndToEnd(t *testing.T) {
 		t.Fatalf("get received %d, final %+v", got, gres[len(gres)-1])
 	}
 }
+
+// testLogger, when set by a test, replaces the gateway's logger; testConfig
+// adjusts the configuration before the gateway is built.
+var (
+	testLogger *slog.Logger
+	testConfig func(*Config)
+)
 
 // logSink, when set by a test, receives the gateway log as well.
 var logSink io.Writer

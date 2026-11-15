@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -83,7 +84,7 @@ func call(t *testing.T, h http.Handler, method, path string, body any) (int, map
 
 // The control API lists and details conflicts, plans actions without
 // changing anything, refuses unconfirmed or incomplete edits, and resolves.
-// Verifies: DCM-SRS-077, DCM-SRS-079
+// Verifies: DCM-SRS-077, DCM-SRS-079, DCM-SRS-080
 func TestControlAPI(t *testing.T) {
 	h, id := setup(t)
 
@@ -111,6 +112,11 @@ func TestControlAPI(t *testing.T) {
 	}
 	if code, _ := call(t, h, "POST", "/control/v1/conflicts/"+id+"/plan", `{"action":"reject","extra":1}`); code != 400 {
 		t.Fatalf("unknown field = %d", code)
+	}
+	// A body over the 64 KiB limit is not read to the end and is refused.
+	big := `{"action":"reject` + strings.Repeat(" ", 70<<10) + `"}`
+	if code, _ := call(t, h, "POST", "/control/v1/conflicts/"+id+"/plan", big); code != 400 {
+		t.Fatalf("oversized body = %d", code)
 	}
 
 	req := ResolveRequest{Action: "reject", Operator: "admin", Reason: "test duplicate"}

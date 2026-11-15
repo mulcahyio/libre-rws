@@ -75,6 +75,10 @@ type Runtime struct {
 	NodeID   string
 	Logger   *slog.Logger
 	Registry *prometheus.Registry
+	// Logs and Audit hold the most recent log lines and audit records in
+	// memory, for the control API (fixed size; see logring.go).
+	Logs  *LogBuffer
+	Audit *LogBuffer
 
 	cfg     AdminConfig
 	mu      sync.RWMutex
@@ -120,28 +124,32 @@ func New(module, version string, cfg AdminConfig) *Runtime {
 		ConstLabels: prometheus.Labels{"module": module, "version": version, "node": cfg.NodeID},
 	}, func() float64 { return 1 }))
 
+	logs, audits := NewLogBuffer(LogRingSize), NewLogBuffer(AuditRingSize)
 	return &Runtime{
 		Module:   module,
 		Version:  version,
 		NodeID:   cfg.NodeID,
-		Logger:   newLogger(cfg).With("module", module, "node", cfg.NodeID),
+		Logger:   newLogger(cfg, logs, audits).With("module", module, "node", cfg.NodeID),
 		Registry: reg,
+		Logs:     logs,
+		Audit:    audits,
 		cfg:      cfg,
 		checks:   map[string]CheckFunc{},
 		started:  time.Now(),
 	}
 }
 
-func newLogger(cfg AdminConfig) *slog.Logger {
+func newLogger(cfg AdminConfig, logs, audits *LogBuffer) *slog.Logger {
 	var lvl slog.Level
 	if err := lvl.UnmarshalText([]byte(cfg.LogLevel)); err != nil {
 		lvl = slog.LevelInfo
 	}
 	opts := &slog.HandlerOptions{Level: lvl}
+	var h slog.Handler = slog.NewJSONHandler(os.Stdout, opts)
 	if cfg.LogFormat == "text" {
-		return slog.New(slog.NewTextHandler(os.Stdout, opts))
+		h = slog.NewTextHandler(os.Stdout, opts)
 	}
-	return slog.New(slog.NewJSONHandler(os.Stdout, opts))
+	return slog.New(newRingHandler(h, logs, audits))
 }
 
 // AddReadinessCheck registers a dependency check used by /readyz.
@@ -217,6 +225,38 @@ func (r *Runtime) adminToken() (token string, ok bool) {
 		return "", false
 	}
 	return strings.TrimSpace(string(b)), true
+}
+
+// AdminHandler returns the handler of the admin listener (probes, metrics,
+// version and the registered control endpoints behind the token check).
+func (r *Runtime) AdminHandler() http.Handler { return r.adminMux() }
+
+// Started is when this process started.
+func (r *Runtime) Started() time.Time { return r.started }
+
+// AdminTLS reports whether the admin listener serves HTTPS.
+func (r *Runtime) AdminTLS() bool { return r.cfg.TLSCertFile != "" }
+
+// Readiness runs every readiness check and returns each result ("ok" or the
+// error text) and whether all passed.
+func (r *Runtime) Readiness(ctx context.Context) (map[string]string, bool) { return r.runChecks(ctx) }
+
+// AdminSecrets returns the admin token values in use (configured directly
+// and read from the token file), so that a module can make sure they never
+// appear in anything it returns. It never logs.
+func (r *Runtime) AdminSecrets() []string {
+	var out []string
+	if t := strings.TrimSpace(r.cfg.Token); t != "" {
+		out = append(out, t)
+	}
+	if r.cfg.TokenFile != "" {
+		if b, err := os.ReadFile(r.cfg.TokenFile); err == nil {
+			if t := strings.TrimSpace(string(b)); t != "" {
+				out = append(out, t)
+			}
+		}
+	}
+	return out
 }
 
 func (r *Runtime) adminMux() *http.ServeMux {

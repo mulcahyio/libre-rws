@@ -158,6 +158,18 @@ func (l *Licensing) Info() map[string]any {
 		"license_ack_required": l.AckRequired(), "license_message": st.Message}
 }
 
+// Summary is the licence part of the control API status (DCM-SRS-081). It
+// holds the state only, never a licence key. A nil receiver (source build)
+// reports that no licence is needed.
+func (l *Licensing) Summary() map[string]any {
+	if l == nil {
+		return map[string]any{"enforced": false}
+	}
+	st := l.status()
+	return map[string]any{"enforced": true, "state": string(st.State), "licensed": Licensed(st),
+		"ack_required": l.AckRequired(), "message": st.Message, "days_left": st.DaysLeft}
+}
+
 // Check is a readiness check that never fails: licensing never takes a node
 // out of service.
 func (l *Licensing) Check(context.Context) error { return nil }

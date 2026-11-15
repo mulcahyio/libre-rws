@@ -83,3 +83,29 @@ func (g *Gateway) callingAEAllowed(callingAE string, remote net.Addr) bool {
 	g.audit(context.Background(), auditAssocRejected, "minor-failure", "calling_ae", callingAE, "remote", remote.String())
 	return false
 }
+
+// String gives the rule in configuration form ("AE", "AE@IP" or "AE@CIDR").
+func (r allowRule) String() string {
+	if !r.prefix.IsValid() {
+		return r.ae
+	}
+	if r.prefix.IsSingleIP() {
+		return r.ae + "@" + r.prefix.Addr().String()
+	}
+	return r.ae + "@" + r.prefix.String()
+}
+
+// AllowedAEs returns the calling-AE allow-list that is in force now, in
+// configuration form. enforced is false when the list is empty (any calling
+// AE may associate). When the configured list was invalid at start the node
+// refuses every association: rules is then empty and enforced is true.
+func (g *Gateway) AllowedAEs() (rules []string, enforced bool) {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	for _, r := range g.allowed {
+		if r.ae != "" {
+			rules = append(rules, r.String())
+		}
+	}
+	return rules, len(g.allowed) > 0
+}
