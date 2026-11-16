@@ -73,6 +73,8 @@ type Licensing struct {
 	lastNag       time.Time // last hourly error (unlicensed, unacknowledged)
 	lastGraceWarn time.Time // last daily warning (grace)
 	lastAckAt     time.Time // newest acknowledgement already reported
+
+	opMu sync.Mutex // one licence install or activation at a time
 }
 
 // New loads the license. In source builds it returns nil (no checks).
@@ -80,7 +82,14 @@ func New(cfg Config, version string, buildDate time.Time, log *slog.Logger, reg 
 	if !Enforced() {
 		return nil, nil
 	}
-	keys, err := license.ParsePublicKeys(officialKeys)
+	return NewWithKeys(officialKeys, cfg, version, buildDate, log, reg)
+}
+
+// NewWithKeys loads the license and checks it against the given LibreKey
+// public key(s). New calls it with the keys embedded in an official build;
+// tests call it with their own key pair.
+func NewWithKeys(publicKeys []byte, cfg Config, version string, buildDate time.Time, log *slog.Logger, reg prometheus.Registerer) (*Licensing, error) {
+	keys, err := license.ParsePublicKeys(publicKeys)
 	if err != nil {
 		return nil, fmt.Errorf("embedded LibreKey key: %w", err)
 	}

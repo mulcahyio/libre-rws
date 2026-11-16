@@ -2,6 +2,9 @@ package licensing
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
 	"log/slog"
 	"path/filepath"
 	"strings"
@@ -10,6 +13,7 @@ import (
 	"time"
 
 	"github.com/mulcahyio/librekey/client"
+	"github.com/mulcahyio/librekey/license"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 )
@@ -185,5 +189,64 @@ func TestLicenseStateMetrics(t *testing.T) {
 			m["libre_dcm_license_days_left"] != 12 {
 			t.Fatalf("%s: metrics %v, want state %v ack_required %v days_left 12", c.state, m, c.want, c.ackd)
 		}
+	}
+}
+
+// The licence status for the control API shows the key as its last four
+// characters only, carries the acknowledgement on file, and repeats that
+// DICOM services never stop. A source build (nil) needs no licence. Without
+// a licence manager the install, request and activation functions refuse.
+// Verifies: DCM-SRS-089
+func TestDetailForControlAPI(t *testing.T) {
+	const key = "LK-SYNTH-ABCD-EFGH-7788" // gitleaks:allow (synthetic test value)
+	l, clk, _, st := setup(t, client.StateExpired)
+	exp := clk.now().Add(-40 * 24 * time.Hour)
+	l.status = func() client.Status {
+		return client.Status{State: *st, Message: "license expired", Expires: &exp,
+			License: &license.License{Key: key, Customer: "Synthetic Clinic", Site: "Main", Term: "annual"}}
+	}
+	d := l.Detail()
+	if !d.Enforced || d.State != "expired" || d.Licensed || !d.AckRequired || d.KeyLast4 != "7788" || d.Customer != "Synthetic Clinic" ||
+		d.Term != "annual" || d.Ack != nil || !strings.Contains(d.Note, "never stops") {
+		t.Fatalf("detail = %+v", d)
+	}
+	raw, _ := json.Marshal(d)
+	if strings.Contains(string(raw), key) || strings.Contains(string(raw), "ABCD") {
+		t.Fatalf("the status holds the licence key: %s", raw)
+	}
+	for in, want := range map[string]string{key: "7788", "  LK-1234  ": "1234", "1234": "", "abc": "", "": ""} {
+		if got := KeyLast4(in); got != want {
+			t.Errorf("KeyLast4(%q) = %q, want %q", in, got, want)
+		}
+	}
+
+	d, err := l.AcknowledgeBy("Dana Admin")
+	if err != nil || d.AckRequired || d.Ack == nil || d.Ack.By != "Dana Admin" || !d.Ack.Valid || !d.Ack.ValidUntil.Equal(d.Ack.At.Add(AckValidity)) {
+		t.Fatalf("after acknowledgement: %+v %v", d, err)
+	}
+	if gauge(l.ackRequired) != 0 {
+		t.Fatal("the acknowledgement was not picked up at once")
+	}
+	if _, err := l.AcknowledgeBy("   "); err == nil {
+		t.Fatal("acknowledgement without a name accepted")
+	}
+	clk.add(25 * time.Hour)
+	if d := l.Detail(); !d.AckRequired || d.Ack == nil || d.Ack.Valid {
+		t.Fatalf("a day later: %+v", d)
+	}
+
+	if _, err := l.RequestText("k", "s"); !errors.Is(err, ErrNoManager) {
+		t.Fatalf("RequestText without a manager: %v", err)
+	}
+	if _, err := l.InstallText("x"); !errors.Is(err, ErrNoManager) {
+		t.Fatalf("InstallText without a manager: %v", err)
+	}
+	if _, err := l.ActivateOnline(context.Background(), "k", "s"); !errors.Is(err, ErrNoManager) {
+		t.Fatalf("ActivateOnline without a manager: %v", err)
+	}
+
+	var none *Licensing
+	if d := none.Detail(); d.Enforced || d.State != "" || d.KeyLast4 != "" {
+		t.Fatalf("source build detail = %+v", d)
 	}
 }

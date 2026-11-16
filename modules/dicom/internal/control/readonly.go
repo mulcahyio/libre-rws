@@ -22,7 +22,8 @@ import (
 
 // Features lists what this node's control API offers (GET /control/v1). A
 // feature is added here in the change that implements it.
-var Features = []string{"conflicts", "status", "config", "remote-aes", "allow-list", "audit", "logs"}
+var Features = []string{"conflicts", "status", "config", "remote-aes", "allow-list", "audit", "logs",
+	"echo", "reload", "license", "backup"}
 
 // Limits of the two ring endpoints.
 const (

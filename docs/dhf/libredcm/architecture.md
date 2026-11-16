@@ -286,6 +286,56 @@ Counters are read from the node's Prometheus registry at request time;
 `conflicts_open` is counted in the index. If a value cannot be read, it is
 left out and `counters_incomplete: true` is set.
 
+#### 5.6.2 Action endpoints (implemented, card WT-0.2/3)
+
+**DRAFT for approval (2026-11-14).** DCM-SRS-086…090 and -097 are `Active`.
+What the code does now:
+
+| Item | Change made |
+|---|---|
+| `internal/control/actions.go` | One runner for every action: strict JSON body, envelope check (operator, reason, request ID), expected node check, request-ID table (10 minutes, at most 1000 IDs), limit of actions running at once, audit record before the action (no record, no action), timeout, audit record with the outcome. The action runs detached from the client's connection, so its result is kept for a repeat. Plan endpoints use a smaller helper that changes nothing |
+| `internal/control/echo.go` | `POST /control/v1/echo`. `DICOMEcho` opens an association for Verification only (gonetdicom `ae.Dial`) as the node's AE title. Target validation and the fixed error texts are here |
+| `internal/control/reload.go` | `POST /control/v1/reload/plan` and `/reload`. The package does not load or apply configuration: it calls the `Reloader` interface. It builds the difference, the warnings and the plan digest, and passes a check function into `Reloader.Apply`, so digest check and apply are one step |
+| `cmd/libredcm/reload.go` | The one reloader. `load` (licence gate, configuration loader, allow-list validation), `Preview`, `Apply(check)`; SIGHUP calls `Apply(nil)`. A mutex lets one reload run at a time |
+| `internal/gateway/allow.go` | `NormalizeAllowedAEs`: the allow-list parser without applying. `SetAllowedAEs` uses the same parser, so a previewed list is an accepted list |
+| `internal/control/license.go` | `GET /control/v1/license` and the four licence actions. They call the `Licence` interface (implemented by `*licensing.Licensing`). Request keys are removed from responses and audit records |
+| `internal/licensing/control.go` | `Detail` (status with the key as last four characters), `AcknowledgeBy`, `RequestText`, `InstallText`, `ActivateOnline`: thin wrappers around the existing LibreKey client calls, with a mutex around install and activation. `NewWithKeys` lets tests run the real code with a test key pair |
+| `internal/control/backup.go` | `POST /control/v1/backup` and `GET /control/v1/backups`. Uses the existing `index.Backup` (SQLite `VACUUM INTO`, DCM-SRS-022). Reserves the file name with `O_EXCL`, checks free space (`freespace_unix.go`; other platforms refuse), sets mode 0600, computes the SHA-256 from the finished file |
+| `cmd/libredcm/main.go` | New setting `control.backup_dir` (`LIBRE_DCM_CONTROL_BACKUP_DIR`, default empty: off). Wires the logger, `DICOMEcho`, the reloader, the licensing and the backup into `control.API` |
+
+Dependency rules, checked by `TestGatewayHasNoLicenseDependency`: the
+gateway imports neither `internal/licensing`, LibreKey nor
+`internal/control`. The control package imports the gateway (types and
+`NormalizeAllowedAEs`) and the licensing package (types); the licensing
+package imports neither. So a licence action has no code path into a DICOM
+service.
+
+```mermaid
+sequenceDiagram
+  participant WT as Libre WT
+  participant C as internal/control (action runner)
+  participant L as logger (audit)
+  participant X as echo / reloader / licensing / index
+  WT->>C: POST action (operator, reason, request_id, expect_node_id)
+  C->>C: strict decode, envelope, expected node
+  alt refused
+    C->>L: SecurityAlert.control-refused
+    C-->>WT: 4xx, nothing done
+  else request_id seen before
+    C-->>WT: first result, header Idempotent-Replay
+  else new request
+    C->>L: audit record, phase start
+    alt record not written
+      C-->>WT: 500 audit_unavailable, nothing done
+    else written
+      C->>X: run under a timeout
+      X-->>C: result
+      C->>L: audit record, phase result
+      C-->>WT: result, kept 10 minutes for a repeat
+    end
+  end
+```
+
 ## 6. SOUP items
 
 The full list with evaluation is `soup.md` (generated from `go.mod` and the
@@ -349,6 +399,18 @@ retention cover (HAZ-004).
   2000 records in memory (no I/O under the lock), so a log write waits at
   most that long; the real log is written before the ring is touched.
   Readiness checks in `GET /control/v1/status` run with a 3 s timeout.
+- Control API actions (DCM-SRS-086, -096): at most two C-ECHO tests, one
+  backup and one online activation at a time per node; a further one is
+  refused (`429`), it does not wait. Timeouts: C-ECHO 15 s, online
+  activation 30 s, backup 10 min. Reload, licence acknowledgement, licence
+  install and activation request do local work only (file read or write);
+  one reload runs at a time (mutex shared with SIGHUP). The request-ID
+  table holds at most 1000 entries, each a response of a few hundred bytes
+  for 10 minutes. Request bodies are limited to 64 KiB (licence install:
+  256 KiB). None of this shares a lock with the DIMSE services except the
+  read/write mutex of the live settings, taken for a map copy.
+- The backup reads the SQLite index in one read transaction (`VACUUM
+  INTO`): writers are not blocked (verified by `TestBackupWhileWriting`).
 
 ## 10. Verification of this architecture (IEC 62304 §5.3.6)
 

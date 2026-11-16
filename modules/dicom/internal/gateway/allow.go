@@ -39,9 +39,10 @@ func parseAllowRule(s string) (allowRule, error) {
 	return r, nil
 }
 
-// SetAllowedAEs replaces the calling-AE allow-list at runtime. On error the
-// current list is kept.
-func (g *Gateway) SetAllowedAEs(entries []string) error {
+// parseAllowRules validates a configured allow-list. Empty entries are
+// skipped. It is the one parser for SetAllowedAEs and NormalizeAllowedAEs,
+// so a list that a preview accepts is a list that a reload accepts.
+func parseAllowRules(entries []string) ([]allowRule, error) {
 	var rules []allowRule
 	for _, e := range entries {
 		if strings.TrimSpace(e) == "" {
@@ -49,9 +50,34 @@ func (g *Gateway) SetAllowedAEs(entries []string) error {
 		}
 		r, err := parseAllowRule(e)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		rules = append(rules, r)
+	}
+	return rules, nil
+}
+
+// NormalizeAllowedAEs validates an allow-list without applying it and
+// returns the rules in the form AllowedAEs reports them. The control API
+// uses it to show what a reload would put in force (DCM-SRS-088).
+func NormalizeAllowedAEs(entries []string) ([]string, error) {
+	rules, err := parseAllowRules(entries)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]string, 0, len(rules))
+	for _, r := range rules {
+		out = append(out, r.String())
+	}
+	return out, nil
+}
+
+// SetAllowedAEs replaces the calling-AE allow-list at runtime. On error the
+// current list is kept.
+func (g *Gateway) SetAllowedAEs(entries []string) error {
+	rules, err := parseAllowRules(entries)
+	if err != nil {
+		return err
 	}
 	g.mu.Lock()
 	g.allowed = rules

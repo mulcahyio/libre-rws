@@ -45,6 +45,12 @@ type Config struct {
 	} `yaml:"index"`
 	Events  events.Config    `yaml:"events"`
 	License licensing.Config `yaml:"license"`
+	Control struct {
+		// BackupDir is the only place POST /control/v1/backup writes index
+		// snapshots to (DCM-SRS-090). Empty: backups through the control
+		// API are off. A client can never choose or change this path.
+		BackupDir string `yaml:"backup_dir" env:"LIBRE_DCM_CONTROL_BACKUP_DIR"`
+	} `yaml:"control"`
 }
 
 func defaults() Config {
@@ -238,11 +244,15 @@ func build(cfgPath string) (*app, error) {
 	if err != nil {
 		return a, fmt.Errorf("license: %w", err)
 	}
-	// Control API for Libre WT (DCM-SRS-077, -080…085); refused unless an
-	// admin token is set. It reads the licence state but lives outside the
-	// gateway: licensing never touches DICOM services (DCM-SRS-058).
+	// Licensing never touches the DICOM gateway (DCM-SRS-058). An unlicensed,
+	// unacknowledged node only blocks configuration reloads (DCM-SRS-060).
+	rl := &reloader{path: cfgPath, gw: gw, log: log}
+	// Control API for Libre WT (DCM-SRS-077, -080…090); refused unless an
+	// admin token is set. It reads the licence state and offers the licence
+	// functions but lives outside the gateway: licensing never touches DICOM
+	// services (DCM-SRS-058).
 	settings := config.Describe(&cfg, fileKeys)
-	(&control.API{
+	api := &control.API{
 		Index: idx, Resolver: gw, Live: gw,
 		Node: control.Node{ID: rt.NodeID, AETitle: cfg.DICOM.AETitle, Version: version, Started: rt.Started(),
 			DICOMListen: cfg.DICOM.Listen, DICOMTLS: cfg.DICOM.TLSCertFile != "", AdminTLS: rt.AdminTLS(),
@@ -252,12 +262,13 @@ func build(cfgPath string) (*app, error) {
 		Settings: settings, RemoteAEEnv: remoteAEsFromEnv(),
 		Secrets: append(control.SecretValues(settings), rt.AdminSecrets()...),
 		Logs:    rt.Logs, Audit: rt.Audit,
-	}).Register(rt)
-	// Licensing never touches the DICOM gateway (DCM-SRS-058). An unlicensed,
-	// unacknowledged node only blocks configuration reloads (DCM-SRS-060).
-	rl := &reloader{path: cfgPath, gw: gw, log: log}
+		AuditLog: log, Echo: control.DICOMEcho, Reloader: rl,
+		Backup: &control.Backup{Dir: cfg.Control.BackupDir, Driver: cfg.Index.Driver, Snapshot: idx.Backup,
+			IndexBytes: func() (int64, error) { return sqliteSize(cfg.Index.DSN) }},
+	}
 	components := []runtime.Component{gw, rl}
 	if lic != nil {
+		api.Licence = lic // a nil *Licensing must stay a nil interface (source build)
 		rl.gate = lic.ConfigChangesAllowed
 		rt.AddVersionInfo(lic.Info)
 		components = append(components, lic)
@@ -268,6 +279,7 @@ func build(cfgPath string) (*app, error) {
 		gw.UseOutbox(relay)
 		components = append(components, relay)
 	}
+	api.Register(rt)
 	for old, repl := range config.DeprecatedInUse() {
 		log.Warn("deprecated setting; rename it", "old", old, "new", repl)
 	}
@@ -324,6 +336,21 @@ func sqlitePath(dsn string) string {
 		}
 	}
 	return p
+}
+
+// sqliteSize is the size of a SQLite index on disk: the database file plus
+// its write-ahead log.
+func sqliteSize(dsn string) (int64, error) {
+	p := sqlitePath(dsn)
+	st, err := os.Stat(p)
+	if err != nil {
+		return 0, err
+	}
+	n := st.Size()
+	if wal, err := os.Stat(p + "-wal"); err == nil {
+		n += wal.Size()
+	}
+	return n, nil
 }
 
 func envOr(def string, names ...string) string {

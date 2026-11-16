@@ -259,19 +259,30 @@ func TestDiscovery(t *testing.T) {
 	for _, f := range body["features"].([]any) {
 		got = append(got, f.(string))
 	}
-	want := []string{"conflicts", "status", "config", "remote-aes", "allow-list", "audit", "logs"}
+	want := []string{"conflicts", "status", "config", "remote-aes", "allow-list", "audit", "logs",
+		"echo", "reload", "license", "backup"}
 	if body["api"] != "v1" || !reflect.DeepEqual(got, want) {
 		t.Fatalf("discovery = %v", body)
 	}
 	// Each listed feature answers; a feature that is not listed is not served.
+	// The action features are POST endpoints: a GET on them is refused (405),
+	// which shows the route exists; "license" also has a GET.
 	for _, f := range want {
-		if rec, _ := e.do(t, "GET", "/control/v1/"+f, testToken); rec.Code != http.StatusOK {
-			t.Errorf("feature %s listed but GET = %d", f, rec.Code)
+		wantCode := http.StatusOK
+		switch f {
+		case "echo", "reload", "backup":
+			wantCode = http.StatusMethodNotAllowed
+		}
+		if rec, _ := e.do(t, "GET", "/control/v1/"+f, testToken); rec.Code != wantCode {
+			t.Errorf("feature %s listed but GET = %d, want %d", f, rec.Code, wantCode)
 		}
 	}
-	for _, f := range []string{"echo", "reload", "license", "backup", "backups", "studies", "send"} {
+	for _, f := range []string{"studies", "send", "config/plan", "restart", "stop"} {
 		if rec, _ := e.do(t, "GET", "/control/v1/"+f, testToken); rec.Code != http.StatusNotFound {
 			t.Errorf("feature %s is not listed but GET = %d", f, rec.Code)
+		}
+		if rec, _ := e.do(t, "POST", "/control/v1/"+f, testToken); rec.Code != http.StatusNotFound && rec.Code != http.StatusMethodNotAllowed {
+			t.Errorf("feature %s is not listed but POST = %d", f, rec.Code)
 		}
 	}
 }

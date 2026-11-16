@@ -12,7 +12,7 @@ import (
 // Licensing must never be able to stop DICOM services (HAZ-010): the DIMSE
 // gateway may not import any licensing code, so no license state can refuse
 // or interrupt an association, a C-STORE or a retrieval.
-// Verifies: DCM-SRS-058
+// Verifies: DCM-SRS-058, DCM-SRS-089
 func TestGatewayHasNoLicenseDependency(t *testing.T) {
 	files, err := filepath.Glob("*.go")
 	if err != nil || len(files) == 0 {
@@ -35,6 +35,12 @@ func TestGatewayHasNoLicenseDependency(t *testing.T) {
 			p := strings.Trim(imp.Path.Value, `"`)
 			if strings.Contains(p, "/licensing") || strings.Contains(p, "librekey") {
 				t.Errorf("%s imports %s: the gateway must not depend on licensing", f, p)
+			}
+			// The control API holds the licence endpoints (DCM-SRS-089). The
+			// gateway must not reach it either, so no licence action can sit
+			// in the path of a DICOM service.
+			if strings.Contains(p, "/internal/control") {
+				t.Errorf("%s imports %s: the gateway must not depend on the control API", f, p)
 			}
 		}
 	}

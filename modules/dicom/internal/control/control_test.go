@@ -62,7 +62,7 @@ func setup(t *testing.T) (http.Handler, string) {
 		t.Fatal(err)
 	}
 	m := mux{http.NewServeMux()}
-	(&API{Index: idx, Resolver: gw}).Register(m)
+	(&API{Index: idx, Resolver: gw, Node: Node{ID: "dcm-1", AETitle: "LIBREDCM"}}).Register(m)
 	return m, id
 }
 
@@ -135,5 +135,50 @@ func TestControlAPI(t *testing.T) {
 	code, body = call(t, h, "GET", "/control/v1/conflicts?state=resolved", nil)
 	if code != 200 || len(body["conflicts"].([]any)) != 1 {
 		t.Fatalf("resolved list = %d %v", code, body)
+	}
+}
+
+// A conflict plan or resolve that names another node is refused with 409 and
+// changes nothing; one that names this node goes through (HAZ-014, HAZ-015).
+// Verifies: DCM-SRS-097, DCM-SRS-077
+func TestConflictEndpointsRefuseWrongInstance(t *testing.T) {
+	h, id := setup(t)
+	wrong := []map[string]any{
+		{"expect_node_id": "dcm-2"},
+		{"expect_ae_title": "OTHERDCM"},
+		{"expect_node_id": "dcm-1", "expect_ae_title": "OTHERDCM"},
+		{"expect_node_id": "DCM-1"}, // exact match only
+	}
+	for _, w := range wrong {
+		plan := map[string]any{"action": "reject"}
+		res := map[string]any{"action": "reject", "operator": "admin", "reason": "test duplicate", "confirm": true}
+		for k, v := range w {
+			plan[k], res[k] = v, v
+		}
+		code, body := call(t, h, "POST", "/control/v1/conflicts/"+id+"/plan", plan)
+		if code != 409 || body["code"] != "instance_mismatch" {
+			t.Fatalf("plan %v = %d %v, want 409 instance_mismatch", w, code, body)
+		}
+		code, body = call(t, h, "POST", "/control/v1/conflicts/"+id+"/resolve", res)
+		if code != 409 || body["code"] != "instance_mismatch" {
+			t.Fatalf("resolve %v = %d %v, want 409 instance_mismatch", w, code, body)
+		}
+		if inst, _ := body["instance"].(map[string]any); inst["node_id"] != "dcm-1" {
+			t.Fatalf("refusal does not name this node: %v", body)
+		}
+	}
+	// Nothing was changed: the conflict is still open.
+	code, body := call(t, h, "GET", "/control/v1/conflicts?state=open", nil)
+	if code != 200 || len(body["conflicts"].([]any)) != 1 {
+		t.Fatalf("conflict no longer open after refused requests: %d %v", code, body)
+	}
+	// The right identity is accepted.
+	ok := map[string]any{"action": "reject", "expect_node_id": "dcm-1", "expect_ae_title": "LIBREDCM"}
+	if code, body := call(t, h, "POST", "/control/v1/conflicts/"+id+"/plan", ok); code != 200 {
+		t.Fatalf("plan with the right identity = %d %v", code, body)
+	}
+	ok["operator"], ok["reason"], ok["confirm"] = "admin", "test duplicate", true
+	if code, body := call(t, h, "POST", "/control/v1/conflicts/"+id+"/resolve", ok); code != 200 || body["state"] != "rejected" {
+		t.Fatalf("resolve with the right identity = %d %v", code, body)
 	}
 }

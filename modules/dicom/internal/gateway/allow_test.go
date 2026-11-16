@@ -110,3 +110,37 @@ func TestAllowListEndToEnd(t *testing.T) {
 		t.Fatal("MODALITY from 127.0.0.1 allowed after list changed")
 	}
 }
+
+// A preview of an allow-list uses the same parser as the list in force: it
+// accepts and refuses the same entries and gives the form AllowedAEs reports.
+// Verifies: DCM-SRS-088, DCM-SRS-015
+func TestNormalizeAllowedAEsMatchesSetAllowedAEs(t *testing.T) {
+	g := &Gateway{}
+	for _, list := range [][]string{
+		nil, {}, {""}, {"CT1"}, {" CT1 ", "MR1@192.168.1.20", "US1@10.0.0.0/8", "", "X@::1", "Y@fd00::/8"},
+		{"CT1@not-an-ip"}, {"@10.0.0.1"}, {"ABCDEFGHIJKLMNOPQ"}, {"CT1", "MR1@300.1.1.1"}, {"A@10.0.0.1/40"},
+	} {
+		norm, errN := NormalizeAllowedAEs(list)
+		errS := g.SetAllowedAEs(list)
+		if (errN == nil) != (errS == nil) {
+			t.Fatalf("%q: preview error %v, apply error %v", list, errN, errS)
+		}
+		if errN != nil {
+			continue
+		}
+		live, _ := g.AllowedAEs()
+		if len(norm) != len(live) {
+			t.Fatalf("%q: preview %v, in force %v", list, norm, live)
+		}
+		for i := range norm {
+			if norm[i] != live[i] {
+				t.Fatalf("%q: preview %v, in force %v", list, norm, live)
+			}
+		}
+		// The normal form is stable: applying it gives itself.
+		again, err := NormalizeAllowedAEs(norm)
+		if err != nil || len(again) != len(norm) {
+			t.Fatalf("%q: normal form %v does not round-trip: %v %v", list, norm, again, err)
+		}
+	}
+}

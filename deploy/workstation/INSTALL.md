@@ -167,7 +167,36 @@ running settings with every secret hidden (`/control/v1/config`), the remote
 AEs and the allow-list in force, and the most recent audit records and log
 lines held in memory (`/control/v1/audit`, `/control/v1/logs`). These views
 only read. The in-memory records are lost at restart; the container log stays
-the full record. Example:
+the full record.
+
+The control API also has actions. Each one needs the name of the person
+(`operator`), a `reason` and a `request_id` (16 to 64 characters, new for
+each action; sending the same one again returns the first result and does
+nothing twice). Each action is written to the audit log before it starts
+and again with its outcome.
+
+| Action | What it does |
+|---|---|
+| `POST /control/v1/echo` | C-ECHO test from LibreDCM to a configured remote AE (`remote_ae`) or to `host`, `port`, `ae_title`. Sends no patient data |
+| `POST /control/v1/reload/plan`, `POST /control/v1/reload` | Shows what a configuration reload would change, then reloads (same as `SIGHUP`). The reload needs `confirm` and the `plan_digest` from the plan. A broken configuration is reported and changes nothing |
+| `GET /control/v1/license`, `POST /control/v1/license/ack`, `/request`, `/install`, `/activate` | Licence status and the same functions as `license-status`, `license-ack`, `license-request`, `license-install`, `license-activate`. Licensing never stops DICOM services |
+| `POST /control/v1/backup`, `GET /control/v1/backups` | Index snapshot into one fixed folder, and the list of snapshots there. Off until you set the folder (below) |
+
+**Backups through the control API** are off by default. To turn them on,
+add this line to `.env` and run `restart`:
+
+```
+LIBRE_DCM_CONTROL_BACKUP_DIR=/var/lib/libredcm/backups
+```
+
+The folder is inside the container's data volume. LibreDCM chooses the file
+name (`index-<node>-<UTC time>.db`); a caller can not choose or change the
+path, and no file is ever overwritten. The snapshot holds the **index only**
+(patient and study data, no images). Copy it and the images to a safe place
+with `backup` as before; snapshots are not removed automatically, and they
+can not be downloaded or deleted through the API.
+
+Example:
 
 ```powershell
 curl.exe -s -H "Authorization: Bearer $env:LIBRE_DCM_ADMIN_TOKEN" http://127.0.0.1:8081/control/v1/status

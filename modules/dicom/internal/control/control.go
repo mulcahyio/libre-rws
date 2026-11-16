@@ -10,6 +10,20 @@
 //	GET  /control/v1/allow-list      calling-AE allow-list in force
 //	GET  /control/v1/audit           recent audit records (in-memory ring)
 //	GET  /control/v1/logs            recent log lines (in-memory ring)
+//	GET  /control/v1/license         licence status (key: last four characters)
+//	GET  /control/v1/backups         index snapshots in the configured directory
+//
+// Actions (actions.go; each needs operator, reason and request_id, checks
+// the expected node, is remembered by request ID and is audited):
+//
+//	POST /control/v1/echo               C-ECHO test of a destination
+//	POST /control/v1/reload/plan        what a reload would change
+//	POST /control/v1/reload             reload (the SIGHUP path), with plan digest
+//	POST /control/v1/license/ack        acknowledge the unlicensed notice
+//	POST /control/v1/license/request    activation request text (offline)
+//	POST /control/v1/license/install    install a licence file sent as text
+//	POST /control/v1/license/activate   online activation
+//	POST /control/v1/backup             index snapshot into the configured directory
 //
 // Patient-association conflicts:
 //
@@ -29,6 +43,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -99,6 +114,22 @@ type API struct {
 	Secrets []string
 	// Logs and Audit are the in-memory rings fed by the logger.
 	Logs, Audit *runtime.LogBuffer
+
+	// The fields below serve the action endpoints.
+
+	// AuditLog is the node's logger. Every action writes its audit records
+	// through it. Without it every action is refused.
+	AuditLog *slog.Logger
+	// Echo runs a C-ECHO test (DICOMEcho on a real node).
+	Echo EchoFunc
+	// Reloader is the node's configuration reloader, the one SIGHUP uses.
+	Reloader Reloader
+	// Licence is the node's licensing; nil in a source build.
+	Licence Licence
+	// Backup describes where and how index snapshots are written.
+	Backup *Backup
+
+	requests idempotency // results of recent actions, by request ID
 }
 
 // Register adds the endpoints to the admin listener.
@@ -108,6 +139,30 @@ func (a *API) Register(r Registrar) {
 	r.HandleControl("POST /control/v1/conflicts/{id}/plan", http.HandlerFunc(a.plan))
 	r.HandleControl("POST /control/v1/conflicts/{id}/resolve", http.HandlerFunc(a.resolve))
 	a.registerReadOnly(r)
+	a.registerActions(r)
+}
+
+// registerActions adds the action endpoints (control-api-v1.md §4).
+func (a *API) registerActions(r Registrar) {
+	r.HandleControl("POST /control/v1/echo", action(a, actionSpec{name: "echo", event: auditVerification,
+		timeout: EchoTimeout, slots: make(chan struct{}, echoSlots)}, a.echo))
+	// One reload at a time is kept by the reloader itself (SIGHUP included).
+	r.HandleControl("POST /control/v1/reload/plan", preview(a, a.reloadPreview))
+	r.HandleControl("POST /control/v1/reload", action(a, actionSpec{name: "reload", event: auditConfigChange,
+		timeout: time.Minute}, a.reload))
+	r.HandleControl("GET /control/v1/license", http.HandlerFunc(a.licenseStatus))
+	r.HandleControl("POST /control/v1/license/ack", action(a, actionSpec{name: "license/ack", event: auditLicense,
+		timeout: time.Minute}, a.licenseAck))
+	// The request text holds the licence key: it is not kept for replay.
+	r.HandleControl("POST /control/v1/license/request", action(a, actionSpec{name: "license/request", event: auditLicense,
+		timeout: time.Minute, forget: true}, a.licenseRequest))
+	r.HandleControl("POST /control/v1/license/install", action(a, actionSpec{name: "license/install", event: auditLicense,
+		timeout: time.Minute, bodyLimit: licenseBodyLimit}, a.licenseInstall))
+	r.HandleControl("POST /control/v1/license/activate", action(a, actionSpec{name: "license/activate", event: auditLicense,
+		timeout: LicenseActivateTimeout, slots: make(chan struct{}, 1)}, a.licenseActivate))
+	r.HandleControl("GET /control/v1/backups", http.HandlerFunc(a.backups))
+	r.HandleControl("POST /control/v1/backup", action(a, actionSpec{name: "backup", event: auditBackup,
+		timeout: BackupTimeout, slots: make(chan struct{}, 1)}, a.backup))
 }
 
 // Detail is the response of GET /control/v1/conflicts/{id}.
@@ -126,6 +181,21 @@ type ResolveRequest struct {
 	// Confirm must be true: the client has shown the plan and the
 	// administrator approved the edit.
 	Confirm bool `json:"confirm"`
+	// ExpectNodeID and ExpectAETitle, when set, must name this node: an
+	// edit meant for another node is refused (DCM-SRS-097).
+	ExpectNodeID  string `json:"expect_node_id,omitempty"`
+	ExpectAETitle string `json:"expect_ae_title,omitempty"`
+}
+
+// wrongInstance answers 409 and reports true when the request names another
+// node than this one. Nothing is changed (DCM-SRS-097).
+func (a *API) wrongInstance(w http.ResponseWriter, nodeID, aeTitle string) bool {
+	if (nodeID == "" || nodeID == a.Node.ID) && (aeTitle == "" || aeTitle == a.Node.AETitle) {
+		return false
+	}
+	a.writeJSON(w, http.StatusConflict, map[string]any{"code": "instance_mismatch",
+		"error": "this node is not the one the request names; nothing was changed", "instance": a.instance()})
+	return true
 }
 
 // writeJSON is the only way a response leaves this package. The body goes
@@ -211,10 +281,15 @@ func decode(r *http.Request, v any) error {
 
 func (a *API) plan(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Action string `json:"action"`
+		Action        string `json:"action"`
+		ExpectNodeID  string `json:"expect_node_id,omitempty"`
+		ExpectAETitle string `json:"expect_ae_title,omitempty"`
 	}
 	if err := decode(r, &req); err != nil {
 		a.writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON body"})
+		return
+	}
+	if a.wrongInstance(w, req.ExpectNodeID, req.ExpectAETitle) {
 		return
 	}
 	p, err := a.Resolver.PlanResolve(r.Context(), r.PathValue("id"), req.Action)
@@ -229,6 +304,9 @@ func (a *API) resolve(w http.ResponseWriter, r *http.Request) {
 	var req ResolveRequest
 	if err := decode(r, &req); err != nil {
 		a.writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid JSON body"})
+		return
+	}
+	if a.wrongInstance(w, req.ExpectNodeID, req.ExpectAETitle) {
 		return
 	}
 	if !req.Confirm {
