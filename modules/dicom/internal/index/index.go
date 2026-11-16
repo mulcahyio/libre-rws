@@ -585,6 +585,9 @@ func (s *SQL) FindWith(ctx context.Context, level Level, filters []Filter, limit
 	}
 	if limit > 0 {
 		q += " LIMIT " + strconv.Itoa(limit)
+		if opts.Offset > 0 {
+			q += " OFFSET " + strconv.Itoa(opts.Offset)
+		}
 	}
 
 	rows, err := s.db.QueryContext(ctx, s.rebind(q), args...)

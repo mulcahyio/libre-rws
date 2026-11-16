@@ -8,8 +8,13 @@ import (
 	"errors"
 	"net/http"
 	"sort"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway"
+	"github.com/mulcahyio/libre-rws/platform/config"
+	"github.com/mulcahyio/libre-rws/platform/runtime"
 )
 
 // Reload (control-api-v1.md §4.2, DCM-SRS-088). The control API does not
@@ -43,9 +48,18 @@ type Reloader interface {
 // Warning codes of a reload plan. Each marks a change that weakens a risk
 // control and must be acknowledged by its code before apply (DCM-SRS-095).
 const (
-	WarnAllowListEmptied   = "allow_list_emptied"
-	WarnRemoteAERemoved    = "remote_ae_removed"
-	WarnRemoteAERetargeted = "remote_ae_retargeted"
+	WarnAllowListEmptied      = "allow_list_emptied"
+	WarnAllowListEntryRemoved = "allow_list_entry_removed"
+	WarnRemoteAERemoved       = "remote_ae_removed"
+	WarnRemoteAERetargeted    = "remote_ae_retargeted"
+)
+
+// Kinds of a plan. The kind is part of the plan digest, so the digest of a
+// reload plan cannot approve a configuration edit or a rollback.
+const (
+	planReload   = "reload"
+	planEdit     = "edit"
+	planRollback = "rollback"
 )
 
 // PlanWarning is one warning of a plan.
@@ -90,8 +104,12 @@ type ReloadRequest struct {
 	AcknowledgeWarnings []string `json:"acknowledge_warnings,omitempty"`
 }
 
-// reloadPlan compares what is running with next.
-func (a *API) reloadPlan(next LiveSettings) ReloadPlan {
+// reloadPlan compares what is running with what a reload would load.
+func (a *API) reloadPlan(next LiveSettings) ReloadPlan { return a.diffPlan(next, planReload) }
+
+// diffPlan compares what is running with next. kind is planReload, planEdit
+// or planRollback.
+func (a *API) diffPlan(next LiveSettings, kind string) ReloadPlan {
 	var p ReloadPlan
 	p.RemoteAEs.Added, p.RemoteAEs.Removed, p.RemoteAEs.Changed = []RemoteAEView{}, []RemoteAEView{}, []RemoteAEChange{}
 	p.AllowList.Added, p.AllowList.Removed, p.Warnings = []string{}, []string{}, []PlanWarning{}
@@ -117,7 +135,7 @@ func (a *API) reloadPlan(next LiveSettings) ReloadPlan {
 			r.AETitle = name // as the gateway does
 		}
 		nextDests = append(nextDests, dest{name, r.Host, r.Port, r.AETitle})
-		to := RemoteAEView{Name: name, Host: r.Host, Port: r.Port, AETitle: r.AETitle, Source: a.remoteAESource(name)}
+		to := RemoteAEView{Name: name, Host: r.Host, Port: r.Port, AETitle: r.AETitle, Source: a.remoteAESource(name, kind)}
 		from, had := current[name]
 		switch {
 		case !had:
@@ -159,6 +177,9 @@ func (a *API) reloadPlan(next LiveSettings) ReloadPlan {
 		p.Warnings = append(p.Warnings, PlanWarning{Code: WarnAllowListEmptied, MustAcknowledge: true,
 			Message: "The allow-list becomes empty: every calling AE may then connect, store and retrieve."})
 	}
+	if w, ok := a.lockedOutWarning(next.AllowedAEs, len(p.AllowList.Removed) > 0 || !enforced); ok {
+		p.Warnings = append(p.Warnings, w)
+	}
 	p.Changed = len(p.RemoteAEs.Added)+len(p.RemoteAEs.Removed)+len(p.RemoteAEs.Changed)+
 		len(p.AllowList.Added)+len(p.AllowList.Removed) > 0 || p.AllowList.EnforcedBefore != p.AllowList.EnforcedAfter
 
@@ -167,20 +188,122 @@ func (a *API) reloadPlan(next LiveSettings) ReloadPlan {
 	allow := append([]string(nil), next.AllowedAEs...)
 	sort.Strings(allow)
 	raw, _ := json.Marshal(struct {
+		Kind      string
 		Running   string
 		RemoteAEs []dest
 		AllowList []string
-	}{a.instance().ConfigDigest, nextDests, allow})
+	}{kind, a.instance().ConfigDigest, nextDests, allow})
 	sum := sha256.Sum256(raw)
 	p.PlanDigest = "sha256:" + hex.EncodeToString(sum[:])
 	return p
 }
 
-func (a *API) remoteAESource(name string) string {
+// remoteAESource says where a destination of a plan would come from.
+func (a *API) remoteAESource(name, kind string) string {
 	if a.RemoteAEEnv[name] {
-		return "env"
+		return config.SourceEnv
 	}
-	return "file"
+	if kind != planReload {
+		return config.SourceOverlay
+	}
+	if remote, _ := a.managed(); remote {
+		return config.SourceOverlay
+	}
+	return config.SourceFile
+}
+
+// recentWindow is how far back a plan looks for active peers (DCM-SRS-095).
+const recentWindow = 24 * time.Hour
+
+// maxNamedPeers bounds the AE titles a warning names.
+const maxNamedPeers = 10
+
+// recentPeers lists the calling AEs (title and "IP:port") that stored,
+// queried or retrieved in the last 24 hours, from the audit ring. known is
+// false when the ring cannot tell: the node has no ring, or audit_log_off
+// keeps the gateway's records out of it.
+func (a *API) recentPeers(now time.Time) (peers [][2]string, known bool) {
+	if a.Audit == nil || a.Node.AuditLogOff {
+		return nil, false
+	}
+	since := now.Add(-recentWindow)
+	entries, _ := a.Audit.Select(a.Audit.Size(), func(e *runtime.LogEntry) bool {
+		return !e.Time.Before(since) && (e.Event == "Query" || strings.HasPrefix(e.Event, "DICOMInstancesTransferred."))
+	})
+	seen := map[[2]string]bool{}
+	for _, e := range entries {
+		var rec struct {
+			CallingAE string `json:"calling_ae"`
+			Remote    string `json:"remote"`
+		}
+		if json.Unmarshal(e.Line, &rec) != nil || rec.CallingAE == "" {
+			continue // a record of the control API has no calling AE
+		}
+		k := [2]string{rec.CallingAE, rec.Remote}
+		if !seen[k] {
+			seen[k] = true
+			peers = append(peers, k)
+		}
+	}
+	return peers, true
+}
+
+// lockedOutWarning builds the warning for an allow-list that would refuse a
+// calling AE that was active in the last 24 hours (DCM-SRS-095). narrowed
+// says that the list loses an entry or starts to be enforced.
+func (a *API) lockedOutWarning(next []string, narrowed bool) (PlanWarning, bool) {
+	if len(next) == 0 || !narrowed {
+		return PlanWarning{}, false // an empty list refuses nobody
+	}
+	peers, known := a.recentPeers(time.Now())
+	if !known {
+		return PlanWarning{Code: WarnAllowListEntryRemoved, MustAcknowledge: true,
+			Message: "The allow-list gets narrower, and this node cannot tell which calling AEs were active in the " +
+				"last 24 hours (audit records are off). A modality that is not on the new list will be refused."}, true
+	}
+	refused := map[string]bool{}
+	for _, p := range peers {
+		if ok, err := gateway.AllowListPermits(next, p[0], p[1]); err != nil || !ok {
+			refused[p[0]] = true
+		}
+	}
+	if len(refused) == 0 {
+		return PlanWarning{}, false
+	}
+	names := make([]string, 0, len(refused))
+	for n := range refused {
+		names = append(names, cleanText(n))
+	}
+	sort.Strings(names)
+	more := ""
+	if len(names) > maxNamedPeers {
+		more = " and " + strconv.Itoa(len(names)-maxNamedPeers) + " more"
+		names = names[:maxNamedPeers]
+	}
+	return PlanWarning{Code: WarnAllowListEntryRemoved, MustAcknowledge: true,
+		Message: "Calling AEs that were active in the last 24 hours would be refused by the new allow-list: " +
+			strings.Join(names, ", ") + more + ". They can then no longer store or retrieve images."}, true
+}
+
+// planGuard is the plan-then-apply check (DCM-SRS-088, -092, -093, -095):
+// the digest the person approved must be the digest of the plan as it is
+// now, and every warning that must be acknowledged must be named.
+func planGuard(plan ReloadPlan, digest string, acknowledged []string) error {
+	if plan.PlanDigest != digest {
+		return &planError{http.StatusConflict, "plan_changed",
+			"the running settings or the configuration changed since the plan was made; nothing was changed. Ask for a new plan.", plan}
+	}
+	acked := map[string]bool{}
+	for _, c := range acknowledged {
+		acked[c] = true
+	}
+	for _, w := range plan.Warnings {
+		if w.MustAcknowledge && !acked[w.Code] {
+			return &planError{http.StatusUnprocessableEntity, "warning_not_acknowledged",
+				"the plan has a warning that must be acknowledged in acknowledge_warnings: " + w.Code + ". Nothing was changed.", plan}
+		}
+	}
+	return nil
 }
 
 // reloadFailure maps a reloader error to a response.
@@ -229,21 +352,7 @@ func (a *API) reload(_ context.Context, req *ReloadRequest) actionResult {
 	var plan ReloadPlan
 	_, err := a.Reloader.Apply(func(next LiveSettings) error {
 		plan = a.reloadPlan(next)
-		if plan.PlanDigest != req.PlanDigest {
-			return &planError{http.StatusConflict, "plan_changed",
-				"the running settings or the configuration changed since the plan was made; nothing was changed. Ask for a new plan.", plan}
-		}
-		acked := map[string]bool{}
-		for _, c := range req.AcknowledgeWarnings {
-			acked[c] = true
-		}
-		for _, w := range plan.Warnings {
-			if w.MustAcknowledge && !acked[w.Code] {
-				return &planError{http.StatusUnprocessableEntity, "warning_not_acknowledged",
-					"the plan has a warning that must be acknowledged in acknowledge_warnings: " + w.Code + ". Nothing was changed.", plan}
-			}
-		}
-		return nil
+		return planGuard(plan, req.PlanDigest, req.AcknowledgeWarnings)
 	})
 	var pe *planError
 	switch {

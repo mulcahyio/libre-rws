@@ -100,29 +100,50 @@ func parseIdentifier(ident *godicom.Dataset, model string, opt queryOptions) (pa
 
 	for _, el := range ident.Iter() {
 		kw := el.Keyword()
-		def, ok := queryKeys[kw]
-		if !ok || def.kind == kReturn {
-			continue
+		if _, known := queryKeys[kw]; !known {
+			continue // also elements without a keyword (private tags): never look those up
 		}
-		vals := dcm.Strings(ident, kw)
-		if len(vals) == 0 || (len(vals) == 1 && (vals[0] == "" || vals[0] == "*")) {
-			continue // universal match
-		}
-		if def.kind == kModality {
-			if q.level == index.Study {
-				q.filters = append(q.filters, index.Filter{Op: index.OpStudyHasModality, Values: vals})
-			}
-			continue
-		}
-		if !columnAllowed(q.level, def.column) {
-			continue
-		}
-		f, ok := buildFilter(def, vals, opt)
-		if ok {
+		if f, use := keyFilter(q.level, kw, dcm.Strings(ident, kw), opt); use == keyMatches {
 			q.filters = append(q.filters, f)
 		}
 	}
 	return q, nil
+}
+
+// What keyFilter decided about one key.
+type keyUse int
+
+const (
+	keyUnknown    keyUse = iota // not a matching key of this node (or return-only)
+	keyUniversal                // empty or "*": matches everything, no filter
+	keyNotAtLevel               // a key of a lower level: no filter at this level
+	keyMatches                  // f restricts the result
+)
+
+// keyFilter turns one matching key into an index filter. It is the one
+// place that decides how a key matches: C-FIND, C-MOVE, C-GET and the study
+// query of the control API all go through it (DCM-SRS-006…009, -091).
+func keyFilter(level index.Level, kw string, vals []string, opt queryOptions) (index.Filter, keyUse) {
+	def, ok := queryKeys[kw]
+	if !ok || def.kind == kReturn {
+		return index.Filter{}, keyUnknown
+	}
+	if len(vals) == 0 || (len(vals) == 1 && (vals[0] == "" || vals[0] == "*")) {
+		return index.Filter{}, keyUniversal
+	}
+	if def.kind == kModality {
+		if level == index.Study {
+			return index.Filter{Op: index.OpStudyHasModality, Values: vals}, keyMatches
+		}
+		return index.Filter{}, keyNotAtLevel
+	}
+	if !columnAllowed(level, def.column) {
+		return index.Filter{}, keyNotAtLevel
+	}
+	if f, ok := buildFilter(def, vals, opt); ok {
+		return f, keyMatches
+	}
+	return index.Filter{}, keyUnknown
 }
 
 func columnAllowed(level index.Level, column string) bool {

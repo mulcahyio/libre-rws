@@ -181,6 +181,33 @@ and again with its outcome.
 | `POST /control/v1/reload/plan`, `POST /control/v1/reload` | Shows what a configuration reload would change, then reloads (same as `SIGHUP`). The reload needs `confirm` and the `plan_digest` from the plan. A broken configuration is reported and changes nothing |
 | `GET /control/v1/license`, `POST /control/v1/license/ack`, `/request`, `/install`, `/activate` | Licence status and the same functions as `license-status`, `license-ack`, `license-request`, `license-install`, `license-activate`. Licensing never stops DICOM services |
 | `POST /control/v1/backup`, `GET /control/v1/backups` | Index snapshot into one fixed folder, and the list of snapshots there. Off until you set the folder (below) |
+| `GET /control/v1/studies` | Finds patients, studies, series or images in the index, with the matching rules of C-FIND. Needs at least one matching key and the header `X-Libre-Operator` (the name of the person). At most 200 rows per page. Each search is written to the audit log |
+| `POST /control/v1/send/plan`, `POST /control/v1/send` | Sends a study (or chosen series or images) to a configured remote AE. You name the destination, the study and the Patient ID; the plan shows what would go where; the send needs `confirm` and the `plan_digest` from the plan. Images held as a patient conflict are never sent. One send at a time, at most 5000 images |
+| `POST /control/v1/config/plan`, `POST /control/v1/config`, `GET /control/v1/config/history`, `POST /control/v1/config/rollback/plan`, `POST /control/v1/config/rollback` | Changes the C-MOVE destinations (`dicom.remote_aes`) and the allow-list (`dicom.allowed_aes`) without a restart, and puts the previous version back. No other setting can be changed this way |
+
+**Changing destinations and the allow-list through the control API.**
+LibreDCM writes such a change to its own file in the data volume
+(`config-overlay.yaml`), never to `.env` or `config.yaml`. Things to know:
+
+- A setting changed this way replaces the value from `config.yaml` as a
+  whole. `GET /control/v1/config` shows `overlay` as its source.
+- A value set in `.env` (`LIBRE_DCM_ALLOWED_AES`, `LIBRE_DCM_REMOTE_AES`)
+  still wins and can not be changed through the API. The workstation
+  installer writes these two settings to `.env`: to manage them from Libre
+  WT, leave them empty in `.env`.
+- Emptying the allow-list, removing a destination, pointing a destination
+  at another address, or a new allow-list that would refuse a modality that
+  was active in the last 24 hours gives a warning that must be
+  acknowledged.
+- One previous version is kept (`config-overlay.yaml.prev`) for the
+  rollback.
+- To drop every change made through the API: stop LibreDCM, delete
+  `config-overlay.yaml` in the data volume, start it again.
+- If that file is damaged or was edited by hand with other settings in it,
+  LibreDCM does not start and says so in its log. Delete the file (the
+  settings of `.env` and `config.yaml` then apply) and start again.
+- To turn the function off, set `control.overlay_file: ""` in
+  `config.yaml`.
 
 **Backups through the control API** are off by default. To turn them on,
 add this line to `.env` and run `restart`:

@@ -84,9 +84,18 @@ are in `../librewt/risk-management.md` (WT-HAZ-05…17).
 
 **State after card WT-0.2/3 (2026-11-14).** The action endpoints exist:
 C-ECHO test, reload, licence, backup. DCM-SRS-086…090 and -097 are `Active`
-and verified; see "Verification of the implemented controls" below. HAZ-015
-and HAZ-016 stay in this section until the configuration edit and the send
-function (card WT-0.2/4) are built.
+and verified; see "Verification of the implemented controls" below.
+
+**State after card WT-0.2/4 (2026-11-16).** The study query, the send and
+the configuration edit with rollback exist. DCM-SRS-091…096 are `Active`
+and verified; every requirement of this extension is now implemented on the
+LibreDCM side. The controls of HAZ-015 and HAZ-016 are verified; see
+"Verification of the implemented controls (card WT-0.2/4)" below. The
+residual risk of both stays as targeted (P2, level R) and needs the benefit
+and risk decision of the approver, as the other R rows of this file. The
+Libre WT pages that use these endpoints are a later card; the use-related
+part of both hazards (what the person sees and confirms) is analysed in
+`../librewt/risk-management.md` and verified there.
 
 ### New hazards
 
@@ -108,7 +117,7 @@ function (card WT-0.2/4) are built.
 | HAZ-009 (disclosure) | Configuration, log or audit endpoints return secrets or more patient data; study search widens who can read patient data | DCM-SRS-082 (redaction from a list of safe settings: unknown settings are hidden), -084 (no more patient data than the audit log, omission honoured), -091 (no listing without a key, audited), -090 (no download), -080 (token, no-store) | The risk grows with the number of endpoints; controlled by the listed requirements. Verified for the read-only endpoints (card WT-0.2/2): `TestNoSecretInAnyResponse` searches every response for every configured secret, `TestAuditRingHonoursPatientIDOmission` checks omission through the real gateway; both mutation-checked. A second, independent control was added: every control response passes a secret filter before it is written (fails closed) |
 | HAZ-010 (licence stops image flow) | Licence actions through the control API change DICOM behaviour | DCM-SRS-089 (existing licensing code, outside the gateway), -058 with `TestGatewayHasNoLicenseDependency` | No increase allowed: the architecture test must keep passing in every PR |
 | HAZ-012 (exploited vulnerability) | More attack surface on the admin listener; C-ECHO test used to probe the network | DCM-SRS-080, -087 (Verification only, result reduced to success or stage), -096; gosec, govulncheck, fuzzing of request decoding | Slight increase, controlled; see `cybersecurity.md` §3a |
-| HAZ-013 (wrong patient association) | Held conflict instances shown or sent through the new endpoints | DCM-SRS-091 (same visibility rules as C-FIND), -092 (held instances never sent) | No increase expected; mutation check of the hidden-conflict filter required (card WT-0.2/4) |
+| HAZ-013 (wrong patient association) | Held conflict instances shown or sent through the new endpoints | DCM-SRS-091 (same visibility rules as C-FIND), -092 (held instances never sent) | No increase. Verified (card WT-0.2/4): the study query is compared with C-FIND on the same node at every level, with visibility hidden and flagged; over HTTP a held instance is returned by no query; a send never contains a conflict instance. Six mutants of the hidden-conflict filter (in the query function, in the visibility setting and in the index) and two of the send filter were each caught |
 | HAZ-014 (wrong correction) | Resolve sent to the wrong node | DCM-SRS-097 (identity check, also offered to the conflict resolve endpoint) | Improves. Implemented (card WT-0.2/3): the conflict plan and resolve endpoints accept `expect_node_id` and `expect_ae_title` |
 
 ### Verification of the implemented controls (card WT-0.2/3)
@@ -149,6 +158,67 @@ second place where settings live (controlled: `GET /control/v1/config` shows
 the source of every setting, and the overlay never touches restart-required
 settings); the audit-before-action rule blocks actions when logging fails
 (safe direction).
+
+### Verification of the implemented controls (card WT-0.2/4)
+
+**DRAFT for approval (2026-11-16).** Test names are in
+`modules/dicom/internal/gateway/admin_test.go`,
+`modules/dicom/internal/control/data_test.go` and `configedit_test.go`, and
+`modules/dicom/cmd/libredcm/overlay_test.go` and
+`control_data_wiring_test.go`. Each control below was also broken on
+purpose (148 mutants in all); every mutant made a named test fail.
+
+| Hazard | Control now implemented | Type | Verification of effectiveness |
+|---|---|---|---|
+| HAZ-015 | Only the two live settings can be edited; every other setting of the node is refused, whatever its value (DCM-SRS-093) | Inherent (no code path writes another setting) | `TestConfigEditRefusesEverythingElse` (every other setting of the node, alone and next to a valid edit: `422`, nothing written), `TestOverlayFileHoldsOnlyLiveSettings` (18 overlay files with another key, version or a bad entry: not loaded, node does not start, reload keeps the running settings), `TestControlDataAndConfigWiring` (TLS, AE title, token, overlay path, conflict visibility refused through the real wiring) |
+| HAZ-015 | The change is validated by the normal loader before it is written; written atomically to the overlay; `config.yaml` never rewritten; a failed step puts the overlay and the previous version back and leaves the running settings (DCM-SRS-093) | Protective | `TestOverlayEditReloadRestartAndRollback` (in force at once, after a reload and after a restart; `config.yaml` byte-identical; file mode 0600; no temporary file left), `TestOverlayFailedChangeLeavesEverythingAsItWas` (12 failures, each with and without an existing overlay: refused check, invalid rule or destination, licence block, broken `config.yaml`, write error, half-written file, other content written, gateway refusing the settings; files and running settings compared before and after), `TestWriteFileAtomic`, `TestConfigEditFailuresChangeNothing` |
+| HAZ-015 | Plan with the exact difference; apply only with confirmation and the digest of that plan; the digest covers the kind of plan, the running settings and the new settings (DCM-SRS-093, -088) | Protective | `TestConfigEditPlanAndApply` (six refusals: no confirmation, no digest, wrong digest, digest of another edit, digest of a reload plan to the same settings; a repeated request writes once; an applied plan is stale), `TestConfigRollback`, `TestControlDataAndConfigWiring` |
+| HAZ-015, HAZ-007, HAZ-005 | Warnings that must be acknowledged by code: allow-list emptied; allow-list that would refuse a calling AE active in the last 24 hours; destination removed or pointed elsewhere (DCM-SRS-095) | Protective | `TestConfigEditWarnings` (13 edits; each warning refused with no, wrong and incomplete acknowledgement; a peer older than 24 hours and a peer that was already refused are not counted; a peer kept by a network rule gives no warning; a list that starts to be enforced is checked; with audit records off the warning is always given), `TestAllowListPermits`, `TestConfigRollback`, `TestControlDataAndConfigWiring` (allow-list not emptied without the acknowledgement; the gateway then refuses an AE that is not listed, on the wire) |
+| HAZ-015 | Previous overlay version kept with time, operator and reason; rollback through the same plan and apply (DCM-SRS-094) | Protective (recovery) | `TestOverlayEditReloadRestartAndRollback` (rollback and rollback of the rollback; history), `TestConfigRollback` (same guard; warnings apply; no previous version refused), `TestControlDataAndConfigWiring` (rollback after a restart) |
+| HAZ-015 | Settings fixed by the environment cannot be edited; the environment still wins over the overlay (DCM-SRS-093, -050) | Protective | `TestConfigEditSetByEnvironment`, `TestOverlayLoadOrder` |
+| HAZ-016 | Send only to a configured destination by name; no address field (DCM-SRS-092, -011) | Inherent | `TestSendPlanAndSend` (unknown and empty destination refused), `TestSendRefusals` (a `host`, `port` or `path` field refused as unknown), `TestControlDataAndConfigWiring` |
+| HAZ-016 | Patient ID required and equal to the indexed Patient ID of the study; chosen series and instances must belong to the study (DCM-SRS-092) | Protective | `TestSendPlanAndSend` (12 refusals, among them another patient, other letter case, wildcard, series and instances of another study; nothing arrives at the destination), `TestSendNeverSendsHeldInstances` |
+| HAZ-016 | Plan shows destination address, patient, study and instance count; the send goes out only for the digest of that plan and sends exactly its instances (DCM-SRS-092) | Protective | `TestSendPlanAndSend` (plan content; a new instance changes the digest; the instances that arrive are those of the plan), `TestSendPlanThenApply` (seven refusals: no confirmation, no digest, wrong digest, digest used for another destination, study or patient, study changed after the plan; a repeated request sends once), `TestControlDataAndConfigWiring` (real DICOM destination) |
+| HAZ-016, HAZ-008 | Outcome per sub-operation; a send in which nothing arrived answers `502`; audit record with operator, destination, study and patient (DCM-SRS-092, -086) | Protective (information for the user) | `TestSendOutcomes`, `TestSendPlanAndSend` (dead destination: every instance failed, by UID), `TestSendPlanThenApply` (audit record; patient ID omitted when the site set so) |
+| HAZ-013 | A send never contains an instance recorded as a patient conflict (DCM-SRS-092) | Inherent (the send reads indexed instances only) | `TestSendNeverSendsHeldInstances` (visibility hidden and flagged; the held patient and a held instance named in the request are refused; the destination receives the indexed instances of the indexed patient only) |
+| HAZ-013, HAZ-002 | Study query through the query function and the visibility rules of C-FIND (DCM-SRS-091) | Inherent (one shared function) | `TestQueryIndexMatchesCFind` (23 queries at four levels compared with a C-FIND on the same node), `TestQueryIndexConflictVisibility` (hidden and flagged, compared with C-FIND), `TestStudiesHideHeldConflictInstances` (over HTTP: 12 queries, the held instance in none), `TestControlDataAndConfigWiring` |
+| HAZ-002 | Never more rows than asked for: no listing without a key; unknown key and key of a lower level refused; paging says when more rows exist (DCM-SRS-091) | Protective | `TestQueryIndexMatchesCFind` (11 refusals), `TestQueryIndexPages`, `TestStudiesPagingAndBounds` (450 rows in five pages, each row once; cursor bound to its query), `TestConformance` (limit and offset on SQLite and PostgreSQL) |
+| HAZ-009, HAZ-008 | Operator required; one audit record per query, written before rows are returned; query values in no other log line; patient values omitted when the site set so (DCM-SRS-091) | Protective | `TestStudiesNeedTokenAndOperator`, `TestStudiesAuditAndLogSecrecy` (the log ring searched for the query values; no audit record, no rows) |
+| HAZ-004 | One send and four study queries at a time; 5000 instances per send; 200 rows per page and 10 000 rows deep; timeouts; bounded overlay (200 destinations, 500 rules, 1 MiB) (DCM-SRS-096) | Protective | `TestSendOneAtATime`, `TestStudiesConcurrencyLimit`, `TestSendPlanAndSend` (limit lowered to 2 in the test: 3 refused, 2 sent), `TestStudiesPagingAndBounds`, `TestOverlayFileHoldsOnlyLiveSettings` (file too large), `TestOverlayFailedChangeLeavesEverythingAsItWas` (too many destinations) |
+
+**Risks from these controls, found while building them** (ISO 14971 §7.5):
+
+- **Two places hold the same setting.** After the first edit, the overlay
+  replaces the value of `config.yaml` as a whole. An administrator who then
+  edits `config.yaml` on the host sees no effect. Controlled by
+  information: `GET /control/v1/config`, `/remote-aes` and `/allow-list`
+  name the source `overlay`; the overlay file starts with a comment that
+  says what it is and how to drop it; INSTALL.md describes it. Residual:
+  confusion and a short delay, no wrong data flow (the stricter of the two
+  views is the one the administrator approved last).
+- **A damaged overlay file stops the node from starting** (availability,
+  HAZ-004). Chosen deliberately over starting with `config.yaml` alone,
+  which could be the wider allow-list (HAZ-007). The file is written
+  atomically and read back before it is used, so this takes a manual edit
+  or a damaged disk. The error message names the file. Decision D25.
+- **The "active peer" warning depends on the audit ring**, which is empty
+  after a restart and holds 1000 records. A modality that was active before
+  a restart, or whose records were pushed out by many others, is not
+  named. The emptied-list and removed-destination warnings do not depend on
+  it. With audit records off the warning is always given (safe direction).
+- **Sends and queries load the node.** One send at a time and bounded
+  queries; a long send holds the send slot for up to 30 minutes, and a
+  second person gets `429`. DICOM services have their own limits and are
+  not blocked by it.
+- **Accepted separate studies cannot be sent from the console** (D26).
+  Safe direction for HAZ-013; a delay for the reader in that rare case,
+  who can still retrieve the study with C-MOVE.
+- **A regression found by the existing fuzz corpus while building this
+  card:** making C-FIND and the study query share one function first moved
+  a look-up in front of the "known key" check, so an identifier with an
+  element that has no keyword (a private tag) made the query handler
+  fail. It never left the development branch. The check is back in front
+  and a mutant that removes it is caught (`FuzzCFindIdentifierBytes`).
 
 ## 3. Risk controls and verification of their effectiveness
 

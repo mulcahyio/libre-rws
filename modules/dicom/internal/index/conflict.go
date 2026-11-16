@@ -75,6 +75,9 @@ type Check struct {
 type FindOptions struct {
 	Open     bool // conflicts held in quarantine (visibility "flagged")
 	Accepted bool // conflicts accepted as separate studies
+	// Offset skips that many rows of the ordered result (paging for the
+	// control API, DCM-SRS-091). It is used only together with a limit.
+	Offset int
 }
 
 func (o FindOptions) states() []string {

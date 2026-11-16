@@ -336,6 +336,59 @@ sequenceDiagram
   end
 ```
 
+#### 5.6.3 Data and configuration endpoints (implemented, card WT-0.2/4)
+
+**DRAFT for approval (2026-11-16).** DCM-SRS-091…096 are `Active`. What
+the code does now:
+
+| Item | Change made |
+|---|---|
+| `internal/gateway/query.go` | `keyFilter`: the one place that turns a matching key into an index filter. `parseIdentifier` (C-FIND, C-MOVE, C-GET) and the study query both call it |
+| `internal/gateway/admin.go` | `QueryIndex` (study query: same filters and the same `findOptions` as C-FIND; refuses a query nothing restricts, an unknown key and a key of a lower level; limit and offset), `PlanSend` and `Send` (validate destination, Patient ID, study, series and instances; read indexed instances only; hand the rebuilt plan to a check function and send exactly its rows through `sendInstances`, the C-MOVE send path), `ValidateRemoteAE`. The gateway still imports neither licensing nor the control package |
+| `internal/gateway/allow.go` | `AllowListPermits`: the association-time decision, offered for a list in configuration form, so a plan can tell which active peers a new list would refuse |
+| `internal/index` | `FindOptions.Offset` (SQL `OFFSET`, used only with a limit). No schema change |
+| `internal/control/studies.go` | `GET /control/v1/studies`: operator header, query parsing and bounds, cursor (offset bound to the query by a hash), four slots, 30 s timeout, audit record before the rows are returned. `Data` is the small interface the gateway implements |
+| `internal/control/send.go` | `POST /control/v1/send/plan` and `/send`: form checks, plan digest (SHA-256 over the plan), the check function passed into `Send`, outcome mapping, audit fields. Runs in the action runner (envelope, request ID, one slot, 30 min timeout) |
+| `internal/control/configedit.go` | `POST /control/v1/config/plan`, `/config`, `/config/rollback/plan`, `/config/rollback`, `GET /control/v1/config/history`. `parseEdit` accepts the two settings and refuses every other key. The package writes no file: it calls the `ConfigEditor` interface and passes a check function, so plan check and write are one step |
+| `internal/control/reload.go` | `diffPlan` (shared by reload, edit and rollback; the plan kind is part of the digest), `planGuard` (digest and acknowledged warnings), the active-peer warning from the audit ring |
+| `cmd/libredcm/overlay.go` | The overlay file: strict reader (known keys only, version, validation, 1 MiB), `loadConfigOverlay` (defaults, `config.yaml`, overlay, environment), atomic writer, and the reloader's `ConfigEditor` methods. `commit` validates the candidate with the loader, runs the check, keeps the previous version, writes, reloads from the files, compares, and restores both files on any failure |
+| `cmd/libredcm/reload.go` | `load(candidate)` reads through `loadConfigOverlay`; `put` applies and remembers which settings the overlay supplied |
+| `cmd/libredcm/main.go` | New setting `control.overlay_file` (`LIBRE_DCM_CONTROL_OVERLAY_FILE`, default `./data/config-overlay.yaml`; empty: off). Start-up loads through the same function, so a restart gives the settings a reload gives. Wires the gateway as `Data` and the reloader as `Editor` |
+| `platform/config` | `SourceOverlay`: a fourth source name for the configuration view |
+| `deploy/docker/Dockerfile.dicom` | Sets the overlay path into the data volume (`/var/lib/libredcm/config-overlay.yaml`) |
+
+```mermaid
+sequenceDiagram
+  participant WT as Libre WT
+  participant C as internal/control
+  participant G as gateway
+  participant D as destination (configured remote AE)
+  WT->>C: POST /control/v1/send/plan (destination, patient_id, study)
+  C->>G: PlanSend
+  G-->>C: plan (address, patient, study, instances, instances_digest)
+  C-->>WT: plan, plan_digest
+  Note over WT: the person reads the plan and approves
+  WT->>C: POST /control/v1/send (plan_digest, confirm, operator, reason, request_id)
+  C->>C: envelope, expected node, request ID, one send at a time
+  C->>C: audit record (phase start)
+  C->>G: Send(request, check)
+  G->>G: build the plan again
+  G->>C: check(plan)
+  alt digest differs
+    C-->>WT: 409 plan_changed, nothing sent
+  else same plan
+    G->>D: C-STORE each instance of the plan
+    D-->>G: status per instance
+    G-->>C: completed, failed, warning, UIDs
+    C->>C: audit record (phase result)
+    C-->>WT: outcome per sub-operation
+  end
+```
+
+The configuration edit follows the diagram of §5.6 above, with one
+difference from that plan: the reloader, not the control package, puts the
+previous overlay back when a step fails, because it holds the lock.
+
 ## 6. SOUP items
 
 The full list with evaluation is `soup.md` (generated from `go.mod` and the

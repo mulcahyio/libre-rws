@@ -74,6 +74,10 @@ func studiesAndPatients(rows []index.Row) (studies, patients []string) {
 	return studies, patients
 }
 
+// AuditOmitsPatientID reports the audit_omit_patient_id setting, so that
+// the audit records the control API writes honour it too.
+func (g *Gateway) AuditOmitsPatientID() bool { return g.cfg.AuditOmitPatientID }
+
 func (g *Gateway) auditPatientIDs(ids []string) []string {
 	if g.cfg.AuditOmitPatientID {
 		return nil

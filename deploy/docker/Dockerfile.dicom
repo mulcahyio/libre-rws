@@ -59,6 +59,7 @@ ENV LIBRE_DCM_CONFIG=/etc/libredcm/config.yaml \
     LIBRE_DCM_INDEX_DSN=file:/var/lib/libredcm/index.db \
     LIBRE_DCM_LICENSE_FILE=/var/lib/libredcm/license.lic \
     LIBRE_DCM_LICENSE_DATA=/var/lib/libredcm \
+    LIBRE_DCM_CONTROL_OVERLAY_FILE=/var/lib/libredcm/config-overlay.yaml \
     LIBRE_DCM_LOG_FORMAT=json
 
 USER 65532:65532
