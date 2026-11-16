@@ -14,6 +14,39 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **Libre WT: licence management and index backup (card WT-0.2/7, issue
+  #20; WT-SRS-027 and -028 now `Active`).**
+  - Licence page per instance (all roles): state, message, days left,
+    expiry, customer, site, term, machine fingerprint and acknowledgement.
+    The key shows only as its last four characters (Libre WT also cuts a
+    longer value LibreDCM might send). Every licence page says that DICOM
+    services keep running whatever the licence state.
+  - Licence actions (Admin), each through a warning page with the
+    single-use approval, the approval box and a reason: acknowledge the
+    unlicensed notice (the Admin types their own user name to sign;
+    LibreDCM records the logged-in user), install a licence file (upload,
+    text, at most 128 KiB; the warning page shows name, size and SHA-256;
+    LibreDCM checks it and a refused file leaves the installed licence),
+    activate online (key in a password field), and download an activation
+    request file for offline activation.
+  - The licence key is kept only in memory with the pending approval, shown
+    masked, sent once, removed from LibreDCM's error text, and never written
+    to the Libre WT log or audit log. The request file is a download only.
+  - Backup page per instance (Operator, Admin): the backup files on the
+    node and the backups started from Libre WT (from its audit log: user,
+    time, reason, file, size, SHA-256). Start a backup through a warning
+    page with a reason; the result shows file, size and checksum. No path,
+    file name, download or delete. The pages say the backup holds the index
+    only and images must be backed up separately. A node without a backup
+    directory offers nothing to approve.
+  - The licence-block message of configuration changes now links to the
+    licence page of the instance.
+  - The licence file upload is the only `multipart/form-data` address
+    (whole body at most 192 KiB, held in memory).
+
+  Changed against the 0.2 design: acknowledging the licence notice is for
+  Admins only (D47; the design had Operator and Admin). No new dependency.
+  No change to LibreDCM.
 - **Libre WT: configuration, destinations, allow-list, edit, reload,
   rollback and C-ECHO test (card WT-0.2/6, issue #20; WT-SRS-019…022 and
   -024 now `Active`).**

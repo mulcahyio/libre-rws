@@ -53,7 +53,7 @@ func repoRoot(t *testing.T) string {
 // a separate process with an empty archive. Libre WT does not import
 // LibreDCM (TestWTDoesNotImportDCM), so the test talks to it the way an
 // installation does: over the control API only.
-func startLibreDCM(t *testing.T, nodeID, aeTitle, token string) (adminURL string) {
+func startLibreDCM(t *testing.T, nodeID, aeTitle, token string, extraEnv ...string) (adminURL string) {
 	t.Helper()
 	root, dir := repoRoot(t), t.TempDir()
 	bin := filepath.Join(dir, "LibreDCM")
@@ -70,6 +70,7 @@ func startLibreDCM(t *testing.T, nodeID, aeTitle, token string) (adminURL string
 		"LIBRE_DCM_NODE_ID="+nodeID, "LIBRE_DCM_AE_TITLE="+aeTitle,
 		"LIBRE_DCM_STORAGE_PATH="+filepath.Join(dir, "blobs"), "LIBRE_DCM_INDEX_DSN=file:"+filepath.Join(dir, "index.db"),
 		"LIBRE_DCM_CONTROL_OVERLAY_FILE="+filepath.Join(dir, "overlay.yaml"), "LIBRE_DCM_LOG_LEVEL=warn")
+	cmd.Env = append(cmd.Env, extraEnv...)
 	logFile, err := os.Create(filepath.Join(dir, "libredcm.log"))
 	if err != nil {
 		t.Fatal(err)

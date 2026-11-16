@@ -174,7 +174,13 @@ WT can manage several LibreDCM nodes: give each node its own admin token and
 list the nodes in the Libre WT configuration file (`instances:`, see
 `modules/wt/README.md`). Libre WT remembers the node ID and AE title of each
 node. If you replace a node or change its AE title, Libre WT shows a warning
-and an administrator accepts the new identity in the console. Libre WT does
+and an administrator accepts the new identity in the console. Libre WT also
+shows the licence state of the node (with the statement that the licence
+never stops DICOM services) and lets an administrator acknowledge the
+unlicensed notice, install a licence file, activate online or download an
+activation request file. An operator or administrator can start an index
+backup from Libre WT when the backup folder below is set; Libre WT shows the
+file, its size and its SHA-256 checksum, and the list of backups. Libre WT does
 not start, stop or restart LibreDCM: use the commands above.
 
 **Control API (for Libre WT):** with the admin token, `/control/v1` on the

@@ -1,0 +1,17 @@
+{{define "title"}}Backup done{{end}}
+{{define "content"}}
+<section class="card">
+<h1>Done: backup of the index</h1>
+<p class="msg info">LibreDCM wrote the backup on instance <b>{{.I.Name}}</b>.</p>
+<dl>
+<dt>File</dt><dd><code>{{.R.File}}</code></dd>
+<dt>Size</dt><dd>{{byteSize .R.Bytes}} ({{.R.Bytes}} bytes)</dd>
+<dt>SHA-256</dt><dd><code class="uid">{{.R.SHA256}}</code></dd>
+<dt>Duration</dt><dd>{{.R.DurationMS}} ms</dd>
+<dt>Request ID</dt><dd><code>{{.RequestID}}</code></dd>
+</dl>
+<p class="msg warn"><b>The backup holds the index only.</b> Images are not included: back up the image store separately.</p>
+{{if .R.Note}}<p><small>{{.R.Note}}</small></p>{{end}}
+<p><a href="{{.Back}}">Back to the backups</a></p>
+</section>
+{{end}}

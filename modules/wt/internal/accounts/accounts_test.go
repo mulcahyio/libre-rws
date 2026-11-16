@@ -136,6 +136,34 @@ func TestAuditLog(t *testing.T) {
 	}
 }
 
+// The backup history of an instance is read from the audit log: only the
+// records of that action and that instance, newest first, at most limit.
+// Verifies: WT-SRS-028
+func TestAuditActionLog(t *testing.T) {
+	ctx := context.Background()
+	s := open(t)
+	for _, e := range []Entry{
+		{Instance: "a", Action: "backup", Detail: "1"}, {Instance: "b", Action: "backup", Detail: "2"},
+		{Instance: "a", Action: "backup.approved", Detail: "3"}, {Instance: "a", Action: "backup", Detail: "4"},
+		{Instance: "a", Action: "backup", Detail: "5"},
+	} {
+		e.User, e.Outcome = "op1", "success"
+		if err := s.Audit(ctx, e); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got, err := s.AuditActionLog(ctx, "a", "backup", 2)
+	if err != nil || len(got) != 2 || got[0].Detail != "5" || got[1].Detail != "4" {
+		t.Fatalf("history = %+v, %v", got, err)
+	}
+	if all, _ := s.AuditActionLog(ctx, "a", "backup", 0); len(all) != 3 {
+		t.Fatalf("history without limit = %+v", all)
+	}
+	if none, _ := s.AuditActionLog(ctx, "", "backup", 0); len(none) != 0 {
+		t.Fatalf("history of no instance = %+v", none)
+	}
+}
+
 // A database written by Libre WT 0.1 is upgraded in place: the old audit
 // records stay, new records can name an instance, and the log can be
 // filtered by instance. A database from a newer Libre WT is refused.

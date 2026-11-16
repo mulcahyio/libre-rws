@@ -47,6 +47,14 @@ type Client interface {
 	RollbackPlan(ctx context.Context, exp dcmclient.Identity) (dcmclient.ChangePlan, *dcmclient.OverlayVersion, error)
 	Rollback(ctx context.Context, digest string, acks []string, env dcmclient.Envelope) (dcmclient.ChangeResult, error)
 	Echo(ctx context.Context, t dcmclient.EchoTarget, env dcmclient.Envelope) (dcmclient.EchoResult, error)
+
+	License(ctx context.Context) (dcmclient.LicenseView, error)
+	LicenseAck(ctx context.Context, env dcmclient.Envelope) (dcmclient.LicenseResult, error)
+	LicenseRequest(ctx context.Context, key, site string, env dcmclient.Envelope) (dcmclient.LicenseRequestResult, error)
+	LicenseInstall(ctx context.Context, text string, env dcmclient.Envelope) (dcmclient.LicenseResult, error)
+	LicenseActivate(ctx context.Context, key, site string, env dcmclient.Envelope) (dcmclient.LicenseResult, error)
+	Backups(ctx context.Context) (dcmclient.BackupList, error)
+	Backup(ctx context.Context, env dcmclient.Envelope) (dcmclient.BackupResult, error)
 }
 
 // IdentityStore remembers the identity of each instance (the accounts

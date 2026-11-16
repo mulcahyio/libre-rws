@@ -138,8 +138,59 @@ Rules:
   not report status". Study Exceptions still work for it.
 - **Licence.** The licence state shown never stops DICOM services. An
   unlicensed node that waits for the licence notice to be acknowledged
-  refuses configuration changes (edit, reload, rollback); Libre WT says so.
-  DICOM keeps running.
+  refuses configuration changes (edit, reload, rollback); Libre WT says so
+  and links to the licence page. DICOM keeps running.
+
+## Licence
+
+**Licence** on an instance (all roles) shows the state, message, days left,
+expiry, customer, site, term, the machine fingerprint and who acknowledged
+the unlicensed notice. A licence key is only ever shown as its last four
+characters. Every licence page says it: **DICOM services keep running
+whatever the licence state.** A source build of LibreDCM needs no licence;
+the page says "not enforced" and offers nothing.
+
+On an official build an Admin has four actions. Each first shows a warning
+page; nothing is sent before the approval with a reason. All are recorded in
+the audit logs of Libre WT and LibreDCM, never with the key.
+
+- **Acknowledge the unlicensed notice.** Type your own user name to sign.
+  LibreDCM records it under your user name and lifts the block on
+  configuration reloads for 24 hours, as `LibreDCM -license-ack NAME` on
+  the host does. Only Admins acknowledge (open decision D47).
+- **Install a licence file.** Upload the file you got from the licence
+  portal (text, at most 128 KiB). The warning page shows its name, size and
+  SHA-256. LibreDCM checks the signature, product, machine and dates; a file
+  it refuses changes nothing and the installed licence stays.
+- **Activate online.** Type the licence key (and a site name if you like).
+  The node asks the licence server and installs the licence it returns.
+  Libre WT waits up to 45 seconds.
+- **Activation request file (offline).** For a node without internet
+  access: the browser downloads a request file. Send it to the licence
+  portal and install the licence file it returns. The file holds the key in
+  encoded form: keep it like the key.
+
+## Backup
+
+**Backup** on an instance (Operator, Admin) makes an online snapshot of the
+index while the node runs. **It holds the index only: back up the image
+store separately.** The snapshot holds patient data.
+
+- The node must have a backup directory (`control.backup_dir` or
+  `LIBRE_DCM_CONTROL_BACKUP_DIR`, set on the host) and a SQLite index. With
+  PostgreSQL, use the database's own tools (`pg_dump`). Otherwise the page
+  says why no backup can be made.
+- **Start a backup…** shows a warning page; give a reason and approve.
+  LibreDCM chooses the file name, checks the free space first and never
+  replaces a file. One backup runs at a time.
+- The result shows the file name, its size and its SHA-256 checksum. Libre
+  WT waits up to 110 seconds; a longer backup still finishes on the node and
+  appears in the list (the result is then "outcome not known").
+- The page lists the backup files on the node and, from the Libre WT audit
+  log, every backup started from Libre WT with user, time, reason, file,
+  size and checksum.
+- Libre WT can't choose a place or a name, download or delete a backup.
+  Remove old backups on the host.
 
 ## Changing the configuration
 
@@ -190,6 +241,5 @@ working while one instance is configured. After login the first page is now
 the fleet page. Going back to 0.1 with the upgraded database works; 0.1
 ignores the additions.
 
-Not yet: study search and send, licence handling, backup, LibreDCM audit
-records and logs (later cards of 0.2); OIDC/LDAP, TOTP, IHE IOCM rejection
-notes to other systems.
+Not yet: study search and send, LibreDCM audit records and logs (later
+cards of 0.2); OIDC/LDAP, TOTP, IHE IOCM rejection notes to other systems.

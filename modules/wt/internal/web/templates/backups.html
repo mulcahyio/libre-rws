@@ -1,0 +1,38 @@
+{{define "title"}}Backup{{end}}
+{{define "content"}}
+<h1>Backup of the index</h1>
+<p class="msg warn" role="note"><b>The backup holds the index only.</b> Images are not included: back up the image store separately (see the LibreDCM install guide). A backup file holds patient data.</p>
+<p class="lead">Read at {{fmtStamp .ReadAt}}.</p>
+{{with .B}}
+{{if .Configured}}
+<p>LibreDCM writes each backup as a new file into its own backup directory <code>{{.Directory}}</code> and never replaces a file. Libre WT can't choose the place or the name, and can't download or delete a backup: removing old backups is done on the host.</p>
+{{if $.CanOperate}}
+{{if not $.Allowed}}<p class="msg error" role="alert">{{$.Blocked}}</p>{{end}}
+<form method="post" action="{{$.Base}}/backup/review" class="inline"><input type="hidden" name="csrf" value="{{$.CSRF}}"><button {{if not $.Allowed}}disabled{{end}}>Start a backup…</button></form>
+<p><small>The button first shows a warning page; nothing starts before you approve it there with a reason.</small></p>
+{{end}}
+{{else}}
+<p class="msg info">Backups can't be made from the console on this instance: {{orDash .Reason}}.</p>
+{{end}}
+
+<h2>Backups on the node</h2>
+{{if .Backups}}
+<table>
+<thead><tr><th>File</th><th>Size</th><th>Time</th></tr></thead>
+<tbody>{{range .Backups}}<tr><td><code>{{.File}}</code></td><td>{{byteSize .Bytes}}</td><td>{{fmtTime .Time}}</td></tr>{{end}}</tbody>
+</table>
+{{if .More}}<p><small>Only the newest {{len .Backups}} of {{.Count}} backups are listed.</small></p>{{end}}
+{{else}}<p>No backup file is in the backup directory.</p>{{end}}
+{{if .Note}}<p><small>{{.Note}}</small></p>{{end}}
+{{end}}
+
+<h2>Backups started from Libre WT</h2>
+<p><small>From the Libre WT audit log: who started each backup, when, why, and LibreDCM's answer (file, size, SHA-256 checksum).</small></p>
+{{if .HistoryErr}}<p class="msg error" role="alert">The history could not be read: {{.HistoryErr}}</p>{{end}}
+{{if .History}}
+<table>
+<thead><tr><th>Time</th><th>User</th><th>Outcome</th><th>Detail</th></tr></thead>
+<tbody>{{range .History}}<tr><td>{{fmtTime .At}}</td><td>{{.User}}</td><td>{{.Outcome}}</td><td><small>{{.Detail}}</small></td></tr>{{end}}</tbody>
+</table>
+{{else}}<p>No backup was started from Libre WT for this instance.</p>{{end}}
+{{end}}

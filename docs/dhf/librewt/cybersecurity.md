@@ -182,3 +182,51 @@ New points:
 
 No new dependency (`go.mod` and `go.sum` unchanged). gosec v2.30.0 and
 govulncheck v1.9.0 results are in the pull request.
+
+### State after card WT-0.2/7 (2026-11-16)
+
+Card WT-0.2/7 added the licence page (acknowledge, request file, install
+file, activate online) and the index backup. Status of the threats they
+touch (C = control verified, P = partly, O = open):
+
+| ID | Status | What is verified now | Tests |
+|---|---|---|---|
+| WT-TM-09 | P | For the four licence actions and the backup: CSRF token (missing, wrong, another session's: refused, nothing reaches LibreDCM), single-use confirmation bound to session, instance, action and input (licence file checksum, key end, site), approval box, reason. The acknowledgement also needs the person's own user name. What is sent (key, site, licence file) is kept on the server from the review. Send comes with card WT-0.2/8 | `TestLicenceAckFlow`, `TestLicenceInstallFlow`, `TestLicenceActivateAndRequest`, `TestBackupFlow`, `TestLicenceBackupRolesAndCSRF` |
+| WT-TM-10 | P | 12 new addresses in the reviewed role table (licence view: all; every licence action: Admin, D47; backup: Operator and Admin), each walked for every role with a valid form and without the CSRF token; the upload address too. Licence actions are shown to Admins only; the backup tab not to Viewers | `TestRoleTable`, `TestLicenceBackupRolesAndCSRF`, `TestLicencePage` |
+| WT-TM-11 | C (for the actions that exist) | Licence and backup actions: nothing sent while the node differs; expected node sent; LibreDCM's "instance mismatch" reported; licence and backup lists answered by another node are not shown | `TestLicenceBackupGuards` |
+| WT-TM-12 | P | Licence keys: password field, shown only as `••••` plus the last four characters, also when LibreDCM sends more; removed from LibreDCM's error text in any case; in no page, log line or audit record; the request text (holds the key, encoded) only as a download. Licence file content in no page, log line or audit record. Search values and LibreDCM audit records come with card WT-0.2/8 | `TestLicenceActivateAndRequest`, `TestLicenceInstallFlow`, `TestLicencePage`, `TestLicenceKeyIsMasked`, `TestLicenceAndBackupRequests` |
+| WT-TM-14 | P | Markup in licence message, site, customer and backup texts: shown as text | `TestLicencePage`, `TestBackupFlow` |
+| WT-TM-18 | P | Reviews, approvals (before sending; no record, nothing sent) and results of every licence and backup action; `unknown` without an answer; LibreDCM's own backup record carries the Libre WT user and reason | `TestLicenceAckFlow`, `TestLicenceBackupGuards`, `TestBackupWithoutAnswer`, `TestLicenceAndBackupAgainstRealLibreDCM` |
+
+New points:
+
+- **File upload (new attack surface).** One address only,
+  `POST /i/{i}/license/install/review`, Admin only, reads
+  `multipart/form-data`. The whole body is capped at 192 KiB by
+  `http.MaxBytesReader` and parsed in memory (nothing is written to disk;
+  any temporary parts are removed at the end of the request). The CSRF
+  token is checked after parsing, before the handler runs. The file must be
+  UTF-8 text without NUL bytes, 128 KiB at most. Only its base name is
+  kept, cut to 100 characters and shown as text. The content goes to
+  LibreDCM, which checks the signature; Libre WT never renders it. A
+  multipart body sent to any other address is not parsed, so it fails the
+  CSRF check (`TestLicenceInstallFlow`).
+- **Download (new).** The activation request is the only response of Libre
+  WT that is not a page: `text/plain`, `Content-Disposition: attachment`,
+  with `nosniff`, `no-store` and the strict CSP of every response. The file
+  name is built from the configured instance name and the time, never from
+  request text.
+- **Secrets in memory.** A typed licence key and an uploaded licence file
+  are kept with the pending approval: at most 10 minutes, at most 20 per
+  session, dropped at logout and at restart. They are never written to
+  disk, the log or the audit log.
+- **Action timeouts.** Online activation waits up to 45 seconds; a backup
+  up to 110 seconds (below the HTTP client and web-server timeouts). After
+  that the outcome is recorded as `unknown`; LibreDCM finishes a backup
+  and lists the file.
+
+### Dependencies and static analysis (card WT-0.2/7)
+
+No new dependency (`go.mod` and `go.sum` unchanged; `mime/multipart` and
+`unicode/utf8` are standard library). gosec v2.30.0 and govulncheck v1.9.0
+results are in the pull request.

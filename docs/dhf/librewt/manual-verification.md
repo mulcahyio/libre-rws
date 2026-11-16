@@ -79,3 +79,35 @@ LibreDCM, the licence block on a real unlicensed official build.
 - WT-SRS-021: destination added and removed (warning box) and allow-list changed on a real node (2026-11-16)
 - WT-SRS-022: rollback and reload on a real node (2026-11-16)
 - WT-SRS-024: C-ECHO success to a real node, connect failure to a closed port, free address refused for the Operator (2026-11-16)
+
+**2026-11-16, Hermes (pre-baseline, development evidence, card WT-0.2/7):**
+Libre WT and LibreDCM built from branch `feat/librewt-0.2-licence` and run
+on Linux as two processes: LibreDCM `manual-dcm-1` (AE `ARCHIVE1`, source
+build, SQLite index, backup directory set with
+`LIBRE_DCM_CONTROL_BACKUP_DIR`, token file) managed by Libre WT as instance
+`dcm-1`. No patient data. Walked with `curl` and three cookie jars (Admin,
+Operator, Viewer) by a scratch script. Seen: licence page 200 for the
+Viewer with "DICOM services keep running whatever the licence state" and
+"Not enforced"; no licence action form for the Admin on this source build;
+acknowledgement review refused for Viewer and Operator (403). Admin uploaded
+a synthetic licence file: the warning page showed the same SHA-256 as
+`sha256sum` of the file (`e7d720f9…51da`); the approved install was refused
+by LibreDCM ("source build: no licence is needed", 422, "Nothing was
+changed"). A 300 KB upload was refused (413). Backup page refused for the
+Viewer (403); shown to the Operator with "The backup holds the index only".
+Backup without a reason refused (422); with a reason done: the result page
+named `index-manual-dcm-1-20261116T232742Z.db` and SHA-256 `26f3c60b…588b`,
+equal to `sha256sum` of the file LibreDCM wrote (102400 bytes, mode 0600);
+an extra `path` form field was ignored; the same approval a second time was
+refused (409); the backups page then listed the file and the history row
+with the reason. LibreDCM's own audit records show the start and result of
+the backup under `op1` with the reason, and the refused licence action
+under `admin1`. The token and the licence text were in no saved page and
+not in the Libre WT log (0 matches each). Not done by hand: a browser
+walkthrough with screenshots, HTTPS between Libre WT and LibreDCM, the
+licence actions against a real unlicensed official build (acknowledge,
+install, activate, request file: automated tests with the fake control API
+only).
+
+- WT-SRS-027: licence page of a real source-build node for Viewer and Admin, acknowledgement refused below Admin, licence file upload with checksum, LibreDCM's refusal shown, oversized upload refused (2026-11-16, see above)
+- WT-SRS-028: index backup on a real node by an Operator, checksum on the page equal to the file on disk, list and history shown, Viewer refused (2026-11-16)

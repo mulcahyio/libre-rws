@@ -69,7 +69,7 @@ which systems may store and retrieve images, where images are sent, and
 | User (see `../libredcm/intended-use.md` §3) | Libre WT role | What they do in Libre WT | Training assumed |
 |---|---|---|---|
 | U1 IT / PACS administrator, senior | Admin | Everything: configuration changes, sending studies, licence installation, resolving exceptions, user management, audit | IT professional with DICOM basics (AE titles, ports, C-MOVE destinations); has read the Libre WT guide; authorised by the site to change the archive |
-| U1 IT / PACS administrator, on duty | Operator | Daily checks, connectivity tests, backups, licence acknowledgement, study search, logs | IT professional with DICOM basics |
+| U1 IT / PACS administrator, on duty | Operator | Daily checks, connectivity tests, backups, study search, logs (licence acknowledgement: Admin, D47) | IT professional with DICOM basics |
 | U2 Modality / integration engineer | Operator (while on site) | Connectivity tests, reading the allow-list and destinations while connecting a device | DICOM networking |
 | U5 Security / compliance officer | Viewer or Admin (site decides) | Reads status; with Admin, reads audit records | IT security |
 | Help desk, manager | Viewer | Looks at the fleet page and dashboards | None beyond the guide |
@@ -99,7 +99,7 @@ confirmation, audit on both sides.
 | C-ECHO test | C-ECHO client (`-echo`) | Operator, Admin (free address: Admin) | Proves that a node reaches a workstation or PACS before relying on it | No (network test only) | WT-SRS-024 |
 | Study search | Index query, same rules as C-FIND | Operator, Admin | Confirms that a study arrived; finds the study to send | No (shows patient data) | WT-SRS-025 |
 | Send study | Same send path as C-MOVE | Admin | Sends a study to a configured workstation or PACS, for example after a failed automatic route | **Yes** (patient data leaves the archive) | WT-SRS-026, -031 |
-| Licence | Licensing (`-license-status`, `-request`, `-activate`, `-install`, `-ack`) | View: all. Acknowledge: Operator, Admin. Others: Admin | Sees the licence state; acknowledges the notice; installs or activates a licence | Licence only. Never DICOM services | WT-SRS-027, -031 |
+| Licence | Licensing (`-license-status`, `-request`, `-activate`, `-install`, `-ack`) | View: all. Acknowledge, request, install, activate: Admin (D47) | Sees the licence state; acknowledges the notice; installs or activates a licence | Licence only. Never DICOM services | WT-SRS-027, -031 |
 | Backup | Online `-backup` | Operator, Admin | Makes a snapshot of the index before maintenance | Writes a new file on the node; changes nothing else | WT-SRS-028, -031 |
 | LibreDCM audit records | Structured audit records | Admin | Looks at recent stores, queries, exports and rejections | No (shows patient data) | WT-SRS-029 |
 | LibreDCM logs | Logs | Operator, Admin | Looks for the cause of a problem | No | WT-SRS-030 |
@@ -122,7 +122,7 @@ image display (not console functions).
 | US-WT-04 | Change one node of a cluster and forget the others (Admin) | Nodes behave differently | WT-HAZ-12 | Divergence flag on the fleet page (WT-SRS-023) |
 | US-WT-05 | Send a study (Admin) | Wrong patient's study; wrong destination | WT-HAZ-07 | Destination from the configured list only; warning page with patient, study and destination; LibreDCM checks the Patient ID (WT-SRS-026) |
 | US-WT-06 | Check health (all roles) | Reading old values as current; missing an unreachable node | WT-HAZ-11 | Unreachable shown as unreachable with the time of last contact; time of reading on every status page (WT-SRS-016, -017) |
-| US-WT-07 | Handle the licence (Operator, Admin) | Expecting images to stop; installing the wrong licence | WT-HAZ-09 | Statement that DICOM keeps running; invalid licence refused, old one kept (WT-SRS-027) |
+| US-WT-07 | Handle the licence (view: all; actions: Admin) | Expecting images to stop; installing the wrong licence | WT-HAZ-09 | Statement that DICOM keeps running; invalid licence refused, old one kept (WT-SRS-027) |
 | US-WT-08 | Back up (Operator, Admin) | Believing images are included; many backups filling the disk | WT-HAZ-10 | Statement on the page; LibreDCM free-space check and one backup at a time (WT-SRS-028) |
 | US-WT-09 | Read configuration, logs, audit records (Operator, Admin) | Copying or showing a screen with patient data or secrets | WT-HAZ-08, WT-HAZ-13 | Secrets never shown; role limits; no-store pages (WT-SRS-019, -032, -034) |
 

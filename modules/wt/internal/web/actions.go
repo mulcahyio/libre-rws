@@ -42,8 +42,10 @@ type pending struct {
 
 	edit *dcmclient.ConfigEdit // configuration edit
 	echo *dcmclient.EchoTarget // C-ECHO test
+	lic  *licencePending       // licence action
 	// shown is the address a configured C-ECHO destination had on the
-	// warning page.
+	// warning page, or what identifies a licence action's input (file
+	// checksum, site, end of the key).
 	shown string
 }
 
@@ -144,8 +146,11 @@ func (s *Server) approveAction(w http.ResponseWriter, r *http.Request, rc *reqCt
 }
 
 // licencePath is the licence page of an instance, or "" while Libre WT has
-// none.
+// none or the instance does not offer the licence functions.
 func licencePath(ic *instCtx) string {
+	if !ic.snap.Supports("license") {
+		return ""
+	}
 	for _, f := range functions {
 		if f.Feature == "license" {
 			return ic.base() + "/" + f.Path

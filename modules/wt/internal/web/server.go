@@ -71,6 +71,7 @@ func New(cfg Config, acct *accounts.Store, reg *fleet.Registry, log *slog.Logger
 		"uptime":       uptime,
 		"counts":       counts,
 		"licenceLabel": licenceLabel,
+		"byteSize":     byteSize,
 	}
 	pages, err := fs.Glob(assets, "templates/*.html")
 	if err != nil {
@@ -169,6 +170,21 @@ func (s *Server) routes() []route {
 		{"GET /i/{inst}/echo", O, s.inst(s.echoPage)},
 		{"POST /i/{inst}/echo/review", O, s.inst(s.echoReview)},
 		{"POST /i/{inst}/echo/apply", O, s.inst(s.echoApply)},
+		// Licence (WT-SRS-027): everyone sees the state; every licence
+		// action, including the acknowledgement, is for an Admin (D47).
+		{"GET /i/{inst}/license", V, s.inst(s.licencePage)},
+		{"POST /i/{inst}/license/ack/review", A, s.inst(s.licenceReview(licAck))},
+		{"POST /i/{inst}/license/ack/apply", A, s.inst(s.licenceApply(licAck))},
+		{"POST /i/{inst}/license/request/review", A, s.inst(s.licenceReview(licRequest))},
+		{"POST /i/{inst}/license/request/apply", A, s.inst(s.licenceApply(licRequest))},
+		{"POST /i/{inst}/license/install/review", A, s.inst(s.licenceReview(licInstall))},
+		{"POST /i/{inst}/license/install/apply", A, s.inst(s.licenceApply(licInstall))},
+		{"POST /i/{inst}/license/activate/review", A, s.inst(s.licenceReview(licActivate))},
+		{"POST /i/{inst}/license/activate/apply", A, s.inst(s.licenceApply(licActivate))},
+		// Index backup (WT-SRS-028): Operators and Admins.
+		{"GET /i/{inst}/backups", O, s.inst(s.backupsPage)},
+		{"POST /i/{inst}/backup/review", O, s.inst(s.backupReview)},
+		{"POST /i/{inst}/backup/apply", O, s.inst(s.backupApply)},
 		// Addresses of 0.1, which had one LibreDCM: they lead to the same
 		// page of the only instance, or to the fleet page when there are
 		// several. They never pick an instance by themselves.
@@ -194,10 +210,23 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /login", s.loginPage)
 	mux.HandleFunc("POST /login", s.loginPost)
 	for _, rt := range s.routes() {
-		mux.HandleFunc(rt.pattern, s.authed(rt.min, rt.h))
+		mux.HandleFunc(rt.pattern, s.authed(rt.min, rt.h, uploadRoutes[rt.pattern]))
 	}
 	return securityHeaders(mux)
 }
+
+// uploadRoutes are the only addresses that accept a file upload
+// (multipart/form-data). Every other form is URL-encoded; a multipart body
+// sent elsewhere is refused by the CSRF check, because its fields are not
+// read.
+var uploadRoutes = map[string]bool{"POST /i/{inst}/license/install/review": true}
+
+const (
+	// maxUploadBody bounds the whole body of an upload: the licence file
+	// (maxLicenceFile) and the form fields. Nothing of it is written to
+	// disk.
+	maxUploadBody = 192 << 10
+)
 
 func securityHeaders(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -232,8 +261,9 @@ func rank(r accounts.Role) int {
 
 // authed requires a live session whose user is enabled, unchanged since
 // login (epoch) and at least role min. State-changing requests also need the
-// session's CSRF token (WT-SRS-004, -005).
-func (s *Server) authed(min accounts.Role, h func(http.ResponseWriter, *http.Request, *reqCtx)) http.HandlerFunc {
+// session's CSRF token (WT-SRS-004, -005). upload allows a multipart body of
+// at most maxUploadBody bytes, read into memory.
+func (s *Server) authed(min accounts.Role, h func(http.ResponseWriter, *http.Request, *reqCtx), upload bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if has, err := s.acct.HasUsers(r.Context()); err == nil && !has {
 			http.Redirect(w, r, "/setup", http.StatusSeeOther)
@@ -256,7 +286,24 @@ func (s *Server) authed(min accounts.Role, h func(http.ResponseWriter, *http.Req
 			return
 		}
 		if r.Method == http.MethodPost {
-			if err := r.ParseForm(); err != nil || !csrfOK(ss, r.PostFormValue("csrf")) {
+			var err error
+			if upload && strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+				r.Body = http.MaxBytesReader(w, r.Body, maxUploadBody)
+				// #nosec G120 -- bounded: the body is capped at maxUploadBody by MaxBytesReader on the line above
+				err = r.ParseMultipartForm(maxUploadBody)
+				if r.MultipartForm != nil {
+					defer func() { _ = r.MultipartForm.RemoveAll() }()
+				}
+				var tooBig *http.MaxBytesError
+				if errors.As(err, &tooBig) {
+					s.render(w, r, http.StatusRequestEntityTooLarge, "error", &reqCtx{token, ss, u}, map[string]any{
+						"Title": "Upload refused", "Message": fmt.Sprintf("The upload is larger than %d KiB. Nothing was sent.", maxUploadBody>>10)})
+					return
+				}
+			} else {
+				err = r.ParseForm()
+			}
+			if err != nil || !csrfOK(ss, r.PostFormValue("csrf")) {
 				s.render(w, r, http.StatusForbidden, "error", &reqCtx{token, ss, u}, map[string]any{
 					"Title": "Request refused", "Message": "The form expired or didn't come from this page. Go back, reload and try again."})
 				return

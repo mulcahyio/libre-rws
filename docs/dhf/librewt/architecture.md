@@ -85,8 +85,8 @@ page shows the instance banner (WT-SRS-014).
 | C-ECHO test | `GET /i/{i}/echo`, `POST /i/{i}/echo/review`, `POST /i/{i}/echo/apply` | Operator, Admin (free address: Admin, checked in the handler) | Pick a destination (Admin: or free address); warning page with reason; result page | WT-SRS-024 |
 | Studies | `GET /i/{i}/studies`, `POST /i/{i}/studies/search`, `GET /i/{i}/studies/{uid}` | Operator, Admin | Search form and results; study detail with series | WT-SRS-025 |
 | Send | `POST /i/{i}/studies/{uid}/send/review`, `POST /i/{i}/studies/{uid}/send/apply` | Admin | Warning page with patient, study, destination; result | WT-SRS-026, -031 |
-| Licence | `GET /i/{i}/license`, `POST /i/{i}/license/{action}/review`, `POST /i/{i}/license/{action}/apply` | View: all. Acknowledge: Operator, Admin. Other actions: Admin | State; acknowledge, request, install, activate | WT-SRS-027, -031 |
-| Backup | `GET /i/{i}/backups`, `POST /i/{i}/backup/review`, `POST /i/{i}/backup/apply` | Operator, Admin | List; start a backup | WT-SRS-028, -031 |
+| Licence | `GET /i/{i}/license`, `POST /i/{i}/license/{action}/review`, `POST /i/{i}/license/{action}/apply` (`{action}`: `ack`, `request`, `install`, `activate`) | View: all. Every action, including the acknowledgement: Admin (D47) | State; acknowledge, request file, install file (upload), activate online | WT-SRS-027, -031 |
+| Backup | `GET /i/{i}/backups`, `POST /i/{i}/backup/review`, `POST /i/{i}/backup/apply` | Operator, Admin | Files on the node and the history from the WT audit log; start a backup; result with file, size, SHA-256 | WT-SRS-028, -031 |
 | LibreDCM audit records | `GET /i/{i}/audit` | Admin | Recent records with filters | WT-SRS-029 |
 | LibreDCM logs | `GET /i/{i}/logs` | Operator, Admin | Recent lines, level filter | WT-SRS-030 |
 | Study Exceptions | `GET /i/{i}/exceptions…` (0.1 pages moved under the instance; `/exceptions` redirects when there is one instance) | As in 0.1 | As in 0.1 | WT-SRS-007…010 |
@@ -139,6 +139,42 @@ records", and the request ID makes a repeat safe. As built (card
 WT-0.2/5): status reads use 5 seconds; the Study Exceptions resolve keeps
 its 2 minutes of 0.1 (a correction rewrites every file of a study). The
 fleet page therefore takes up to 5 seconds when a node does not answer.
+As built (card WT-0.2/7): online activation waits 45 seconds (LibreDCM
+gives the licence server 30); a backup waits 110 seconds, below the
+2-minute HTTP client timeout and the 3-minute write timeout of the Libre
+WT web server. A longer backup still finishes on the node (LibreDCM lets it
+run up to 10 minutes); Libre WT then records the outcome as `unknown` and
+the file appears in the list of backups.
+
+As built (card WT-0.2/7), licence and backup:
+
+- **Licence page.** Reads `GET /control/v1/license`. The key is shown as
+  its last four characters; the client cuts a longer value LibreDCM might
+  send to four characters. Every licence page says that DICOM services keep
+  running whatever the licence state.
+- **Acknowledgement.** Admin only (D47). The warning page asks the person
+  to type their own user name as a signature; the apply step refuses
+  anything else. LibreDCM gets the logged-in user as operator, never the
+  typed text.
+- **Install.** The only upload in Libre WT: `multipart/form-data` is read
+  only on `POST /i/{i}/license/install/review`, with the whole body capped
+  at 192 KiB in memory (`http.MaxBytesReader`, nothing written to disk) and
+  the file at 128 KiB of UTF-8 text without NUL bytes. A multipart body
+  sent to any other address is refused by the CSRF check, because its
+  fields are not read. The file text stays on the server with the
+  confirmation; the warning page shows its name, size and SHA-256, and the
+  approval is bound to that checksum.
+- **Activation and request file.** The key is typed into a password field,
+  kept in memory with the confirmation only, shown masked, sent once, and
+  removed from LibreDCM's error text (all cases) before it is shown or
+  audited. The request text comes back as a `text/plain` download
+  (`Content-Disposition: attachment`) and is never rendered.
+- **Backup.** The review step reads `GET /control/v1/backups` and issues no
+  confirmation when the node has no backup directory or a PostgreSQL index.
+  The apply step sends the envelope only. The result (file, size, SHA-256,
+  duration) is written to the WT audit log; the backup page shows those
+  records as the history (`accounts.AuditActionLog`), next to the files
+  LibreDCM lists.
 
 ## 5. Action flow (all state changes)
 
@@ -277,9 +313,9 @@ Each can be changed before the code that depends on it is merged.
 | D2 | Clusters | A label per connection. Grouped display and divergence flags only. Every action is for one node | Rolling cluster actions need a control plane; too large and too risky for 0.2 | Cluster-wide apply, one node at a time, later |
 | D3 | Which settings can be edited? | Only what LibreDCM can reload live today: C-MOVE destinations and the allow-list, through an overlay file owned and validated by LibreDCM. Everything else is read-only | A wrong restart-required value can stop a node from starting with nobody at the host (HAZ-004) | Edit more settings and mark them "applies at next restart" |
 | D4 | Remote start, stop, restart | Not built. The status page names the host procedure | Brief of 2026-11-14; a remote stop makes images unavailable | Later, through the installer or an agent on the host |
-| D5 | Roles | Viewer: fleet, status, licence state, exceptions (as 0.1). Operator: also configuration view, logs, study search, C-ECHO to configured destinations, backup, licence acknowledgement. Admin: all changes, send, licence installation, LibreDCM audit records | Follows the 2026-10-16 console spec (Operator runs, Admin changes) and least privilege for patient data | Viewer also sees configuration; Operator may reload |
+| D5 | Roles | Viewer: fleet, status, licence state, exceptions (as 0.1). Operator: also configuration view, logs, study search, C-ECHO to configured destinations, backup, licence acknowledgement (moved to Admin by D47). Admin: all changes, send, licence installation, LibreDCM audit records | Follows the 2026-10-16 console spec (Operator runs, Admin changes) and least privilege for patient data | Viewer also sees configuration; Operator may reload |
 | D6 | Send and C-ECHO targets | Send only to configured destinations. C-ECHO to configured destinations for Operators; a free address only for Admin | Images must never go to an address nobody configured (HAZ-005); the free C-ECHO is needed when connecting a new device | No free C-ECHO address at all |
-| D7 | Licence actions | Acknowledge: Operator and Admin. Request, install, activate: Admin. Keys masked | Mirrors the command-line functions; installation changes what the site paid for | Admin only for everything |
+| D7 | Licence actions | Acknowledge: Operator and Admin. Request, install, activate: Admin. Keys masked. **Acknowledgement changed to Admin only by D47 (card WT-0.2/7)** | Mirrors the command-line functions; installation changes what the site paid for | Admin only for everything |
 | D8 | Backup | Written to a directory set in LibreDCM's own configuration; file name made by LibreDCM; never overwrites; no download and no delete in the console; SQLite index only | No path from the browser removes traversal and overwrite risks; the index holds patient data | Download for Admin over HTTPS only; retention rule |
 | D9 | Audit records and logs | Recent records from fixed-size buffers in LibreDCM's memory (lost at restart). The site's log collector stays the record | No new store for patient data; no streaming needed | Persist audit records in the index database; live tail |
 | D10 | Who is the operator for LibreDCM? | Libre WT sends the logged-in user's name with the shared admin token of that instance | Same model as 0.1; per-user tokens need an identity design | Per-user or per-console credentials, mutual TLS |
@@ -319,3 +355,8 @@ Each can be changed before the code that depends on it is merged.
 | D44 | LibreDCM does not answer an action in time | Libre WT waits 30 seconds, then records the outcome as `unknown` and shows the request ID. It does not repeat the request on its own; a new attempt needs a new review (card WT-0.2/6) | A repeat could do the action twice (C-ECHO is harmless; a change is refused by LibreDCM because the plan digest no longer fits). The person checks first | Retry automatically with the same request ID (LibreDCM returns the first result) |
 | D45 | Destinations form | The whole table is sent; rename is remove and add; destinations fixed by an environment variable are shown read-only and left out (LibreDCM keeps them). Up to 3 empty rows for new entries; allow-list as one rule per line (card WT-0.2/6) | Matches the API (whole value of a setting); no scripts needed in the page | One form per destination |
 | D46 | Licence block link | When LibreDCM refuses a change until the licence notice is acknowledged, the page says so and that DICOM keeps running. The link to the instance's licence page appears once Libre WT has that page, which comes in card WT-0.2/7 (card WT-0.2/6) | The licence page is built in the next card; the link is generated from the list of instance pages | Build a minimal licence page now |
+| D47 | Who acknowledges the unlicensed notice in Libre WT? | An Admin, who types their own user name as a signature; LibreDCM records the logged-in user. This replaces the Operator part of D7 (card WT-0.2/7; card text: "acknowledge (Admin, enters own name = logged-in user)") | The card asks for Admin; the acknowledgement lifts the block on configuration reloads, which are Admin actions; the stricter rule is the safer default. It never affects DICOM services | Operator and Admin, as D7 said |
+| D48 | Size and form of a licence file upload | Text (UTF-8, no NUL bytes), at most 128 KiB; the whole upload at most 192 KiB, held in memory; the only address that reads `multipart/form-data` (card WT-0.2/7) | Licence files are a few KiB; LibreDCM accepts 256 KiB of request body; one upload address keeps the attack surface small | Paste the licence text into a text field |
+| D49 | How long does Libre WT wait for a backup? | 110 seconds, then the outcome is `unknown` and the person checks the list of backups. Online activation: 45 seconds (card WT-0.2/7) | Stays below the HTTP client timeout (2 minutes) and the web server's write timeout (3 minutes) without changing either; LibreDCM finishes the backup anyway | Raise both timeouts to more than LibreDCM's 10 minutes |
+| D50 | Backup history | From the Libre WT audit log (the result record holds file, size, SHA-256, request ID and reason), next to the file list of LibreDCM, which has no checksum (card WT-0.2/7; card text: "backup history from the audit records") | No new store; the checksum is known only from the answer to the backup | Read LibreDCM's own audit records (Admin only, card WT-0.2/8) |
+| D51 | Views of the licence and backup pages | Not written to the audit log; every licence and backup action is (card WT-0.2/7) | Neither page shows patient data, audit records or logs (WT-SRS-033); the licence state is a Viewer page like the status page | Record every view, as for the configuration pages (D43) |

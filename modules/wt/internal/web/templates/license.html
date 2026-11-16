@@ -1,0 +1,68 @@
+{{define "title"}}Licence{{end}}
+{{define "content"}}
+<h1>Licence</h1>
+<p class="msg info" role="note"><b>DICOM services keep running whatever the licence state.</b> The licence never stops, delays or refuses storing, finding or sending images. When the node is unlicensed, only administrators see warnings, and configuration reloads wait until the notice is acknowledged.</p>
+<p class="lead">Read at {{fmtStamp .ReadAt}}.</p>
+{{with .L}}
+{{if not .Enforced}}
+<section class="card narrow">
+<p><b>Not enforced:</b> this LibreDCM is a source build, which needs no licence. There is nothing to do here.</p>
+{{if .Note}}<p><small>{{.Note}}</small></p>{{end}}
+</section>
+{{else}}
+{{if .AckRequired}}<p class="msg warn" role="alert">The unlicensed notice is not acknowledged. Configuration reloads of this instance are blocked until an administrator acknowledges it. DICOM services are not affected.</p>{{end}}
+<table class="narrow">
+<tbody>
+<tr><th>State</th><td><b>{{orDash .State}}</b>{{if .Licensed}} <span class="state success">licensed</span>{{else}} <span class="state open">not licensed</span>{{end}}</td></tr>
+<tr><th>Message</th><td>{{orDash .Message}}</td></tr>
+<tr><th>Days left</th><td>{{if .Licensed}}{{.DaysLeft}}{{else}}—{{end}}</td></tr>
+<tr><th>Expires</th><td>{{if .Expires}}{{fmtTimeP .Expires}}{{else}}—{{end}}</td></tr>
+<tr><th>Customer</th><td>{{orDash .Customer}}</td></tr>
+<tr><th>Site</th><td>{{orDash .Site}}</td></tr>
+<tr><th>Term</th><td>{{orDash .Term}}</td></tr>
+<tr><th>Licence key</th><td>{{if .KeyLast4}}<code>••••{{.KeyLast4}}</code> (only the last four characters are ever shown){{else}}—{{end}}</td></tr>
+<tr><th>Machine fingerprint</th><td><code class="uid">{{orDash .Fingerprint}}</code></td></tr>
+<tr><th>Acknowledgement</th><td>{{with .Ack}}by <b>{{orDash .By}}</b> at {{fmtTime .At}}{{if .Valid}}, valid until {{fmtTime .ValidUntil}}{{else}}, <b>no longer valid</b>{{end}}{{else}}none{{end}}</td></tr>
+</tbody>
+</table>
+{{if .Note}}<p><small>{{.Note}}</small></p>{{end}}
+{{end}}
+{{end}}
+
+{{if .CanAct}}
+{{if not .Allowed}}<p class="msg error" role="alert">{{.Blocked}}</p>{{end}}
+<h2>Licence actions (administrators)</h2>
+<p><small>Each button first shows a warning page. Nothing is sent to LibreDCM before you approve it there with a reason. Every action is recorded in the audit logs of Libre WT and LibreDCM. A licence key is never written to either log: only its last four characters.</small></p>
+<div class="compare">
+<form method="post" action="{{.Base}}/license/ack/review" class="card">
+<h3>Acknowledge the unlicensed notice</h3>
+<p>Records that you have seen the notice. It lifts the block on configuration reloads for 24 hours, as <code>LibreDCM -license-ack NAME</code> on the host does. It is recorded under your user name.</p>
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<div class="actions"><button {{if not .Allowed}}disabled{{end}}>Acknowledge…</button></div>
+</form>
+<form method="post" action="{{.Base}}/license/install/review" class="card" enctype="multipart/form-data">
+<h3>Install a licence file</h3>
+<p>LibreDCM checks the file (signature, product, this machine, dates). A file it refuses changes nothing: the installed licence stays.</p>
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<label>Licence file (text, at most 128 KiB) <input type="file" name="license" required></label>
+<div class="actions"><button {{if not .Allowed}}disabled{{end}}>Check and install…</button></div>
+</form>
+<form method="post" action="{{.Base}}/license/activate/review" class="card">
+<h3>Activate online</h3>
+<p>The node sends the key to the licence server and installs the licence it returns. Nothing changes when the server refuses or can't be reached.</p>
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<label>Licence key <input type="password" name="key" maxlength="128" autocomplete="off" required></label>
+<label>Site name (optional) <input name="site" maxlength="200"></label>
+<div class="actions"><button {{if not .Allowed}}disabled{{end}}>Activate…</button></div>
+</form>
+<form method="post" action="{{.Base}}/license/request/review" class="card">
+<h3>Activation request file (offline)</h3>
+<p>For a node without internet access: download a request file, send it to the licence portal, then install the licence file it returns. The file holds the key in encoded form; keep it like the key.</p>
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<label>Licence key (optional) <input type="password" name="key" maxlength="128" autocomplete="off"></label>
+<label>Site name (optional) <input name="site" maxlength="200"></label>
+<div class="actions"><button {{if not .Allowed}}disabled{{end}}>Make the request file…</button></div>
+</form>
+</div>
+{{end}}
+{{end}}

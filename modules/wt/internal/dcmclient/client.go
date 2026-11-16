@@ -33,6 +33,9 @@ type Config struct {
 	// ActionTimeout bounds the wait for the answer to an action (C-ECHO
 	// test, reload, configuration edit, rollback). Default 30 seconds.
 	ActionTimeout time.Duration
+	// BackupTimeout bounds the wait for an index backup. Default
+	// DefaultBackupTimeout (110 seconds).
+	BackupTimeout time.Duration
 }
 
 // Client is a LibreDCM control-API client.
@@ -42,6 +45,7 @@ type Client struct {
 	http   *http.Client
 	read   time.Duration
 	action time.Duration
+	backup time.Duration
 }
 
 // New validates the configuration and builds a client.
@@ -83,7 +87,11 @@ func New(cfg Config) (*Client, error) {
 	if cfg.ActionTimeout <= 0 {
 		cfg.ActionTimeout = DefaultActionTimeout
 	}
-	return &Client{base: u, token: token, http: &http.Client{Transport: tr, Timeout: cfg.Timeout}, read: cfg.ReadTimeout, action: cfg.ActionTimeout}, nil
+	if cfg.BackupTimeout <= 0 {
+		cfg.BackupTimeout = DefaultBackupTimeout
+	}
+	return &Client{base: u, token: token, http: &http.Client{Transport: tr, Timeout: cfg.Timeout}, read: cfg.ReadTimeout, action: cfg.ActionTimeout,
+		backup: cfg.BackupTimeout}, nil
 }
 
 // URL returns the configured LibreDCM URL (never the token).

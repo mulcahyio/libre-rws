@@ -1,0 +1,20 @@
+{{define "title"}}Done: {{.Title}}{{end}}
+{{define "content"}}
+<section class="card">
+<h1>Done: {{.Title}}</h1>
+<p class="msg info">{{if eq .Kind "ack"}}LibreDCM recorded the acknowledgement on instance <b>{{.I.Name}}</b>.{{else if eq .Kind "install"}}LibreDCM checked and installed the licence file on instance <b>{{.I.Name}}</b>.{{else}}LibreDCM activated instance <b>{{.I.Name}}</b> and installed the licence.{{end}}</p>
+<p><b>DICOM services kept running</b> and are not affected by the licence state.</p>
+<h2>Licence now</h2>
+{{with .L}}
+<dl>
+<dt>State</dt><dd><b>{{orDash .State}}</b>{{if .Licensed}}, licensed{{if gt .DaysLeft 0}}, {{.DaysLeft}} days left{{end}}{{else}}, not licensed{{end}}</dd>
+<dt>Message</dt><dd>{{orDash .Message}}</dd>
+<dt>Customer</dt><dd>{{orDash .Customer}}</dd>
+<dt>Licence key</dt><dd>{{if .KeyLast4}}<code>••••{{.KeyLast4}}</code>{{else}}—{{end}}</dd>
+<dt>Acknowledgement</dt><dd>{{with .Ack}}by <b>{{orDash .By}}</b> at {{fmtTime .At}}{{else}}{{if $.L.AckRequired}}needed{{else}}not needed{{end}}{{end}}</dd>
+</dl>
+{{end}}
+<dl><dt>Request ID</dt><dd><code>{{.RequestID}}</code></dd></dl>
+<p><a href="{{.Back}}">Back to the licence page</a></p>
+</section>
+{{end}}

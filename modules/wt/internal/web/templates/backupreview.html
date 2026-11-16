@@ -1,0 +1,27 @@
+{{define "title"}}Review: backup{{end}}
+{{define "content"}}
+<p><a href="{{.Back}}">← Back</a></p>
+<h1>Review: backup of the index</h1>
+<section class="warning" role="alert">
+<h2>⚠ This writes a new file with patient data on the node</h2>
+<p>Instance <b>{{.I.Name}}</b> (node ID <code>{{orDash .I.Remembered.NodeID}}</code>, AE title <code>{{orDash .I.Remembered.AETitle}}</code>) makes a snapshot of its index while it keeps running.</p>
+<ul>
+<li>The file goes into the node's own backup directory <code>{{.B.Directory}}</code>, under a name LibreDCM makes. No file is replaced.</li>
+<li>LibreDCM checks the free space first (the index size plus 10 %) and starts nothing when it is short.</li>
+<li><b>The backup holds the index only. Images are not included</b>: back up the image store separately.</li>
+<li>The file holds patient data: protect the directory.</li>
+<li>One backup runs at a time. It may take several minutes on a large index. DICOM services keep running.</li>
+</ul>
+</section>
+<form method="post" action="{{.Base}}/backup/apply" class="card">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<input type="hidden" name="confirm" value="{{.Confirm}}">
+<label>Reason (recorded in the audit trails of Libre WT and LibreDCM) <textarea name="reason" required maxlength="500" rows="2"></textarea></label>
+<label class="check"><input type="checkbox" name="approve" value="yes" required> Start the backup on instance {{.I.Name}}</label>
+<div class="actions">
+<button class="primary">Start the backup</button>
+<a class="button" href="{{.Back}}">Cancel</a>
+</div>
+<p><small>This approval is valid for 10 minutes, once. Libre WT waits up to 110 seconds for the answer; a longer backup still finishes on the node and appears in the list.</small></p>
+</form>
+{{end}}
