@@ -44,6 +44,14 @@ type Config struct {
 	OtherNode map[string]bool
 	// DigestAfter is the settings digest after an applied change.
 	DigestAfter string
+
+	// Lic is the licence status of the node (licence.go).
+	Lic dcmclient.LicenseDetail
+	// BackupDir is the node's backup directory; "" means backups are off.
+	// BackupReason is the reason the node gives then.
+	BackupDir, BackupReason string
+	// Backups are the snapshots in the backup directory, newest first.
+	Backups []dcmclient.BackupFile
 }
 
 func defaultConfig() Config {
@@ -69,6 +77,11 @@ func defaultConfig() Config {
 		Delay:       map[string]time.Duration{},
 		OtherNode:   map[string]bool{},
 		DigestAfter: "sha256:after",
+		Lic: dcmclient.LicenseDetail{Enforced: true, State: "unlicensed", AckRequired: true,
+			Message: "No licence is installed. DICOM services keep running.", Fingerprint: "fp-synthetic-0001",
+			Note: "DICOM services run in every licence state. Licensing never stops them."},
+		BackupDir: "/var/lib/libredcm/backups",
+		Backups:   []dcmclient.BackupFile{{File: "index-node-1-20261101T020000Z.db", Bytes: 4096, Time: time.Date(2026, 11, 1, 2, 0, 0, 0, time.UTC)}},
 	}
 	c.Plan.Changed = true
 	c.Plan.RemoteAEs.Added = []dcmclient.RemoteAE{{Name: "VIEWER2", Host: "10.1.2.3", Port: 11112, AETitle: "VIEWER2", Source: "overlay"}}
@@ -104,7 +117,10 @@ func (s *Server) configPaths(w http.ResponseWriter, r *http.Request) bool {
 		"/control/v1/config": "GET POST", "/control/v1/remote-aes": "GET", "/control/v1/allow-list": "GET",
 		"/control/v1/config/history": "GET", "/control/v1/config/plan": "POST", "/control/v1/reload/plan": "POST",
 		"/control/v1/reload": "POST", "/control/v1/config/rollback/plan": "POST", "/control/v1/config/rollback": "POST",
-		"/control/v1/echo": "POST",
+		"/control/v1/echo":    "POST",
+		"/control/v1/license": "GET", "/control/v1/license/ack": "POST", "/control/v1/license/request": "POST",
+		"/control/v1/license/install": "POST", "/control/v1/license/activate": "POST",
+		"/control/v1/backups": "GET", "/control/v1/backup": "POST",
 	}
 	if s.Legacy || !strings.Contains(known[path], r.Method) {
 		return false
@@ -192,6 +208,10 @@ func (s *Server) configPaths(w http.ResponseWriter, r *http.Request) bool {
 		write(w, 200, out)
 	case path == "/control/v1/echo":
 		s.echo(w, body, inst)
+	case strings.HasPrefix(path, "/control/v1/license"):
+		s.licence(w, path, body, inst)
+	case strings.HasPrefix(path, "/control/v1/backup"):
+		s.backup(w, path, inst)
 	default: // reload, config, rollback
 		s.applyChange(w, path, body, inst)
 	}

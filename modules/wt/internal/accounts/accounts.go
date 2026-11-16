@@ -464,6 +464,31 @@ func (s *Store) AuditLogFor(ctx context.Context, instance string, limit int) ([]
 	return out, rows.Err()
 }
 
+// AuditActionLog returns the newest records of one action for one LibreDCM
+// instance, for example the backup history of an instance (WT-SRS-028).
+func (s *Store) AuditActionLog(ctx context.Context, instance, action string, limit int) ([]Entry, error) {
+	if limit <= 0 || limit > 5000 {
+		limit = 500
+	}
+	rows, err := s.db.QueryContext(ctx, `SELECT id, at, user, ip, instance, action, target, outcome, detail FROM audit
+		WHERE instance = ? AND action = ? ORDER BY id DESC LIMIT ?`, instance, action, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Entry
+	for rows.Next() {
+		var e Entry
+		var at int64
+		if err := rows.Scan(&e.ID, &at, &e.User, &e.IP, &e.Instance, &e.Action, &e.Target, &e.Outcome, &e.Detail); err != nil {
+			return nil, err
+		}
+		e.At = time.UnixMilli(at).UTC()
+		out = append(out, e)
+	}
+	return out, rows.Err()
+}
+
 // Identity is the node ID and AE title Libre WT remembers for a configured
 // LibreDCM instance (WT-SRS-015).
 type Identity struct {

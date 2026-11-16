@@ -1,0 +1,40 @@
+{{define "title"}}Review: {{.Title}}{{end}}
+{{define "content"}}
+<p><a href="{{.Back}}">← Back</a></p>
+<h1>Review: {{.Title}}</h1>
+<section class="warning" role="alert">
+<h2>⚠ This is a licence action on instance {{.I.Name}}</h2>
+<p>Instance <b>{{.I.Name}}</b> (node ID <code>{{orDash .I.Remembered.NodeID}}</code>, AE title <code>{{orDash .I.Remembered.AETitle}}</code>){{if .I.Cluster}}, cluster <b>{{.I.Cluster}}</b>. Other nodes of the cluster are not changed{{end}}.</p>
+<p><b>DICOM services keep running whatever happens here.</b> The licence never stops, delays or refuses storing, finding or sending images.</p>
+{{if eq .Kind "ack"}}<p>You acknowledge the unlicensed notice under your user name <b>{{.User.Username}}</b>. LibreDCM records it and lifts the block on configuration reloads for 24 hours. The node stays unlicensed.</p>{{end}}
+{{if eq .Kind "install"}}<p>LibreDCM checks the file (signature, product, this machine, dates) and installs it only when it is valid. When LibreDCM refuses it, the installed licence stays as it is.</p>{{end}}
+{{if eq .Kind "activate"}}<p>The node sends the key to the licence server and installs the licence it returns. When the server refuses or can't be reached, nothing changes.</p>{{end}}
+{{if eq .Kind "request"}}<p>LibreDCM makes an activation request for this machine. Your browser downloads it as a file. The file holds the licence key in encoded form: send it to the licence portal only. Nothing changes on the node.</p>{{end}}
+</section>
+<table class="narrow">
+<tbody>
+<tr><th>Licence state now</th><td>{{if .L.Enforced}}<b>{{orDash .L.State}}</b>{{if .L.AckRequired}}, notice not acknowledged{{end}}{{else}}not enforced (source build): LibreDCM will refuse licence actions{{end}}</td></tr>
+{{if eq .Kind "install"}}{{with .File}}
+<tr><th>File</th><td><code>{{.Name}}</code></td></tr>
+<tr><th>Size</th><td>{{.Size}} bytes</td></tr>
+<tr><th>SHA-256</th><td><code class="uid">{{.SHA256}}</code></td></tr>
+{{end}}{{end}}
+{{if or (eq .Kind "activate") (eq .Kind "request")}}
+<tr><th>Licence key</th><td><code>{{.Key}}</code></td></tr>
+<tr><th>Site</th><td>{{orDash .Site}}</td></tr>
+{{end}}
+</tbody>
+</table>
+<form method="post" action="{{.Base}}/license/{{.Kind}}/apply" class="card">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<input type="hidden" name="confirm" value="{{.Confirm}}">
+{{if eq .Kind "ack"}}<label>Sign: type your user name (<b>{{.User.Username}}</b>) <input name="signature" maxlength="128" autocomplete="off" required></label>{{end}}
+<label>Reason (recorded in the audit trails of Libre WT and LibreDCM) <textarea name="reason" required maxlength="500" rows="2"></textarea></label>
+<label class="check"><input type="checkbox" name="approve" value="yes" required> I approve this licence action for instance {{.I.Name}}</label>
+<div class="actions">
+<button class="primary">{{if eq .Kind "request"}}Download the request file{{else}}{{.Title}}{{end}}</button>
+<a class="button" href="{{.Back}}">Cancel</a>
+</div>
+<p><small>This approval is valid for 10 minutes, once, and for this action only.</small></p>
+</form>
+{{end}}

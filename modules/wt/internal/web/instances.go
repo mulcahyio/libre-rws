@@ -150,6 +150,8 @@ var functions = []function{
 	{"remote-aes", "Destinations", "remote-aes", accounts.Operator},
 	{"allow-list", "Allow-list", "allow-list", accounts.Operator},
 	{"echo", "C-ECHO test", "echo", accounts.Operator},
+	{"license", "Licence", "license", accounts.Viewer},
+	{"backup", "Backup", "backups", accounts.Operator},
 }
 
 type functionView struct {

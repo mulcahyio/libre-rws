@@ -549,17 +549,18 @@ func TestReloadAndRollback(t *testing.T) {
 	if code != http.StatusLocked {
 		t.Fatalf("blocked reload plan = %d", code)
 	}
-	has(t, "licence block", body, "until the licence notice is acknowledged", "Nothing was changed", "DICOM services keep running")
-	hasNot(t, "licence block without a licence page", body, "Open the licence page")
-	// Once Libre WT has a licence page for the instance, the message links
-	// to it.
-	saved := functions
-	functions = append(append([]function(nil), functions...), function{"license", "Licence", "license", accounts.Viewer})
-	e.dcm.Set(func(f *fakedcm.Server) { f.Features = append(f.Features, "license") })
-	_, body, _ = b.post("/i/default/reload/review", start)
-	functions = saved
-	has(t, "licence block with a licence page", body, `<a href="/i/default/license">Open the licence page of this instance</a>`)
+	has(t, "licence block", body, "until the licence notice is acknowledged", "Nothing was changed", "DICOM services keep running",
+		`<a href="/i/default/license">Open the licence page of this instance</a>`)
+	// A node that does not offer the licence functions gets no link to a
+	// licence page.
 	e.dcm.Set(func(f *fakedcm.Server) {
+		f.Features = []string{"conflicts", "status", "config", "remote-aes", "allow-list", "reload", "echo", "config-edit"}
+	})
+	_, body, _ = b.post("/i/default/reload/review", start)
+	has(t, "licence block on a node without licence functions", body, "until the licence notice is acknowledged")
+	hasNot(t, "licence block on a node without licence functions", body, "Open the licence page")
+	e.dcm.Set(func(f *fakedcm.Server) {
+		f.Features = append(f.Features, "license")
 		delete(f.Cfg.Fail, "/control/v1/reload/plan")
 	})
 	confirm, _ = b.review("/i/default/reload/review", start)
