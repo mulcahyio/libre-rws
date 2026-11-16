@@ -162,7 +162,14 @@ the admin token) on `127.0.0.1:8081`, over HTTPS when TLS is on. The
 container restarts on its own after a crash or a reboot.
 
 **Libre WT (web console):** Libre WT shows this node on its fleet page,
-with a dashboard and a status page, and handles Study Exceptions. One Libre
+with a dashboard and a status page, and handles Study Exceptions. It shows
+the node's configuration, C-MOVE destinations and allow-list, and runs
+C-ECHO tests from the node. An administrator can change the destinations
+and the allow-list, reload the configuration and roll back the last change
+made from the console; each change shows LibreDCM's plan first and needs an
+approval and a reason. LibreDCM keeps such changes in its own overlay
+file (`config-overlay.yaml` in the data folder), never in your
+`config.yaml`; delete the overlay file and reload to drop them. One Libre
 WT can manage several LibreDCM nodes: give each node its own admin token and
 list the nodes in the Libre WT configuration file (`instances:`, see
 `modules/wt/README.md`). Libre WT remembers the node ID and AE title of each

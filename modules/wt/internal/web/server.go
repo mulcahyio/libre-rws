@@ -139,7 +139,7 @@ type route struct {
 }
 
 func (s *Server) routes() []route {
-	V, A := accounts.Viewer, accounts.Admin
+	V, O, A := accounts.Viewer, accounts.Operator, accounts.Admin
 	return []route{
 		{"POST /logout", V, s.logout},
 		{"GET /{$}", V, s.fleetPage},
@@ -153,6 +153,22 @@ func (s *Server) routes() []route {
 		{"POST /i/{inst}/exceptions/{id}/resolve", A, s.inst(s.resolve)},
 		{"POST /i/{inst}/identity/review", A, s.inst(s.identityReview)},
 		{"POST /i/{inst}/identity/apply", A, s.inst(s.identityApply)},
+		// Configuration (WT-SRS-019…022): Operators read, Admins change.
+		{"GET /i/{inst}/config", O, s.inst(s.configPage)},
+		{"GET /i/{inst}/remote-aes", O, s.inst(s.remoteAEsPage)},
+		{"GET /i/{inst}/allow-list", O, s.inst(s.allowListPage)},
+		{"GET /i/{inst}/config/edit", A, s.inst(s.configEditPage)},
+		{"POST /i/{inst}/config/review", A, s.inst(s.configReview)},
+		{"POST /i/{inst}/config/apply", A, s.inst(s.changeApply(actConfigEdit, "Configuration change", s.sendEdit))},
+		{"POST /i/{inst}/reload/review", A, s.inst(s.reloadReview)},
+		{"POST /i/{inst}/reload/apply", A, s.inst(s.changeApply(actReload, "Reload", s.sendReload))},
+		{"POST /i/{inst}/rollback/review", A, s.inst(s.rollbackReview)},
+		{"POST /i/{inst}/rollback/apply", A, s.inst(s.changeApply(actRollback, "Rollback", s.sendRollback))},
+		// C-ECHO test (WT-SRS-024): Operators test configured destinations;
+		// the handlers refuse a free address below Admin.
+		{"GET /i/{inst}/echo", O, s.inst(s.echoPage)},
+		{"POST /i/{inst}/echo/review", O, s.inst(s.echoReview)},
+		{"POST /i/{inst}/echo/apply", O, s.inst(s.echoApply)},
 		// Addresses of 0.1, which had one LibreDCM: they lead to the same
 		// page of the only instance, or to the fleet page when there are
 		// several. They never pick an instance by themselves.
@@ -279,6 +295,7 @@ func (s *Server) render(w http.ResponseWriter, r *http.Request, code int, page s
 	if rc != nil {
 		data["User"] = rc.user
 		data["IsAdmin"] = rc.user.Role == accounts.Admin
+		data["CanOperate"] = rank(rc.user.Role) >= rank(accounts.Operator)
 		data["CSRF"] = rc.sess.csrf
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

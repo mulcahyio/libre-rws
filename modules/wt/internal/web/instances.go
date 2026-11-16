@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mulcahyio/libre-rws/modules/wt/internal/accounts"
 	"github.com/mulcahyio/libre-rws/modules/wt/internal/dcmclient"
 	"github.com/mulcahyio/libre-rws/modules/wt/internal/fleet"
 )
@@ -52,6 +53,9 @@ func (s *Server) renderI(w http.ResponseWriter, r *http.Request, code int, page 
 	}
 	data["I"] = ic.snap
 	data["Base"] = ic.base()
+	if rc != nil {
+		data["Tabs"] = functionViews(ic.snap, rc.user.Role)
+	}
 	if _, ok := data["Back"]; !ok {
 		data["Back"] = ic.base() + "/"
 	}
@@ -135,12 +139,17 @@ func stored(c dcmclient.Counters) (ok, other uint64) {
 type function struct {
 	Feature string // name in LibreDCM's discovery answer
 	Label   string
-	Path    string // under /i/{inst}/
+	Path    string        // under /i/{inst}/
+	Min     accounts.Role // lowest role that may open it (as in the role table)
 }
 
 var functions = []function{
-	{"status", "Status", "status"},
-	{"conflicts", "Study Exceptions", "exceptions"},
+	{"status", "Status", "status", accounts.Viewer},
+	{"conflicts", "Study Exceptions", "exceptions", accounts.Viewer},
+	{"config", "Configuration", "config", accounts.Operator},
+	{"remote-aes", "Destinations", "remote-aes", accounts.Operator},
+	{"allow-list", "Allow-list", "allow-list", accounts.Operator},
+	{"echo", "C-ECHO test", "echo", accounts.Operator},
 }
 
 type functionView struct {
@@ -148,9 +157,14 @@ type functionView struct {
 	Available bool
 }
 
-func functionViews(s fleet.Snapshot) []functionView {
+// functionViews lists the functions the role may use: a page shows no
+// control the user's role cannot use (WT-SRS-034).
+func functionViews(s fleet.Snapshot, role accounts.Role) []functionView {
 	out := make([]functionView, 0, len(functions))
 	for _, f := range functions {
+		if rank(role) < rank(f.Min) {
+			continue
+		}
 		out = append(out, functionView{f, s.Supports(f.Feature)})
 	}
 	return out
@@ -233,7 +247,7 @@ func (s *Server) legacyPath(w http.ResponseWriter, r *http.Request, _ *reqCtx) {
 // ---------------------------------------------------------------- dashboard, status
 
 func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, rc *reqCtx, ic *instCtx) {
-	data := map[string]any{"Functions": functionViews(ic.snap), "Back": "/"}
+	data := map[string]any{"Functions": functionViews(ic.snap, rc.user.Role), "Back": "/"}
 	if st := ic.snap.Status; st != nil {
 		data["Stored"], data["NotStored"] = stored(st.Counters)
 	}

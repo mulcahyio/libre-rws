@@ -1,0 +1,22 @@
+{{define "title"}}C-ECHO result{{end}}
+{{define "content"}}
+<section class="card">
+<h1>C-ECHO test: {{if .R.OK}}<span class="state success">success</span>{{else}}<span class="state open">failed</span>{{end}}</h1>
+{{if .R.OK}}
+<p class="msg info">The device answered the C-ECHO in {{.R.DurationMS}} ms.</p>
+{{else}}
+<p class="msg error" role="alert">The test failed at the stage <b>{{orDash .R.Stage}}</b>: {{orDash .R.Error}} (after {{.R.DurationMS}} ms).</p>
+<p><small>Stages: <b>connect</b> is the network connection (or TLS), <b>association</b> is the DICOM negotiation (the device may not know this node's AE title), <b>echo</b> is the C-ECHO itself.</small></p>
+{{end}}
+<dl>
+<dt>From instance</dt><dd><b>{{.I.Name}}</b></dd>
+<dt>Target</dt><dd><code>{{orDash .R.Target}}</code> ({{if eq .R.Source "configured"}}configured destination{{else}}free address{{end}})</dd>
+<dt>Called AE</dt><dd><code>{{orDash .R.CalledAE}}</code></dd>
+<dt>Calling AE</dt><dd><code>{{orDash .R.CallingAE}}</code></dd>
+<dt>TLS</dt><dd>{{if .R.TLS}}yes, certificate not checked{{else}}no{{end}}</dd>
+<dt>Request ID</dt><dd><code>{{.RequestID}}</code></dd>
+</dl>
+<p><small>{{.R.Note}}</small></p>
+<p><a href="{{.Back}}">Back to the C-ECHO test</a></p>
+</section>
+{{end}}

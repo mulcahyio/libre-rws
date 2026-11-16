@@ -1,0 +1,16 @@
+{{define "title"}}Destinations{{end}}
+{{define "content"}}
+<h1>C-MOVE destinations</h1>
+<p class="lead">The destinations in force on this node now, read at {{fmtStamp .ReadAt}}. A C-MOVE, and a send from Libre WT, can go only to these.</p>
+{{if .List}}
+<table>
+<thead><tr><th>Name</th><th>Host</th><th>Port</th><th>AE title</th><th>Source</th></tr></thead>
+<tbody>{{range .List}}<tr><td><b>{{.Name}}</b></td><td><code>{{.Host}}</code></td><td>{{.Port}}</td><td><code>{{.AETitle}}</code></td><td>{{.Source}}</td></tr>{{end}}</tbody>
+</table>
+{{else}}<p class="msg info">No destination is configured. A C-MOVE to any destination is refused.</p>{{end}}
+<p><small>Source: <b>file</b> is <code>config.yaml</code>, <b>overlay</b> is a change made from a console, <b>env</b> is an environment variable on the host (it can't be changed here).</small></p>
+<div class="actions">
+{{if .CanEcho}}<a class="button" href="{{.Base}}/echo">C-ECHO test…</a>{{end}}
+{{if .CanEdit}}<a class="button" href="{{.Base}}/config/edit">Edit destinations…</a>{{end}}
+</div>
+{{end}}

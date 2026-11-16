@@ -3,6 +3,7 @@
 <section class="card narrow">
 <h1>{{.Title}}</h1>
 <p class="msg error" role="alert">{{.Message}}</p>
+{{if .Link}}<p><a href="{{.Link}}">{{.LinkText}}</a></p>{{end}}
 <p><a href="{{if .Back}}{{.Back}}{{else}}/{{end}}">Back</a></p>
 </section>
 {{end}}

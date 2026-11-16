@@ -1,0 +1,28 @@
+{{define "title"}}C-ECHO test{{end}}
+{{define "content"}}
+<h1>C-ECHO test</h1>
+<p class="lead">This node opens a DICOM association to another device and sends one C-ECHO, under its own AE title. It shows whether the device can be reached and accepts this node, as it would for a C-MOVE. No patient data is sent.</p>
+{{if not .Allowed}}<p class="msg error" role="alert">{{.Blocked}}</p>{{end}}
+
+<h2>Configured destinations</h2>
+{{if .List}}
+<table>
+<thead><tr><th>Name</th><th>Host</th><th>Port</th><th>AE title</th><th></th></tr></thead>
+<tbody>{{range .List}}<tr><td><b>{{.Name}}</b></td><td><code>{{.Host}}</code></td><td>{{.Port}}</td><td><code>{{.AETitle}}</code></td>
+<td><form method="post" action="{{$.Base}}/echo/review" class="inline"><input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="remote_ae" value="{{.Name}}"><button {{if not $.Allowed}}disabled{{end}}>Test…</button></form></td></tr>{{end}}</tbody>
+</table>
+{{else}}<p class="msg info">No destination is configured on this node.</p>{{end}}
+
+{{if .IsAdmin}}
+<h2>Another address (administrators)</h2>
+<form method="post" action="{{.Base}}/echo/review" class="card narrow">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<label>Host name or IP address <input name="host" maxlength="253" required></label>
+<label>Port <input name="port" inputmode="numeric" maxlength="5" required></label>
+<label>AE title of the device <input name="ae_title" maxlength="16" required></label>
+<label class="check"><input type="checkbox" name="tls" value="yes"> Use TLS (the device's certificate is not checked)</label>
+<div class="actions"><button {{if not .Allowed}}disabled{{end}}>Test…</button></div>
+</form>
+{{end}}
+<p><small>Each button first shows what will be done. The test is recorded in the audit logs of Libre WT and LibreDCM.</small></p>
+{{end}}

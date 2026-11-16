@@ -112,6 +112,9 @@ func newFleetEnv(t *testing.T, specs ...string) *env {
 		if strings.HasPrefix(members[i].Name, "plain") {
 			members[i].Client = plainHTTP{members[i].Client}
 		}
+		if strings.HasPrefix(members[i].Name, "mute") {
+			members[i].Client = mute{members[i].Client}
+		}
 	}
 	logger := slog.New(slog.NewTextHandler(e.log, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	reg, err := fleet.New(members, acct, time.Nanosecond, logger)

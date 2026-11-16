@@ -18,12 +18,30 @@ Web management console for LibreDCM, part of Libre RWS. It has:
   incoming images, correct the archived study, or reject the incoming images.
   Every edit shows exactly what will change and needs an explicit approval
   and a reason;
-- audit log of logins, user changes, reviews, edits and accepted instance
-  identities, with a filter per instance.
+- **Configuration** per instance: the settings the node runs with, where
+  each comes from and whether it changes without a restart; secrets show
+  only as "set" or "not set";
+- **Destinations** and **Allow-list**: the C-MOVE destinations and the
+  calling-AE allow-list in force; an empty allow-list is shown as a
+  warning (every calling AE may connect);
+- **Edit, reload, rollback** (Admin): change the destinations or the
+  allow-list, reload the configuration files, or put the previous
+  console-made version back. Each shows LibreDCM's plan of exactly what
+  changes first, with a box for each warning, and needs approval and a
+  reason;
+- **C-ECHO test**: from the node to a configured destination (Operator and
+  Admin) or to another address (Admin), with the result or the stage that
+  failed;
+- audit log of logins, user changes, page openings of configuration pages,
+  reviews, approvals, results and accepted instance identities, with a
+  filter per instance.
 
 All roles see the fleet, dashboard, status, about and Study Exceptions pages.
-Only an Admin resolves exceptions, accepts a new instance identity, manages
-users and reads the audit log.
+Operators also see the configuration, destinations and allow-list and run
+C-ECHO tests to configured destinations. Only an Admin changes the
+configuration, reloads, rolls back, tests a free address, resolves
+exceptions, accepts a new instance identity, manages users and reads the
+audit log.
 
 Libre WT does not display images. It does not start, stop or restart
 LibreDCM: that is done on the host (see `deploy/workstation/INSTALL.md`,
@@ -118,7 +136,50 @@ Rules:
   reason and approves. The acceptance is recorded in the audit log.
 - **Older LibreDCM.** A LibreDCM without the newer control API shows "does
   not report status". Study Exceptions still work for it.
-- **Licence.** The licence state shown never stops DICOM services.
+- **Licence.** The licence state shown never stops DICOM services. An
+  unlicensed node that waits for the licence notice to be acknowledged
+  refuses configuration changes (edit, reload, rollback); Libre WT says so.
+  DICOM keeps running.
+
+## Changing the configuration
+
+Only the two settings LibreDCM can change without a restart can be changed
+in Libre WT: the C-MOVE destinations and the calling-AE allow-list. All
+other settings are read-only; change them on the host and restart the node.
+
+1. Open the instance, then **Configuration** → **Edit destinations or
+   allow-list**. Change the table or the rules and press **Review the
+   change…**. Nothing changes yet.
+2. Libre WT asks LibreDCM for its plan and shows it: what is added, removed
+   or changed, on which instance (banner, node ID, AE title). Each warning
+   that weakens a safety check (a destination removed or pointed elsewhere,
+   an allow-list that becomes empty or would refuse a device used in the
+   last 24 hours) has its own box.
+3. Tick each warning, give a reason, tick the approval box and press
+   **Approve and apply**. The approval is valid once, for 10 minutes, in
+   this browser session, for this plan. If the node's settings changed in
+   the meantime, LibreDCM refuses and nothing is changed: review again.
+
+LibreDCM keeps the change in its own overlay file (`config.yaml` is not
+rewritten) and keeps the version before it for one **rollback**. **Reload
+from the files** applies what the files on the host hold now, also through
+a plan page. In a cluster, each node is changed on its own: the fleet page
+flags the nodes whose settings differ.
+
+The result page shows the request ID. It is in the audit log of Libre WT
+and of LibreDCM. If LibreDCM does not answer in time, Libre WT says that the
+outcome is not known: look for the request ID before you try again.
+
+## C-ECHO test
+
+**C-ECHO test** on an instance makes that node open a DICOM association
+under its own AE title and send one C-ECHO. It shows whether a device can be
+reached and accepts the node, as for a C-MOVE. No patient data is sent.
+Operators test configured destinations; an Admin can also test a host, port
+and AE title that are not configured (for a new device), with or without
+TLS (the device's certificate is not checked). A failure shows the stage:
+**connect** (network or TLS), **association** (the device refused the
+node's AE title or the negotiation) or **echo**.
 
 ## Upgrade from Libre WT 0.1
 
@@ -129,7 +190,6 @@ working while one instance is configured. After login the first page is now
 the fleet page. Going back to 0.1 with the upgraded database works; 0.1
 ignores the additions.
 
-Not yet: configuration, remote AEs, allow-list, C-ECHO test, reload, study
-search and send, licence handling, backup, LibreDCM audit records and logs
-(later cards of 0.2); OIDC/LDAP, TOTP, IHE IOCM rejection notes to other
-systems.
+Not yet: study search and send, licence handling, backup, LibreDCM audit
+records and logs (later cards of 0.2); OIDC/LDAP, TOTP, IHE IOCM rejection
+notes to other systems.

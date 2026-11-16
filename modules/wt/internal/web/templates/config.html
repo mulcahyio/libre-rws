@@ -1,0 +1,45 @@
+{{define "title"}}Configuration{{end}}
+{{define "content"}}
+<h1>Configuration</h1>
+<p class="lead">The settings this node runs with now, read at {{fmtStamp .ReadAt}}. Secrets are never sent to Libre WT: they show only as "set" or "not set".</p>
+<p><small>Digest of the live settings: <code class="uid">{{orDash .Digest}}</code></small></p>
+
+<table>
+<thead><tr><th>Setting</th><th>Value</th><th>Source</th><th>Change</th></tr></thead>
+<tbody>
+{{range .Settings}}<tr>
+<td><code>{{.Key}}</code></td>
+<td>{{if .Redacted}}<span class="state">{{if not .SetKnown}}hidden{{else if .IsSet}}set{{else}}not set{{end}}</span> <small>secret, not shown</small>{{else}}{{range .Lines}}<code>{{.}}</code><br>{{else}}<span class="empty">—</span>{{end}}{{if .Parts}}<small>removed from this value: {{range $i, $p := .Parts}}{{if $i}}, {{end}}{{$p}}{{end}}</small>{{end}}{{end}}</td>
+<td>{{.Source}}{{if .Env}} <small><code>{{.Env}}</code></small>{{end}}</td>
+<td>{{if .Live}}<span class="state live">live</span> <small>changes without a restart</small>{{else}}<span class="state restart">restart</span> <small>read-only here</small>{{end}}</td>
+</tr>{{end}}
+</tbody>
+</table>
+<p class="msg info">Settings marked <b>restart</b> can't be changed from Libre WT. Change them in <code>config.yaml</code> or the environment on the host, then restart the node with the installer script or Docker. {{.RestartNote}}</p>
+
+<h2>Live settings</h2>
+<p>The C-MOVE <a href="{{.Base}}/remote-aes">destinations</a> and the calling-AE <a href="{{.Base}}/allow-list">allow-list</a> change without a restart.</p>
+{{if .EditOff}}<p class="msg info">Configuration edit is off on this node (no overlay file). Edit <code>config.yaml</code> on the host and reload.</p>{{end}}
+{{if .History}}{{with .History}}
+<table class="narrow">
+<thead><tr><th>Console-made version</th><th>When</th><th>By</th><th>Kind</th><th>Reason</th><th>Holds</th></tr></thead>
+<tbody>
+{{if .Current}}<tr><td>current</td><td>{{.Current.Time}}</td><td>{{orDash .Current.Operator}}</td><td>{{.Current.Kind}}</td><td>{{orDash .Current.Reason}}</td><td>{{range .Current.Settings}}<code>{{.}}</code> {{end}}</td></tr>{{else}}<tr><td>current</td><td colspan="5" class="empty">none: no change was made from a console</td></tr>{{end}}
+{{if .Previous}}<tr><td>previous</td><td>{{.Previous.Time}}</td><td>{{orDash .Previous.Operator}}</td><td>{{.Previous.Kind}}</td><td>{{orDash .Previous.Reason}}</td><td>{{range .Previous.Settings}}<code>{{.}}</code> {{end}}</td></tr>{{else}}<tr><td>previous</td><td colspan="5" class="empty">none: nothing to roll back to</td></tr>{{end}}
+</tbody>
+</table>
+<p><small>{{.Note}}</small></p>
+{{end}}{{end}}
+{{if .HistoryErr}}<p class="msg error" role="alert">The version history could not be read: {{.HistoryErr}}</p>{{end}}
+
+{{if or .CanEdit .CanReload}}
+{{if .Allowed}}
+<div class="actions">
+{{if .CanEdit}}<a class="button" href="{{.Base}}/config/edit">Edit destinations or allow-list</a>{{end}}
+{{if .CanReload}}<form method="post" action="{{.Base}}/reload/review" class="inline"><input type="hidden" name="csrf" value="{{.CSRF}}"><button>Reload from the files…</button></form>{{end}}
+{{if and .CanEdit .History}}{{if .History.Previous}}<form method="post" action="{{.Base}}/rollback/review" class="inline"><input type="hidden" name="csrf" value="{{.CSRF}}"><button class="danger">Roll back to the previous version…</button></form>{{end}}{{end}}
+</div>
+<p><small>Each button first shows what would change. Nothing changes before you approve it there.</small></p>
+{{else}}<p class="msg error" role="alert">{{.Blocked}}</p>{{end}}
+{{end}}
+{{end}}

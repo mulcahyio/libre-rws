@@ -82,3 +82,8 @@ table.narrow { max-width: 46rem; }
 .tile { background: var(--surface); border: 1px solid var(--line); border-radius: .5rem; padding: .6rem .8rem; }
 .tile span { display: block; color: var(--muted); font-size: .8rem; }
 .tile b { font-size: 1.15rem; }
+.state.live { border-color: var(--ok); color: var(--ok); }
+.state.restart, .state.unknown { border-color: var(--muted); color: var(--muted); }
+label.warnbox { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-line); border-radius: .35rem; padding: .5rem .7rem; }
+td input { max-width: 100%; }
+button[disabled] { opacity: .5; cursor: not-allowed; }

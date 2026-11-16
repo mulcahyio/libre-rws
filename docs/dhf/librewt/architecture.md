@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Document | DHF-WT-ARCH |
-| Status | **DRAFT** (2026-11-10); v0.2 part added 2026-11-14, **DRAFT for approval**; §2…§6 updated 2026-11-16 with what card WT-0.2/5 built |
+| Status | **DRAFT** (2026-11-10); v0.2 part added 2026-11-14, **DRAFT for approval**; §2…§6 updated 2026-11-16 with what card WT-0.2/5 built; §3, §5 and §8 updated 2026-11-16 with what card WT-0.2/6 built |
 
 | Item | Path | Responsibility |
 |---|---|---|
@@ -82,7 +82,7 @@ page shows the instance banner (WT-SRS-014).
 | Allow-list | `GET /i/{i}/allow-list` | Operator, Admin | Rules in force; "empty = everyone may connect" notice | WT-SRS-020 |
 | Edit destinations / allow-list | `GET /i/{i}/config/edit`, `POST /i/{i}/config/review`, `POST /i/{i}/config/apply` | Admin | Form, then warning page with LibreDCM's plan, then apply | WT-SRS-021, -031 |
 | Reload, rollback | `POST /i/{i}/reload/review`, `POST /i/{i}/reload/apply`, `POST /i/{i}/rollback/review`, `POST /i/{i}/rollback/apply` | Admin | Plan page with the difference, then apply | WT-SRS-022, -031 |
-| C-ECHO test | `GET /i/{i}/echo`, `POST /i/{i}/echo` | Operator, Admin | Pick a destination (Admin: or free address), reason; result page | WT-SRS-024 |
+| C-ECHO test | `GET /i/{i}/echo`, `POST /i/{i}/echo/review`, `POST /i/{i}/echo/apply` | Operator, Admin (free address: Admin, checked in the handler) | Pick a destination (Admin: or free address); warning page with reason; result page | WT-SRS-024 |
 | Studies | `GET /i/{i}/studies`, `POST /i/{i}/studies/search`, `GET /i/{i}/studies/{uid}` | Operator, Admin | Search form and results; study detail with series | WT-SRS-025 |
 | Send | `POST /i/{i}/studies/{uid}/send/review`, `POST /i/{i}/studies/{uid}/send/apply` | Admin | Warning page with patient, study, destination; result | WT-SRS-026, -031 |
 | Licence | `GET /i/{i}/license`, `POST /i/{i}/license/{action}/review`, `POST /i/{i}/license/{action}/apply` | View: all. Acknowledge: Operator, Admin. Other actions: Admin | State; acknowledge, request, install, activate | WT-SRS-027, -031 |
@@ -170,6 +170,31 @@ reload, rollback, send, licence actions, backup, C-ECHO, identity
 acceptance, and the 0.1 resolve). Actions without a LibreDCM plan (backup,
 C-ECHO, licence acknowledgement) still get a warning page that says what
 will happen and on which instance.
+
+As built (card WT-0.2/6, `modules/wt/internal/web/actions.go`): the review
+step stores what the apply step will send (the edited table or rules, the
+C-ECHO target, LibreDCM's plan digest, the warnings that need a box)
+together with the single-use confirmation, on the server. The apply request
+carries only the confirmation, the reason and the ticked boxes; form fields
+it adds are ignored. The confirmation is bound to the session, the
+instance, the action and a fingerprint of the expected node, target and
+plan digest. The apply step checks, in this order: confirmation (used up at
+the first try, whatever the outcome), approval box, reason (1 to 500
+characters), every warning box, instance reachable and still the
+remembered node, a check of the action (C-ECHO: the destination still has
+the address shown), then writes the approval to the audit log and only
+then sends the action with operator, reason, a new random request ID, the
+expected node ID and AE title, the plan digest and the acknowledged warning
+codes. The 0.1 resolve and the identity acceptance keep their own handlers;
+they follow the same rule.
+
+Action answers: success is recorded with LibreDCM's digests before and
+after and the request ID. A refusal before the action started (400, 404,
+409, 422, 423, 429) is shown with LibreDCM's text and "Nothing was
+changed". Another error is shown without that sentence. When LibreDCM does
+not answer in time (30 seconds), the outcome is recorded as `unknown` and
+the page gives the request ID to look for; Libre WT does not repeat the
+request on its own.
 
 ## 6. Multi-instance connections
 
@@ -288,3 +313,9 @@ Each can be changed before the code that depends on it is merged.
 | D38 | "Instance selector" (card text) | Links: the fleet page lists the instances; every instance page has "Other instances". No drop-down and nothing remembered (card WT-0.2/5) | D1: a selection kept in the session is how the wrong node gets changed | A drop-down that only navigates |
 | D39 | Fleet counts | "Stored" is the C-STORE result `success`; "Not stored" is every other C-STORE result; "Rejected associations" is LibreDCM's own counter (card WT-0.2/5) | Card text: "store/rejection counts"; the status page shows every result on its own | Other grouping |
 | D40 | Test against a real LibreDCM | The test builds LibreDCM from the repository and runs it as a separate process (not in the test process) (card WT-0.2/5) | Libre WT must not import LibreDCM code (`TestWTDoesNotImportDCM`); a separate process is also how an installation runs | Allow the import in one test file |
+| D41 | Where does the apply step get what it sends? | From the server: the review step keeps the edited value, the C-ECHO target and LibreDCM's plan digest with the single-use confirmation. The apply form carries only the confirmation, the reason and the ticked boxes (card WT-0.2/6) | The browser can't change what was reviewed between the warning page and the approval; LibreDCM's digest check stays a second line | Send the value again from the browser and rely on LibreDCM's digest check alone |
+| D42 | How many open approvals per session? | At most 20; a new review drops the oldest. Each lives 10 minutes (card WT-0.2/6) | Bounded memory; a person rarely has more than a few warning pages open | No limit; or one per action |
+| D43 | Audit of configuration views | Every opening of the configuration, destinations, allow-list, edit and C-ECHO pages is recorded. When the record can't be written the page is not shown (card WT-0.2/6; card text: "audit on WT side for every view of config") | Same rule as for actions: no record, no access. The pages show network layout and the allow-list | Record and show anyway, logging the failure |
+| D44 | LibreDCM does not answer an action in time | Libre WT waits 30 seconds, then records the outcome as `unknown` and shows the request ID. It does not repeat the request on its own; a new attempt needs a new review (card WT-0.2/6) | A repeat could do the action twice (C-ECHO is harmless; a change is refused by LibreDCM because the plan digest no longer fits). The person checks first | Retry automatically with the same request ID (LibreDCM returns the first result) |
+| D45 | Destinations form | The whole table is sent; rename is remove and add; destinations fixed by an environment variable are shown read-only and left out (LibreDCM keeps them). Up to 3 empty rows for new entries; allow-list as one rule per line (card WT-0.2/6) | Matches the API (whole value of a setting); no scripts needed in the page | One form per destination |
+| D46 | Licence block link | When LibreDCM refuses a change until the licence notice is acknowledged, the page says so and that DICOM keeps running. The link to the instance's licence page appears once Libre WT has that page, which comes in card WT-0.2/7 (card WT-0.2/6) | The licence page is built in the next card; the link is generated from the list of instance pages | Build a minimal licence page now |

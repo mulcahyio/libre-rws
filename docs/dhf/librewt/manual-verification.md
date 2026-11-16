@@ -46,3 +46,36 @@ automated tests with the fake control API).
 - WT-SRS-017: dashboard and status page of a real node (2026-11-16)
 - WT-SRS-023: "settings differ in cluster" shown for two real nodes with different allow-lists (2026-11-16)
 - WT-SRS-036: start-up warning and page warning for the plain-HTTP instance (2026-11-16)
+
+**2026-11-16, Hermes (pre-baseline, development evidence, card WT-0.2/6):**
+LibreDCM and Libre WT built from branch `feat/librewt-0.2-config` and run on
+Linux as three processes: LibreDCM `manual-dcm-1` (AE `ARCHIVE1`, overlay
+file in its data folder, token file) managed by Libre WT as instance
+`dcm-1`, and LibreDCM `manual-dcm-2` (AE `ARCHIVE2`) used only as a C-ECHO
+target. No patient data. Walked with `curl` and two cookie jars (Admin and
+Operator) by a scratch script. Seen: configuration page for both roles with
+2 live and 4 secret rows, change controls for the Admin only; empty
+allow-list warning; Operator refused on the edit page (403). Admin added
+destination `DCM2` (dcm-2's DICOM port): warning page with LibreDCM's
+difference; apply without a reason refused (422); the same confirmation a
+second time refused (409); proper apply done, destination shown with source
+`overlay`. Operator C-ECHO to `DCM2`: success. Operator free address:
+refused (403). Admin C-ECHO to a port where nothing listens: failed at the
+stage `connect`, "connection refused". Removing `DCM2`: LibreDCM's warning
+`remote_ae_removed` had its own box; apply without it refused (422), with it
+done. Allow-list restricted to two rules (no device had been active, so
+LibreDCM gave no warning), then rolled back to the previous version (the
+rollback page named who made it); allow-list empty again. Reload from the
+files done. Review without the CSRF token and with another session's token:
+403. LibreDCM's own audit records of the 7 actions name the Libre WT user
+(`admin1`, `op1`), the reason and a request ID; Libre WT's audit log has the
+matching reviews, approvals, results and the two page views. The token was
+in no saved page and not in the Libre WT log (0 matches). Not done by hand:
+a browser walkthrough with screenshots, HTTPS between Libre WT and
+LibreDCM, the licence block on a real unlicensed official build.
+
+- WT-SRS-019: configuration page of a real node for Operator and Admin, secrets hidden (2026-11-16, see above)
+- WT-SRS-020: destinations and allow-list pages of a real node, empty allow-list warning (2026-11-16)
+- WT-SRS-021: destination added and removed (warning box) and allow-list changed on a real node (2026-11-16)
+- WT-SRS-022: rollback and reload on a real node (2026-11-16)
+- WT-SRS-024: C-ECHO success to a real node, connect failure to a closed port, free address refused for the Operator (2026-11-16)

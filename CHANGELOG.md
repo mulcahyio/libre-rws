@@ -14,6 +14,47 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **Libre WT: configuration, destinations, allow-list, edit, reload,
+  rollback and C-ECHO test (card WT-0.2/6, issue #20; WT-SRS-019…022 and
+  -024 now `Active`).**
+  - Configuration page per instance (Operator, Admin): every setting the
+    node runs with, its source and whether it changes without a restart.
+    Secrets show only as "set" or "not set"; Libre WT also drops any value
+    of a setting LibreDCM marks as secret. Restart-only settings are
+    read-only, with the host procedure.
+  - Destinations and Allow-list pages (Operator, Admin): the C-MOVE
+    destinations and calling-AE rules in force, with their source. An empty
+    allow-list is shown as a warning (every calling AE may connect); an
+    invalid one as "refuses every association".
+  - Edit of the destinations and the allow-list (Admin): Libre WT sends the
+    new value to LibreDCM as a plan, shows LibreDCM's exact difference on a
+    warning page with a box for each warning that must be acknowledged,
+    and applies it only with the single-use approval of that page, the
+    approval box and a reason. A value LibreDCM refuses is shown with its
+    reason and the typed form is kept.
+  - Reload from the files and rollback to the previous console-made
+    version (Admin), each through a plan page. When an unlicensed node
+    blocks changes until the licence notice is acknowledged, Libre WT says
+    so and that DICOM keeps running.
+  - C-ECHO test from the node: to a configured destination (Operator,
+    Admin) or to another host, port and AE title (Admin), with the result
+    or the stage that failed and the duration.
+  - One action flow for these actions: what is sent is kept on the server
+    from the review (the browser can't change it); the approval is bound
+    to the session, instance, action and plan, used once, valid 10
+    minutes, at most 20 open per session; LibreDCM's plan digest, the
+    logged-in user as operator, the reason, a random request ID and the
+    expected node go with every action. The approval is written to the
+    audit log before sending; without the record nothing is sent. When
+    LibreDCM does not answer in 30 seconds the outcome is recorded as
+    "unknown" with the request ID.
+  - Audit: every opening of the configuration pages (without the record,
+    the page is not shown), every review, approval and result, with the
+    instance and the request ID.
+  - The dashboard and the instance tabs list only the pages the user's
+    role can open.
+
+  No new dependency. No change to LibreDCM.
 - **Libre WT: several LibreDCM instances, fleet page, dashboard, status and
   about pages (card WT-0.2/5, issue #20; WT-SRS-013…018, -023, -035, -036
   now `Active`).**
