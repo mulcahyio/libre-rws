@@ -1,0 +1,30 @@
+{{define "title"}}Review: C-ECHO test{{end}}
+{{define "content"}}
+<p><a href="{{.Base}}/echo">← Back</a></p>
+<h1>Review: C-ECHO test</h1>
+<section class="warning" role="alert">
+<h2>⚠ This makes a network connection from the node</h2>
+<p>Instance <b>{{.I.Name}}</b> (node ID <code>{{orDash .I.Remembered.NodeID}}</code>, AE title <code>{{orDash .I.Remembered.AETitle}}</code>) will open a DICOM association and send one C-ECHO.</p>
+<p>No patient data is sent. Nothing is changed on the node.</p>
+</section>
+<table class="narrow">
+<tbody>
+<tr><th>Target</th><td>{{if .T.Configured}}configured destination <b>{{.T.Name}}</b>{{else}}<b class="diff">free address</b> (not a configured destination){{end}}</td></tr>
+<tr><th>Address</th><td><code>{{.T.Addr}}</code></td></tr>
+<tr><th>Called AE title</th><td><code>{{.T.AETitle}}</code></td></tr>
+<tr><th>Calling AE title</th><td><code>{{orDash .I.Remembered.AETitle}}</code></td></tr>
+<tr><th>TLS</th><td>{{if .T.TLS}}yes; the device's certificate is not checked, so the test shows that the device answers, not who it is{{else}}no{{end}}</td></tr>
+</tbody>
+</table>
+<form method="post" action="{{.Base}}/echo/apply" class="card">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<input type="hidden" name="confirm" value="{{.Confirm}}">
+<label>Reason (recorded in the audit trails of Libre WT and LibreDCM) <textarea name="reason" required maxlength="500" rows="2"></textarea></label>
+<label class="check"><input type="checkbox" name="approve" value="yes" required> Run this test from instance {{.I.Name}}</label>
+<div class="actions">
+<button class="primary">Run the test</button>
+<a class="button" href="{{.Base}}/echo">Cancel</a>
+</div>
+<p><small>This approval is valid for 10 minutes, once, and for this target only. The test takes up to 15 seconds.</small></p>
+</form>
+{{end}}

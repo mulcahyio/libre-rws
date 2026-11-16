@@ -1,0 +1,10 @@
+{{define "title"}}{{.Label}}{{end}}
+{{define "content"}}
+<h1>{{.Label}}</h1>
+{{if .Unreachable}}
+<p class="msg info">This instance can't be reached, so this page has nothing to show. No old values are shown.</p>
+{{else}}
+<p class="msg info">Not available on this instance: this LibreDCM ({{orDash .I.Version}}) does not offer this function. Other pages of the instance still work.</p>
+{{end}}
+<p><a href="{{.Base}}/">Back to the dashboard</a></p>
+{{end}}

@@ -1,0 +1,58 @@
+{{define "title"}}Review: {{.V.Title}}{{end}}
+{{define "content"}}
+<p><a href="{{.V.Back}}">← Back</a></p>
+<h1>Review: {{.V.Title}}</h1>
+<section class="warning" role="alert">
+<h2>⚠ Warning: this changes which devices can connect to, or receive images from, this node</h2>
+<p>The change is made on instance <b>{{.I.Name}}</b> (node ID <code>{{orDash .I.Remembered.NodeID}}</code>, AE title <code>{{orDash .I.Remembered.AETitle}}</code>){{if .I.Cluster}}, cluster <b>{{.I.Cluster}}</b>. Other nodes of the cluster are not changed{{end}}.</p>
+{{if eq .V.Kind "reload"}}<p>The node reads its configuration files again. The difference below is what the files hold now against what is running.</p>{{end}}
+{{if eq .V.Kind "rollback"}}<p>The previous console-made version is put back{{with .V.Previous}}: made {{.Time}} by <b>{{orDash .Operator}}</b> ({{.Kind}}), reason: {{orDash .Reason}}{{end}}. The version that is current now becomes the previous one.</p>{{end}}
+{{if eq .V.Kind "edit"}}<p>LibreDCM keeps the change in its own overlay file; <code>config.yaml</code> is not rewritten. The version in force now is kept for one rollback.</p>{{end}}
+<p>This is the plan LibreDCM made. LibreDCM refuses the change when its settings are no longer the ones this plan was made for.</p>
+</section>
+
+{{if not .V.Plan.Changed}}<p class="msg info"><b>Nothing would change:</b> the settings in force already are the ones this action leads to.</p>{{end}}
+
+{{with .V.Plan}}
+{{if or .RemoteAEs.Added .RemoteAEs.Removed .RemoteAEs.Changed}}
+<h2>C-MOVE destinations</h2>
+<table>
+<thead><tr><th>Change</th><th>Name</th><th>Now</th><th>After</th></tr></thead>
+<tbody>
+{{range .RemoteAEs.Added}}<tr><td><span class="state success">added</span></td><td><b>{{.Name}}</b></td><td>—</td><td><code class="diff">{{.Host}}:{{.Port}}</code> AE <code class="diff">{{.AETitle}}</code></td></tr>{{end}}
+{{range .RemoteAEs.Removed}}<tr><td><span class="state open">removed</span></td><td><b>{{.Name}}</b></td><td><code>{{.Host}}:{{.Port}}</code> AE <code>{{.AETitle}}</code></td><td class="diff">removed</td></tr>{{end}}
+{{range .RemoteAEs.Changed}}<tr><td><span class="state open">changed</span></td><td><b>{{.Name}}</b></td><td><code>{{.From.Host}}:{{.From.Port}}</code> AE <code>{{.From.AETitle}}</code></td><td><code class="diff">{{.To.Host}}:{{.To.Port}}</code> AE <code class="diff">{{.To.AETitle}}</code></td></tr>{{end}}
+</tbody>
+</table>
+{{end}}
+{{if or .AllowList.Added .AllowList.Removed (ne .AllowList.EnforcedBefore .AllowList.EnforcedAfter)}}
+<h2>Calling-AE allow-list</h2>
+<table class="narrow">
+<thead><tr><th>Change</th><th>Rule</th></tr></thead>
+<tbody>
+{{range .AllowList.Added}}<tr><td><span class="state success">added</span></td><td><code class="diff">{{.}}</code></td></tr>{{end}}
+{{range .AllowList.Removed}}<tr><td><span class="state open">removed</span></td><td><code>{{.}}</code></td></tr>{{end}}
+</tbody>
+</table>
+<p>Now: {{if .AllowList.EnforcedBefore}}the list is enforced{{else}}<b>the list is empty, every calling AE may connect</b>{{end}}. After: {{if .AllowList.EnforcedAfter}}the list is enforced{{else}}<b class="diff">the list is empty, every calling AE may connect</b>{{end}}.</p>
+{{end}}
+{{end}}
+
+<form method="post" action="{{.V.Apply}}" class="card">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<input type="hidden" name="confirm" value="{{.V.Confirm}}">
+{{range .V.Notes}}<p class="msg warn">{{.Message}}</p>{{end}}
+{{if .V.Acks}}
+<h2>Warnings from LibreDCM: tick each one to acknowledge it</h2>
+{{range $i, $w := .V.Acks}}<label class="check warnbox"><input type="checkbox" name="ack_{{$i}}" value="yes" required> <span>{{$w.Message}} <small>({{$w.Code}})</small></span></label>
+{{end}}
+{{end}}
+<label>Reason (recorded in the audit trails of Libre WT and LibreDCM) <textarea name="reason" required maxlength="500" rows="3"></textarea></label>
+<label class="check"><input type="checkbox" name="approve" value="yes" required> I have checked the change above and approve it for instance {{.I.Name}}</label>
+<div class="actions">
+<button class="primary danger">Approve and apply</button>
+<a class="button" href="{{.V.Back}}">Cancel</a>
+</div>
+<p><small>This approval is valid for 10 minutes, once, and for this plan only.</small></p>
+</form>
+{{end}}

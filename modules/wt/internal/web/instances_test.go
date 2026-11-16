@@ -593,7 +593,7 @@ func TestTextFromLibreDCMIsNeverMarkup(t *testing.T) {
 // Every address behind the login has one row in the role table, and the
 // server refuses each one for a role below its row, whatever the page links
 // show. Without a session every address leads to the login page.
-// Verifies: WT-SRS-004, WT-SRS-014
+// Verifies: WT-SRS-004, WT-SRS-014, WT-SRS-034
 func TestRoleTable(t *testing.T) {
 	e := newFleetEnv(t, "a", "b")
 	e.users(t)
@@ -609,6 +609,19 @@ func TestRoleTable(t *testing.T) {
 		"POST /i/{inst}/exceptions/{id}/resolve": accounts.Admin,
 		"POST /i/{inst}/identity/review":         accounts.Admin,
 		"POST /i/{inst}/identity/apply":          accounts.Admin,
+		"GET /i/{inst}/config":                   accounts.Operator,
+		"GET /i/{inst}/remote-aes":               accounts.Operator,
+		"GET /i/{inst}/allow-list":               accounts.Operator,
+		"GET /i/{inst}/config/edit":              accounts.Admin,
+		"POST /i/{inst}/config/review":           accounts.Admin,
+		"POST /i/{inst}/config/apply":            accounts.Admin,
+		"POST /i/{inst}/reload/review":           accounts.Admin,
+		"POST /i/{inst}/reload/apply":            accounts.Admin,
+		"POST /i/{inst}/rollback/review":         accounts.Admin,
+		"POST /i/{inst}/rollback/apply":          accounts.Admin,
+		"GET /i/{inst}/echo":                     accounts.Operator,
+		"POST /i/{inst}/echo/review":             accounts.Operator,
+		"POST /i/{inst}/echo/apply":              accounts.Operator,
 		"GET /exceptions":                        accounts.Viewer,
 		"GET /exceptions/{rest...}":              accounts.Viewer,
 		"GET /users":                             accounts.Admin,

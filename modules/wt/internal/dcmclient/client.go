@@ -30,14 +30,18 @@ type Config struct {
 	// ReadTimeout bounds the status reads (discovery, status, version), so
 	// an unreachable node can't hold a page for long. Default 5 seconds.
 	ReadTimeout time.Duration
+	// ActionTimeout bounds the wait for the answer to an action (C-ECHO
+	// test, reload, configuration edit, rollback). Default 30 seconds.
+	ActionTimeout time.Duration
 }
 
 // Client is a LibreDCM control-API client.
 type Client struct {
-	base  *url.URL
-	token string
-	http  *http.Client
-	read  time.Duration
+	base   *url.URL
+	token  string
+	http   *http.Client
+	read   time.Duration
+	action time.Duration
 }
 
 // New validates the configuration and builds a client.
@@ -76,7 +80,10 @@ func New(cfg Config) (*Client, error) {
 	if cfg.ReadTimeout <= 0 {
 		cfg.ReadTimeout = 5 * time.Second
 	}
-	return &Client{base: u, token: token, http: &http.Client{Transport: tr, Timeout: cfg.Timeout}, read: cfg.ReadTimeout}, nil
+	if cfg.ActionTimeout <= 0 {
+		cfg.ActionTimeout = DefaultActionTimeout
+	}
+	return &Client{base: u, token: token, http: &http.Client{Transport: tr, Timeout: cfg.Timeout}, read: cfg.ReadTimeout, action: cfg.ActionTimeout}, nil
 }
 
 // URL returns the configured LibreDCM URL (never the token).

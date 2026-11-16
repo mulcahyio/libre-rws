@@ -1,0 +1,30 @@
+{{define "title"}}{{.Title}}{{end}}
+{{define "content"}}
+<section class="card">
+<h1>Done: {{.Title}}</h1>
+{{if .R.Changed}}
+<p class="msg info">LibreDCM applied the change on instance <b>{{.I.Name}}</b>. The new settings are in force now.</p>
+{{else}}
+<p class="msg info">LibreDCM answered that nothing changed: the settings in force already were the ones asked for.{{if .R.Note}} {{.R.Note}}{{end}}</p>
+{{end}}
+<dl>
+<dt>Digest before</dt><dd><code class="uid">{{orDash .R.DigestBefore}}</code></dd>
+<dt>Digest after</dt><dd><code class="uid">{{orDash .R.DigestAfter}}</code></dd>
+<dt>Request ID</dt><dd><code>{{.RequestID}}</code></dd>
+</dl>
+{{with .R.Plan}}
+{{if or .RemoteAEs.Added .RemoteAEs.Removed .RemoteAEs.Changed .AllowList.Added .AllowList.Removed}}
+<h2>What changed</h2>
+<ul>
+{{range .RemoteAEs.Added}}<li>Destination <b>{{.Name}}</b> added: <code>{{.Host}}:{{.Port}}</code> AE <code>{{.AETitle}}</code></li>{{end}}
+{{range .RemoteAEs.Removed}}<li>Destination <b>{{.Name}}</b> removed</li>{{end}}
+{{range .RemoteAEs.Changed}}<li>Destination <b>{{.Name}}</b> changed: <code>{{.From.Host}}:{{.From.Port}}</code> AE <code>{{.From.AETitle}}</code> → <code>{{.To.Host}}:{{.To.Port}}</code> AE <code>{{.To.AETitle}}</code></li>{{end}}
+{{range .AllowList.Added}}<li>Allow-list rule added: <code>{{.}}</code></li>{{end}}
+{{range .AllowList.Removed}}<li>Allow-list rule removed: <code>{{.}}</code></li>{{end}}
+</ul>
+{{end}}
+{{end}}
+<p><small>The request ID is in the audit records of Libre WT and of LibreDCM. In a cluster, the other nodes were not changed.</small></p>
+<p><a href="{{.Back}}">Back to the configuration</a></p>
+</section>
+{{end}}

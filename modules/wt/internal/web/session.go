@@ -20,6 +20,9 @@ const (
 	loginMaxPerIP   = 10 // failed logins per IP per window
 	loginMaxPerUser = 5  // failed logins per username per window
 	confirmTTL      = 10 * time.Minute
+	// maxConfirmsPerSession bounds the open approvals of one session, so
+	// repeated reviews can't fill the memory.
+	maxConfirmsPerSession = 20
 )
 
 type session struct {
@@ -41,6 +44,10 @@ type confirmation struct {
 	action   string
 	digest   string
 	expires  time.Time
+	// pending is what the warning page showed and the apply step will
+	// send. It is kept here, on the server, so the browser can't change it
+	// between the two steps (WT-SRS-031). Nil for the 0.1 resolve flow.
+	pending *pending
 }
 
 type sessions struct {
@@ -196,17 +203,51 @@ func planDigest(parts ...string) string {
 }
 
 func (s *sessions) issueConfirm(session, instance, conflict, action, digest string) string {
+	return s.issuePending(session, instance, conflict, action, digest, nil)
+}
+
+// issuePending issues a confirmation that carries what the apply step will
+// send.
+func (s *sessions) issuePending(session, instance, conflict, action, digest string, p *pending) string {
 	t := randToken()
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	now := s.now()
+	live, oldest := 0, ""
 	for k, c := range s.confirms {
 		if now.After(c.expires) {
 			delete(s.confirms, k)
+			continue
+		}
+		if c.session == session {
+			live++
+			if oldest == "" || c.expires.Before(s.confirms[oldest].expires) {
+				oldest = k
+			}
 		}
 	}
-	s.confirms[t] = confirmation{session: session, instance: instance, conflict: conflict, action: action, digest: digest, expires: now.Add(confirmTTL)}
+	// A session keeps a bounded number of open approvals: the oldest goes.
+	if live >= maxConfirmsPerSession {
+		delete(s.confirms, oldest)
+	}
+	s.confirms[t] = confirmation{session: session, instance: instance, conflict: conflict, action: action, digest: digest, expires: now.Add(confirmTTL), pending: p}
 	return t
+}
+
+// usePending consumes a confirmation token issued by issuePending for this
+// session, instance and action. The token is gone after the first try,
+// whatever the outcome. It returns false when the token is unknown,
+// expired, already used, or was issued for another session, instance or
+// action.
+func (s *sessions) usePending(token, session, instance, action string) (*pending, string, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	c, ok := s.confirms[token]
+	delete(s.confirms, token)
+	if !ok || c.pending == nil || s.now().After(c.expires) || c.session != session || c.instance != instance || c.action != action {
+		return nil, "", false
+	}
+	return c.pending, c.digest, true
 }
 
 // useConfirm consumes a confirmation token; it returns the plan digest it

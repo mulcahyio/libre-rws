@@ -31,8 +31,8 @@
   </div>
   <nav class="tabs">
     <a href="{{.Base}}/">Dashboard</a>
-    <a href="{{.Base}}/status">Status</a>
-    <a href="{{.Base}}/exceptions">Study Exceptions</a>
+    {{range .Tabs}}<a href="{{$.Base}}/{{.Path}}">{{.Label}}</a>
+    {{end}}
     {{if gt (len .Instances) 1}}<a href="/">Other instances ({{len .Instances}} configured)</a>{{end}}
   </nav>
   {{if eq (print .I.State) "unreachable"}}

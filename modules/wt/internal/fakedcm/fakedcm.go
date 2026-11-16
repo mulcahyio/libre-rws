@@ -45,9 +45,14 @@ type Server struct {
 	Conflict dcmclient.Conflict
 	Plan     dcmclient.Plan
 
+	// Cfg holds the answers of the configuration endpoints (config.go).
+	Cfg Config
+
 	plans    []map[string]any
 	resolves []map[string]any
 	hits     map[string]int
+	posts    map[string][]map[string]any
+	headers  map[string]http.Header
 }
 
 // New starts a fake node with one open patient-ID conflict (synthetic
@@ -55,8 +60,8 @@ type Server struct {
 func New() *Server {
 	open := uint64(1)
 	s := &Server{Token: "tok", NodeID: "node-1", AETitle: "FAKEDCM", Version: "0.3.0-test", Digest: "sha256:aaaa",
-		Features: []string{"conflicts", "status", "config", "remote-aes", "allow-list", "audit", "logs", "echo", "reload", "license", "backup"},
-		hits:     map[string]int{}}
+		Features: []string{"conflicts", "status", "config", "remote-aes", "allow-list", "audit", "logs", "echo", "reload", "license", "backup", "studies", "send", "config-edit"},
+		hits:     map[string]int{}, posts: map[string][]map[string]any{}, headers: map[string]http.Header{}, Cfg: defaultConfig()}
 	s.Status.UptimeSeconds = 93784 // 1d 2h
 	s.Status.Backends.Storage, s.Status.Backends.Index, s.Status.Backends.Events = "fs", "sqlite", "log"
 	s.Status.DICOM.Listen, s.Status.DICOM.AllowListEntries, s.Status.DICOM.RemoteAEs = ":11112", 2, 1
@@ -134,6 +139,7 @@ func (s *Server) serve(w http.ResponseWriter, r *http.Request) {
 		panic(http.ErrAbortHandler) // drops the connection
 	}
 	s.hits[r.URL.Path]++
+	s.headers[r.URL.Path] = r.Header.Clone()
 	if r.Header.Get("Authorization") != "Bearer "+s.Token {
 		fail(w, http.StatusUnauthorized, "", "unauthorized")
 		return
@@ -154,6 +160,7 @@ func (s *Server) serve(w http.ResponseWriter, r *http.Request) {
 		write(w, 200, map[string]any{"conflicts": []dcmclient.Conflict{s.Conflict}})
 	case strings.HasPrefix(path, "/control/v1/conflicts/"):
 		s.conflict(w, r, strings.TrimPrefix(path, "/control/v1/conflicts/"))
+	case s.configPaths(w, r):
 	default:
 		http.NotFound(w, r) // plain 404 without a machine code, as the real mux
 	}

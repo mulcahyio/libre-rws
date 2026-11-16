@@ -127,3 +127,31 @@ card WT-0.2/5.
 | The identity check blocks Study Exceptions after a planned node replacement or AE title change until an Admin accepts | Held images stay unavailable a little longer (WT-HAZ-03). The warning is on every page of the instance and names the cause | Accepted; the acceptance is one audited step |
 | The fleet page waits up to 5 seconds when a node does not answer | Slower page, no wrong information | Accepted |
 | An instance removed from the configuration and added again under the same name keeps its remembered identity | Intended: the name is the key. A new node behind an old name shows the identity warning | Accepted |
+
+## Libre WT 0.2: controls implemented in card WT-0.2/6 (DRAFT for approval, 2026-11-16)
+
+Prepared by Hermes (Claude) for human review. Card WT-0.2/6 built the
+configuration view, the destinations and allow-list views, the edit of
+these two live settings, reload, rollback and the C-ECHO test, on one
+shared action flow (`architecture.md` §5, "As built").
+
+| Hazard | Controls now implemented | Verification (tests) | State of the hazard |
+|---|---|---|---|
+| WT-HAZ-05 wrong instance targeted | As in card WT-0.2/5, now for every new action: instance only from the address; banner and instance named on each warning page; confirmation bound to session, instance, action and the expected node; no review and no apply while the node differs or can't be reached; expected node ID and AE title sent with every plan and action; an answer from another node is not shown | `TestConfigEditFlow` (confirmation of instance a refused on b), `TestConfigActionsNeedTheRememberedNode`, `TestReadAnsweredByAnotherNode`, `TestConfigAgainstRealLibreDCM` | Controls in place for all actions built so far |
+| WT-HAZ-06 configuration change breaks or opens DICOM traffic | WT-SRS-021 (plan from LibreDCM; warning page with the exact difference; one box per warning that must be acknowledged; LibreDCM's refusal shown with its reason, the typed values kept), -022 (reload and rollback through a plan page; the version that comes back is named), -020 (empty allow-list shown as a warning; invalid list shown as "refuses every association"), -031 (approval box, reason, single-use confirmation; the plan digest shown is the one sent; what is sent is kept on the server from the review), -034 (Admin only), -019 (restart-required settings read-only), -024 (C-ECHO test to check a destination) | `TestConfigEditFlow`, `TestConfigEditWarningsAndRefusals`, `TestPlanChangedAfterReview`, `TestReloadAndRollback`, `TestDestinationsAndAllowList`, `TestConfigRolesAndCSRF`, `TestEcho`, `TestConfigAgainstRealLibreDCM` | Controls complete. Target residual P2 (R) confirmed for review |
+| WT-HAZ-08 secret disclosed | WT-SRS-019 and -032 for the configuration page: redacted settings shown only as set, not set or hidden; the client also drops any value of a redacted setting; LibreDCM text shown as text | `TestConfigPage`, `TestConfigDropsRedactedValues`, `TestConfigAgainstRealLibreDCM` (admin token not on the page) | Open: licence key handling (WT-SRS-027) comes with card WT-0.2/7 |
+| WT-HAZ-14 C-ECHO test misused | WT-SRS-024: Operators only configured destinations (checked in the review and again at apply); free address Admin only; host, port and AE title checked before anything is sent; reason; audit on both sides | `TestEcho`, `TestConfigRolesAndCSRF`, `TestConfigAgainstRealLibreDCM` (LibreDCM's record names the operator and reason) | Control complete. Target residual P2 (A) confirmed for review |
+| WT-HAZ-15 reload or rollback activates settings nobody reviewed | WT-SRS-022: the plan page shows the difference between the running and the to-be-loaded settings; the rollback page names who made the version that comes back, when and why; LibreDCM's plan digest is sent, so a file changed after the review is refused ("Nothing was changed") | `TestReloadAndRollback`, `TestPlanChangedAfterReview`, `TestConfigAgainstRealLibreDCM` | Control complete. Target residual P1 (R) confirmed for review |
+| WT-HAZ-17 actions can't be traced | WT-SRS-033 for the new pages and actions: every opening of a configuration page (no record, no page); review, approval (before sending; no record, nothing sent) and result with instance, target, reason, request ID and outcome; `unknown` when LibreDCM gave no answer. WT-SRS-031: operator, reason and request ID sent to LibreDCM | `TestConfigPage`, `TestNoAuditNoConfigAction`, `TestNoAnswerMeansUnknownOutcome`, `TestConfigEditFlow`, `TestConfigAgainstRealLibreDCM` (LibreDCM's records carry the request ID Libre WT recorded) | Controls in place for all actions built so far |
+
+Mutation check (2026-11-16): 37 mutants, each removing one control above;
+the result is in the pull request of card WT-0.2/6.
+
+### New risks from this implementation (ISO 14971 §7.5)
+
+| Risk | Assessment | Handling |
+|---|---|---|
+| A page that can't write its audit record is not shown: a broken audit database hides the configuration from Operators | Availability of a view, not of DICOM. The audit database is the same one logins use; when it fails, actions fail too. S2, P1 | Accepted; D43 |
+| An action without an answer is reported as "outcome not known"; the person may repeat it | A repeated change is refused by LibreDCM (the plan digest no longer fits the changed settings); a repeated C-ECHO is harmless | Accepted; D44 |
+| Warning boxes on every weakening change can be ticked without reading | Each box carries LibreDCM's own sentence naming the device or the effect; the reason is required and audited | Accepted; as in the 0.2 analysis above |
+| A free C-ECHO address can still be used by an Admin to probe hosts | Recorded on both sides with reason; Admin only | Accepted; WT-HAZ-14 residual |

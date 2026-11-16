@@ -140,3 +140,45 @@ New points:
 
 No new dependency in card WT-0.2/5 (`go.mod` and `go.sum` unchanged). gosec
 v2.30.0 and govulncheck v1.9.0 results are in the pull request.
+
+### State after card WT-0.2/6 (2026-11-16)
+
+Card WT-0.2/6 added the configuration, destinations and allow-list views,
+the edit of the destinations and the allow-list, reload, rollback and the
+C-ECHO test. These are the first Libre WT functions that change a LibreDCM's
+network behaviour. Status of the threats they touch (C = control verified,
+P = partly, O = open):
+
+| ID | Status | What is verified now | Tests |
+|---|---|---|---|
+| WT-TM-09 | P | For edit, reload, rollback and C-ECHO: CSRF token (missing, wrong, another session's: refused, nothing reaches LibreDCM, not even a plan request); single-use confirmation bound to session, instance, action and plan; expiry; approval box; reason; one box per warning. What is sent is kept on the server from the review, so a forged apply form can't change it. Send, licence and backup come with their cards | `TestConfigEditFlow`, `TestConfigEditWarningsAndRefusals`, `TestReloadAndRollback`, `TestEcho`, `TestConfigRolesAndCSRF`, `TestOpenApprovalsAreBounded` |
+| WT-TM-10 | P | 13 new addresses in the reviewed role table; each walked for every role with a valid form (refused below its role, nothing reaches LibreDCM) and without a session. The free C-ECHO address is refused for an Operator inside the handler, at review and at apply. Pages show no control the role can't use (dashboard, tabs, configuration pages) | `TestRoleTable`, `TestConfigRolesAndCSRF`, `TestEcho` |
+| WT-TM-11 | C (for the actions that exist) | No plan request and no action while the node differs or can't be reached; confirmation of one instance refused on another; expected node sent; LibreDCM's "instance mismatch" reported; an answer of a read that names another node is not shown | `TestConfigActionsNeedTheRememberedNode`, `TestReadAnsweredByAnotherNode`, `TestConfigEditFlow` |
+| WT-TM-12 | P | Redacted settings shown only as set, not set or hidden; the client drops a value LibreDCM sent by mistake for a redacted setting; admin token on no page and in no log line. Licence keys come with card WT-0.2/7 | `TestConfigPage`, `TestConfigDropsRedactedValues`, `TestConfigAgainstRealLibreDCM` |
+| WT-TM-14 | P | Markup in setting values, LibreDCM's warning messages and refusal texts, destination names typed back into the form: shown as text | `TestConfigPage`, `TestConfigEditWarningsAndRefusals`, `TestActionRefusalsAreShown` |
+| WT-TM-17 | C | Free C-ECHO address Admin only (role and handler); host, port and AE title checked before sending (no URL, path or user part; port 1 to 65535; AE title 1 to 16 characters); reason; audit on both sides; LibreDCM returns only fixed error texts | `TestEcho`, `TestConfigRolesAndCSRF`, `TestConfigAgainstRealLibreDCM` |
+| WT-TM-18 | P | For the new pages and actions: page openings, reviews, approvals (written before sending; no record, nothing sent) and results with instance, target, reason, request ID and outcome (`unknown` without an answer); LibreDCM's own records carry the same request ID and the Libre WT user | `TestConfigPage`, `TestNoAuditNoConfigAction`, `TestNoAnswerMeansUnknownOutcome`, `TestConfigAgainstRealLibreDCM` |
+
+New points:
+
+- **Request IDs.** Every action carries a random 128-bit request ID
+  (`crypto/rand`, 32 hexadecimal characters), made on the server at
+  approval. It ties the Libre WT audit record to LibreDCM's two records. It
+  is not a secret.
+- **Approval store.** Pending approvals are kept in memory with the
+  session: at most 20 per session, 10 minutes each, removed at logout.
+  They hold the reviewed value (destination table, rules, C-ECHO target),
+  never a secret. A restart of Libre WT drops them: the person reviews
+  again.
+- **Network reach of the node.** The C-ECHO test makes the LibreDCM host
+  open a TCP connection to an address an Admin typed. Libre WT checks the
+  form; LibreDCM checks it again and returns no peer bytes (DCM-SRS-087).
+  Residual: an Admin can learn which hosts answer; it is recorded.
+- **Action timeout.** Libre WT waits at most 30 seconds for an action and
+  5 seconds for a read or a plan. The C-ECHO itself is bounded by LibreDCM
+  (15 seconds).
+
+### Dependencies and static analysis (card WT-0.2/6)
+
+No new dependency (`go.mod` and `go.sum` unchanged). gosec v2.30.0 and
+govulncheck v1.9.0 results are in the pull request.

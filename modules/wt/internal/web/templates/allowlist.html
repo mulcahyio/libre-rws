@@ -1,0 +1,21 @@
+{{define "title"}}Allow-list{{end}}
+{{define "content"}}
+<h1>Calling-AE allow-list</h1>
+<p class="lead">The rules in force on this node now, read at {{fmtStamp .ReadAt}}. A rule is an AE title, <code>AE@IP</code> or <code>AE@network</code>.</p>
+{{if .L.Invalid}}
+<p class="msg error" role="alert"><b>The configured allow-list is invalid.</b> This node refuses every association until the list is corrected.</p>
+{{else if not .L.Entries}}
+<div class="warning" role="alert">
+<h2>⚠ The allow-list is empty: every calling AE may connect</h2>
+<p>Any device that reaches the DICOM port of this node can store, query and retrieve images. Add the AE titles of your devices to restrict this.</p>
+</div>
+{{else}}
+<p><span class="state success">enforced</span> Only the calling AEs below may connect.</p>
+<table class="narrow">
+<thead><tr><th>Rule</th><th>Source</th></tr></thead>
+<tbody>{{range .L.Entries}}<tr><td><code>{{.Rule}}</code></td><td>{{.Source}}</td></tr>{{end}}</tbody>
+</table>
+{{end}}
+<p><small>Source: <b>file</b> is <code>config.yaml</code>, <b>overlay</b> is a change made from a console, <b>env</b> is an environment variable on the host (it can't be changed here).</small></p>
+{{if .CanEdit}}<div class="actions"><a class="button" href="{{.Base}}/config/edit">Edit the allow-list…</a></div>{{end}}
+{{end}}

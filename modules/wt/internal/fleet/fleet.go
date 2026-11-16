@@ -35,6 +35,18 @@ type Client interface {
 	Conflict(ctx context.Context, id string) (dcmclient.Detail, error)
 	Plan(ctx context.Context, id, action string, exp dcmclient.Identity) (dcmclient.Plan, error)
 	Resolve(ctx context.Context, id, action, operator, reason string, exp dcmclient.Identity) (dcmclient.Result, error)
+
+	Config(ctx context.Context) (dcmclient.ConfigView, error)
+	RemoteAEs(ctx context.Context) (dcmclient.RemoteAEList, error)
+	AllowList(ctx context.Context) (dcmclient.AllowList, error)
+	ConfigHistory(ctx context.Context) (dcmclient.ConfigHistory, error)
+	ReloadPlan(ctx context.Context, exp dcmclient.Identity) (dcmclient.ChangePlan, error)
+	Reload(ctx context.Context, digest string, acks []string, env dcmclient.Envelope) (dcmclient.ChangeResult, error)
+	ConfigPlan(ctx context.Context, edit dcmclient.ConfigEdit, exp dcmclient.Identity) (dcmclient.ChangePlan, error)
+	ConfigApply(ctx context.Context, edit dcmclient.ConfigEdit, digest string, acks []string, env dcmclient.Envelope) (dcmclient.ChangeResult, error)
+	RollbackPlan(ctx context.Context, exp dcmclient.Identity) (dcmclient.ChangePlan, *dcmclient.OverlayVersion, error)
+	Rollback(ctx context.Context, digest string, acks []string, env dcmclient.Envelope) (dcmclient.ChangeResult, error)
+	Echo(ctx context.Context, t dcmclient.EchoTarget, env dcmclient.Envelope) (dcmclient.EchoResult, error)
 }
 
 // IdentityStore remembers the identity of each instance (the accounts

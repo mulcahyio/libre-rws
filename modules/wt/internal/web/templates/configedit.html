@@ -1,0 +1,46 @@
+{{define "title"}}Edit configuration{{end}}
+{{define "content"}}
+<p><a href="{{.Base}}/config">← Back to the configuration</a></p>
+<h1>Edit destinations or allow-list</h1>
+<p class="lead">Only these two settings change without a restart. Nothing changes when you press a button below: Libre WT first shows exactly what LibreDCM would change on instance <b>{{.I.Name}}</b>, and you approve it there.</p>
+{{if not .Allowed}}<p class="msg error" role="alert">{{.Blocked}}</p>{{end}}
+
+<h2>C-MOVE destinations</h2>
+{{if and .Error (eq .ErrorFor "remote_aes")}}<p class="msg error" role="alert">{{.Error}}</p>{{end}}
+<form method="post" action="{{.Base}}/config/review" class="card">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<input type="hidden" name="setting" value="remote_aes">
+<table>
+<thead><tr><th>Name</th><th>Host</th><th>Port</th><th>AE title</th><th>Remove</th></tr></thead>
+<tbody>
+{{range .F.Rows}}{{if .Env}}<tr><td><b>{{.Name}}</b></td><td><code>{{.Host}}</code></td><td>{{.Port}}</td><td><code>{{.AETitle}}</code></td><td><small>set by an environment variable on the host; can't be changed here</small></td></tr>
+{{else if .Existing}}<tr><td><b>{{.Name}}</b><input type="hidden" name="name" value="{{.Name}}"><input type="hidden" name="existing" value="{{.Name}}"></td>
+<td><input name="host" value="{{.Host}}" maxlength="253" aria-label="Host of {{.Name}}"></td><td><input name="port" value="{{.Port}}" inputmode="numeric" maxlength="5" size="6" aria-label="Port of {{.Name}}"></td>
+<td><input name="ae_title" value="{{.AETitle}}" maxlength="16" size="17" aria-label="AE title of {{.Name}}"></td>
+<td><label class="check"><input type="checkbox" name="remove" value="{{.Name}}" {{if .Remove}}checked{{end}}> remove</label></td></tr>
+{{else}}<tr><td><input name="name" value="{{.Name}}" maxlength="64" placeholder="new name" aria-label="Name of a new destination"></td>
+<td><input name="host" value="{{.Host}}" maxlength="253" aria-label="Host of a new destination"></td><td><input name="port" value="{{.Port}}" inputmode="numeric" maxlength="5" size="6" aria-label="Port of a new destination"></td>
+<td><input name="ae_title" value="{{.AETitle}}" maxlength="16" size="17" aria-label="AE title of a new destination"></td><td><small>new</small></td></tr>
+{{end}}{{end}}
+</tbody>
+</table>
+<p><small>To rename a destination, remove it and add it under the new name. Empty rows are ignored. An empty AE title means the name is used.</small></p>
+<div class="actions"><button class="primary" {{if not .Allowed}}disabled{{end}}>Review the change…</button></div>
+</form>
+
+<h2>Calling-AE allow-list</h2>
+{{if and .Error (eq .ErrorFor "allow_list")}}<p class="msg error" role="alert">{{.Error}}</p>{{end}}
+{{if .F.AllowEnv}}
+<p class="msg info">The allow-list of this node is set by an environment variable on the host. It can't be changed here.</p>
+{{else}}
+<form method="post" action="{{.Base}}/config/review" class="card">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<input type="hidden" name="setting" value="allow_list">
+{{if .F.AllowEmpty}}<p class="msg warn">The allow-list is empty now: every calling AE may connect.</p>{{end}}
+<label>Rules, one per line: <code>AE</code>, <code>AE@IP</code> or <code>AE@network/prefix</code>
+<textarea name="rules" rows="10" spellcheck="false">{{.F.Rules}}</textarea></label>
+<p><small>An empty list lets every calling AE connect; LibreDCM asks you to acknowledge that. A device that is not on the list can no longer store or retrieve images.</small></p>
+<div class="actions"><button class="primary" {{if not .Allowed}}disabled{{end}}>Review the change…</button></div>
+</form>
+{{end}}
+{{end}}
