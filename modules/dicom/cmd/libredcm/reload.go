@@ -31,11 +31,28 @@ type reloadTarget interface {
 // /control/v1/reload, DCM-SRS-088) both go through Apply, one at a time.
 type reloader struct {
 	path string
-	gw   reloadTarget
-	log  *slog.Logger
-	gate func() (bool, string) // nil: always allowed; licensing blocks reloads while unacknowledged
+	// overlayPath is the overlay file the control API writes changes to
+	// (DCM-SRS-093); "" means this node has none. It is fixed at start.
+	overlayPath string
+	gw          reloadTarget
+	log         *slog.Logger
+	gate        func() (bool, string) // nil: always allowed; licensing blocks reloads while unacknowledged
 
-	mu sync.Mutex // one reload at a time
+	mu sync.Mutex // one reload or configuration change at a time
+
+	useMu sync.Mutex
+	use   overlayUse // which live settings the overlay supplied at the last load put in force
+
+	// writeFn replaces writeFileAtomic for the overlay file (tests).
+	writeFn func(path string, data []byte) error
+}
+
+// writeOverlay writes the overlay file.
+func (r *reloader) writeOverlay(path string, data []byte) error {
+	if r.writeFn != nil {
+		return r.writeFn(path, data)
+	}
+	return writeFileAtomic(path, data)
 }
 
 func (r *reloader) Name() string { return "config-reload" }
@@ -54,28 +71,43 @@ func (r *reloader) Run(ctx context.Context) error {
 	}
 }
 
-// load checks the licence gate, reads the configuration and validates the
-// live settings. It changes nothing.
-func (r *reloader) load() (control.LiveSettings, error) {
+// load checks the licence gate, reads the configuration (config.yaml, then
+// the overlay file, then the environment) and validates the live settings.
+// candidate, when not nil, stands in for the content of the overlay file:
+// a change is validated this way before it is written. load changes nothing.
+func (r *reloader) load(candidate *overlayDoc) (control.LiveSettings, overlayUse, error) {
 	var next control.LiveSettings
 	if r.gate != nil {
 		if ok, why := r.gate(); !ok {
 			r.log.Error("config reload blocked; keeping current settings", "reason", why)
-			return next, fmt.Errorf("%w: %s", errReloadBlocked, why)
+			return next, overlayUse{}, fmt.Errorf("%w: %s", errReloadBlocked, why)
 		}
 	}
-	cfg, err := loadConfig(r.path)
+	cfg, use, err := loadConfigOverlay(r.path, &r.overlayPath, candidate)
 	if err != nil {
 		r.log.Error("config reload failed; keeping current settings", "err", err)
-		return next, err
+		return next, use, err
 	}
 	rules, err := gateway.NormalizeAllowedAEs(cfg.DICOM.AllowedAEs)
 	if err != nil {
 		r.log.Error("config reload: invalid allowed_aes; keeping current settings", "err", err)
-		return next, err
+		return next, use, err
 	}
 	next.AllowedAEs, next.RemoteAEs = rules, cfg.DICOM.RemoteAEs
-	return next, nil
+	return next, use, nil
+}
+
+// put puts loaded settings in force and remembers what the overlay supplied.
+func (r *reloader) put(next control.LiveSettings, use overlayUse) error {
+	if err := r.gw.SetAllowedAEs(next.AllowedAEs); err != nil {
+		r.log.Error("config reload: invalid allowed_aes; keeping current settings", "err", err)
+		return err
+	}
+	r.gw.SetRemoteAEs(next.RemoteAEs)
+	r.useMu.Lock()
+	r.use = use
+	r.useMu.Unlock()
+	return nil
 }
 
 // Preview reports what a reload would put in force, without changing
@@ -83,7 +115,8 @@ func (r *reloader) load() (control.LiveSettings, error) {
 func (r *reloader) Preview() (control.LiveSettings, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	return r.load()
+	next, _, err := r.load(nil)
+	return next, err
 }
 
 // Apply loads the configuration, lets check refuse it, and puts it in force
@@ -91,7 +124,7 @@ func (r *reloader) Preview() (control.LiveSettings, error) {
 func (r *reloader) Apply(check func(control.LiveSettings) error) (control.LiveSettings, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	next, err := r.load()
+	next, use, err := r.load(nil)
 	if err != nil {
 		return next, err
 	}
@@ -101,11 +134,9 @@ func (r *reloader) Apply(check func(control.LiveSettings) error) (control.LiveSe
 			return next, err
 		}
 	}
-	if err := r.gw.SetAllowedAEs(next.AllowedAEs); err != nil {
-		r.log.Error("config reload: invalid allowed_aes; keeping current settings", "err", err)
+	if err := r.put(next, use); err != nil {
 		return next, err
 	}
-	r.gw.SetRemoteAEs(next.RemoteAEs)
 	r.log.Info("configuration reloaded", "remote_aes", len(next.RemoteAEs), "allowed_aes", len(next.AllowedAEs))
 	return next, nil
 }

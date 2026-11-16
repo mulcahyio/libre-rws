@@ -90,11 +90,23 @@ func (g *Gateway) callingAEAllowed(callingAE string, remote net.Addr) bool {
 	g.mu.RLock()
 	rules := g.allowed
 	g.mu.RUnlock()
+	if permits(rules, callingAE, remote.String()) {
+		return true
+	}
+	g.m.rejected.Inc()
+	g.audit(context.Background(), auditAssocRejected, "minor-failure", "calling_ae", callingAE, "remote", remote.String())
+	return false
+}
+
+// permits is the allow-list decision: an empty list lets every calling AE
+// in; otherwise one rule must name the AE title and, when it has an address
+// part, contain the peer's address. remote is "IP:port".
+func permits(rules []allowRule, callingAE, remote string) bool {
 	if len(rules) == 0 {
 		return true
 	}
 	var addr netip.Addr
-	if ap, err := netip.ParseAddrPort(remote.String()); err == nil {
+	if ap, err := netip.ParseAddrPort(remote); err == nil {
 		addr = ap.Addr().Unmap()
 	}
 	for _, r := range rules {
@@ -105,9 +117,19 @@ func (g *Gateway) callingAEAllowed(callingAE string, remote net.Addr) bool {
 			return true
 		}
 	}
-	g.m.rejected.Inc()
-	g.audit(context.Background(), auditAssocRejected, "minor-failure", "calling_ae", callingAE, "remote", remote.String())
 	return false
+}
+
+// AllowListPermits says whether an allow-list given in configuration form
+// would let callingAE connect from remote ("IP:port"). It uses the decision
+// of the association-time check, so a plan can tell which recently active
+// peers a new list would refuse (DCM-SRS-095).
+func AllowListPermits(entries []string, callingAE, remote string) (bool, error) {
+	rules, err := parseAllowRules(entries)
+	if err != nil {
+		return false, err
+	}
+	return permits(rules, callingAE, remote), nil
 }
 
 // String gives the rule in configuration form ("AE", "AE@IP" or "AE@CIDR").

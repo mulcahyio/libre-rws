@@ -14,6 +14,49 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **LibreDCM control API: study query, send and configuration edit for
+  Libre WT (card WT-0.2/4, issue #20; DCM-SRS-091…096 now `Active`).** New
+  endpoints on the admin listener, all behind the admin token:
+  - `GET /control/v1/studies`: finds patients, studies, series or images in
+    the index with the matching rules and the patient-conflict visibility of
+    C-FIND (one shared function). Needs at least one matching key and the
+    name of the person in the header `X-Libre-Operator`. A key the node does
+    not match on is refused, not ignored. At most 200 rows per page, with a
+    cursor when more rows exist; four queries at a time. Each query writes
+    an audit record before rows are returned; the query values appear in no
+    other log line.
+  - `POST /control/v1/send/plan` and `POST /control/v1/send`: sends a study,
+    chosen series or chosen instances to a configured remote AE by name,
+    over the send path of C-MOVE. The Patient ID must be given and must be
+    the one the study is indexed under. The plan shows the destination
+    address, the patient, the study and the instances. The send needs
+    `confirm` and the digest of an unchanged plan and sends exactly the
+    instances of that plan. Instances recorded as a patient conflict are
+    never sent. One send at a time, at most 5000 instances, 30 minutes. The
+    answer lists the instances that failed or got a warning; when nothing
+    arrived it is `502`. Audited as `DICOMInstancesTransferred.sent` with
+    operator, destination, study and patient.
+  - `POST /control/v1/config/plan`, `POST /control/v1/config`,
+    `GET /control/v1/config/history`, `POST /control/v1/config/rollback/plan`
+    and `POST /control/v1/config/rollback`: change the C-MOVE destinations
+    and the calling-AE allow-list without a restart. No other setting can be
+    changed: every other key is refused. The change is validated by the
+    normal loader, written atomically to an overlay file that LibreDCM owns
+    (new setting `control.overlay_file`, `LIBRE_DCM_CONTROL_OVERLAY_FILE`;
+    default `./data/config-overlay.yaml`, in the container image
+    `/var/lib/libredcm/config-overlay.yaml`; empty = function off) and put
+    in force through the normal reload. `config.yaml` is never rewritten.
+    Loading order: defaults, `config.yaml`, overlay, environment. A failed
+    step leaves the files and the running settings as they were. One
+    previous version is kept and can be put back. Settings fixed by an
+    environment variable cannot be edited.
+  - A plan (reload, edit or rollback) now also warns when the new allow-list
+    would refuse a calling AE that was active in the last 24 hours. Like the
+    other warnings it must be acknowledged by its code.
+
+  No change to C-STORE, C-MOVE or C-GET. C-FIND now builds its filters
+  through the function it shares with the study query; its results are
+  unchanged (compared in the tests). No new dependency.
 - **LibreDCM control API: actions for Libre WT (card WT-0.2/3, issue #20;
   DCM-SRS-086…090 and -097 now `Active`).** New endpoints on the admin
   listener, all behind the admin token:

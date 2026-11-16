@@ -20,10 +20,32 @@ import (
 // state, writes a log line or starts work that outlives the request
 // (DCM-SRS-080). Results are bounded (DCM-SRS-096).
 
-// Features lists what this node's control API offers (GET /control/v1). A
-// feature is added here in the change that implements it.
+// Features lists what every node's control API offers (GET /control/v1). A
+// feature is added here in the change that implements it. "studies" and
+// "send" are added when the node has an index to query, "config-edit" when
+// it has an overlay file to write to: a node lists only what it serves.
 var Features = []string{"conflicts", "status", "config", "remote-aes", "allow-list", "audit", "logs",
 	"echo", "reload", "license", "backup"}
+
+// features is the list this node answers with.
+func (a *API) features() []string {
+	out := append([]string{}, Features...)
+	if a.Data != nil {
+		out = append(out, "studies", "send")
+	}
+	if a.Editor != nil && a.Editor.Enabled() {
+		out = append(out, "config-edit")
+	}
+	return out
+}
+
+// managed says which live settings the overlay file supplies now.
+func (a *API) managed() (remoteAEs, allowedAEs bool) {
+	if a.Editor == nil || !a.Editor.Enabled() {
+		return false, false
+	}
+	return a.Editor.Managed()
+}
 
 // Limits of the two ring endpoints.
 const (
@@ -76,8 +98,12 @@ func (a *API) liveRemoteAEs() []RemoteAEView {
 	if a.Live == nil {
 		return out
 	}
+	fileSrc := config.SourceFile
+	if remote, _ := a.managed(); remote {
+		fileSrc = config.SourceOverlay
+	}
 	for name, r := range a.Live.RemoteAEs() {
-		src := config.SourceFile
+		src := fileSrc
 		if a.RemoteAEEnv[name] {
 			src = config.SourceEnv
 		}
@@ -94,16 +120,31 @@ func (a *API) liveAllowList() (rules []AllowRuleView, enforced bool) {
 		return rules, false
 	}
 	src := config.SourceFile
-	for _, s := range a.Settings {
-		if s.Key == "dicom.allowed_aes" && s.Source == config.SourceEnv {
-			src = config.SourceEnv
-		}
+	if _, allowed := a.managed(); allowed {
+		src = config.SourceOverlay
+	}
+	if a.allowListEnv() != "" {
+		src = config.SourceEnv
 	}
 	list, enforced := a.Live.AllowedAEs()
 	for _, r := range list {
 		rules = append(rules, AllowRuleView{Rule: r, Source: src})
 	}
 	return rules, enforced
+}
+
+// allowListEnv names the environment variable that fixes the allow-list, or
+// "" when the environment does not set it.
+func (a *API) allowListEnv() string {
+	for _, s := range a.Settings {
+		if s.Key == "dicom.allowed_aes" && s.Source == config.SourceEnv {
+			if s.Env != "" {
+				return s.Env
+			}
+			return "LIBRE_DCM_ALLOWED_AES"
+		}
+	}
+	return ""
 }
 
 // instance builds the identity block. The digest covers the live-reloadable
@@ -137,7 +178,7 @@ func (a *API) instance() Instance {
 }
 
 func (a *API) discovery(w http.ResponseWriter, _ *http.Request) {
-	a.writeJSON(w, http.StatusOK, map[string]any{"api": "v1", "features": Features, "instance": a.instance()})
+	a.writeJSON(w, http.StatusOK, map[string]any{"api": "v1", "features": a.features(), "instance": a.instance()})
 }
 
 // checkResult is one readiness check in the status response.
@@ -263,12 +304,18 @@ func (a *API) config(w http.ResponseWriter, _ *http.Request) {
 		switch s.Key {
 		case "dicom.remote_aes":
 			s.Value, s.Source = remotes, sourceOf(len(remotes), func(i int) string { return remotes[i].Source })
+			if remote, _ := a.managed(); remote && len(remotes) == 0 {
+				s.Source = config.SourceOverlay // the overlay holds an empty table
+			}
 		case "dicom.allowed_aes":
 			list := make([]string, 0, len(rules))
 			for _, r := range rules {
 				list = append(list, r.Rule)
 			}
 			s.Value, s.Source = list, sourceOf(len(rules), func(i int) string { return rules[i].Source })
+			if _, allowed := a.managed(); allowed && len(rules) == 0 && a.allowListEnv() == "" {
+				s.Source = config.SourceOverlay // the overlay holds an empty list
+			}
 		}
 		views = append(views, viewSetting(s))
 	}
@@ -281,14 +328,15 @@ func (a *API) config(w http.ResponseWriter, _ *http.Request) {
 }
 
 // sourceOf gives the source of a list setting from its entries: "default"
-// when empty, "env" when every entry comes from the environment, else "file".
+// when empty, "env" when every entry comes from the environment, else the
+// source of the other entries ("file" or "overlay").
 func sourceOf(n int, src func(int) string) string {
 	if n == 0 {
 		return config.SourceDefault
 	}
 	for i := 0; i < n; i++ {
-		if src(i) != config.SourceEnv {
-			return config.SourceFile
+		if s := src(i); s != config.SourceEnv {
+			return s
 		}
 	}
 	return config.SourceEnv

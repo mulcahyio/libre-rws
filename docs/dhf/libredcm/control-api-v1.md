@@ -68,6 +68,15 @@ Machine codes used by the action endpoints (the `code` field):
 | `backup_not_configured`, `backup_unsupported`, `insufficient_space`, `space_check_failed` | 422 | Backup |
 | `backup_exists` | 409 | Backup |
 | `backup_failed` | 500 | Backup |
+| `operator_required` | 422 | Study query: the header `X-Libre-Operator` is missing |
+| `invalid_query`, `invalid_limit`, `invalid_cursor`, `invalid_level` | 400 | Study query |
+| `no_matching_key`, `unknown_key`, `key_not_at_level`, `too_many_rows` | 422 | Study query |
+| `query_failed` | 500 | Study query |
+| `unknown_destination`, `study_not_found` | 404 | Send |
+| `study_required`, `patient_id_required`, `patient_mismatch`, `series_not_in_study`, `instance_not_in_study`, `nothing_to_send`, `too_many_instances`, `invalid_uid` | 422 | Send |
+| `send_failed` | 502 | Send: no instance was accepted by the destination |
+| `restart_required`, `unknown_setting`, `set_by_environment`, `nothing_to_change`, `no_previous_version` | 422 | Configuration edit and rollback (also `invalid_config`, `not_confirmed`, `plan_digest_required`, `warning_not_acknowledged`, `plan_changed`, `license_ack_required` as for reload) |
+| `config_write_failed` | 500 | Configuration edit: the overlay file could not be written; nothing changed |
 
 ### 2.1 Discovery (implemented, card WT-0.2/2)
 
@@ -82,8 +91,9 @@ Machine codes used by the action endpoints (the `code` field):
 }
 ```
 
-A node lists a feature only when it serves it. Today the list ends at
-`backup`; `studies`, `send` and `config-edit` come with card WT-0.2/4.
+A node lists a feature only when it serves it. `config-edit` is listed and
+served only when the node has an overlay file (`control.overlay_file` not
+empty). **Implemented** in full since card WT-0.2/4.
 
 ### 2.2 Instance identity (DCM-SRS-097)
 
@@ -152,12 +162,15 @@ The operator name is asserted by the client. LibreDCM cannot check it: there
 is one shared admin token. This is a known residual risk (see
 `cybersecurity.md` TM-18).
 
-### 2.4 Plan, then apply (DCM-SRS-092, -093)
+### 2.4 Plan, then apply (DCM-SRS-088, -092, -093)
 
 Actions that change data flow or settings have two steps:
 
 1. `POST …/plan` describes exactly what would happen and returns a
-   `plan_digest` (SHA-256 over the plan). Nothing changes.
+   `plan_digest` (SHA-256 over the plan). Nothing changes. The digest also
+   covers the kind of plan: the digest of a reload plan does not approve a
+   configuration edit or a rollback, also when all three lead to the same
+   settings.
 2. `POST …` (apply) must carry that `plan_digest` and `"confirm": true`.
    LibreDCM builds the plan again. If the digest differs, the state has
    changed since the person looked at it: LibreDCM answers `409`, code
@@ -172,9 +185,10 @@ allow-list becomes empty, so every peer may connect). Apply is refused with
 ### 2.5 Resource protection (DCM-SRS-096)
 
 Control requests must never slow DICOM services down. Query results are
-bounded and paged. At most one backup and one send run at a time per node; a
-second request gets `429`. Ring buffers have fixed sizes. An action has a
-timeout and is cancelled when it expires.
+bounded and paged. At most one backup, one send and four study queries run
+at a time per node; a further request gets `429` at once and does not wait.
+Ring buffers have fixed sizes. An action has a timeout and is cancelled when
+it expires.
 
 ## 3. Read-only endpoints (implemented, card WT-0.2/2)
 
@@ -384,83 +398,174 @@ removing backups is a deliberate act on the host.
 The snapshot covers the index. Images must be backed up by the site
 (limitation L5 in `intended-use.md`). The response repeats this note.
 
-## 5. Data and configuration actions (planned, card WT-0.2/4)
+## 5. Data and configuration actions (implemented, card WT-0.2/4)
 
 ### 5.1 Study query: `GET /control/v1/studies` (DCM-SRS-091)
 
-Query: `level` (`patient`, `study`, `series`, `image`), matching keys
-(`PatientID`, `PatientName`, `StudyDate`, `AccessionNumber`,
-`StudyInstanceUID`, `SeriesInstanceUID`, `ModalitiesInStudy`), `limit`
-(default 50, at most 200), `cursor`.
+Query fields: `level` (`patient`, `study`, `series`, `image`; default
+`study`), `limit` (default 50, at most 200), `cursor`, and matching keys by
+their DICOM keyword, for example `PatientID=P1&StudyDate=20260101-20260131`.
+The keys are those C-FIND matches on (`PatientID`, `PatientName`,
+`PatientBirthDate`, `PatientSex`, `StudyInstanceUID`, `StudyDate`,
+`StudyTime`, `AccessionNumber`, `StudyID`, `StudyDescription`,
+`ReferringPhysicianName`, `ModalitiesInStudy`, `SeriesInstanceUID`,
+`Modality`, `SeriesNumber`, `SeriesDescription`, `SOPInstanceUID`,
+`SOPClassUID`, `InstanceNumber`). Values use DICOM matching: single value,
+`*` and `?`, date and time ranges, and a list separated by `\` for UIDs and
+modalities.
 
-- Same matching rules as C-FIND (DCM-SRS-006…009): one shared query function.
-- Same conflict visibility as C-FIND (DCM-SRS-073): with visibility `hidden`,
-  held instances are not returned.
-- A query with no matching key is refused (`422`): no listing of the whole
-  archive.
-- When more rows exist, the response says so (`"more": true` and a
-  `cursor`). The result is never cut silently.
-- LibreDCM does not write the query values of this request to its log; they
-  appear only in the audit record, which honours patient-ID omission.
-- Each query writes a `Query` audit record with the operator (sent in the
-  header `X-Libre-Operator`; required for this endpoint).
+The header `X-Libre-Operator` is required: the name of the person, 1 to 128
+characters (`422`, `operator_required`).
+
+- **Same matching rules as C-FIND** (DCM-SRS-006…009). One function in the
+  gateway turns a key into an index filter; C-FIND, C-MOVE, C-GET and this
+  endpoint all use it.
+- **Same conflict visibility as C-FIND** (DCM-SRS-073). With visibility
+  `hidden`, instances held as a patient conflict are not returned at any
+  level. With `flagged` they are returned under their own Patient ID, with
+  `ConflictID`. The response says which applies (`held_instances`).
+- **Never more than was asked for.** A query that no key restricts (no key,
+  an empty value, `*`) is refused (`422`, `no_matching_key`): the archive is
+  not listed. A key this node does not match on (`unknown_key`) and a key
+  that does not apply at the level (`key_not_at_level`) are refused too,
+  where C-FIND ignores them: a person who typed a key expects it to count.
+- **Bounded and paged.** A page holds at most `limit` rows. When more rows
+  exist the response has `"more": true` and a `cursor` for the next page.
+  The result is never cut silently. A cursor belongs to one query (level,
+  limit and keys): with another query it is refused (`400`,
+  `invalid_cursor`). Paging stops after 10 000 rows (`422`,
+  `too_many_rows`): narrow the query. A query runs for at most 30 seconds;
+  at most four run at once (`429`).
+- **Audit.** Each query writes one `Query` audit record with the operator,
+  the level, the keys with their values, the number of rows and whether
+  more exist. The record is written before the rows are returned; when it
+  cannot be written, no row is returned (`500`, `audit_unavailable`). It is
+  written at every log level and also with `audit_log_off`. With
+  `audit_omit_patient_id` the values of `PatientID`, `PatientName` and
+  `PatientBirthDate` are replaced by `(omitted)`.
+- **No query value in the log.** LibreDCM writes the query values to that
+  audit record and nowhere else. The admin listener writes no access log.
+  The values are in the URL: a proxy in front of the admin port would log
+  them (see `cybersecurity.md` TM-34).
+
+Response: `level`, `rows` (objects keyed by DICOM keyword; a study row also
+has `NumberOfStudyRelatedSeries`, `NumberOfStudyRelatedInstances` and
+`ModalitiesInStudy`; an image row has `TransferSyntaxUID`), `count`,
+`limit`, `more`, `cursor`, `held_instances`.
 
 ### 5.2 Send: `POST /control/v1/send/plan` and `POST /control/v1/send` (DCM-SRS-092)
 
-Request: `{"destination": "VIEWER1", "study_instance_uid": "1.2.3", "series_instance_uids": [], "patient_id": "P1"}`, plus the envelope; apply adds `plan_digest` and `confirm`.
+Request: `{"destination": "VIEWER1", "patient_id": "P1", "study_instance_uid": "1.2.3", "series_instance_uids": [], "sop_instance_uids": []}`,
+plus the envelope; the send adds `plan_digest` and `"confirm": true`.
 
 - `destination` must be the name of a configured remote AE. There is no
-  free host/port: images only go to configured destinations (DCM-SRS-011).
-  Unknown name: `404`, nothing sent.
-- `patient_id` is required and must match the indexed Patient ID of the
-  study. A mismatch is refused with `422`. The person must name the patient
-  as well as the study.
-- The plan shows: destination name, host, port and AE title; patient ID and
-  name; study date and description; number of series and instances.
-- Held (hidden) conflict instances are never sent.
-- Apply uses the existing C-MOVE send path (stored encoding, each instance
-  on its own). One send at a time per node. At most 5000 instances per send.
-- Response: counts of completed, failed and warning sub-operations and the
-  SOP Instance UIDs that failed.
-- Audit: `DICOMInstancesTransferred.sent` with operator, reason,
-  destination, study and patient ID (honouring `audit_omit_patient_id`).
+  host or port field (an unknown field is refused): images only go to
+  configured destinations (DCM-SRS-011). Unknown name: `404`, nothing sent.
+- `patient_id` is required and must be exactly the Patient ID the study is
+  indexed under (no wildcard, case-sensitive). A mismatch is refused with
+  `422`, `patient_mismatch`. The person names the patient as well as the
+  study.
+- `series_instance_uids` and `sop_instance_uids` are optional and narrow
+  the send. Each one must belong to the study; one that does not refuses
+  the whole request (`series_not_in_study`, `instance_not_in_study`).
+- **The plan** shows: destination name, host, port and AE title; Patient
+  ID, name and birth date; study date, description and accession number;
+  each series with modality and number of instances; the totals; and
+  `instances_digest`, a SHA-256 over the SOP Instance UID, archive key and
+  transfer syntax of every instance that would go out. `plan_digest` is a
+  SHA-256 over the whole plan. Nothing is sent.
+- **Instances recorded as a patient conflict are never sent**: neither held
+  ones nor ones accepted as a separate study, whatever the visibility
+  setting, and also when the request names them. Such instances leave the
+  node only through C-MOVE or C-GET by a DICOM peer, under the rules of
+  DCM-SRS-073 (decision D26).
+- **The send** needs `confirm` and `plan_digest`. The gateway builds the
+  plan again and sends exactly the instances of that plan, and only when
+  its digest is the one in the request. A new instance in the study, a
+  replaced file or a destination that now points elsewhere changes the
+  digest: `409`, `plan_changed`, nothing sent.
+- It uses the send path of C-MOVE (each instance in the encoding it is
+  stored in). One send at a time per node (`429`). At most 5000 instances
+  per send (`too_many_instances`: send it series by series). Timeout 30
+  minutes; instances not sent by then are reported as failed.
+- **Response**: `outcome` (`complete`, `partial` or `failed`), `instances`,
+  `completed`, `failed`, `warning`, `failed_sop_instance_uids`,
+  `warning_sop_instance_uids`, `duration_ms` and the plan. Every instance
+  of the plan that is in neither list was accepted by the destination.
+  `complete` and `partial` answer `200`. When no instance was accepted the
+  answer is `502`, `send_failed`, so that it cannot be read as a success.
+- **Audit**: `DICOMInstancesTransferred.sent` (the event of a C-MOVE
+  export), with `op: control-send`, operator, reason, request ID,
+  destination name, host, port and AE title, study, Patient ID (honouring
+  `audit_omit_patient_id`) and the counts. A refused send writes a refusal
+  record with destination and study.
 
 ### 5.3 Configuration edit (DCM-SRS-093, -094, -095)
 
 Only live-reloadable settings can be edited: `dicom.remote_aes` and
-`dicom.allowed_aes`. A request that names any other key is refused with
-`422`, code `restart_required`.
+`dicom.allowed_aes`. A request that names any other setting of the node is
+refused as a whole with `422`, `restart_required`; a key that is no setting
+at all with `422`, `unknown_setting`. There is no way to turn TLS, the audit
+log or the conflict policy off through the API.
 
-**Overlay file.** LibreDCM owns one extra file next to its data
-(`control.overlay_file`, default `<data dir>/config-overlay.yaml`). The
+**Overlay file.** LibreDCM owns one extra file (`control.overlay_file`,
+`LIBRE_DCM_CONTROL_OVERLAY_FILE`; default `./data/config-overlay.yaml`, in
+the container image `/var/lib/libredcm/config-overlay.yaml`). The
 administrator's own `config.yaml` is never rewritten. Loading order:
 defaults, then `config.yaml`, then the overlay, then environment variables.
-Environment variables still win (DCM-SRS-050). A setting fixed by an
-environment variable cannot be edited: the plan refuses with `422`, code
-`set_by_environment`, and says which variable.
+
+- A setting the overlay holds **replaces** the value of `config.yaml` as a
+  whole. From the first edit of the destinations on, the destinations in
+  `config.yaml` are no longer used (the plan of that first edit shows
+  them, so they are kept unless the person removes them). To drop the
+  changes made through the API, delete the overlay file on the host and
+  reload.
+- Environment variables still win (DCM-SRS-050). An allow-list fixed by
+  `LIBRE_DCM_ALLOWED_AES` cannot be edited (`422`, `set_by_environment`,
+  with the name of the variable). A destination of `LIBRE_DCM_REMOTE_AES`
+  cannot be changed or removed; it may be sent back unchanged (a client
+  sends the whole table) and is then not copied into the overlay.
+- The overlay file can hold only the two settings, a version number and
+  who wrote it. A file with any other key, another version, an invalid
+  entry or broken YAML is refused as a whole: the node does not start with
+  it and a reload keeps the running settings. LibreDCM never falls back to
+  `config.yaml` alone, which could be the weaker configuration (D25).
+- `control.overlay_file: ""` in `config.yaml` turns the function off. The
+  node then does not serve these endpoints (`404`) and does not list
+  `config-edit`. The path needs a restart to change.
 
 | Endpoint | Does |
 |---|---|
-| `POST /control/v1/config/plan` | Body: the full new value of one or both settings. Returns the validated difference (added, removed, changed entries), warnings and `plan_digest`. Nothing changes |
-| `POST /control/v1/config` | Apply. Needs `plan_digest`, `confirm`, and `acknowledge_warnings` when required. Steps: validate with the normal loader, keep the current overlay as the previous version, write the new overlay atomically (temporary file, fsync, rename), run the normal reload. If the reload fails, the previous overlay is put back and the running settings are unchanged |
-| `GET /control/v1/config/history` | The current and the kept previous overlay versions: time, operator, reason, digest |
-| `POST /control/v1/config/rollback/plan`, `POST /control/v1/config/rollback` | Put the previous overlay back, through the same plan and apply steps |
+| `POST /control/v1/config/plan` | Body: `{"settings": {"dicom.remote_aes": [{"name", "host", "port", "ae_title"}], "dicom.allowed_aes": ["AE", "AE@IP", "AE@CIDR"]}}`: the whole new value of one or both settings. Returns the difference to what is running (added, removed, changed), warnings and `plan_digest`, in the form of the reload plan (§4.2). Nothing changes |
+| `POST /control/v1/config` | Apply. Needs the envelope, the same `settings`, `plan_digest`, `confirm`, and `acknowledge_warnings` when required. Steps, as one step with the reload (no other reload, SIGHUP included, can come in between): validate with the normal loader; build the plan again and compare its digest; keep the current overlay as the previous version; write the new overlay (temporary file, `fsync`, rename, mode 0600); reload from the files; compare what was loaded with what was validated. If a step fails, the overlay and the previous version are put back as they were and the running settings are not touched |
+| `GET /control/v1/config/history` | `current` and `previous` overlay version: time, operator, reason, request ID, kind (`edit`, `rollback`, `initial`), digest, the settings it holds; and which settings in force come from the overlay |
+| `POST /control/v1/config/rollback/plan`, `POST /control/v1/config/rollback` | Put the previous overlay version back, through the same plan and apply steps, warnings included. The version that was current becomes the previous one, so a rollback can be rolled back. One previous version is kept. Without one: `422`, `no_previous_version` |
 
-Warnings that must be acknowledged (`must_acknowledge: true`):
+A plan that changes nothing in force can be applied; the answer is
+`"applied": false, "changed": false` and nothing is written, so the kept
+previous version stays the one before the last real change.
+
+Warnings that must be acknowledged (`must_acknowledge: true`); they are part
+of every plan: reload, edit and rollback:
 
 | Code | When |
 |---|---|
 | `allow_list_emptied` | The new allow-list is empty, so every calling AE may connect |
-| `allow_list_entry_removed` | A calling AE that stored or queried in the last 24 hours (per the audit ring) would be refused |
+| `allow_list_entry_removed` | The new allow-list would refuse a calling AE that stored, queried or retrieved in the last 24 hours. The warning names the AE titles (at most 10). The peers come from the in-memory audit ring (§3.4), so the list is empty after a restart. With `audit_log_off` the node cannot tell, and every narrower list carries the warning |
 | `remote_ae_removed` | A C-MOVE destination is removed |
 | `remote_ae_retargeted` | An existing destination name gets a new host, port or AE title |
 
 An invalid allow-list rule or remote AE entry is refused at plan time
-(`422`); it never reaches the running node. The licence acknowledgement
-block applies as for reload (`423`).
+(`422`, `invalid_config`); it never reaches the running node. At most 200
+destinations and 500 allow-list entries. The licence acknowledgement block
+applies as for reload (`423`). A failed write answers `500`,
+`config_write_failed`.
 
 In a cluster each node has its own overlay file. A change is made node by
-node. `config_digest` (§2.2) lets the client show when nodes differ.
+node. `config_digest` (§2.2) lets the client show when nodes differ. In the
+cluster compose file the data folder of a node is an unnamed volume: give
+each node a named volume, or keep these two settings in the shared
+configuration, so that a change survives a re-created container.
 
 ## 6. Audit records written by the control API
 
@@ -469,9 +574,9 @@ All are structured log lines with `audit=true`, like the existing ones.
 | Event name | Written by | Fields besides operator, reason, request_id, outcome |
 |---|---|---|
 | `PatientRecord.conflict-resolved` | conflict resolve (existing) | action, conflict |
-| `Query` | `GET /studies` | level, keys (values honour patient-ID omission), rows |
-| `DICOMInstancesTransferred.sent` | send | destination, study, patient ID, counts |
-| `SecurityAlert.configuration-changed` | config apply, rollback, reload | difference (names added, removed, changed), digests before and after, acknowledged warnings |
+| `Query` | `GET /studies` | `op: control-query`, operator, level, keys with values (patient values honour patient-ID omission), rows, more, offset. No reason or request ID: a read |
+| `DICOMInstancesTransferred.sent` | send | `op: control-send`, destination name, host, port and AE title, study, patient ID (honours omission), series, instances, completed, failed, warning |
+| `SecurityAlert.configuration-changed` | config apply, rollback, reload | `change` (`reload`, `edit`, `rollback`), difference (names added, removed, changed), digests before and after, acknowledged warnings |
 | `SecurityAlert.license-action` | licence ack, install, activate, request | `license_action`, licence state before and after, `key_last4` (never the key) |
 | `SecurityAlert.backup` | backup | file name, bytes, checksum |
 | `NetworkEntry.verification` | C-ECHO test | target, called AE, source (configured or ad-hoc), stage, result |
@@ -500,7 +605,7 @@ Libre WT audits who opened which page.
 ## 8. Open decisions for Patrick
 
 Listed with the Libre WT decisions in `../librewt/architecture.md` §8
-(D1…D22). Those that shape this API: D3 (editable settings), D4 (no remote
+(D1…D32). Those that shape this API: D3 (editable settings), D4 (no remote
 restart), D6 (send only to configured destinations; ad hoc C-ECHO target),
 D8 (backup directory, no download), D9 (in-memory rings), D10 (shared token,
 operator asserted), D12 (plan digest and request ID), D15 (no `-gen-cert`).
@@ -508,3 +613,11 @@ Added while building the actions (card WT-0.2/3): D17 (reload needs a plan),
 D18 (two audit records per action), D19 (plan endpoints need no operator),
 D20 (backup directory off by default), D21 (C-ECHO TLS without certificate
 check), D22 (licence acknowledgement through the API).
+Added while building the data and configuration actions (card WT-0.2/4):
+D23 (overlay file on by default), D24 (the overlay replaces a setting as a
+whole), D25 (a broken overlay stops the start), D26 (no conflict instance
+is sent from the console), D27 (send limits and the `502` for a send in
+which nothing arrived), D28 (study query: operator header, always audited,
+stricter than C-FIND about keys), D29 (active peers from the audit ring),
+D30 (audit event name of the send), D31 (plan endpoints are `POST`), D32
+(one previous version).

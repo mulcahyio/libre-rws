@@ -50,6 +50,11 @@ type Config struct {
 		// snapshots to (DCM-SRS-090). Empty: backups through the control
 		// API are off. A client can never choose or change this path.
 		BackupDir string `yaml:"backup_dir" env:"LIBRE_DCM_CONTROL_BACKUP_DIR"`
+		// OverlayFile is the file LibreDCM writes configuration changes
+		// from the control API to (DCM-SRS-093). It can hold only the two
+		// settings that change without a restart. Empty: configuration
+		// edit through the control API is off.
+		OverlayFile string `yaml:"overlay_file" env:"LIBRE_DCM_CONTROL_OVERLAY_FILE"`
 	} `yaml:"control"`
 }
 
@@ -62,6 +67,7 @@ func defaults() Config {
 	c.Events.Driver = "log"
 	c.Events.LegacySubjects = true
 	c.License.File = "./data/license.lic"
+	c.Control.OverlayFile = "./data/config-overlay.yaml"
 	return c
 }
 
@@ -119,26 +125,12 @@ func main() {
 	}
 }
 
-// loadConfig reads the YAML file, applies environment overrides and merges
+// loadConfig reads the YAML file, then the overlay file the control API
+// writes (overlay.go), applies environment overrides and merges
 // LIBRE_DCM_REMOTE_AES (or the old RWS_DICOM_REMOTE_AES) into the destination table (environment wins per entry).
 func loadConfig(cfgPath string) (Config, error) {
-	cfg := defaults()
-	if err := config.Load(cfgPath, &cfg); err != nil {
-		return cfg, err
-	}
-	if v := config.Getenv("LIBRE_DCM_REMOTE_AES", "RWS_DICOM_REMOTE_AES"); v != "" {
-		aes, err := parseRemoteAEs(v)
-		if err != nil {
-			return cfg, err
-		}
-		if cfg.DICOM.RemoteAEs == nil {
-			cfg.DICOM.RemoteAEs = map[string]gateway.RemoteAE{}
-		}
-		for k, a := range aes {
-			cfg.DICOM.RemoteAEs[k] = a
-		}
-	}
-	return cfg, nil
+	cfg, _, err := loadConfigOverlay(cfgPath, nil, nil)
+	return cfg, err
 }
 
 // backup snapshots the index without stopping a running module. Images are
@@ -190,7 +182,7 @@ func run(cfgPath string) error {
 // build loads the configuration and wires the node together without
 // starting any listener (tests use it to exercise the real wiring).
 func build(cfgPath string) (*app, error) {
-	cfg, err := loadConfig(cfgPath)
+	cfg, use, err := loadConfigOverlay(cfgPath, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -246,8 +238,12 @@ func build(cfgPath string) (*app, error) {
 	}
 	// Licensing never touches the DICOM gateway (DCM-SRS-058). An unlicensed,
 	// unacknowledged node only blocks configuration reloads (DCM-SRS-060).
-	rl := &reloader{path: cfgPath, gw: gw, log: log}
-	// Control API for Libre WT (DCM-SRS-077, -080…090); refused unless an
+	rl := &reloader{path: cfgPath, overlayPath: cfg.Control.OverlayFile, gw: gw, log: log, use: use}
+	if use.RemoteAEs || use.AllowedAEs {
+		log.Info("live settings taken from the configuration overlay", "file", cfg.Control.OverlayFile,
+			"remote_aes", use.RemoteAEs, "allowed_aes", use.AllowedAEs)
+	}
+	// Control API for Libre WT (DCM-SRS-077, -080…097); refused unless an
 	// admin token is set. It reads the licence state and offers the licence
 	// functions but lives outside the gateway: licensing never touches DICOM
 	// services (DCM-SRS-058).
@@ -262,7 +258,7 @@ func build(cfgPath string) (*app, error) {
 		Settings: settings, RemoteAEEnv: remoteAEsFromEnv(),
 		Secrets: append(control.SecretValues(settings), rt.AdminSecrets()...),
 		Logs:    rt.Logs, Audit: rt.Audit,
-		AuditLog: log, Echo: control.DICOMEcho, Reloader: rl,
+		AuditLog: log, Echo: control.DICOMEcho, Reloader: rl, Data: gw, Editor: rl,
 		Backup: &control.Backup{Dir: cfg.Control.BackupDir, Driver: cfg.Index.Driver, Snapshot: idx.Backup,
 			IndexBytes: func() (int64, error) { return sqliteSize(cfg.Index.DSN) }},
 	}

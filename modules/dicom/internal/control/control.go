@@ -25,6 +25,17 @@
 //	POST /control/v1/license/activate   online activation
 //	POST /control/v1/backup             index snapshot into the configured directory
 //
+// Data and configuration (studies.go, send.go, configedit.go):
+//
+//	GET  /control/v1/studies                study query with the C-FIND rules, paged
+//	POST /control/v1/send/plan              what a send would send, and where to
+//	POST /control/v1/send                   send to a configured destination (C-MOVE path)
+//	POST /control/v1/config/plan            what an edit of the live settings would change
+//	POST /control/v1/config                 write the edit to the overlay file and reload
+//	GET  /control/v1/config/history         current and previous overlay version
+//	POST /control/v1/config/rollback/plan   what putting the previous version back would change
+//	POST /control/v1/config/rollback        put the previous overlay version back
+//
 // Patient-association conflicts:
 //
 //	GET  /control/v1/conflicts?state=active|open|accepted|resolved|all&limit=N
@@ -128,6 +139,11 @@ type API struct {
 	Licence Licence
 	// Backup describes where and how index snapshots are written.
 	Backup *Backup
+	// Data runs the study query and the send (the gateway on a real node).
+	Data Data
+	// Editor writes configuration changes to the node's overlay file (the
+	// reloader on a real node). Nil: configuration edit is not offered.
+	Editor ConfigEditor
 
 	requests idempotency // results of recent actions, by request ID
 }
@@ -163,6 +179,8 @@ func (a *API) registerActions(r Registrar) {
 	r.HandleControl("GET /control/v1/backups", http.HandlerFunc(a.backups))
 	r.HandleControl("POST /control/v1/backup", action(a, actionSpec{name: "backup", event: auditBackup,
 		timeout: BackupTimeout, slots: make(chan struct{}, 1)}, a.backup))
+	a.registerData(r)
+	a.registerConfigEdit(r)
 }
 
 // Detail is the response of GET /control/v1/conflicts/{id}.

@@ -91,6 +91,7 @@ func (g *Gateway) readDataset(ctx context.Context, key string) ([]byte, error) {
 type subOpTally struct {
 	completed, failed, warning int
 	failedUIDs                 []string
+	warningUIDs                []string
 }
 
 func (t *subOpTally) fail(uid string) {
@@ -266,6 +267,7 @@ func (g *Gateway) sendChunk(ctx context.Context, dest RemoteAE, group string, ro
 			g.m.retrieveSubOps.WithLabelValues("move", "completed").Inc()
 		case isWarning(res.Status):
 			tally.warning++
+			tally.warningUIDs = append(tally.warningUIDs, uid)
 			g.m.retrieveSubOps.WithLabelValues("move", "warning").Inc()
 		default:
 			g.log.Warn("destination rejected instance", "sop_instance_uid", uid, "status", fmt.Sprintf("0x%04X", res.Status))

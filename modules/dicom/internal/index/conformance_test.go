@@ -48,7 +48,7 @@ func uids(rows []Row, key string) []string {
 	return out
 }
 
-// Verifies: DCM-SRS-006, DCM-SRS-020
+// Verifies: DCM-SRS-006, DCM-SRS-020, DCM-SRS-091
 func TestConformance(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -108,6 +108,38 @@ func TestConformance(t *testing.T) {
 			}
 			if lim, _ := idx.Find(ctx, Study, nil, 2); len(lim) != 2 {
 				t.Errorf("limit: %d rows", len(lim))
+			}
+			// Paging (DCM-SRS-091): limit and offset walk the ordered
+			// result, each row once, at every level and with conflicts
+			// in view; an offset after the end gives no rows.
+			for _, lvl := range []Level{Patient, Study, Series, Image} {
+				for _, opts := range []FindOptions{{}, {Open: true, Accepted: true}} {
+					all, err := idx.FindWith(ctx, lvl, nil, 0, opts)
+					if err != nil {
+						t.Fatalf("paging %s: %v", lvl, err)
+					}
+					var paged []Row
+					for off := 0; off <= len(all); off += 3 {
+						o := opts
+						o.Offset = off
+						page, err := idx.FindWith(ctx, lvl, nil, 3, o)
+						if err != nil {
+							t.Fatalf("paging %s offset %d: %v", lvl, off, err)
+						}
+						if len(page) > 3 {
+							t.Errorf("paging %s: page of %d rows", lvl, len(page))
+						}
+						paged = append(paged, page...)
+					}
+					if fmt.Sprint(paged) != fmt.Sprint(all) {
+						t.Errorf("paging %s: pages give %d rows in another order or number than the %d of the whole result", lvl, len(paged), len(all))
+					}
+					o := opts
+					o.Offset = len(all)
+					if page, _ := idx.FindWith(ctx, lvl, nil, 3, o); len(page) != 0 {
+						t.Errorf("paging %s: %d rows after the end", lvl, len(page))
+					}
+				}
 			}
 			mods, err := idx.ModalitiesForStudies(ctx, []string{"1.1", "1.3"})
 			if err != nil || fmt.Sprint(mods["1.1"]) != "[CT SR]" || fmt.Sprint(mods["1.3"]) != "[US]" {

@@ -14,6 +14,9 @@ const (
 	SourceDefault = "default"
 	SourceFile    = "file"
 	SourceEnv     = "env"
+	// SourceOverlay: a file the module itself writes (LibreDCM's
+	// configuration overlay). Describe never returns it; the module sets it.
+	SourceOverlay = "overlay"
 )
 
 // Setting is one leaf of a configuration struct, as it is running.

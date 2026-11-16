@@ -106,7 +106,7 @@ on 2026-11-14: "Build Libre WT to support all LibreDCM functions developed to
 date"). The interface contract is `control-api-v1.md`. Each row becomes
 `Active` in the pull request that implements and verifies it
 (DCM-SRS-080…085: card WT-0.2/2; DCM-SRS-086…090 and -097: card WT-0.2/3;
-both issue #20). Hazards HAZ-015 and HAZ-016 are in `risk-management.md` §2a.
+DCM-SRS-091…096: card WT-0.2/4; all issue #20). Hazards HAZ-015 and HAZ-016 are in `risk-management.md` §2a.
 
 Wording made exact when the rows became `Active` (card WT-0.2/3; the IDs and
 their meaning are unchanged): -086 names the endpoints it covers and the two
@@ -114,11 +114,16 @@ audit records; -087 adds that the answer carries no error text of the peer;
 -088 adds the confirmation and the plan digest; -089 adds the source build;
 -090 adds the case that free space cannot be read.
 
-Two rows are partly implemented and stay `Draft` until card WT-0.2/4
-completes them: -095 (the warnings and their acknowledgement work for
-reload; the configuration edit and the "recently active peer" warning are
-not built yet) and -096 (the limits and timeouts of the actions built so
-far are verified; the send limit is not built yet).
+Wording made exact when the last six rows became `Active` (card WT-0.2/4,
+2026-11-16; the IDs and their meaning are unchanged): -091 names the three
+refusals and says that the audit record is written before a row is
+returned; -092 adds chosen instances, names the outcome per sub-operation
+and says "recorded as a patient conflict" where it said "held"; -093 adds
+that an overlay file with any other setting is refused as a whole; -095
+says "would refuse a calling AE that was active in the last 24 hours"
+where it said "an entry of a recently active peer is removed" (it also
+covers a list that starts to be enforced); -096 adds the number of study
+queries and the size of one send.
 
 | ID | Requirement | Status | Risk control for |
 |---|---|---|---|
@@ -133,10 +138,10 @@ far are verified; the send limit is not built yet).
 | DCM-SRS-088 | `POST /control/v1/reload` shall reload the configuration through the same path as SIGHUP, including the licence acknowledgement block, and report what changed. Its plan shall show the difference between the running settings and the settings a reload would load. A configuration that fails to load or validate shall be reported and shall leave the running settings unchanged. The reload shall act only when the request carries an explicit confirmation and the digest of an unchanged plan. | Active | HAZ-005, HAZ-007, HAZ-015 |
 | DCM-SRS-089 | The control API shall offer the licence functions: status, acknowledgement by the named operator, activation request, licence file installation and online activation, using the existing licensing code. An invalid licence shall be refused and the installed licence kept. Licence keys shall not be logged, audited or returned in full. No licence endpoint shall be able to refuse, delay or interrupt DICOM services. A build that needs no licence shall say so and refuse the licence actions. | Active | HAZ-010, HAZ-008 |
 | DCM-SRS-090 | `POST /control/v1/backup` shall write a consistent snapshot of the SQLite index into the directory configured on the node, under a file name made by LibreDCM, and report file name, size and SHA-256. It shall accept no path from the client, never overwrite an existing file, refuse when the directory is not configured, when free space is too low or cannot be determined, or when another backup is running, and `GET /control/v1/backups` shall list the snapshots. No endpoint shall download or delete a snapshot. | Active | HAZ-001, HAZ-004, HAZ-009 |
-| DCM-SRS-091 | `GET /control/v1/studies` shall query the index at patient, study, series and image level with the same matching rules and the same patient-conflict visibility rules as C-FIND. It shall refuse a query without a matching key, limit and page the result, say when more rows exist, write a query audit record naming the operator, and keep the query values out of the log outside that audit record. | Draft | HAZ-002, HAZ-009, HAZ-013 |
-| DCM-SRS-092 | `POST /control/v1/send` shall send a study or chosen series to a configured remote AE given by name, over the same send path as C-MOVE. It shall require the Patient ID and refuse when it does not match the study's indexed Patient ID; refuse an unknown destination; never send held conflict instances; and act only when the request carries the digest of an unchanged plan and an explicit confirmation. The plan shall show destination address, patient, study and instance count. The result shall give the outcome per sub-operation and shall be audited with operator, destination, study and patient. | Draft | HAZ-016, HAZ-005, HAZ-008, HAZ-013 |
-| DCM-SRS-093 | The control API shall allow editing only the settings that can change without a restart (remote AEs, calling-AE allow-list). The change shall be validated by the normal configuration loader, written atomically to an overlay file owned by LibreDCM (the administrator's configuration file is never rewritten), and applied through the normal reload. An invalid change or a failed reload shall leave the running settings and the overlay unchanged. A setting fixed by an environment variable shall be refused. Apply shall require the digest of an unchanged plan and an explicit confirmation. | Draft | HAZ-015, HAZ-005, HAZ-007 |
-| DCM-SRS-094 | LibreDCM shall keep the previous overlay version with time, operator and reason, and shall offer a rollback to it through the same plan and apply steps. | Draft | HAZ-015 |
-| DCM-SRS-095 | A planned change that weakens a risk control (the allow-list becomes empty; an allow-list entry of a recently active peer is removed; a destination is removed or pointed at another address) shall carry a warning, and apply shall be refused unless the request acknowledges each such warning by its code. | Draft | HAZ-015, HAZ-007, HAZ-005 |
-| DCM-SRS-096 | Control requests shall not degrade DICOM services: results and buffers shall be bounded, at most one backup and one send shall run at a time per node, and every action shall have a timeout. | Draft | HAZ-004 |
+| DCM-SRS-091 | `GET /control/v1/studies` shall query the index at patient, study, series and image level with the same matching rules and the same patient-conflict visibility rules as C-FIND. It shall refuse a query without a matching key, a key it does not match on and a key that does not apply at the level; limit and page the result; say when more rows exist; require the name of the operator; write a query audit record naming the operator before a row is returned; and keep the query values out of the log outside that audit record. | Active | HAZ-002, HAZ-009, HAZ-013 |
+| DCM-SRS-092 | `POST /control/v1/send` shall send a study, chosen series or chosen instances of it to a configured remote AE given by name, over the same send path as C-MOVE. It shall require the Patient ID and refuse when it does not match the study's indexed Patient ID; refuse an unknown destination; never send instances that are recorded as a patient conflict; and act only when the request carries the digest of an unchanged plan and an explicit confirmation. The plan shall show destination address, patient, study and instance count. The result shall give the outcome per sub-operation (counts, and the SOP Instance UIDs that failed or got a warning) and shall be audited with operator, destination, study and patient. | Active | HAZ-016, HAZ-005, HAZ-008, HAZ-013 |
+| DCM-SRS-093 | The control API shall allow editing only the settings that can change without a restart (remote AEs, calling-AE allow-list). The change shall be validated by the normal configuration loader, written atomically to an overlay file owned by LibreDCM (the administrator's configuration file is never rewritten), and applied through the normal reload. An invalid change or a failed reload shall leave the running settings and the overlay unchanged. A setting fixed by an environment variable shall be refused. An overlay file that holds any other setting shall be refused as a whole. Apply shall require the digest of an unchanged plan and an explicit confirmation. | Active | HAZ-015, HAZ-005, HAZ-007 |
+| DCM-SRS-094 | LibreDCM shall keep the previous overlay version with time, operator and reason, and shall offer a rollback to it through the same plan and apply steps. | Active | HAZ-015 |
+| DCM-SRS-095 | A planned change that weakens a risk control (the allow-list becomes empty; the allow-list would refuse a calling AE that was active in the last 24 hours; a destination is removed or pointed at another address) shall carry a warning, and apply shall be refused unless the request acknowledges each such warning by its code. | Active | HAZ-015, HAZ-007, HAZ-005 |
+| DCM-SRS-096 | Control requests shall not degrade DICOM services: results and buffers shall be bounded, at most one backup, one send and four study queries shall run at a time per node, one send shall hold at most 5000 instances, and every action shall have a timeout. | Active | HAZ-004 |
 | DCM-SRS-097 | Every control response shall identify the node (node ID, AE title, version and a digest of the running live-reloadable settings). A state-changing request that carries an expected node ID or AE title that does not match shall be refused without any change. | Active | HAZ-015, HAZ-016 |
