@@ -1,7 +1,8 @@
 // Command LibreWT is Libre Watch Tower, the management console for LibreDCM
-// (v0.1: accounts, one LibreDCM connection, Study Exceptions queue, audit
-// log). Configuration comes from a YAML file and LIBRE_WT_* environment
-// variables (environment wins).
+// (accounts, one or more LibreDCM connections, fleet overview, dashboard and
+// status per instance, Study Exceptions queue, audit log). Configuration
+// comes from a YAML file and LIBRE_WT_* environment variables (environment
+// wins). The list of instances can only be given in the file.
 package main
 
 import (
@@ -19,7 +20,7 @@ import (
 	"time"
 
 	"github.com/mulcahyio/libre-rws/modules/wt/internal/accounts"
-	"github.com/mulcahyio/libre-rws/modules/wt/internal/dcmclient"
+	"github.com/mulcahyio/libre-rws/modules/wt/internal/fleet"
 	"github.com/mulcahyio/libre-rws/modules/wt/internal/web"
 	"github.com/mulcahyio/libre-rws/platform/config"
 )
@@ -35,12 +36,59 @@ type Config struct {
 	IdleTimeout time.Duration `yaml:"session_idle_timeout" env:"LIBRE_WT_SESSION_IDLE_TIMEOUT"`
 	MaxSession  time.Duration `yaml:"session_max_age" env:"LIBRE_WT_SESSION_MAX_AGE"`
 	LogLevel    string        `yaml:"log_level" env:"LIBRE_WT_LOG_LEVEL"`
-	DCM         struct {
+	// StatusCache is how long a status read of an instance is reused for
+	// all users, so many open consoles do not load a node.
+	StatusCache time.Duration `yaml:"status_cache" env:"LIBRE_WT_STATUS_CACHE"`
+	// DCM is the single connection of Libre WT 0.1. It is used as one
+	// instance named "default" when Instances is empty.
+	DCM struct {
 		URL       string `yaml:"url" env:"LIBRE_WT_DCM_URL"`
 		Token     string `yaml:"token" env:"LIBRE_WT_DCM_TOKEN"`
 		TokenFile string `yaml:"token_file" env:"LIBRE_WT_DCM_TOKEN_FILE"`
 		CAFile    string `yaml:"ca_file" env:"LIBRE_WT_DCM_CA_FILE"`
 	} `yaml:"dcm"`
+	// Instances are the LibreDCM nodes this console manages (WT-SRS-013).
+	Instances []fleet.InstanceConfig `yaml:"instances"`
+}
+
+// DefaultInstance is the name of the instance made from the dcm: block.
+const DefaultInstance = "default"
+
+// instances returns the connections to open: the instances list, or the
+// dcm: block of 0.1 as one instance. Giving both is refused: it would not be
+// clear which LibreDCM the console manages.
+func (c Config) instances() ([]fleet.InstanceConfig, error) {
+	if len(c.Instances) == 0 {
+		return []fleet.InstanceConfig{{Name: DefaultInstance, URL: c.DCM.URL, Token: c.DCM.Token, TokenFile: c.DCM.TokenFile, CAFile: c.DCM.CAFile}}, nil
+	}
+	if c.DCM.Token != "" || c.DCM.TokenFile != "" {
+		return nil, errors.New("configuration has both instances: and a dcm: token (or LIBRE_WT_DCM_TOKEN / LIBRE_WT_DCM_TOKEN_FILE): " +
+			"use instances: for every LibreDCM, or dcm: for a single one")
+	}
+	return c.Instances, nil
+}
+
+// openFleet builds the registry of LibreDCM instances from the
+// configuration and logs each connection (never its token). Nothing is sent
+// to a LibreDCM here: an instance that is down does not stop Libre WT from
+// starting.
+func openFleet(cfg Config, ids fleet.IdentityStore, log *slog.Logger) (*fleet.Registry, error) {
+	conns, err := cfg.instances()
+	if err != nil {
+		return nil, err
+	}
+	members, err := fleet.Connect(conns)
+	if err != nil {
+		return nil, err
+	}
+	for _, m := range members {
+		log.Info("LibreDCM instance configured", "instance", m.Name, "cluster", m.Cluster, "url", m.Client.URL())
+		if m.Client.PlainHTTPRemote() {
+			log.Warn("plain HTTP to a LibreDCM that is not on this machine: the admin token and patient data are not encrypted; use https:// and ca_file",
+				"instance", m.Name, "url", m.Client.URL())
+		}
+	}
+	return fleet.New(members, ids, cfg.StatusCache, log)
 }
 
 func defaults() Config {
@@ -50,6 +98,7 @@ func defaults() Config {
 	c.IdleTimeout = 30 * time.Minute
 	c.MaxSession = 12 * time.Hour
 	c.LogLevel = "info"
+	c.StatusCache = fleet.DefaultCache
 	c.DCM.URL = "http://127.0.0.1:8081"
 	return c
 }
@@ -87,12 +136,12 @@ func run(cfgPath string) error {
 		return err
 	}
 	defer acct.Close()
-	dcm, err := dcmclient.New(dcmclient.Config{URL: cfg.DCM.URL, Token: cfg.DCM.Token, TokenFile: cfg.DCM.TokenFile, CAFile: cfg.DCM.CAFile})
+	reg, err := openFleet(cfg, acct, log)
 	if err != nil {
 		return err
 	}
 	secure := cfg.TLSCertFile != "" && cfg.TLSKeyFile != ""
-	srv, err := web.New(web.Config{Version: version, Secure: secure, IdleTimeout: cfg.IdleTimeout, MaxSession: cfg.MaxSession}, acct, dcm, log)
+	srv, err := web.New(web.Config{Version: version, Secure: secure, IdleTimeout: cfg.IdleTimeout, MaxSession: cfg.MaxSession}, acct, reg, log)
 	if err != nil {
 		return err
 	}
@@ -107,7 +156,7 @@ func run(cfgPath string) error {
 		TLSConfig: &tls.Config{MinVersion: tls.VersionTLS12}}
 	errc := make(chan error, 1)
 	go func() {
-		log.Info("LibreWT starting", "version", version, "listen", cfg.Listen, "https", secure, "dcm", dcm.URL())
+		log.Info("LibreWT starting", "version", version, "listen", cfg.Listen, "https", secure, "instances", len(reg.Names()))
 		if secure {
 			errc <- hs.ListenAndServeTLS(cfg.TLSCertFile, cfg.TLSKeyFile)
 		} else {

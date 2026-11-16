@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Document | DHF-WT-SEC |
-| Status | **DRAFT** (2026-11-10); v0.2 part added 2026-11-14, **DRAFT for approval** |
+| Status | **DRAFT** (2026-11-10); v0.2 part added 2026-11-14, **DRAFT for approval**; verification state updated 2026-11-16 (card WT-0.2/5) |
 
 ## Architecture and trust boundaries
 
@@ -89,7 +89,54 @@ flowchart LR
 | WT-TM-18 | R | An action can't be tied to a person or to an instance | Audit before sending, with instance, action, reason, outcome; operator forwarded to LibreDCM (WT-SRS-033, -031) | Audit tests; test that a failing audit write stops the action | O | Shared accounts are a site matter; audit export later |
 | WT-TM-19 | T | Wrong or hostile entry in the instances configuration (duplicate name, missing token, odd characters in a name used in addresses) | Strict name pattern; unique names; refuse to start (WT-SRS-013) | Configuration tests | O | — |
 
+### State after card WT-0.2/5 (2026-11-16)
+
+Card WT-0.2/5 built the connections to several instances, the fleet,
+dashboard, status and about pages and the identity check. Status of the
+threats above that it touches (C = control verified, P = partly, O = open):
+
+| ID | Status | What is verified now | Tests |
+|---|---|---|---|
+| WT-TM-09 | P | For the resolve of a Study Exception and for accepting an instance identity: CSRF token, single-use confirmation bound to session, instance, action and plan, approval box, reason. Other actions come with their cards | `TestReviewAndApproveEdit`, `TestInstanceFromAddressOnly`, `TestIdentityChangeBlocksActionsUntilAccepted`, `TestIdentityAcceptedThenActionsResume` |
+| WT-TM-10 | P | One role table for every address behind the login; walked for every role and without a session. New addresses must be added to the reviewed table in the test | `TestRoleTable` |
+| WT-TM-11 | C (for the actions that exist) | Instance only from the address; a form field or query value can't select one; confirmation of one instance refused on another; identity change blocks actions; expected node ID and AE title sent; the real LibreDCM refuses a wrong one | `TestInstanceFromAddressOnly`, `TestIdentityChangeBlocksActionsUntilAccepted`, `TestLibreDCMRefusesWrongNode`, `TestAgainstRealLibreDCM` |
+| WT-TM-12 | P | Admin tokens of every instance appear on no page, in no log line and in no start-up error | `TestFleetPage`, `TestDashboardStatusAndAbout`, `TestUsersAuditAndDCMDown`, `TestInstancesConfiguration`, `TestConnectionsValidated` |
+| WT-TM-14 | P | Markup in the AE title, node ID, version, digest, check names and errors, licence text, counter names, patient name, source AE and study description stays text on every page that exists | `TestTextFromLibreDCMIsNeverMarkup` |
+| WT-TM-15 | P | Identity remembered and checked; plain-HTTP warning. The TLS test with a wrong certificate is not written yet | `TestIdentityRememberedAndChangeDetected`, `TestPlainHTTPWarningOnPages`, `TestPlainHTTPRemote` |
+| WT-TM-16 | P | 21 page loads inside the cache time cause one status read; status reads time out | `TestStatusReadIsCachedAndShared`, `TestClientStatusDiscoveryAndExpectedIdentity` |
+| WT-TM-19 | C | Duplicate names (also by case), other characters, long names, missing token, empty token file, both configuration forms: refused at start | `TestConnectionsValidated`, `TestInstancesConfiguration` |
+
+New points:
+
+- **Trust on first use.** The node ID and AE title of a newly configured
+  instance are remembered from its first answer (open decision D33). An
+  attacker who answers at the address before the real node is ever reached
+  would be remembered. The address and the token come from the host's
+  configuration file; with HTTPS and a CA file the first answer is
+  authenticated.
+- **The token goes to whoever answers.** Libre WT sends the admin token to
+  the configured address before it can check the identity. Over plain HTTP
+  to another machine this exposes the token on the network (warning,
+  WT-SRS-036; decision D11).
+- **Instance names in addresses.** Names are limited to letters, digits,
+  `-` and `_`, checked at start; the name in a request is matched exactly
+  against the configured list, never used to build a file path or a query.
+- **Redirects stay on the server.** `/i/<name>` redirects only for a
+  configured instance, and the target is built from the configured name. An
+  unknown name, however it is written, gives "not found". The 0.1 addresses
+  redirect to `/i/<configured name>/exceptions…`. No redirect target takes
+  a host from the request (`TestInstanceFromAddressOnly`,
+  `TestOldAddressesWithOneInstance`).
+- **The instance filter of the audit page** takes its value from the
+  address (`?instance=`). The value is an instance name, not a secret, and
+  an unknown value is ignored.
+- **Identity acceptance** is a new state-changing function of Libre WT
+  itself (Admin only, CSRF, single-use confirmation, approval box, reason,
+  audit record before the change). It sends nothing to LibreDCM.
+- **Database upgrade.** `librewt.db` is upgraded in place (one new column,
+  one new table). No secret is added to it: tokens are never stored.
+
 ### Dependencies and static analysis
 
-No new dependency is planned for 0.2. gosec and govulncheck run on every
-pull request as before.
+No new dependency in card WT-0.2/5 (`go.mod` and `go.sum` unchanged). gosec
+v2.30.0 and govulncheck v1.9.0 results are in the pull request.

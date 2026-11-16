@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Document | DHF-WT-RMF |
-| Status | **DRAFT** (2026-11-10, prepared by Hermes/Claude for human review); v0.2 analysis added 2026-11-14, **DRAFT for approval** |
+| Status | **DRAFT** (2026-11-10, prepared by Hermes/Claude for human review); v0.2 analysis added 2026-11-14, **DRAFT for approval**; verification of the first v0.2 controls added 2026-11-16 (card WT-0.2/5) |
 | Procedure | QMS-SOP-003 (same scales and matrix as LibreDCM) |
 
 Libre WT's main hazard is the one it exists to control: a study filed under
@@ -95,3 +95,35 @@ LibreDCM is optional; a syntactically valid but wrong destination address
 can't be detected before a C-ECHO or a send; cluster-wide changes are made
 node by node. None is new in kind; each is listed as an open decision or a
 gap in `architecture.md` §8 and `cybersecurity.md`.
+
+## Libre WT 0.2: controls implemented in card WT-0.2/5 (DRAFT for approval, 2026-11-16)
+
+Prepared by Hermes (Claude) for human review. Card WT-0.2/5 built the
+connections to several instances, the fleet page, dashboard, status and
+about pages, and moved Study Exceptions under the instance. The table gives,
+for each hazard touched, the controls that now exist and the tests that
+verify them. Controls of later cards stay `Draft`; the target residual risk
+of a hazard is confirmed only when all its controls are in.
+
+| Hazard | Controls now implemented | Verification (tests) | State of the hazard |
+|---|---|---|---|
+| WT-HAZ-05 wrong instance targeted | WT-SRS-013 (unique names, own token per instance), -014 (instance only from the address, banner, no selected instance), -015 (identity remembered; change warned; no action while changed or unreachable; expected identity sent; LibreDCM's refusal shown). The confirmation of an edit is bound to the instance (part of WT-SRS-031, still `Draft`) | `TestConnectionsValidated`, `TestInstancesConfiguration`, `TestInstanceFromAddressOnly`, `TestDashboardStatusAndAbout`, `TestIdentityRememberedAndChangeDetected`, `TestIdentityChangeBlocksActionsUntilAccepted`, `TestIdentityAcceptedThenActionsResume`, `TestLibreDCMRefusesWrongNode`, `TestInstanceIdentityStore`, `TestClientStatusDiscoveryAndExpectedIdentity`, `TestAgainstRealLibreDCM` (the real node refuses another node's name) | Controls in place for the one action that exists (resolve). Confirmed again for each new action in its card |
+| WT-HAZ-08 secret disclosed | WT-SRS-036 (plain-HTTP warning on pages and at startup). Tokens stay out of pages, log and errors (WT-SRS-006) | `TestPlainHTTPRemote`, `TestPlainHTTPWarningOnPages`, `TestInstancesConfiguration`, `TestFleetPage`, `TestUsersAuditAndDCMDown` | Open: WT-SRS-019, -027, -032 come with later cards |
+| WT-HAZ-11 status misleads | WT-SRS-016 (unreachable shown as such, last contact, no old values), -017 (time of reading, every readiness check), -018 (unsupported functions marked), -035 | `TestUnreachableShowsNoOldValues`, `TestStatusReadIsCachedAndShared`, `TestFleetPage`, `TestFleetNeverReached`, `TestDashboardStatusAndAbout`, `TestFeaturesAndLegacyNode`, `TestOlderLibreDCM`, `TestAgainstRealLibreDCM` | Controls complete. Target residual P2 (R) confirmed for review |
+| WT-HAZ-12 cluster nodes drift apart | WT-SRS-023 (flags for settings digest and version) | `TestDivergenceWithinCluster`, `TestFleetPage` | Control complete. Target residual P2 (R) confirmed for review |
+| WT-HAZ-16 console load | Status read on page load only; reading shared by all users for 5 seconds; a failed reading is kept as long; 5-second timeout | `TestStatusReadIsCachedAndShared`, `TestClientStatusDiscoveryAndExpectedIdentity` | Open: bounded search comes with its card |
+| WT-HAZ-01, WT-HAZ-02 (0.1) | Unchanged. Study Exceptions run the 0.1 flow per instance; every address has one row in the role table | `TestReviewAndApproveEdit`, `TestNoAuditNoEdit`, `TestViewerRole`, `TestRoleTable` | Unchanged |
+
+Mutation check (2026-11-16): each control above was broken on purpose, one
+at a time, and the tests were run. The result is in the pull request of
+card WT-0.2/5.
+
+### New risks from this implementation (ISO 14971 §7.5)
+
+| Risk | Assessment | Handling |
+|---|---|---|
+| The identity is trusted on first use. An address that is wrong from the first day is remembered as "right" | The banner shows node ID and AE title on every page, and the administrator who adds the instance sees them at once. LibreDCM still checks the identity Libre WT sends. S4, P1 | Accepted for 0.2; open decision D33 (`architecture.md` §8) offers the identity in the configuration file |
+| An older LibreDCM gets no expected identity with a resolve | Same protection as Libre WT 0.1 had. Libre WT's own identity check on the node ID from `/version` still blocks actions when the node ID changes | Accepted; D35. Ends when the node is upgraded |
+| The identity check blocks Study Exceptions after a planned node replacement or AE title change until an Admin accepts | Held images stay unavailable a little longer (WT-HAZ-03). The warning is on every page of the instance and names the cause | Accepted; the acceptance is one audited step |
+| The fleet page waits up to 5 seconds when a node does not answer | Slower page, no wrong information | Accepted |
+| An instance removed from the configuration and added again under the same name keeps its remembered identity | Intended: the name is the key. A new node behind an old name shows the identity warning | Accepted |

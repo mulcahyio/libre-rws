@@ -123,7 +123,7 @@ The product family is **Libre**: "Libre" plus a short code for each module.
 |---|---|---|
 | **Libre RWS** | The platform. RWS = Radiology Workflow System. | RWS |
 | **Libre DCM** | The DICOM module (program `LibreDCM`). DCM = DICOM. | RWS DICOM (`rws-dicom`) |
-| **Libre WT** | Libre Watch Tower, the web management console (v0.1: accounts, Study Exceptions queue, audit log; see `modules/wt/README.md`). WT = Watch Tower. | RWS DICOM management console |
+| **Libre WT** | Libre Watch Tower, the web management console (accounts, one or more LibreDCM instances, fleet page, status, Study Exceptions queue, audit log; see `modules/wt/README.md`). WT = Watch Tower. | RWS DICOM management console |
 
 New modules follow the same pattern, e.g. Libre MWL for the modality
 worklist. Since 0.2.0 the code uses the new names: the `LibreDCM` binary, the
