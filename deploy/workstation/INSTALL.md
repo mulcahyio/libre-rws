@@ -161,6 +161,15 @@ Health endpoints: `/readyz`, `/healthz` (open), `/metrics`, `/version` (need
 the admin token) on `127.0.0.1:8081`, over HTTPS when TLS is on. The
 container restarts on its own after a crash or a reboot.
 
+**Libre WT (web console):** Libre WT shows this node on its fleet page,
+with a dashboard and a status page, and handles Study Exceptions. One Libre
+WT can manage several LibreDCM nodes: give each node its own admin token and
+list the nodes in the Libre WT configuration file (`instances:`, see
+`modules/wt/README.md`). Libre WT remembers the node ID and AE title of each
+node. If you replace a node or change its AE title, Libre WT shows a warning
+and an administrator accepts the new identity in the console. Libre WT does
+not start, stop or restart LibreDCM: use the commands above.
+
 **Control API (for Libre WT):** with the admin token, `/control/v1` on the
 same port shows the node's status and counters (`/control/v1/status`), the
 running settings with every secret hidden (`/control/v1/config`), the remote

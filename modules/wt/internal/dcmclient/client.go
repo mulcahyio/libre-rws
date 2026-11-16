@@ -1,6 +1,6 @@
 // Package dcmclient talks to one LibreDCM instance through its REST control
-// API (WT-SRS-006). Libre WT never imports LibreDCM code: the JSON contract
-// is the only coupling, so the two can be released separately.
+// API (WT-SRS-006, WT-SRS-013). Libre WT never imports LibreDCM code: the JSON
+// contract is the only coupling, so the two can be released separately.
 package dcmclient
 
 import (
@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -26,6 +27,9 @@ type Config struct {
 	TokenFile string
 	CAFile    string // PEM to trust (LibreDCM's self-signed certificate)
 	Timeout   time.Duration
+	// ReadTimeout bounds the status reads (discovery, status, version), so
+	// an unreachable node can't hold a page for long. Default 5 seconds.
+	ReadTimeout time.Duration
 }
 
 // Client is a LibreDCM control-API client.
@@ -33,6 +37,7 @@ type Client struct {
 	base  *url.URL
 	token string
 	http  *http.Client
+	read  time.Duration
 }
 
 // New validates the configuration and builds a client.
@@ -68,16 +73,36 @@ func New(cfg Config) (*Client, error) {
 	if cfg.Timeout <= 0 {
 		cfg.Timeout = 2 * time.Minute // a correction rewrites every file of a study
 	}
-	return &Client{base: u, token: token, http: &http.Client{Transport: tr, Timeout: cfg.Timeout}}, nil
+	if cfg.ReadTimeout <= 0 {
+		cfg.ReadTimeout = 5 * time.Second
+	}
+	return &Client{base: u, token: token, http: &http.Client{Transport: tr, Timeout: cfg.Timeout}, read: cfg.ReadTimeout}, nil
 }
 
 // URL returns the configured LibreDCM URL (never the token).
 func (c *Client) URL() string { return c.base.String() }
 
-// APIError is a non-2xx answer from LibreDCM.
+// PlainHTTPRemote reports whether the connection uses plain HTTP to an
+// address that is not a loopback address: the admin token and patient data
+// then cross a network unencrypted (WT-SRS-036).
+func (c *Client) PlainHTTPRemote() bool {
+	if c.base.Scheme != "http" {
+		return false
+	}
+	host := c.base.Hostname()
+	if strings.EqualFold(host, "localhost") {
+		return false
+	}
+	ip := net.ParseIP(host)
+	return ip == nil || !ip.IsLoopback()
+}
+
+// APIError is a non-2xx answer from LibreDCM. Code is LibreDCM's machine
+// code, when it sent one.
 type APIError struct {
 	Status  int
 	Message string
+	Code    string
 }
 
 func (e *APIError) Error() string { return fmt.Sprintf("LibreDCM: %s (HTTP %d)", e.Message, e.Status) }
@@ -86,6 +111,13 @@ func (e *APIError) Error() string { return fmt.Sprintf("LibreDCM: %s (HTTP %d)",
 func NotFound(err error) bool {
 	var ae *APIError
 	return errors.As(err, &ae) && ae.Status == http.StatusNotFound
+}
+
+// InstanceMismatch reports whether LibreDCM refused the request because the
+// node that answered is not the node Libre WT expected (DCM-SRS-097).
+func InstanceMismatch(err error) bool {
+	var ae *APIError
+	return errors.As(err, &ae) && ae.Status == http.StatusConflict && ae.Code == "instance_mismatch"
 }
 
 // Refused reports whether LibreDCM refused the request as invalid (422).
@@ -124,12 +156,13 @@ func (c *Client) do(ctx context.Context, method, path string, in, out any) error
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		var e struct {
 			Error string `json:"error"`
+			Code  string `json:"code"`
 		}
 		_ = json.Unmarshal(data, &e)
 		if e.Error == "" {
 			e.Error = http.StatusText(resp.StatusCode)
 		}
-		return &APIError{Status: resp.StatusCode, Message: e.Error}
+		return &APIError{Status: resp.StatusCode, Message: e.Error, Code: e.Code}
 	}
 	if out == nil {
 		return nil
@@ -240,25 +273,146 @@ func (c *Client) Conflict(ctx context.Context, id string) (Detail, error) {
 	return d, err
 }
 
-// Plan asks what an action would change.
-func (c *Client) Plan(ctx context.Context, id, action string) (Plan, error) {
+// Identity names a LibreDCM node (DCM-SRS-097).
+type Identity struct {
+	NodeID  string `json:"node_id"`
+	AETitle string `json:"ae_title"`
+}
+
+// Zero reports whether no identity is given.
+func (i Identity) Zero() bool { return i.NodeID == "" && i.AETitle == "" }
+
+// expect adds the expected identity to a request body. LibreDCM then refuses
+// the request when another node answers (WT-SRS-015). A zero identity adds
+// nothing: a LibreDCM without identity support refuses unknown fields.
+func expect(body map[string]any, exp Identity) map[string]any {
+	if exp.NodeID != "" {
+		body["expect_node_id"] = exp.NodeID
+	}
+	if exp.AETitle != "" {
+		body["expect_ae_title"] = exp.AETitle
+	}
+	return body
+}
+
+// Plan asks what an action would change. exp is the node Libre WT expects.
+func (c *Client) Plan(ctx context.Context, id, action string, exp Identity) (Plan, error) {
 	var p Plan
-	err := c.do(ctx, http.MethodPost, "/control/v1/conflicts/"+url.PathEscape(id)+"/plan", map[string]string{"action": action}, &p)
+	err := c.do(ctx, http.MethodPost, "/control/v1/conflicts/"+url.PathEscape(id)+"/plan", expect(map[string]any{"action": action}, exp), &p)
 	return p, err
 }
 
-// Resolve executes an action that the administrator approved.
-func (c *Client) Resolve(ctx context.Context, id, action, operator, reason string) (Result, error) {
+// Resolve executes an action that the administrator approved, on the node
+// Libre WT expects (exp).
+func (c *Client) Resolve(ctx context.Context, id, action, operator, reason string, exp Identity) (Result, error) {
 	var r Result
-	err := c.do(ctx, http.MethodPost, "/control/v1/conflicts/"+url.PathEscape(id)+"/resolve", map[string]any{
+	err := c.do(ctx, http.MethodPost, "/control/v1/conflicts/"+url.PathEscape(id)+"/resolve", expect(map[string]any{
 		"action": action, "operator": operator, "reason": reason, "confirm": true,
-	}, &r)
+	}, exp), &r)
 	return r, err
 }
 
 // Version returns LibreDCM's /version (module, version, node, uptime).
 func (c *Client) Version(ctx context.Context) (map[string]any, error) {
+	ctx, cancel := context.WithTimeout(ctx, c.read)
+	defer cancel()
 	out := map[string]any{}
 	err := c.do(ctx, http.MethodGet, "/version", nil, &out)
 	return out, err
+}
+
+// InstanceInfo is the identity block LibreDCM puts in every control
+// response (DCM-SRS-097).
+type InstanceInfo struct {
+	NodeID       string `json:"node_id"`
+	AETitle      string `json:"ae_title"`
+	Version      string `json:"version"`
+	ConfigDigest string `json:"config_digest"`
+}
+
+// Identity returns the part that names the node.
+func (i InstanceInfo) Identity() Identity { return Identity{NodeID: i.NodeID, AETitle: i.AETitle} }
+
+// Discovery is the answer of GET /control/v1: the control functions this
+// LibreDCM serves (WT-SRS-018).
+type Discovery struct {
+	API      string       `json:"api"`
+	Features []string     `json:"features"`
+	Instance InstanceInfo `json:"instance"`
+}
+
+// Discovery asks the node which control functions it supports.
+func (c *Client) Discovery(ctx context.Context) (Discovery, error) {
+	ctx, cancel := context.WithTimeout(ctx, c.read)
+	defer cancel()
+	var d Discovery
+	err := c.do(ctx, http.MethodGet, "/control/v1", nil, &d)
+	return d, err
+}
+
+// Check is one readiness check of a node.
+type Check struct {
+	Name  string `json:"name"`
+	OK    bool   `json:"ok"`
+	Error string `json:"error"`
+}
+
+// License is the licence part of the status. Enforced is false for source
+// builds. The licence state never affects DICOM services.
+type License struct {
+	Enforced    bool   `json:"enforced"`
+	State       string `json:"state"`
+	Licensed    bool   `json:"licensed"`
+	AckRequired bool   `json:"ack_required"`
+	Message     string `json:"message"`
+	DaysLeft    int    `json:"days_left"`
+}
+
+// Counters are the node's live counters, read by LibreDCM at request time.
+type Counters struct {
+	AssociationsActive   uint64            `json:"associations_active"`
+	AssociationsTotal    uint64            `json:"associations_total"`
+	AssociationsRejected uint64            `json:"associations_rejected_total"`
+	CStore               map[string]uint64 `json:"cstore"`
+	CFindTotal           uint64            `json:"cfind_total"`
+	RetrieveSubOps       map[string]uint64 `json:"retrieve_subops"`
+	OutboxPending        uint64            `json:"outbox_pending"`
+	PublishFailures      uint64            `json:"event_publish_failures_total"`
+	// ConflictsOpen is nil when the node could not count them.
+	ConflictsOpen *uint64 `json:"conflicts_open"`
+}
+
+// Status is the answer of GET /control/v1/status (DCM-SRS-081).
+type Status struct {
+	Instance      InstanceInfo `json:"instance"`
+	Time          time.Time    `json:"time"`
+	UptimeSeconds int64        `json:"uptime_seconds"`
+	Backends      struct {
+		Storage string `json:"storage"`
+		Index   string `json:"index"`
+		Events  string `json:"events"`
+	} `json:"backends"`
+	DICOM struct {
+		Listen           string `json:"listen"`
+		TLS              bool   `json:"tls"`
+		AllowListEntries int    `json:"allow_list_entries"`
+		RemoteAEs        int    `json:"remote_aes"`
+	} `json:"dicom"`
+	Admin struct {
+		TLS bool `json:"tls"`
+	} `json:"admin"`
+	Ready              bool     `json:"ready"`
+	Checks             []Check  `json:"checks"`
+	License            License  `json:"license"`
+	Counters           Counters `json:"counters"`
+	CountersIncomplete bool     `json:"counters_incomplete"`
+}
+
+// Status reads the node's status.
+func (c *Client) Status(ctx context.Context) (Status, error) {
+	ctx, cancel := context.WithTimeout(ctx, c.read)
+	defer cancel()
+	var s Status
+	err := c.do(ctx, http.MethodGet, "/control/v1/status", nil, &s)
+	return s, err
 }

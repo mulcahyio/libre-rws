@@ -1,0 +1,67 @@
+{{define "title"}}Status{{end}}
+{{define "content"}}
+<h1>Status</h1>
+{{if .I.Status}}{{with .I.Status}}
+<p class="lead">Read by Libre WT at <b>{{fmtStamp $.I.ReadAt}}</b> (node clock: {{fmtStamp .Time}}). Reload the page for a new reading.</p>
+<div class="compare">
+<section class="card">
+<h2>Identity</h2>
+<dl>
+<dt>Node ID</dt><dd><code>{{orDash .Instance.NodeID}}</code></dd>
+<dt>AE title</dt><dd><code>{{orDash .Instance.AETitle}}</code></dd>
+<dt>Version</dt><dd>{{orDash .Instance.Version}}</dd>
+<dt>Uptime</dt><dd>{{uptime .UptimeSeconds}}</dd>
+<dt>Settings digest</dt><dd><code class="uid">{{orDash .Instance.ConfigDigest}}</code></dd>
+</dl>
+</section>
+<section class="card">
+<h2>Backends and listeners</h2>
+<dl>
+<dt>Storage</dt><dd>{{orDash .Backends.Storage}}</dd>
+<dt>Index</dt><dd>{{orDash .Backends.Index}}</dd>
+<dt>Events</dt><dd>{{orDash .Backends.Events}}</dd>
+<dt>DICOM listener</dt><dd><code>{{orDash .DICOM.Listen}}</code>, TLS {{if .DICOM.TLS}}on{{else}}off{{end}}</dd>
+<dt>Admin listener</dt><dd>TLS {{if .Admin.TLS}}on{{else}}off{{end}}</dd>
+<dt>Allow-list rules</dt><dd>{{.DICOM.AllowListEntries}}{{if eq .DICOM.AllowListEntries 0}} (every calling AE may connect){{end}}</dd>
+<dt>C-MOVE destinations</dt><dd>{{.DICOM.RemoteAEs}}</dd>
+</dl>
+</section>
+<section class="card">
+<h2>Licence</h2>
+<p>{{licenceLabel .License}}</p>
+{{if .License.Message}}<p><small>{{.License.Message}}</small></p>{{end}}
+<p><small>The licence state never stops DICOM services.</small></p>
+</section>
+</div>
+
+<h2>Readiness: {{if .Ready}}<span class="state reachable">ready</span>{{else}}<span class="state notready">not ready</span>{{end}}</h2>
+<table class="narrow">
+<thead><tr><th>Check</th><th>Result</th></tr></thead>
+<tbody>{{range .Checks}}<tr><td>{{.Name}}</td><td>{{if .OK}}<span class="state reachable">ok</span>{{else}}<span class="state notready">failed</span> {{.Error}}{{end}}</td></tr>{{else}}<tr><td colspan="2">The node reported no checks.</td></tr>{{end}}</tbody>
+</table>
+
+<h2>Counters since the node started</h2>
+{{if .CountersIncomplete}}<p class="msg warn" role="alert">The node could not read every counter. Missing values are shown as 0 or unknown.</p>{{end}}
+<table class="narrow">
+<thead><tr><th>DICOM service</th><th>Counter</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>Associations (all services, C-ECHO included)</td><td>open now</td><td>{{.Counters.AssociationsActive}}</td></tr>
+<tr><td>Associations</td><td>total</td><td>{{.Counters.AssociationsTotal}}</td></tr>
+<tr><td>Associations</td><td>rejected</td><td>{{.Counters.AssociationsRejected}}</td></tr>
+{{range counts .Counters.CStore}}<tr><td>C-STORE</td><td>{{.Name}}</td><td>{{.N}}</td></tr>{{else}}<tr><td>C-STORE</td><td>all results</td><td>0</td></tr>{{end}}
+<tr><td>C-FIND</td><td>total</td><td>{{.Counters.CFindTotal}}</td></tr>
+{{range counts .Counters.RetrieveSubOps}}<tr><td>C-MOVE and C-GET sub-operations</td><td>{{.Name}}</td><td>{{.N}}</td></tr>{{else}}<tr><td>C-MOVE and C-GET sub-operations</td><td>all results</td><td>0</td></tr>{{end}}
+<tr><td>Events</td><td>outbox pending</td><td>{{.Counters.OutboxPending}}</td></tr>
+<tr><td>Events</td><td>publish failures</td><td>{{.Counters.PublishFailures}}</td></tr>
+<tr><td>Study Exceptions</td><td>open</td><td>{{if .Counters.ConflictsOpen}}{{.Counters.ConflictsOpen}}{{else}}unknown{{end}}</td></tr>
+</tbody>
+</table>
+{{end}}{{else if ne (print .I.State) "unreachable"}}
+<p class="msg info">Status is not available for this instance: this LibreDCM version ({{orDash .I.Version}}) does not support it. Upgrade LibreDCM to see readiness checks and counters here.</p>
+{{end}}
+
+<section class="card">
+<h2>Start, stop and restart</h2>
+<p>Libre WT does not start, stop or restart LibreDCM. Do this on the host of the node: with the installer script (<code>LibreDCM.ps1 restart</code> on Windows, <code>./libredcm.sh restart</code> on macOS and Linux; see "Day-to-day" in the LibreDCM install guide, <code>deploy/workstation/INSTALL.md</code>) or with Docker (<code>docker compose restart</code> in the install folder). Settings that need a restart are changed in the node's configuration on the host.</p>
+</section>
+{{end}}

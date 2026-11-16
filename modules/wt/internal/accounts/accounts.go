@@ -1,6 +1,8 @@
 // Package accounts holds Libre WT's local user accounts, roles and audit log
 // in a SQLite database inside Libre WT's own data directory (WT-SRS-002…005,
-// WT-SRS-011). Passwords are stored as argon2id hashes.
+// WT-SRS-011). Passwords are stored as argon2id hashes. Since 0.2 it also
+// holds the identity each LibreDCM instance reported first (WT-SRS-015) and
+// the audit log names the instance (WT-SRS-033).
 package accounts
 
 import (
@@ -48,14 +50,15 @@ type User struct {
 
 // Entry is one audit record.
 type Entry struct {
-	ID      int64
-	At      time.Time
-	User    string
-	IP      string
-	Action  string
-	Target  string
-	Outcome string // success | failure
-	Detail  string
+	ID       int64
+	At       time.Time
+	User     string
+	IP       string
+	Instance string // LibreDCM instance the action was for; "" for console actions
+	Action   string
+	Target   string
+	Outcome  string // success | failure
+	Detail   string
 }
 
 // Errors.
@@ -112,7 +115,46 @@ CREATE TABLE IF NOT EXISTS audit (
 	detail  TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_audit_at ON audit(at);
+CREATE TABLE IF NOT EXISTS instance_identity (
+	name        TEXT PRIMARY KEY,
+	node_id     TEXT NOT NULL,
+	ae_title    TEXT NOT NULL,
+	first_seen  INTEGER NOT NULL,
+	accepted_by TEXT NOT NULL DEFAULT '',
+	accepted_at INTEGER NOT NULL DEFAULT 0,
+	reason      TEXT NOT NULL DEFAULT ''
+);
 `
+
+// schemaVersion is stored in SQLite's user_version. 0: Libre WT 0.1 (no
+// version written). 2: audit.instance column and the instance_identity table.
+const schemaVersion = 2
+
+// migrate upgrades a 0.1 database in place. The column is added only when
+// it is missing, so a start that was interrupted can be repeated.
+func migrate(ctx context.Context, db *sql.DB) error {
+	var v int
+	if err := db.QueryRowContext(ctx, `PRAGMA user_version`).Scan(&v); err != nil {
+		return err
+	}
+	if v > schemaVersion {
+		return fmt.Errorf("the database was written by a newer Libre WT (schema %d, this version knows %d)", v, schemaVersion)
+	}
+	if v == schemaVersion {
+		return nil
+	}
+	var has int
+	if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM pragma_table_info('audit') WHERE name = 'instance'`).Scan(&has); err != nil {
+		return err
+	}
+	if has == 0 {
+		if _, err := db.ExecContext(ctx, `ALTER TABLE audit ADD COLUMN instance TEXT NOT NULL DEFAULT ''`); err != nil {
+			return err
+		}
+	}
+	_, err := db.ExecContext(ctx, `PRAGMA user_version = 2`)
+	return err
+}
 
 // Open opens (and creates) the database at path.
 func Open(ctx context.Context, path string) (*Store, error) {
@@ -124,6 +166,10 @@ func Open(ctx context.Context, path string) (*Store, error) {
 	if _, err := db.ExecContext(ctx, schema); err != nil {
 		_ = db.Close()
 		return nil, fmt.Errorf("accounts: schema: %w", err)
+	}
+	if err := migrate(ctx, db); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("accounts: schema upgrade: %w", err)
 	}
 	s := &Store{db: db, now: time.Now}
 	s.dummy = hashPassword("dummy-password-for-timing")
@@ -383,17 +429,24 @@ func (s *Store) SetPassword(ctx context.Context, id int64, password string) erro
 // Audit appends an audit record. Audit failures are returned so callers can
 // refuse the action they were about to record.
 func (s *Store) Audit(ctx context.Context, e Entry) error {
-	_, err := s.db.ExecContext(ctx, `INSERT INTO audit (at, user, ip, action, target, outcome, detail) VALUES (?,?,?,?,?,?,?)`,
-		s.now().UnixMilli(), e.User, e.IP, e.Action, e.Target, e.Outcome, e.Detail)
+	_, err := s.db.ExecContext(ctx, `INSERT INTO audit (at, user, ip, instance, action, target, outcome, detail) VALUES (?,?,?,?,?,?,?,?)`,
+		s.now().UnixMilli(), e.User, e.IP, e.Instance, e.Action, e.Target, e.Outcome, e.Detail)
 	return err
 }
 
 // AuditLog returns the newest records first.
 func (s *Store) AuditLog(ctx context.Context, limit int) ([]Entry, error) {
+	return s.AuditLogFor(ctx, "", limit)
+}
+
+// AuditLogFor returns the newest records first; a non-empty instance keeps
+// only the records of that LibreDCM instance (WT-SRS-033).
+func (s *Store) AuditLogFor(ctx context.Context, instance string, limit int) ([]Entry, error) {
 	if limit <= 0 || limit > 5000 {
 		limit = 500
 	}
-	rows, err := s.db.QueryContext(ctx, `SELECT id, at, user, ip, action, target, outcome, detail FROM audit ORDER BY id DESC LIMIT ?`, limit)
+	rows, err := s.db.QueryContext(ctx, `SELECT id, at, user, ip, instance, action, target, outcome, detail FROM audit
+		WHERE (? = '' OR instance = ?) ORDER BY id DESC LIMIT ?`, instance, instance, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -402,11 +455,72 @@ func (s *Store) AuditLog(ctx context.Context, limit int) ([]Entry, error) {
 	for rows.Next() {
 		var e Entry
 		var at int64
-		if err := rows.Scan(&e.ID, &at, &e.User, &e.IP, &e.Action, &e.Target, &e.Outcome, &e.Detail); err != nil {
+		if err := rows.Scan(&e.ID, &at, &e.User, &e.IP, &e.Instance, &e.Action, &e.Target, &e.Outcome, &e.Detail); err != nil {
 			return nil, err
 		}
 		e.At = time.UnixMilli(at).UTC()
 		out = append(out, e)
 	}
 	return out, rows.Err()
+}
+
+// Identity is the node ID and AE title Libre WT remembers for a configured
+// LibreDCM instance (WT-SRS-015).
+type Identity struct {
+	NodeID     string
+	AETitle    string
+	FirstSeen  time.Time
+	AcceptedBy string // "" while it is the identity reported first
+	AcceptedAt time.Time
+	Reason     string
+}
+
+// InstanceIdentity returns the remembered identity of an instance; ok is
+// false when none is remembered yet.
+func (s *Store) InstanceIdentity(ctx context.Context, name string) (id Identity, ok bool, err error) {
+	var first, accepted int64
+	err = s.db.QueryRowContext(ctx, `SELECT node_id, ae_title, first_seen, accepted_by, accepted_at, reason FROM instance_identity WHERE name = ?`, name).
+		Scan(&id.NodeID, &id.AETitle, &first, &id.AcceptedBy, &accepted, &id.Reason)
+	if errors.Is(err, sql.ErrNoRows) {
+		return Identity{}, false, nil
+	}
+	if err != nil {
+		return Identity{}, false, err
+	}
+	id.FirstSeen = time.UnixMilli(first).UTC()
+	if accepted > 0 {
+		id.AcceptedAt = time.UnixMilli(accepted).UTC()
+	}
+	return id, true, nil
+}
+
+// RememberIdentity stores the identity an instance reported first. It never
+// replaces a remembered identity: only AcceptIdentity does. It returns the
+// identity that is remembered after the call.
+func (s *Store) RememberIdentity(ctx context.Context, name, nodeID, aeTitle string) (Identity, error) {
+	if _, err := s.db.ExecContext(ctx, `INSERT INTO instance_identity (name, node_id, ae_title, first_seen) VALUES (?,?,?,?)
+		ON CONFLICT(name) DO NOTHING`, name, nodeID, aeTitle, s.now().UnixMilli()); err != nil {
+		return Identity{}, err
+	}
+	id, _, err := s.InstanceIdentity(ctx, name)
+	return id, err
+}
+
+// CompleteIdentity fills in the AE title of a remembered identity that has
+// none (an older LibreDCM reports only its node ID), when the node ID is the
+// same. Nothing else is changed.
+func (s *Store) CompleteIdentity(ctx context.Context, name, nodeID, aeTitle string) error {
+	_, err := s.db.ExecContext(ctx, `UPDATE instance_identity SET ae_title = ? WHERE name = ? AND node_id = ? AND ae_title = ''`, aeTitle, name, nodeID)
+	return err
+}
+
+// AcceptIdentity replaces the remembered identity of an instance with the
+// one an administrator accepted, with their name and reason.
+func (s *Store) AcceptIdentity(ctx context.Context, name, nodeID, aeTitle, by, reason string) error {
+	now := s.now().UnixMilli()
+	_, err := s.db.ExecContext(ctx, `INSERT INTO instance_identity (name, node_id, ae_title, first_seen, accepted_by, accepted_at, reason) VALUES (?,?,?,?,?,?,?)
+		ON CONFLICT(name) DO UPDATE SET node_id = excluded.node_id, ae_title = excluded.ae_title,
+		accepted_by = excluded.accepted_by, accepted_at = excluded.accepted_at, reason = excluded.reason`,
+		name, nodeID, aeTitle, now, by, now, reason)
+	return err
 }

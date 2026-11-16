@@ -1,0 +1,31 @@
+{{define "title"}}Dashboard{{end}}
+{{define "content"}}
+<h1>Dashboard</h1>
+{{if .I.Status}}{{with .I.Status}}
+<p class="lead">Read at {{fmtStamp $.I.ReadAt}}.</p>
+<div class="tiles">
+<div class="tile"><span>Health</span><b>{{if .Ready}}ready{{else}}not ready{{end}}</b></div>
+<div class="tile"><span>Version</span><b>{{orDash .Instance.Version}}</b></div>
+<div class="tile"><span>Uptime</span><b>{{uptime .UptimeSeconds}}</b></div>
+<div class="tile"><span>Licence</span><b>{{licenceLabel .License}}</b></div>
+<div class="tile"><span>Open associations</span><b>{{.Counters.AssociationsActive}}</b></div>
+<div class="tile"><span>Stored</span><b>{{$.Stored}}</b></div>
+<div class="tile"><span>Not stored</span><b>{{$.NotStored}}</b></div>
+<div class="tile"><span>Rejected associations</span><b>{{.Counters.AssociationsRejected}}</b></div>
+<div class="tile"><span>Outbox pending</span><b>{{.Counters.OutboxPending}}</b></div>
+<div class="tile"><span>Open exceptions</span><b>{{if .Counters.ConflictsOpen}}{{.Counters.ConflictsOpen}}{{else}}unknown{{end}}</b></div>
+</div>
+{{if not .Ready}}<p class="msg error" role="alert">This node reports that it is not ready. See the readiness checks on the <a href="{{$.Base}}/status">status page</a>.</p>{{end}}
+<p><small>The licence state never stops DICOM services.</small></p>
+{{end}}{{else if ne (print .I.State) "unreachable"}}
+<p class="msg info">This LibreDCM version ({{orDash .I.Version}}) does not report status. Upgrade LibreDCM to see health and counters here.</p>
+{{end}}
+
+<h2>Functions for this instance</h2>
+<table class="narrow">
+<thead><tr><th>Function</th><th>On this instance</th></tr></thead>
+<tbody>{{range .Functions}}<tr><td>{{if .Available}}<a href="{{$.Base}}/{{.Path}}">{{.Label}}</a>{{else}}{{.Label}}{{end}}</td>
+<td>{{if .Available}}available{{else if eq (print $.I.State) "unreachable"}}unknown (instance not reachable){{else}}not available: this LibreDCM version does not support it{{end}}</td></tr>{{end}}</tbody>
+</table>
+<p><small>Address of the admin listener: <code>{{.I.URL}}</code></small></p>
+{{end}}

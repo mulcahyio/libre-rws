@@ -1,15 +1,32 @@
-# Libre WT configuration. Every value can also be set by environment
-# variable (shown on the right); environment wins over this file.
+# Libre WT configuration. Every value except the instances list can also be
+# set by environment variable (shown on the right); environment wins over
+# this file.
 
 listen: "127.0.0.1:8090"          # LIBRE_WT_LISTEN       keep on 127.0.0.1 unless TLS is configured
-data_dir: ./data-wt               # LIBRE_WT_DATA_DIR     accounts and audit log (librewt.db)
+data_dir: ./data-wt               # LIBRE_WT_DATA_DIR     accounts, audit log, instance identities (librewt.db)
 # tls_cert_file: /etc/librewt/tls.crt   # LIBRE_WT_TLS_CERT   serve HTTPS (recommended on a network)
 # tls_key_file:  /etc/librewt/tls.key   # LIBRE_WT_TLS_KEY
 session_idle_timeout: 30m         # LIBRE_WT_SESSION_IDLE_TIMEOUT
 session_max_age: 12h              # LIBRE_WT_SESSION_MAX_AGE
 log_level: info                   # LIBRE_WT_LOG_LEVEL
+status_cache: 5s                  # LIBRE_WT_STATUS_CACHE how long a status reading of a node is reused for all users
 
-dcm:                              # the LibreDCM instance this console manages
+# One LibreDCM: the dcm: block. It is shown as the instance "default".
+dcm:
   url: http://127.0.0.1:8081      # LIBRE_WT_DCM_URL        LibreDCM admin listener
   token_file: ./dcm-admin-token   # LIBRE_WT_DCM_TOKEN_FILE LibreDCM's admin token (or token: / LIBRE_WT_DCM_TOKEN)
   # ca_file: ./libredcm-tls.crt   # LIBRE_WT_DCM_CA_FILE    trust LibreDCM's self-signed certificate
+
+# Several LibreDCM nodes: remove the dcm: block above and list them here
+# (file only; using both forms stops Libre WT at start). Each node has its
+# own token. Names: letters, digits, - and _; unique.
+# instances:
+#   - name: dcm-1
+#     cluster: site-a                   # optional label: same label = one group on the fleet page
+#     url: https://dcm-1.example:8081   # this node's admin listener, never a load balancer
+#     token_file: ./tokens/dcm-1.token
+#     ca_file: ./tls/dcm-1.crt          # optional
+#   - name: dcm-2
+#     cluster: site-a
+#     url: https://dcm-2.example:8081
+#     token_file: ./tokens/dcm-2.token

@@ -30,11 +30,13 @@ type session struct {
 	lastSeen time.Time
 }
 
-// confirmation is a single-use token issued with the warning page of an edit.
-// The resolve request must present it, from the same session, for the same
-// conflict, action and plan, before it expires.
+// confirmation is a single-use token issued with the warning page of an
+// action. The apply request must present it, from the same session, for the
+// same LibreDCM instance, target (the conflict), action and plan, before it
+// expires (WT-SRS-009, WT-SRS-031).
 type confirmation struct {
 	session  string
+	instance string
 	conflict string
 	action   string
 	digest   string
@@ -193,7 +195,7 @@ func planDigest(parts ...string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func (s *sessions) issueConfirm(session, conflict, action, digest string) string {
+func (s *sessions) issueConfirm(session, instance, conflict, action, digest string) string {
 	t := randToken()
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -203,19 +205,19 @@ func (s *sessions) issueConfirm(session, conflict, action, digest string) string
 			delete(s.confirms, k)
 		}
 	}
-	s.confirms[t] = confirmation{session: session, conflict: conflict, action: action, digest: digest, expires: now.Add(confirmTTL)}
+	s.confirms[t] = confirmation{session: session, instance: instance, conflict: conflict, action: action, digest: digest, expires: now.Add(confirmTTL)}
 	return t
 }
 
 // useConfirm consumes a confirmation token; it returns the plan digest it
 // was issued for, and false when the token is unknown, expired, already used
-// or belongs to another session, conflict or action.
-func (s *sessions) useConfirm(token, session, conflict, action string) (string, bool) {
+// or belongs to another session, instance, conflict or action.
+func (s *sessions) useConfirm(token, session, instance, conflict, action string) (string, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	c, ok := s.confirms[token]
 	delete(s.confirms, token)
-	if !ok || s.now().After(c.expires) || c.session != session || c.conflict != conflict || c.action != action {
+	if !ok || s.now().After(c.expires) || c.session != session || c.instance != instance || c.conflict != conflict || c.action != action {
 		return "", false
 	}
 	return c.digest, true

@@ -1,10 +1,10 @@
 {{define "title"}}Study Exceptions{{end}}
 {{define "content"}}
 <h1>Study Exceptions</h1>
-<p class="lead">Images LibreDCM held because they contradict the patient, study or series already in the archive. Nothing here changes until an administrator resolves it.</p>
-<nav class="tabs">{{range .Filters}}<a href="/exceptions?state={{.}}" {{if eq . $.State}}aria-current="page"{{end}}>{{.}}</a>{{end}}</nav>
-{{if .Error}}<p class="msg error" role="alert">Can't reach LibreDCM: {{.Error}}</p>{{end}}
-{{if .Conflicts}}
+<p class="lead">Study exceptions of instance <b>{{.I.Name}}</b>: images LibreDCM held because they contradict the patient, study or series already in the archive. Nothing here changes until an administrator resolves it.</p>
+<nav class="tabs">{{range .Filters}}<a href="{{$.Base}}/exceptions?state={{.}}" {{if eq . $.State}}aria-current="page"{{end}}>{{.}}</a>{{end}}</nav>
+{{if .Error}}<p class="msg error" role="alert">Can't reach LibreDCM: {{.Error}} (instance {{.I.Name}})</p>{{end}}
+{{if .Unsupported}}<p class="msg info">Study Exceptions are not available for this instance: this LibreDCM version does not support them.</p>{{else if .Conflicts}}
 <table>
 <thead><tr><th>Last received</th><th>Problem</th><th>State</th><th>Archived patient</th><th>Incoming patient</th><th>Study</th><th>Images</th><th>From</th><th></th></tr></thead>
 <tbody>
@@ -18,7 +18,7 @@
 <td><small>{{.StudyDate}} {{.StudyDescription}}<br><code class="uid">{{.StudyUID}}</code></small></td>
 <td>{{.Instances}}</td>
 <td>{{.SourceAE}}</td>
-<td><a class="button" href="/exceptions/{{.ID}}">Open</a></td>
+<td><a class="button" href="{{$.Base}}/exceptions/{{.ID}}">Open</a></td>
 </tr>
 {{end}}
 </tbody>

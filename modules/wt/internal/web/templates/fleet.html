@@ -1,0 +1,42 @@
+{{define "title"}}Fleet{{end}}
+{{define "content"}}
+<h1>Fleet</h1>
+<p class="lead">Every LibreDCM instance configured in Libre WT, by cluster label. Read at {{fmtStamp .Now}}; each row is at most a few seconds old. An instance that can't be reached shows no values.</p>
+{{range .Groups}}
+<h2>{{if .Label}}Cluster <b>{{.Label}}</b>{{else}}No cluster label{{end}}</h2>
+<table class="fleet">
+<thead><tr><th>Instance</th><th>Health</th><th>Version</th><th>Uptime</th><th>Licence</th><th>Open associations</th><th>Stored</th><th>Not stored</th><th>Rejected associations</th><th>Outbox pending</th><th>Open exceptions</th></tr></thead>
+<tbody>
+{{range .Rows}}
+<tr>
+<td><a href="/i/{{.S.Name}}/"><b>{{.S.Name}}</b></a><br><small><code>{{if .S.HasRemembered}}{{orDash .S.Remembered.AETitle}} · {{orDash .S.Remembered.NodeID}}{{else}}—{{end}}</code></small>
+{{if .S.PlainHTTP}}<br><span class="flag warn">plain HTTP</span>{{end}}</td>
+{{if eq (print .S.State) "unreachable"}}
+<td><span class="state unreachable">unreachable</span></td>
+<td colspan="9" class="stale">{{.S.Err}}<br><small>Last successful contact: {{if .S.LastOK.IsZero}}none since Libre WT started{{else}}{{fmtStamp .S.LastOK}}{{end}}</small></td>
+{{else}}
+<td>
+  {{if eq (print .S.State) "identity-changed"}}<span class="state identity-changed">identity changed</span><br>{{end}}
+  {{if .S.Status}}{{if .S.Status.Ready}}<span class="state reachable">ready</span>{{else}}<span class="state notready">not ready</span>{{end}}{{else}}<span class="state reachable">reachable</span>{{end}}
+</td>
+<td>{{orDash .S.Version}}{{if .Flags.Version}}<br><span class="flag warn">version differs in cluster</span>{{end}}{{if .Flags.Config}}<br><span class="flag warn">settings differ in cluster</span>{{end}}</td>
+{{if .S.Status}}
+<td>{{uptime .S.Status.UptimeSeconds}}</td>
+<td>{{licenceLabel .S.Status.License}}</td>
+<td>{{.S.Status.Counters.AssociationsActive}}</td>
+<td>{{.Stored}}</td>
+<td>{{.NotStored}}</td>
+<td>{{.S.Status.Counters.AssociationsRejected}}</td>
+<td>{{.S.Status.Counters.OutboxPending}}</td>
+<td>{{if .S.Status.Counters.ConflictsOpen}}<a href="/i/{{.S.Name}}/exceptions">{{.S.Status.Counters.ConflictsOpen}}</a>{{else}}unknown{{end}}</td>
+{{else}}
+<td colspan="8" class="stale">This LibreDCM version does not report status. <a href="/i/{{.S.Name}}/exceptions">Study Exceptions</a> work.</td>
+{{end}}
+{{end}}
+</tr>
+{{end}}
+</tbody>
+</table>
+{{end}}
+<p><small>"Stored" and "Not stored" count C-STORE requests since the node started. "Settings differ" compares the settings that change without a restart (C-MOVE destinations and the calling-AE allow-list) between the instances that share a cluster label. The licence state never stops DICOM services.</small></p>
+{{end}}

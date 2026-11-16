@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Document | DHF-WT-SRS |
-| Status | **DRAFT** (2026-11-10, v0.1 scope approved by Patrick Mulcahy in chat, recorded in issue #15). §5 added 2026-11-14 for v0.2 (issue #20), rows `Draft`, **DRAFT for approval**. Must be reviewed and approved at the QMS baseline |
+| Status | **DRAFT** (2026-11-10, v0.1 scope approved by Patrick Mulcahy in chat, recorded in issue #15). §5 added 2026-11-14 for v0.2 (issue #20), **DRAFT for approval**: rows are `Draft` until the pull request that implements and verifies them; WT-SRS-013…018, -023, -035 and -036 are `Active` since card WT-0.2/5 (2026-11-16). Must be reviewed and approved at the QMS baseline |
 | Software item | Libre WT (Watch Tower): management console of the Libre RWS PACS; v0.1 covers the Study Exceptions queue for LibreDCM |
 | Safety class | B with class-C depth for the resolve path (it changes patient identity on stored images through LibreDCM; HAZ-013, HAZ-014 in `../libredcm/risk-management.md`) |
 
@@ -33,7 +33,7 @@ OIDC/LDAP and TOTP come later.
 
 | ID | Requirement | Status | Risk control for |
 |---|---|---|---|
-| WT-SRS-006 | Libre WT shall connect to one LibreDCM through its REST control API with the LibreDCM admin token (from configuration or a token file, never shown in the interface), optionally trusting a given CA certificate. Libre WT shall not import LibreDCM or DICOM code; it shall change archived data only through LibreDCM's resolve endpoint. It shall refuse to start without a token. | Active | HAZ-009, HAZ-014 |
+| WT-SRS-006 | Libre WT shall connect to LibreDCM (one instance in 0.1; one or more since 0.2, see WT-SRS-013) through its REST control API with the LibreDCM admin token (from configuration or a token file, never shown in the interface), optionally trusting a given CA certificate. Libre WT shall not import LibreDCM or DICOM code; it shall change archived data only through LibreDCM's resolve endpoint. It shall refuse to start without a token. | Active | HAZ-009, HAZ-014 |
 
 ## 3. Study Exceptions
 
@@ -68,20 +68,20 @@ in `risk-management.md`; HAZ-015 and HAZ-016 in
 
 | ID | Requirement | Status | Risk control for |
 |---|---|---|---|
-| WT-SRS-013 | Libre WT shall connect to one or more LibreDCM instances, each configured with a unique name, the address of that node's admin listener, its own admin token (value or token file), an optional CA certificate and an optional cluster label. The single-instance `dcm:` setting of 0.1 shall keep working as one instance. Libre WT shall refuse to start when two instances share a name, a name has characters outside letters, digits, `-` and `_`, or an instance has no token. | Draft | WT-HAZ-05, HAZ-009 |
-| WT-SRS-014 | Every page that shows or changes data of a LibreDCM instance shall carry the instance name in its address (`/i/{instance}/…`) and shall show a banner with the instance name, AE title, node ID and cluster label. Libre WT shall keep no "currently selected instance" in the session: a request acts on the instance named in its own address only. | Draft | WT-HAZ-05 |
-| WT-SRS-015 | Libre WT shall remember the node ID and AE title each instance reported first and shall show a warning on that instance's pages when they change, until an Admin accepts the new identity with a reason. Every state-changing request to LibreDCM shall carry the expected node ID and AE title, so LibreDCM refuses it when the address now reaches another node. | Draft | WT-HAZ-05, HAZ-015, HAZ-016 |
-| WT-SRS-036 | Libre WT shall show a warning on an instance's pages, and log it at startup, when the connection uses plain HTTP to an address that is not a loopback address. | Draft | WT-HAZ-08, HAZ-009 |
+| WT-SRS-013 | Libre WT shall connect to one or more LibreDCM instances, each configured with a unique name, the address of that node's admin listener, its own admin token (value or token file), an optional CA certificate and an optional cluster label. The single-instance `dcm:` setting of 0.1 shall keep working as one instance, named `default`. Libre WT shall refuse to start when two instances share a name (upper and lower case count as the same), a name has characters outside letters, digits, `-` and `_` or is longer than 64 characters, an instance has no token, or both the `instances:` list and a `dcm:` token are given. | Active | WT-HAZ-05, HAZ-009 |
+| WT-SRS-014 | Every page that shows or changes data of one LibreDCM instance shall carry the instance name in its address (`/i/{instance}/…`) and shall show a banner with the instance name, AE title, node ID and cluster label. (The fleet and about pages list all instances and name each row.) Libre WT shall keep no "currently selected instance" in the session: a request acts on the instance named in its own address only, and an unknown name gives a "not found" page. | Active | WT-HAZ-05 |
+| WT-SRS-015 | Libre WT shall remember the node ID and AE title each instance reported first and shall show a warning on that instance's pages when they change, until an Admin accepts the new identity with a reason. While the identity differs, or the instance can't be reached, Libre WT shall send no state-changing request to that instance. Every state-changing request to LibreDCM shall carry the expected node ID and AE title, so LibreDCM refuses it when the address now reaches another node; Libre WT shall report that refusal and that nothing was changed. | Active | WT-HAZ-05, HAZ-015, HAZ-016 |
+| WT-SRS-036 | Libre WT shall show a warning on an instance's pages, and log it at startup, when the connection uses plain HTTP to an address that is not a loopback address. | Active | WT-HAZ-08, HAZ-009 |
 
 ### 5.2 Overview and status
 
 | ID | Requirement | Status | Risk control for |
 |---|---|---|---|
-| WT-SRS-016 | The fleet page shall list all configured instances, grouped by cluster label, each with: reachable or not, ready or not, version, uptime, licence state, open associations, stored and rejected counts, pending outbox events and open study exceptions. An instance that cannot be reached shall be shown as unreachable with the time of the last successful contact, never with old values shown as current. | Draft | WT-HAZ-11, HAZ-004 |
-| WT-SRS-017 | The instance dashboard and status page shall show the values of LibreDCM's status endpoint: identity, uptime, backends, each readiness check with its result, licence state, counters per DICOM service (associations, C-STORE by result, C-FIND, C-MOVE and C-GET sub-operations), outbox and conflicts, with the time the data was read. The page shall state that container start, stop and restart are done on the host and name the documented procedure; Libre WT shall offer no such action. | Draft | WT-HAZ-11, HAZ-004 |
-| WT-SRS-018 | Libre WT shall ask each instance which control functions it supports and shall show a function that an instance does not support as unavailable for that instance, without error pages. | Draft | WT-HAZ-11 |
-| WT-SRS-023 | Within one cluster label, the fleet page shall flag instances whose digest of live-reloadable settings differs, and instances whose LibreDCM version differs. | Draft | WT-HAZ-12, HAZ-015 |
-| WT-SRS-035 | The about page shall show the Libre WT version and, per instance, the LibreDCM version, node ID and AE title. | Draft | WT-HAZ-11 |
+| WT-SRS-016 | The fleet page shall list all configured instances, grouped by cluster label, each with: reachable or not, ready or not, version, uptime, licence state, open associations, stored and rejected counts, pending outbox events and open study exceptions. An instance that cannot be reached shall be shown as unreachable with the time of the last successful contact, never with old values shown as current. A status reading shall be reused for all users for a short time (default 5 seconds), so open consoles do not load a node. | Active | WT-HAZ-11, HAZ-004 |
+| WT-SRS-017 | The instance dashboard and status page shall show the values of LibreDCM's status endpoint: identity, uptime, backends, each readiness check with its result, licence state, counters per DICOM service (associations, C-STORE by result, C-FIND, C-MOVE and C-GET sub-operations), outbox and conflicts, with the time the data was read. The page shall state that container start, stop and restart are done on the host and name the documented procedure; Libre WT shall offer no such action. | Active | WT-HAZ-11, HAZ-004 |
+| WT-SRS-018 | Libre WT shall ask each instance which control functions it supports and shall show a function that an instance does not support as unavailable for that instance, without error pages. A LibreDCM without the discovery endpoint shall be handled as an instance that supports Study Exceptions only. | Active | WT-HAZ-11 |
+| WT-SRS-023 | Within one cluster label, the fleet page shall flag instances whose digest of live-reloadable settings differs, and instances whose LibreDCM version differs. | Active | WT-HAZ-12, HAZ-015 |
+| WT-SRS-035 | The about page shall show the Libre WT version and, per instance, the LibreDCM version, node ID and AE title. | Active | WT-HAZ-11 |
 
 ### 5.3 Configuration
 

@@ -14,6 +14,48 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **Libre WT: several LibreDCM instances, fleet page, dashboard, status and
+  about pages (card WT-0.2/5, issue #20; WT-SRS-013…018, -023, -035, -036
+  now `Active`).**
+  - Connections: an `instances:` list in the Libre WT configuration file,
+    each with a name, the address of that node's admin listener, its own
+    token (`token_file` or `token`), an optional `ca_file` and an optional
+    `cluster` label. The `dcm:` block and `LIBRE_WT_DCM_*` variables of 0.1
+    keep working as one instance named `default`. Libre WT refuses to start
+    on duplicate names (also when they differ only in case), other
+    characters than letters, digits, `-` and `_`, a missing token, or when
+    both forms are given.
+  - Every page of an instance has the instance in its address
+    (`/i/<name>/…`) and a banner with name, AE title, node ID and cluster
+    label. Nothing is "selected" in the session.
+  - Fleet page (`/`, all roles): all instances by cluster label with
+    health, version, uptime, licence state, open associations, stored and
+    not-stored counts, rejected associations, outbox depth and open
+    exceptions. An instance that can't be reached shows the time of the
+    last contact and no values. Inside a cluster label, instances with
+    other live settings or another version are flagged.
+  - Dashboard and status page per instance (all roles): identity, uptime,
+    backends, each readiness check, licence state, counters per DICOM
+    service, with the time of the reading. The status page names the host
+    procedure for start, stop and restart; Libre WT has no such button.
+  - About page: Libre WT version and, per instance, LibreDCM version, node
+    ID and AE title.
+  - Instance identity: Libre WT remembers the node ID and AE title each
+    instance reported first. When another node answers, every page of the
+    instance warns and no edit is sent until an Admin accepts the new
+    identity (warning page, approval box, reason, audit). Edits carry the
+    expected node ID and AE title, so LibreDCM refuses them on another
+    node.
+  - Warning on the pages and in the start-up log when an instance is
+    reached over plain HTTP on another machine.
+  - A LibreDCM without the newer control API still works for Study
+    Exceptions; its status is shown as not available.
+  - The Libre WT audit log names the instance and can be filtered by it.
+    `librewt.db` is upgraded in place.
+  - New setting `status_cache` (`LIBRE_WT_STATUS_CACHE`, default 5s): how
+    long a status reading is reused for all users.
+
+  No new dependency. No change to LibreDCM.
 - **LibreDCM control API: study query, send and configuration edit for
   Libre WT (card WT-0.2/4, issue #20; DCM-SRS-091…096 now `Active`).** New
   endpoints on the admin listener, all behind the admin token:
@@ -237,6 +279,12 @@ LibreDCM's behaviour unless stated.
   OS-package vulnerabilities; justified exceptions expire (`.trivyignore.yaml`).
 
 ### Changed
+- Libre WT: Study Exceptions moved from `/exceptions…` to
+  `/i/<instance>/exceptions…`. The old addresses lead to the same page when
+  there is one instance, and to the fleet page when there are several.
+  After login the first page is the fleet page. The footer no longer shows
+  the LibreDCM address (it is on the dashboard and the about page). An
+  approval of an edit is now also bound to the instance.
 - Configuration parsing uses `go.yaml.in/yaml/v3` v3.0.5 (maintained by the
   YAML organisation) instead of the archived `gopkg.in/yaml.v3`. No
   behaviour change: the example configuration decodes identically with both.

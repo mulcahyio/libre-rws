@@ -1,0 +1,30 @@
+{{define "title"}}About{{end}}
+{{define "content"}}
+<h1>About</h1>
+<section class="card narrow">
+<dl>
+<dt>Libre WT</dt><dd>version <b>{{.Version}}</b></dd>
+<dt>Product</dt><dd>Libre WT (Watch Tower), management console of the Libre RWS PACS. Libre Systems.</dd>
+</dl>
+<p><small>Libre WT does not display images and is not used for diagnosis.</small></p>
+</section>
+<h2>LibreDCM instances</h2>
+<table>
+<thead><tr><th>Instance</th><th>Cluster</th><th>LibreDCM version</th><th>Node ID</th><th>AE title</th><th>Admin listener</th><th>State</th></tr></thead>
+<tbody>{{range .Snaps}}<tr>
+<td><a href="/i/{{.Name}}/"><b>{{.Name}}</b></a></td>
+<td>{{orDash .Cluster}}</td>
+{{if eq (print .State) "unreachable"}}
+<td>unknown (not reachable)</td>
+<td>{{if .HasRemembered}}<code>{{orDash .Remembered.NodeID}}</code> <small>(remembered)</small>{{else}}—{{end}}</td>
+<td>{{if .HasRemembered}}<code>{{orDash .Remembered.AETitle}}</code> <small>(remembered)</small>{{else}}—{{end}}</td>
+{{else}}
+<td>{{orDash .Version}}</td>
+<td><code>{{orDash .Reported.NodeID}}</code></td>
+<td><code>{{orDash .Reported.AETitle}}</code></td>
+{{end}}
+<td><code>{{.URL}}</code></td>
+<td><span class="state {{.State}}">{{.State}}</span></td>
+</tr>{{end}}</tbody>
+</table>
+{{end}}

@@ -1,6 +1,6 @@
 {{define "title"}}Exception {{.C.ID}}{{end}}
 {{define "content"}}
-<p><a href="/exceptions">← Study Exceptions</a></p>
+<p><a href="{{.Base}}/exceptions">← Study Exceptions</a></p>
 <h1>{{kindLabel .C.Kind}} <span class="state {{.C.State}}">{{stateLabel .C.State}}</span></h1>
 <p class="lead">Study <code class="uid">{{.C.StudyUID}}</code>{{if .C.SeriesUID}}, series <code class="uid">{{.C.SeriesUID}}</code>{{end}}. Received from <b>{{.C.SourceAE}}</b>, first {{fmtTime .C.FirstSeen}}, last {{fmtTime .C.LastSeen}}.</p>
 <div class="compare">
@@ -35,10 +35,11 @@
 </table>
 
 {{if .C.Active}}
-  {{if .IsAdmin}}
+  {{if not .Allowed}}<p class="msg error" role="alert">Edits are blocked for this instance. {{.Blocked}}</p>
+  {{else if .IsAdmin}}
   <h2>Resolve</h2>
   <p>Each action first shows exactly what will change and asks you to approve the edit.</p>
-  <div class="actions">{{range .Actions}}<a class="button {{if eq . "reject"}}danger{{end}}" href="/exceptions/{{$.C.ID}}/review?action={{.}}">{{actionLabel .}}</a>{{end}}</div>
+  <div class="actions">{{range .Actions}}<a class="button {{if eq . "reject"}}danger{{end}}" href="{{$.Base}}/exceptions/{{$.C.ID}}/review?action={{.}}">{{actionLabel .}}</a>{{end}}</div>
   {{if ne .C.Kind "patient_id"}}<p><small>This kind of conflict can only be rejected in this version; correct the source and resend.</small></p>{{end}}
   {{else}}<p class="msg info">Only an administrator can resolve exceptions.</p>{{end}}
 {{else}}

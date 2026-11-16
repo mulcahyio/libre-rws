@@ -1,10 +1,11 @@
 {{define "title"}}Audit log{{end}}
 {{define "content"}}
 <h1>Audit log</h1>
-<p class="lead">Newest first, last 500 records. Libre WT records logins, user changes and every exception review and resolution; LibreDCM keeps its own audit records for the same edits.</p>
+<p class="lead">Newest first, last 500 records{{if .Filter}} for instance <b>{{.Filter}}</b>{{end}}. Libre WT records logins, user changes, every exception review and resolution and every accepted instance identity; LibreDCM keeps its own audit records for the same edits.</p>
+<nav class="tabs"><a href="/audit" {{if not .Filter}}aria-current="page"{{end}}>all</a>{{range .Instances}}<a href="/audit?instance={{.}}" {{if eq . $.Filter}}aria-current="page"{{end}}>{{.}}</a>{{end}}</nav>
 {{if .Error}}<p class="msg error" role="alert">{{.Error}}</p>{{end}}
 <table>
-<thead><tr><th>Time</th><th>User</th><th>Address</th><th>Action</th><th>Target</th><th>Outcome</th><th>Detail</th></tr></thead>
-<tbody>{{range .Entries}}<tr><td>{{fmtTime .At}}</td><td>{{.User}}</td><td>{{.IP}}</td><td>{{.Action}}</td><td><code class="uid">{{.Target}}</code></td><td><span class="state {{.Outcome}}">{{.Outcome}}</span></td><td>{{.Detail}}</td></tr>{{end}}</tbody>
+<thead><tr><th>Time</th><th>User</th><th>Address</th><th>Instance</th><th>Action</th><th>Target</th><th>Outcome</th><th>Detail</th></tr></thead>
+<tbody>{{range .Entries}}<tr><td>{{fmtTime .At}}</td><td>{{.User}}</td><td>{{.IP}}</td><td>{{orDash .Instance}}</td><td>{{.Action}}</td><td><code class="uid">{{.Target}}</code></td><td><span class="state {{.Outcome}}">{{.Outcome}}</span></td><td>{{.Detail}}</td></tr>{{end}}</tbody>
 </table>
 {{end}}

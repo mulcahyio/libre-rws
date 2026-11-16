@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Document | DHF-WT-ARCH |
-| Status | **DRAFT** (2026-11-10); v0.2 part added 2026-11-14, **DRAFT for approval** |
+| Status | **DRAFT** (2026-11-10); v0.2 part added 2026-11-14, **DRAFT for approval**; §2…§6 updated 2026-11-16 with what card WT-0.2/5 built |
 
 | Item | Path | Responsibility |
 |---|---|---|
@@ -61,7 +61,8 @@ state. Libre WT stores no LibreDCM configuration and no patient data.
 | WT-SI-02 | `modules/wt/internal/accounts` | Audit entries gain an instance column (schema upgrade in place); new table for the remembered identity of each instance |
 | WT-SI-03 | `modules/wt/internal/dcmclient` | One client per instance. New calls for every control endpoint. Still the JSON contract only, no LibreDCM imports (`TestWTDoesNotImportDCM`) |
 | WT-SI-04 | `modules/wt/internal/web` | New pages (§3). One shared action flow for all state changes (§5). Role table in one place |
-| WT-SI-05 (new) | `modules/wt/internal/fleet` | Registry of instances: name, cluster label, client, short status cache, remembered identity, supported features |
+| WT-SI-05 (new) | `modules/wt/internal/fleet` | Registry of instances: name, cluster label, client, short status cache, remembered identity, supported features. **Implemented** (card WT-0.2/5) |
+| Test support (not part of the program) | `modules/wt/internal/fakedcm` | Stand-in for LibreDCM's control API over HTTP, for tests. No program file imports it (`TestFakeIsTestOnly`) |
 
 No new dependency is planned.
 
@@ -89,7 +90,7 @@ page shows the instance banner (WT-SRS-014).
 | LibreDCM audit records | `GET /i/{i}/audit` | Admin | Recent records with filters | WT-SRS-029 |
 | LibreDCM logs | `GET /i/{i}/logs` | Operator, Admin | Recent lines, level filter | WT-SRS-030 |
 | Study Exceptions | `GET /i/{i}/exceptions…` (0.1 pages moved under the instance; `/exceptions` redirects when there is one instance) | As in 0.1 | As in 0.1 | WT-SRS-007…010 |
-| Instance identity | `POST /i/{i}/identity/review`, `POST /i/{i}/identity/apply` | Admin | Accept a changed node ID or AE title | WT-SRS-015 |
+| Instance identity | `POST /i/{i}/identity/review`, `POST /i/{i}/identity/apply` | Admin | Accept a changed node ID or AE title. Nothing is sent to LibreDCM | WT-SRS-015 |
 | About | `GET /about` | All | Versions | WT-SRS-035 |
 | Users, account, console audit | `/users`, `/account`, `/audit` | As in 0.1 | Audit gains an instance filter | WT-SRS-012, -033 |
 
@@ -113,14 +114,31 @@ appear in an address (WT-SRS-032).
 | Study Exceptions | `/control/v1/conflicts…` (0.1) |
 
 Status reads: Libre WT reads an instance's status when a page needs it and
-keeps the answer for a few seconds (default 5) for all users, so many open
-consoles do not load a node (WT-HAZ-16). The page shows the time of the
-reading. There is no background change of state: Libre WT never acts on a
-LibreDCM without a user request.
+keeps the answer for a few seconds (default 5, setting `status_cache`) for
+all users, so many open consoles do not load a node (WT-HAZ-16). The page
+shows the time of the reading. There is no background change of state:
+Libre WT never acts on a LibreDCM without a user request.
+
+As built (card WT-0.2/5): one reading is two requests, `GET /control/v1`
+(functions and identity) and `GET /control/v1/status`. Page loads that
+arrive during a reading wait for it and share its result. A failed reading
+is kept for the same few seconds, so a node that is down is not asked on
+every page load. A failed reading keeps nothing the node said before: only
+the time of the last good reading. The fleet page reads all instances at
+the same time. Data pages (Study Exceptions) are not cached.
+
+A LibreDCM without `GET /control/v1` (versions before the control API
+extension) is read through `/version`: node ID and version only. Libre WT
+then offers Study Exceptions for it and shows status as not available. It
+sends such a node no expected identity, because that node refuses request
+fields it does not know.
 
 Timeouts: 5 seconds for reads, 30 seconds for actions. A send or a backup
 may take longer: Libre WT then shows "still running, check the audit
-records", and the request ID makes a repeat safe.
+records", and the request ID makes a repeat safe. As built (card
+WT-0.2/5): status reads use 5 seconds; the Study Exceptions resolve keeps
+its 2 minutes of 0.1 (a correction rewrites every file of a study). The
+fleet page therefore takes up to 5 seconds when a node does not answer.
 
 ## 5. Action flow (all state changes)
 
@@ -170,7 +188,13 @@ instances:
 
 - Instances come from the configuration file only. They are not added or
   changed in the browser: adding a connection means handling a token, which
-  stays on the host.
+  stays on the host. There is no environment variable for the list.
+- At most 64 instances. Names: 1 to 64 letters, digits, `-` or `_`; two
+  names that differ only in upper and lower case are refused.
+- Without an `instances:` list, the `dcm:` block (or `LIBRE_WT_DCM_*`) of
+  0.1 is one instance named `default`. Giving both is refused at start.
+- The addresses of 0.1 (`/exceptions…`) lead to the same page of the only
+  instance. With several instances they lead to the fleet page.
 - Each instance has its own token. A token never appears in pages, logs or
   the audit log.
 - The cluster label groups instances on the fleet page and drives the
@@ -195,7 +219,20 @@ stateDiagram-v2
 ```
 
 In the states `IdentityChanged` and `Unreachable`, Libre WT sends no action
-to that instance (accepting the new identity is the one exception).
+to that instance (accepting the new identity is the one exception; it
+changes only what Libre WT expects and sends nothing to LibreDCM).
+
+The remembered identity is kept in `librewt.db` (table `instance_identity`,
+keyed by instance name): node ID, AE title, first seen, and for an accepted
+identity who accepted it, when and why. The first answer of a newly
+configured instance is remembered as it is. A later answer never replaces
+it; only the acceptance does. One exception: a node first seen as an older
+LibreDCM (node ID only) that later reports an AE title under the same node
+ID has the AE title added.
+
+`librewt.db` schema version 2 (SQLite `user_version`): the audit table has
+an `instance` column, added in place when a 0.1 database is opened. A
+database with a higher version is refused.
 
 ## 7. What Libre WT 0.2 does not do
 
@@ -243,3 +280,11 @@ Each can be changed before the code that depends on it is merged.
 | D30 | Audit event name of a send | `DICOMInstancesTransferred.sent` with `op: control-send`, the name C-MOVE and C-GET exports already use. (The card text said `.exported`.) (card WT-0.2/4) | One event name for every export keeps log rules simple; the name follows the existing records | A new event name |
 | D31 | Method of the plan endpoints of the configuration edit | `POST` (they carry the new value in the body) and they change nothing, as the reload and send plans. (The card text said "GET plan".) (card WT-0.2/4) | A `GET` with a body is not reliable through proxies; one rule for every plan endpoint | `GET` with the value in the query string |
 | D32 | How many overlay versions are kept | One previous version, with time, operator and reason. A rollback swaps current and previous. The audit records hold every change (card WT-0.2/4) | Smallest thing that undoes the last change | A longer history with a pick list |
+| D33 | Which identity does Libre WT trust first? | The first answer of a newly configured instance is remembered (trust on first use) and kept in `librewt.db`. Later changes need an Admin (card WT-0.2/5) | No extra step when adding an instance; the address and token were typed by the person who installs | Node ID and AE title written in the configuration file and checked from the first contact |
+| D34 | "Health polled" (card text) | Read when a page is opened, kept 5 seconds for all users. No background polling and no automatic page refresh (card WT-0.2/5) | Design of 2026-11-14 (WT-HAZ-16): Libre WT does nothing without a user; an auto-refresh would also keep idle sessions alive | A background poller with a "last seen" history; a refresh button or timed refresh |
+| D35 | LibreDCM before the control API extension | Supported for Study Exceptions only; status shown as not available; no expected identity sent to it (card WT-0.2/5) | A site may upgrade Libre WT first. The old node refuses unknown request fields, so the identity check cannot be sent | Refuse to manage such a node |
+| D36 | Both `dcm:` and `instances:` configured | Refuse to start (card WT-0.2/5) | It would not be clear which LibreDCM the console manages | Add the `dcm:` block as one more instance |
+| D37 | Divergence rule | Within a cluster label: flag the instances whose value is not the most common one; when no value is the most common, flag all. Unreachable instances are not compared (card WT-0.2/5) | Shows the odd node out without calling a majority "right" when there is none | Flag every instance as soon as two values exist |
+| D38 | "Instance selector" (card text) | Links: the fleet page lists the instances; every instance page has "Other instances". No drop-down and nothing remembered (card WT-0.2/5) | D1: a selection kept in the session is how the wrong node gets changed | A drop-down that only navigates |
+| D39 | Fleet counts | "Stored" is the C-STORE result `success`; "Not stored" is every other C-STORE result; "Rejected associations" is LibreDCM's own counter (card WT-0.2/5) | Card text: "store/rejection counts"; the status page shows every result on its own | Other grouping |
+| D40 | Test against a real LibreDCM | The test builds LibreDCM from the repository and runs it as a separate process (not in the test process) (card WT-0.2/5) | Libre WT must not import LibreDCM code (`TestWTDoesNotImportDCM`); a separate process is also how an installation runs | Allow the import in one test file |

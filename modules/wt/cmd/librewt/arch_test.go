@@ -35,3 +35,27 @@ func TestWTDoesNotImportDCM(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+// The fake LibreDCM is for tests only: no file of the program imports it.
+// Verifies: WT-SRS-006
+func TestFakeIsTestOnly(t *testing.T) {
+	root := filepath.Join("..", "..")
+	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(p, ".go") || strings.HasSuffix(p, "_test.go") {
+			return err
+		}
+		f, err := parser.ParseFile(token.NewFileSet(), p, nil, parser.ImportsOnly)
+		if err != nil {
+			return err
+		}
+		for _, imp := range f.Imports {
+			if strings.HasSuffix(strings.Trim(imp.Path.Value, `"`), "/internal/fakedcm") {
+				t.Errorf("%s imports the test fake", p)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}

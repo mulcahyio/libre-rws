@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{block "title" .}}Libre WT{{end}} · Libre WT</title>
+<title>{{block "title" .}}Libre WT{{end}}{{if .I}} · {{.I.Name}}{{end}} · Libre WT</title>
 <link rel="stylesheet" href="/static/app.css">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 </head>
@@ -12,16 +12,47 @@
   <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
   {{if .User}}
   <nav>
-    <a href="/exceptions">Study Exceptions</a>
+    <a href="/">Fleet</a>
     {{if .IsAdmin}}<a href="/users">Users</a><a href="/audit">Audit log</a>{{end}}
+    <a href="/about">About</a>
     <a href="/account">{{.User.Username}} <span class="role">{{.User.Role}}</span></a>
     <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="{{.CSRF}}"><button class="link">Log out</button></form>
   </nav>
   {{end}}
 </header>
+{{if .I}}
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">{{.I.Name}}</b>
+    <span class="label">AE title</span> <code>{{if .I.HasRemembered}}{{orDash .I.Remembered.AETitle}}{{else}}—{{end}}</code>
+    <span class="label">Node ID</span> <code>{{if .I.HasRemembered}}{{orDash .I.Remembered.NodeID}}{{else}}—{{end}}</code>
+    <span class="label">Cluster</span> {{if .I.Cluster}}<b>{{.I.Cluster}}</b>{{else}}none{{end}}
+    <span class="state {{.I.State}}">{{.I.State}}</span>
+  </div>
+  <nav class="tabs">
+    <a href="{{.Base}}/">Dashboard</a>
+    <a href="{{.Base}}/status">Status</a>
+    <a href="{{.Base}}/exceptions">Study Exceptions</a>
+    {{if gt (len .Instances) 1}}<a href="/">Other instances ({{len .Instances}} configured)</a>{{end}}
+  </nav>
+  {{if eq (print .I.State) "unreachable"}}
+  <p class="msg error" role="alert">This instance can't be reached: {{.I.Err}}. Last successful contact: {{if .I.LastOK.IsZero}}none since Libre WT started{{else}}{{fmtStamp .I.LastOK}}{{end}}. No values are shown, because they would be old.</p>
+  {{end}}
+  {{if eq (print .I.State) "identity-changed"}}
+  <div class="warning" role="alert">
+    <h2>⚠ Another node answers at this instance's address</h2>
+    <p>Libre WT remembers node ID <code>{{orDash .I.Remembered.NodeID}}</code>, AE title <code>{{orDash .I.Remembered.AETitle}}</code>. The node that answers now reports node ID <code>{{orDash .I.Reported.NodeID}}</code>, AE title <code>{{orDash .I.Reported.AETitle}}</code>.</p>
+    <p>Libre WT sends no change to this instance until an administrator accepts the new identity. Check the address in the Libre WT configuration and the node itself first.</p>
+    {{if .IsAdmin}}<form method="post" action="{{.Base}}/identity/review"><input type="hidden" name="csrf" value="{{.CSRF}}"><button class="danger">Review the new identity</button></form>{{end}}
+  </div>
+  {{end}}
+  {{if .I.IdentityErr}}<p class="msg error" role="alert">Libre WT could not record which node this instance is ({{.I.IdentityErr}}). It sends no change to this instance.</p>{{end}}
+  {{if .I.PlainHTTP}}<p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>{{.I.URL}}</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>{{end}}
+</section>
+{{end}}
 <main>
 {{block "content" .}}{{end}}
 </main>
-<footer>Libre WT {{.Version}} · connected to LibreDCM at <code>{{.DCMURL}}</code> · Libre RWS is a Libre Systems product</footer>
+<footer>Libre WT {{.Version}} · {{len .Instances}} LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
 </body>
 </html>

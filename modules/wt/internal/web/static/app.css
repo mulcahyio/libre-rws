@@ -66,3 +66,19 @@ td.ops input { width: 10rem; }
 .warning { background: var(--warn-bg); color: var(--warn-ink); border: 2px solid var(--warn-line); border-radius: .5rem; padding: .8rem 1.2rem; }
 .warning h2 { margin-top: .2rem; }
 .empty { color: var(--muted); }
+.instance { background: var(--surface); border-bottom: 1px solid var(--line); border-left: 6px solid var(--wt); padding: .5rem 1.4rem .2rem; }
+.instance .ident { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem .7rem; }
+.instance .label { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
+.instance .iname { font-size: 1.25rem; color: var(--wt); }
+.instance .tabs { margin: .5rem 0; }
+.instance .msg, .instance .warning { margin: .5rem 0; }
+.state.reachable { border-color: var(--ok); color: var(--ok); }
+.state.unreachable, .state.notready, .state.identity-changed { border-color: var(--warn-line); color: var(--warn-line); font-weight: 600; }
+.flag { font-size: .75rem; padding: .05rem .4rem; border-radius: .25rem; white-space: nowrap; }
+.flag.warn, .msg.warn { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-line); }
+td.stale { color: var(--muted); }
+table.narrow { max-width: 46rem; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: .7rem; margin: .8rem 0; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: .5rem; padding: .6rem .8rem; }
+.tile span { display: block; color: var(--muted); font-size: .8rem; }
+.tile b { font-size: 1.15rem; }

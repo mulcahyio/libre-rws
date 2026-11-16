@@ -1,9 +1,9 @@
 // Package web is Libre WT's web interface: server-rendered pages, no
-// JavaScript, strict Content Security Policy (WT-SRS-001…012).
+// JavaScript, strict Content Security Policy (WT-SRS-001…018, -023, -035,
+// -036).
 package web
 
 import (
-	"context"
 	"embed"
 	"errors"
 	"fmt"
@@ -16,21 +16,11 @@ import (
 	"time"
 
 	"github.com/mulcahyio/libre-rws/modules/wt/internal/accounts"
-	"github.com/mulcahyio/libre-rws/modules/wt/internal/dcmclient"
+	"github.com/mulcahyio/libre-rws/modules/wt/internal/fleet"
 )
 
 //go:embed templates/*.html static/*
 var assets embed.FS
-
-// DCM is the part of the LibreDCM client the web interface uses.
-type DCM interface {
-	URL() string
-	Conflicts(ctx context.Context, state string) ([]dcmclient.Conflict, error)
-	Conflict(ctx context.Context, id string) (dcmclient.Detail, error)
-	Plan(ctx context.Context, id, action string) (dcmclient.Plan, error)
-	Resolve(ctx context.Context, id, action, operator, reason string) (dcmclient.Result, error)
-	Version(ctx context.Context) (map[string]any, error)
-}
 
 // Config configures the web interface.
 type Config struct {
@@ -42,17 +32,17 @@ type Config struct {
 
 // Server serves Libre WT.
 type Server struct {
-	cfg  Config
-	acct *accounts.Store
-	dcm  DCM
-	log  *slog.Logger
-	ss   *sessions
-	tmpl map[string]*template.Template
+	cfg   Config
+	acct  *accounts.Store
+	fleet *fleet.Registry
+	log   *slog.Logger
+	ss    *sessions
+	tmpl  map[string]*template.Template
 }
 
 // New builds the server and parses the templates.
-func New(cfg Config, acct *accounts.Store, dcm DCM, log *slog.Logger) (*Server, error) {
-	s := &Server{cfg: cfg, acct: acct, dcm: dcm, log: log, ss: newSessions(cfg.IdleTimeout, cfg.MaxSession, cfg.Secure),
+func New(cfg Config, acct *accounts.Store, reg *fleet.Registry, log *slog.Logger) (*Server, error) {
+	s := &Server{cfg: cfg, acct: acct, fleet: reg, log: log, ss: newSessions(cfg.IdleTimeout, cfg.MaxSession, cfg.Secure),
 		tmpl: map[string]*template.Template{}}
 	funcs := template.FuncMap{
 		"fmtTime": func(t time.Time) string {
@@ -76,7 +66,11 @@ func New(cfg Config, acct *accounts.Store, dcm DCM, log *slog.Logger) (*Server, 
 			}
 			return s
 		},
-		"differs": func(a, b string) bool { return a != b },
+		"differs":      func(a, b string) bool { return a != b },
+		"fmtStamp":     fmtStamp,
+		"uptime":       uptime,
+		"counts":       counts,
+		"licenceLabel": licenceLabel,
 	}
 	pages, err := fs.Glob(assets, "templates/*.html")
 	if err != nil {
@@ -134,6 +128,45 @@ func stateLabel(s string) string {
 	return s
 }
 
+// route is one entry of the role table: the address pattern, the lowest
+// role that may use it and the handler. Every page behind a login is in
+// this one table, so the role of each address can be reviewed and tested in
+// one place (WT-SRS-034).
+type route struct {
+	pattern string
+	min     accounts.Role
+	h       func(http.ResponseWriter, *http.Request, *reqCtx)
+}
+
+func (s *Server) routes() []route {
+	V, A := accounts.Viewer, accounts.Admin
+	return []route{
+		{"POST /logout", V, s.logout},
+		{"GET /{$}", V, s.fleetPage},
+		{"GET /about", V, s.aboutPage},
+		{"GET /i/{inst}", V, s.instRoot},
+		{"GET /i/{inst}/{$}", V, s.inst(s.dashboard)},
+		{"GET /i/{inst}/status", V, s.inst(s.statusPage)},
+		{"GET /i/{inst}/exceptions", V, s.inst(s.exceptions)},
+		{"GET /i/{inst}/exceptions/{id}", V, s.inst(s.exception)},
+		{"GET /i/{inst}/exceptions/{id}/review", A, s.inst(s.review)},
+		{"POST /i/{inst}/exceptions/{id}/resolve", A, s.inst(s.resolve)},
+		{"POST /i/{inst}/identity/review", A, s.inst(s.identityReview)},
+		{"POST /i/{inst}/identity/apply", A, s.inst(s.identityApply)},
+		// Addresses of 0.1, which had one LibreDCM: they lead to the same
+		// page of the only instance, or to the fleet page when there are
+		// several. They never pick an instance by themselves.
+		{"GET /exceptions", V, s.legacyPath},
+		{"GET /exceptions/{rest...}", V, s.legacyPath},
+		{"GET /users", A, s.users},
+		{"POST /users", A, s.userCreate},
+		{"POST /users/{id}", A, s.userUpdate},
+		{"GET /account", V, s.account},
+		{"POST /account/password", V, s.accountPassword},
+		{"GET /audit", A, s.auditPage},
+	}
+}
+
 // Handler returns the HTTP handler with security headers.
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
@@ -144,20 +177,9 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /setup", s.setupPost)
 	mux.HandleFunc("GET /login", s.loginPage)
 	mux.HandleFunc("POST /login", s.loginPost)
-	mux.HandleFunc("POST /logout", s.authed(accounts.Viewer, s.logout))
-	mux.HandleFunc("GET /{$}", s.authed(accounts.Viewer, func(w http.ResponseWriter, r *http.Request, _ *reqCtx) {
-		http.Redirect(w, r, "/exceptions", http.StatusSeeOther)
-	}))
-	mux.HandleFunc("GET /exceptions", s.authed(accounts.Viewer, s.exceptions))
-	mux.HandleFunc("GET /exceptions/{id}", s.authed(accounts.Viewer, s.exception))
-	mux.HandleFunc("GET /exceptions/{id}/review", s.authed(accounts.Admin, s.review))
-	mux.HandleFunc("POST /exceptions/{id}/resolve", s.authed(accounts.Admin, s.resolve))
-	mux.HandleFunc("GET /users", s.authed(accounts.Admin, s.users))
-	mux.HandleFunc("POST /users", s.authed(accounts.Admin, s.userCreate))
-	mux.HandleFunc("POST /users/{id}", s.authed(accounts.Admin, s.userUpdate))
-	mux.HandleFunc("GET /account", s.authed(accounts.Viewer, s.account))
-	mux.HandleFunc("POST /account/password", s.authed(accounts.Viewer, s.accountPassword))
-	mux.HandleFunc("GET /audit", s.authed(accounts.Admin, s.auditPage))
+	for _, rt := range s.routes() {
+		mux.HandleFunc(rt.pattern, s.authed(rt.min, rt.h))
+	}
 	return securityHeaders(mux)
 }
 
@@ -228,10 +250,17 @@ func (s *Server) authed(min accounts.Role, h func(http.ResponseWriter, *http.Req
 	}
 }
 
+// audit records a console action that is not for one LibreDCM instance.
 func (s *Server) audit(r *http.Request, user, action, target, outcome, detail string) error {
-	err := s.acct.Audit(r.Context(), accounts.Entry{User: user, IP: clientIP(r), Action: action, Target: target, Outcome: outcome, Detail: detail})
+	return s.auditI(r, user, "", action, target, outcome, detail)
+}
+
+// auditI records an action for a LibreDCM instance (WT-SRS-033).
+func (s *Server) auditI(r *http.Request, user, instance, action, target, outcome, detail string) error {
+	err := s.acct.Audit(r.Context(), accounts.Entry{User: user, IP: clientIP(r), Instance: instance, Action: action,
+		Target: target, Outcome: outcome, Detail: detail})
 	if err != nil {
-		s.log.Error("audit write failed", "action", action, "err", err)
+		s.log.Error("audit write failed", "action", action, "instance", instance, "err", err)
 	}
 	return err
 }
@@ -246,7 +275,7 @@ func (s *Server) render(w http.ResponseWriter, r *http.Request, code int, page s
 		data = map[string]any{}
 	}
 	data["Version"] = s.cfg.Version
-	data["DCMURL"] = s.dcm.URL()
+	data["Instances"] = s.fleet.Names()
 	if rc != nil {
 		data["User"] = rc.user
 		data["IsAdmin"] = rc.user.Role == accounts.Admin
@@ -290,7 +319,7 @@ func (s *Server) setupPost(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = s.audit(r, u.Username, "setup.admin-created", u.Username, "success", "first administrator created")
 	s.ss.start(w, u.ID, u.Epoch, u.Username)
-	http.Redirect(w, r, "/exceptions", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (s *Server) loginPage(w http.ResponseWriter, r *http.Request) {
@@ -326,125 +355,13 @@ func (s *Server) loginPost(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = s.audit(r, u.Username, "login", u.Username, "success", "")
 	s.ss.start(w, u.ID, u.Epoch, u.Username)
-	http.Redirect(w, r, "/exceptions", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (s *Server) logout(w http.ResponseWriter, r *http.Request, rc *reqCtx) {
 	_ = s.audit(r, rc.user.Username, "logout", rc.user.Username, "success", "")
 	s.ss.end(w, rc.token)
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
-}
-
-// ---------------------------------------------------------------- exceptions
-
-var stateFilters = []string{"active", "open", "accepted", "resolved", "all"}
-
-func (s *Server) exceptions(w http.ResponseWriter, r *http.Request, rc *reqCtx) {
-	state := r.URL.Query().Get("state")
-	valid := false
-	for _, f := range stateFilters {
-		valid = valid || f == state
-	}
-	if !valid {
-		state = "active"
-	}
-	data := map[string]any{"State": state, "Filters": stateFilters}
-	list, err := s.dcm.Conflicts(r.Context(), state)
-	if err != nil {
-		data["Error"] = err.Error()
-	}
-	data["Conflicts"] = list
-	s.render(w, r, http.StatusOK, "exceptions", rc, data)
-}
-
-func (s *Server) exception(w http.ResponseWriter, r *http.Request, rc *reqCtx) {
-	d, err := s.dcm.Conflict(r.Context(), r.PathValue("id"))
-	if err != nil {
-		code := http.StatusBadGateway
-		if dcmclient.NotFound(err) {
-			code = http.StatusNotFound
-		}
-		s.render(w, r, code, "error", rc, map[string]any{"Title": "Exception not available", "Message": err.Error()})
-		return
-	}
-	actions := []string{"reject"}
-	if d.Conflict.Kind == "patient_id" {
-		actions = []string{"correct_incoming", "correct_existing", "reject"}
-	}
-	s.render(w, r, http.StatusOK, "exception", rc, map[string]any{"D": d, "C": d.Conflict, "Actions": actions})
-}
-
-func digestOf(p dcmclient.Plan) string {
-	parts := []string{p.ConflictID, p.Action, p.Summary, strconv.Itoa(p.ExistingInstances), strconv.Itoa(p.IncomingInstances)}
-	for _, c := range append(append([]dcmclient.Change(nil), p.ExistingChanges...), p.IncomingChanges...) {
-		parts = append(parts, c.Attribute, c.From, c.To)
-	}
-	return planDigest(parts...)
-}
-
-// review shows the warning page: exactly what will change, a reason field and
-// the approve-edit confirmation (WT-SRS-009).
-func (s *Server) review(w http.ResponseWriter, r *http.Request, rc *reqCtx) {
-	id, action := r.PathValue("id"), r.URL.Query().Get("action")
-	d, err := s.dcm.Conflict(r.Context(), id)
-	if err != nil {
-		s.render(w, r, http.StatusBadGateway, "error", rc, map[string]any{"Title": "Exception not available", "Message": err.Error()})
-		return
-	}
-	p, err := s.dcm.Plan(r.Context(), id, action)
-	if err != nil {
-		s.render(w, r, http.StatusUnprocessableEntity, "error", rc, map[string]any{"Title": "This action isn't possible", "Message": err.Error()})
-		return
-	}
-	_ = s.audit(r, rc.user.Username, "exception.review", id, "success", action)
-	tok := s.ss.issueConfirm(rc.token, id, action, digestOf(p))
-	s.render(w, r, http.StatusOK, "review", rc, map[string]any{"C": d.Conflict, "P": p, "Confirm": tok, "Action": action})
-}
-
-func (s *Server) resolve(w http.ResponseWriter, r *http.Request, rc *reqCtx) {
-	id, action := r.PathValue("id"), r.PostFormValue("action")
-	reason := strings.TrimSpace(r.PostFormValue("reason"))
-	fail := func(code int, msg string) {
-		_ = s.audit(r, rc.user.Username, "exception.resolve", id, "failure", action+": "+msg)
-		s.render(w, r, code, "error", rc, map[string]any{"Title": "Edit not made", "Message": msg, "Back": "/exceptions/" + id})
-	}
-	digest, ok := s.ss.useConfirm(r.PostFormValue("confirm"), rc.token, id, action)
-	if !ok {
-		fail(http.StatusConflict, "The approval expired or was already used. Open the exception and review the change again.")
-		return
-	}
-	if r.PostFormValue("approve") != "yes" {
-		fail(http.StatusUnprocessableEntity, "Tick \"I approve this edit\" to confirm the change.")
-		return
-	}
-	if reason == "" {
-		fail(http.StatusUnprocessableEntity, "A reason is required; it is recorded in the audit trail.")
-		return
-	}
-	// The plan must still be the one the administrator approved (new images
-	// may have arrived since the warning page was shown).
-	p, err := s.dcm.Plan(r.Context(), id, action)
-	if err != nil {
-		fail(http.StatusUnprocessableEntity, err.Error())
-		return
-	}
-	if digestOf(p) != digest {
-		fail(http.StatusConflict, "The change is no longer the one you approved (the exception was updated). Review it again.")
-		return
-	}
-	// Record the intent first: if the audit log can't be written, don't edit.
-	if err := s.audit(r, rc.user.Username, "exception.resolve.approved", id, "success", action+": "+reason); err != nil {
-		fail(http.StatusInternalServerError, "The audit log can't be written, so the edit was not made.")
-		return
-	}
-	res, err := s.dcm.Resolve(r.Context(), id, action, rc.user.Username, reason)
-	if err != nil {
-		fail(http.StatusBadGateway, err.Error())
-		return
-	}
-	_ = s.audit(r, rc.user.Username, "exception.resolve", id, "success",
-		fmt.Sprintf("%s: state=%s files_rewritten=%d", action, res.State, res.Rewritten))
-	s.render(w, r, http.StatusOK, "resolved", rc, map[string]any{"R": res, "ID": id})
 }
 
 // ---------------------------------------------------------------- users / account / audit
@@ -544,8 +461,14 @@ func (s *Server) accountPassword(w http.ResponseWriter, r *http.Request, rc *req
 }
 
 func (s *Server) auditPage(w http.ResponseWriter, r *http.Request, rc *reqCtx) {
-	data := map[string]any{}
-	list, err := s.acct.AuditLog(r.Context(), 500)
+	// The instance filter must name a configured instance; anything else
+	// shows every record.
+	instance := r.URL.Query().Get("instance")
+	if _, ok := s.fleet.Client(instance); !ok {
+		instance = ""
+	}
+	data := map[string]any{"Filter": instance}
+	list, err := s.acct.AuditLogFor(r.Context(), instance, 500)
 	if err != nil {
 		data["Error"] = err.Error()
 	}
