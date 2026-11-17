@@ -83,12 +83,12 @@ page shows the instance banner (WT-SRS-014).
 | Edit destinations / allow-list | `GET /i/{i}/config/edit`, `POST /i/{i}/config/review`, `POST /i/{i}/config/apply` | Admin | Form, then warning page with LibreDCM's plan, then apply | WT-SRS-021, -031 |
 | Reload, rollback | `POST /i/{i}/reload/review`, `POST /i/{i}/reload/apply`, `POST /i/{i}/rollback/review`, `POST /i/{i}/rollback/apply` | Admin | Plan page with the difference, then apply | WT-SRS-022, -031 |
 | C-ECHO test | `GET /i/{i}/echo`, `POST /i/{i}/echo/review`, `POST /i/{i}/echo/apply` | Operator, Admin (free address: Admin, checked in the handler) | Pick a destination (Admin: or free address); warning page with reason; result page | WT-SRS-024 |
-| Studies | `GET /i/{i}/studies`, `POST /i/{i}/studies/search`, `GET /i/{i}/studies/{uid}` | Operator, Admin | Search form and results; study detail with series | WT-SRS-025 |
-| Send | `POST /i/{i}/studies/{uid}/send/review`, `POST /i/{i}/studies/{uid}/send/apply` | Admin | Warning page with patient, study, destination; result | WT-SRS-026, -031 |
+| Studies | `GET /i/{i}/studies`, `POST /i/{i}/studies/search`, `GET /i/{i}/studies/{uid}`, `GET /i/{i}/studies/{uid}/series/{suid}` | Operator, Admin | Search form and results; study detail with series; series with its instances (identifiers only); "not a diagnostic viewer" statement | WT-SRS-025 |
+| Send | `POST /i/{i}/studies/{uid}/send/review`, `POST /i/{i}/studies/{uid}/send/apply` | Admin (D52) | Warning page with patient, study, destination; result per instance | WT-SRS-026, -031 |
 | Licence | `GET /i/{i}/license`, `POST /i/{i}/license/{action}/review`, `POST /i/{i}/license/{action}/apply` (`{action}`: `ack`, `request`, `install`, `activate`) | View: all. Every action, including the acknowledgement: Admin (D47) | State; acknowledge, request file, install file (upload), activate online | WT-SRS-027, -031 |
 | Backup | `GET /i/{i}/backups`, `POST /i/{i}/backup/review`, `POST /i/{i}/backup/apply` | Operator, Admin | Files on the node and the history from the WT audit log; start a backup; result with file, size, SHA-256 | WT-SRS-028, -031 |
-| LibreDCM audit records | `GET /i/{i}/audit` | Admin | Recent records with filters | WT-SRS-029 |
-| LibreDCM logs | `GET /i/{i}/logs` | Operator, Admin | Recent lines, level filter | WT-SRS-030 |
+| LibreDCM audit records | `GET /i/{i}/audit`, export `GET /i/{i}/audit.csv` | Admin | Recent records with filters; CSV export | WT-SRS-029, -037 |
+| LibreDCM logs | `GET /i/{i}/logs`, export `GET /i/{i}/logs.csv` | View: Operator, Admin. Export: Admin (D53) | Recent lines, level and period filter; CSV export | WT-SRS-030, -037 |
 | Study Exceptions | `GET /i/{i}/exceptions…` (0.1 pages moved under the instance; `/exceptions` redirects when there is one instance) | As in 0.1 | As in 0.1 | WT-SRS-007…010 |
 | Instance identity | `POST /i/{i}/identity/review`, `POST /i/{i}/identity/apply` | Admin | Accept a changed node ID or AE title. Nothing is sent to LibreDCM | WT-SRS-015 |
 | About | `GET /about` | All | Versions | WT-SRS-035 |
@@ -175,6 +175,63 @@ As built (card WT-0.2/7), licence and backup:
   duration) is written to the WT audit log; the backup page shows those
   records as the history (`accounts.AuditActionLog`), next to the files
   LibreDCM lists.
+
+As built (card WT-0.2/8), studies, send, audit records and logs:
+
+- **Study search.** The form is sent by `POST` (values never in an
+  address). Libre WT turns it into DICOM matching keys: `PatientID`,
+  `PatientName` (wildcards `*` and `?` pass through), `StudyDate` as a range
+  `YYYYMMDD-YYYYMMDD` from two date fields, `ModalitiesInStudy` (one code,
+  upper case), `AccessionNumber`, `StudyInstanceUID`. A value of `*` alone
+  counts as no value; a search without a value is refused before anything
+  is sent. Values are at most 64 characters, without control characters or
+  the DICOM list separator `\`. The search is written to the Libre WT audit
+  log (with its keys and values, D55) before `GET /control/v1/studies` is
+  called with the user's name in `X-Libre-Operator`; LibreDCM writes its
+  own `Query` record. 50 studies per page; when LibreDCM says there are
+  more, the page says so and offers the next page with LibreDCM's cursor.
+  The answer is shown only when it comes from the expected node.
+- **Study and series pages.** `GET /i/{i}/studies/{uid}` asks for the study
+  row and its series (level `series`, 200 per page);
+  `GET …/series/{suid}` asks for the instances (level `image`). The UIDs in
+  the address are checked to be DICOM UIDs. Each opening is audited first
+  (no record, no page). No pixel data is read or shown; every page says
+  that Libre WT is not a diagnostic viewer.
+- **Send.** Admin only (D52). The study page offers a send form only when
+  the study has exactly one row without `ConflictID` (not held, not under
+  two patients) and the node offers `send`. The form carries the
+  destination (a list of the configured destinations), the Patient ID the
+  page showed and optionally series. The review step calls
+  `POST /control/v1/send/plan` and issues no approval when the plan names
+  another Patient ID, study or destination than the request, has no
+  digest, holds no instance or comes from another node. The warning page
+  shows the patient name, ID and birth date in the warning box, in the
+  table and in the approval box. The request and the plan digest stay on
+  the server with the approval; the apply step checks that the study in
+  the address is the reviewed one and sends exactly that request with
+  `confirm`, `plan_digest` and the envelope. LibreDCM builds the plan
+  again and refuses with `409 plan_changed` when anything changed.
+- **Send result.** `complete` and `partial` (HTTP 200) and `failed` (HTTP
+  502 `send_failed`, which carries the counts) are shown with the accepted
+  count and every failed and warning SOP Instance UID; the audit record
+  holds the outcome (`success`, `partial`, `failure`), counts and failed
+  UIDs. Libre WT waits 110 seconds (D54); then the outcome is `unknown` and
+  the page gives the request ID to look up on the LibreDCM audit page
+  (event `DICOMInstancesTransferred.sent`).
+- **Audit records and logs.** `GET /control/v1/audit` and `/logs` with
+  filters from fixed lists only (outcome, level, period of 15 minutes to 7
+  days or all, limit) and an event-type prefix of letters, digits, `.`,
+  `_` and `-` (D57). Each JSON line is shown newest first as time,
+  event or message, outcome, who (operator, or the calling AE) and the
+  other fields as `key=value` text. Each opening is audited (no record, no
+  page).
+- **CSV export.** Admin only (D53). Same filter, same rows; written to the
+  audit log before the file is sent (no record, no file);
+  `text/csv; charset=utf-8`, `Content-Disposition: attachment`, a file name
+  from the configured instance name and the time. A cell that starts with
+  `=`, `+`, `-`, `@`, tab or carriage return gets a leading `'`.
+- **Study Exceptions views** are now audited too (D56), so every page that
+  shows patient data leaves a record (WT-SRS-033).
 
 ## 5. Action flow (all state changes)
 
@@ -360,3 +417,10 @@ Each can be changed before the code that depends on it is merged.
 | D49 | How long does Libre WT wait for a backup? | 110 seconds, then the outcome is `unknown` and the person checks the list of backups. Online activation: 45 seconds (card WT-0.2/7) | Stays below the HTTP client timeout (2 minutes) and the web server's write timeout (3 minutes) without changing either; LibreDCM finishes the backup anyway | Raise both timeouts to more than LibreDCM's 10 minutes |
 | D50 | Backup history | From the Libre WT audit log (the result record holds file, size, SHA-256, request ID and reason), next to the file list of LibreDCM, which has no checksum (card WT-0.2/7; card text: "backup history from the audit records") | No new store; the checksum is known only from the answer to the backup | Read LibreDCM's own audit records (Admin only, card WT-0.2/8) |
 | D51 | Views of the licence and backup pages | Not written to the audit log; every licence and backup action is (card WT-0.2/7) | Neither page shows patient data, audit records or logs (WT-SRS-033); the licence state is a Viewer page like the status page | Record every view, as for the configuration pages (D43) |
+| D52 | Who may send a study? | Admin only, as designed (WT-SRS-026, -034; D5). The card text said "Operator+" (card WT-0.2/8) | "Admin only" is a listed risk control of WT-HAZ-07 (wrong study or wrong destination). The brief forbids weakening a risk control without a written assessment and Patrick's decision; the stricter rule is the safe default | Operators and Admins send (change one line of the role table, WT-SRS-026, -034 and the risk file) |
+| D53 | Roles of the log page and of the CSV export | Log page: Operator and Admin, as designed (WT-SRS-030). CSV export of audit records and of logs: Admin only (card text: "audit record viewer and log tail with filters and CSV export (Admin; export itself audited)") (card WT-0.2/8) | An export takes patient data and network details off the screen into a file; Admin is the role that already reads audit records | Logs page Admin only too; or export for Operators |
+| D54 | How long does Libre WT wait for a send? | 110 seconds, as for a backup; then the outcome is `unknown` and the page points to LibreDCM's audit records (card WT-0.2/8) | LibreDCM finishes the send (up to 30 minutes); waiting longer would need longer HTTP and web-server timeouts. The request ID ties the result to the approval | Raise the timeouts; or poll a send status endpoint (not in the API) |
+| D55 | What does the Libre WT audit log keep of a search? | The keys with their values (for example `PatientID=PAT-*`), cut to 300 characters (card WT-0.2/8) | "Who looked up which patient" is the point of auditing a search (HAZ-009); LibreDCM keeps the same values in its `Query` record. `librewt.db` therefore holds patient identifiers: protect the file like the index | Keep only the key names |
+| D56 | Opening Study Exceptions pages | Audited now, like every other page with patient data; when the record can't be written the page is not shown (card WT-0.2/8) | WT-SRS-033 asks for every page that shows patient data; 0.1 did not record views | Leave the 0.1 pages unaudited |
+| D57 | Filters of the audit and log pages | Fixed choices for outcome, level, period (15 minutes to 7 days, or all) and number; event type as a prefix of at most 64 letters, digits, `.`, `_`, `-`. Other values fall back to the default and are not sent (card WT-0.2/8) | No free text reaches LibreDCM or the export file name; a period is what people ask for ("the last hour") | Free date and time fields |
+| D58 | "Per-instance result" of a send | The counts, plus every failed and every warning SOP Instance UID LibreDCM reports; every other instance of the plan was accepted (card WT-0.2/8) | It is exactly what LibreDCM returns; listing every accepted UID would need another query, which LibreDCM audits as an access | List all instances with their result |

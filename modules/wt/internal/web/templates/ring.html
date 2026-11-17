@@ -1,0 +1,33 @@
+{{define "title"}}{{.Label}}{{end}}
+{{define "content"}}
+<h1>{{.Label}}</h1>
+{{if .Audit}}
+<p class="msg warn" role="note">This page shows only the most recent audit records that instance <b>{{.I.Name}}</b> keeps in memory ({{.V.BufferSize}} at most, lost at restart). The site's log collector holds the full audit record.</p>
+{{if .V.AuditLogOff}}<p class="msg error" role="alert">This node runs with <code>audit_log_off</code>: its DICOM gateway writes no audit records.</p>{{end}}
+{{else}}
+<p class="msg warn" role="note">This page shows only the most recent log lines that instance <b>{{.I.Name}}</b> keeps in memory ({{.V.BufferSize}} at most, lost at restart), without audit records. The site's log collector holds the full log.</p>
+{{end}}
+<form method="get" class="card">
+<div class="tiles">
+{{if .Audit}}
+<label>Event type (starts with) <input name="type" value="{{.F.Type}}" maxlength="64" placeholder="DICOMInstancesTransferred"></label>
+<label>Outcome <select name="outcome">{{range .Outcomes}}<option value="{{.}}" {{if eq . $.F.Outcome}}selected{{end}}>{{if .}}{{.}}{{else}}any{{end}}</option>{{end}}</select></label>
+{{else}}
+<label>Lowest level <select name="level">{{range .Levels}}<option value="{{.}}" {{if eq . $.F.Level}}selected{{end}}>{{.}}</option>{{end}}</select></label>
+{{end}}
+<label>Period <select name="period">{{range .Periods}}<option value="{{.Code}}" {{if eq .Code $.F.Period}}selected{{end}}>last {{.Label}}</option>{{end}}</select></label>
+<label>At most <select name="limit">{{range .Limits}}<option value="{{.}}" {{if eq . $.F.Limit}}selected{{end}}>{{.}}</option>{{end}}</select></label>
+</div>
+<div class="actions"><button class="primary">Show</button>{{if .CanExport}} <a class="button" href="{{.Export}}">Export as CSV</a>{{end}}</div>
+{{if .CanExport}}<p><small>The export holds the entries shown with this filter and is recorded in the Libre WT audit log.</small></p>{{end}}
+</form>
+<p class="lead">{{len .E}} shown, read at {{fmtStamp .ReadAt}}, newest first.{{if .V.More}} <b>More entries match than are shown:</b> narrow the filter or raise the limit.{{end}}</p>
+{{if .E}}
+<table>
+<thead><tr><th>Time</th>{{if .Audit}}<th>Event</th><th>Outcome</th><th>Who</th>{{else}}<th>Level</th><th>Message</th>{{end}}<th>Details</th></tr></thead>
+<tbody>{{range .E}}<tr><td>{{.Time}}</td>{{if $.Audit}}<td>{{.Message}}</td><td>{{.Outcome}}</td><td>{{.Who}}</td>{{else}}<td>{{.Level}}</td><td>{{.Message}}</td>{{end}}
+<td><small>{{range .Fields}}<code>{{.}}</code> {{end}}</small></td></tr>{{end}}</tbody>
+</table>
+{{else}}<p>Nothing matches.</p>{{end}}
+{{if .V.Note}}<p><small>{{.V.Note}}</small></p>{{end}}
+{{end}}

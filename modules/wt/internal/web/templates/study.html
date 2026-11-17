@@ -1,0 +1,65 @@
+{{define "title"}}Study{{end}}
+{{define "content"}}
+<p><a href="{{.Base}}/studies">← Back to the search</a></p>
+<h1>Study</h1>
+<p class="msg info" role="note"><b>Libre WT is not a diagnostic viewer.</b> It shows no images. Use a cleared viewer for reading and diagnosis.</p>
+{{with .S}}
+{{if .Row}}
+<section class="card">
+<dl>
+<dt>Patient ID</dt><dd><b>{{index .Row "PatientID"}}</b>{{if index .Row "ConflictID"}} <span class="flag warn">held: patient conflict</span>{{end}}</dd>
+<dt>Patient name</dt><dd><b>{{fmtPN (index .Row "PatientName")}}</b></dd>
+<dt>Birth date</dt><dd>{{orDash (fmtDA (index .Row "PatientBirthDate"))}}</dd>
+<dt>Study date</dt><dd>{{orDash (fmtDA (index .Row "StudyDate"))}}</dd>
+<dt>Description</dt><dd>{{orDash (index .Row "StudyDescription")}}</dd>
+<dt>Accession</dt><dd>{{orDash (index .Row "AccessionNumber")}}</dd>
+<dt>Modalities</dt><dd>{{orDash (index .Row "ModalitiesInStudy")}}</dd>
+<dt>Series / instances</dt><dd>{{index .Row "NumberOfStudyRelatedSeries"}} / {{index .Row "NumberOfStudyRelatedInstances"}}</dd>
+<dt>Study UID</dt><dd><code class="uid">{{$.UID}}</code></dd>
+</dl>
+<p><small>Answered by instance <b>{{$.I.Name}}</b> at {{fmtStamp $.ReadAt}}.</small></p>
+</section>
+{{if gt (len .Rows) 1}}<p class="msg warn" role="alert">LibreDCM lists this Study Instance UID {{len .Rows}} times (under more than one Patient ID, or held as a patient conflict). Check Study Exceptions.</p>{{end}}
+{{else}}
+<p class="msg error" role="alert">{{.Why}}</p>
+{{end}}
+{{end}}
+
+<h2>Series</h2>
+{{if .SeriesErr}}<p class="msg error" role="alert">The series could not be read: {{.SeriesErr}}</p>{{end}}
+{{if .Series}}
+<table>
+<thead><tr><th>Number</th><th>Modality</th><th>Description</th><th>Instances</th><th>Series UID</th><th></th></tr></thead>
+<tbody>{{range .Series}}<tr>
+<td>{{index . "SeriesNumber"}}</td><td>{{index . "Modality"}}</td><td>{{index . "SeriesDescription"}}{{if index . "ConflictID"}} <span class="flag warn">held: patient conflict</span>{{end}}</td>
+<td>{{index . "NumberOfSeriesRelatedInstances"}}</td><td><code class="uid">{{index . "SeriesInstanceUID"}}</code></td>
+<td><a href="{{$.Base}}/studies/{{pathEsc $.UID}}/series/{{pathEsc (index . "SeriesInstanceUID")}}">Instances</a></td>
+</tr>{{end}}</tbody>
+</table>
+{{if .SeriesMore}}<p class="msg warn">More series exist than are shown. <a href="{{$.Base}}/studies/{{pathEsc $.UID}}?cursor={{.SeriesCursor}}">Next page</a></p>{{end}}
+{{else if not .SeriesErr}}<p>No series is listed.</p>{{end}}
+
+{{if .CanSend}}
+<h2>Send to a destination</h2>
+{{if not .Allowed}}<p class="msg error" role="alert">{{.Blocked}}</p>{{end}}
+{{if .DestErr}}<p class="msg error" role="alert">The destinations could not be read: {{.DestErr}}</p>{{end}}
+{{if .Destinations}}
+<form method="post" action="{{.Base}}/studies/{{pathEsc .UID}}/send/review" class="card">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<input type="hidden" name="patient_id" value="{{.S.PatientID}}">
+<p>Patient <b>{{.S.PatientID}}</b>, <b>{{fmtPN (index .S.Row "PatientName")}}</b>. Images go only to a destination configured on this instance.</p>
+<label>Destination <select name="destination" required>
+<option value="">Choose…</option>
+{{range .Destinations}}<option value="{{.Name}}">{{.Name}}: {{.AETitle}} at {{addr .Host .Port}}</option>{{end}}
+</select></label>
+{{if .Series}}<fieldset><legend>Series (none ticked: the whole study)</legend>
+{{range .Series}}{{if not (index . "ConflictID")}}<label class="check"><input type="checkbox" name="series" value="{{index . "SeriesInstanceUID"}}"> {{index . "SeriesNumber"}} {{index . "Modality"}} {{index . "SeriesDescription"}} ({{index . "NumberOfSeriesRelatedInstances"}})</label>{{end}}{{end}}
+</fieldset>{{end}}
+<button {{if not .Allowed}}disabled{{end}}>Review the send…</button>
+<p><small>The button first shows a warning page with the patient, the study and the destination as LibreDCM plans them; nothing is sent before you approve it there with a reason.</small></p>
+</form>
+{{else if not .DestErr}}<p class="msg info">No destination is configured on this instance, so nothing can be sent.</p>{{end}}
+{{else if and .IsAdmin (not .S.Sendable) .S.Why .S.Row}}
+<p class="msg info">This study can't be sent from the console: {{.S.Why}}</p>
+{{end}}
+{{end}}

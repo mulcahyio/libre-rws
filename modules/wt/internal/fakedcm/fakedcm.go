@@ -47,6 +47,9 @@ type Server struct {
 
 	// Cfg holds the answers of the configuration endpoints (config.go).
 	Cfg Config
+	// Data holds the archive, audit records and log lines of the data
+	// endpoints (data.go).
+	Data Data
 
 	plans    []map[string]any
 	resolves []map[string]any
@@ -61,7 +64,7 @@ func New() *Server {
 	open := uint64(1)
 	s := &Server{Token: "tok", NodeID: "node-1", AETitle: "FAKEDCM", Version: "0.3.0-test", Digest: "sha256:aaaa",
 		Features: []string{"conflicts", "status", "config", "remote-aes", "allow-list", "audit", "logs", "echo", "reload", "license", "backup", "studies", "send", "config-edit"},
-		hits:     map[string]int{}, posts: map[string][]map[string]any{}, headers: map[string]http.Header{}, Cfg: defaultConfig()}
+		hits:     map[string]int{}, posts: map[string][]map[string]any{}, headers: map[string]http.Header{}, Cfg: defaultConfig(), Data: defaultData()}
 	s.Status.UptimeSeconds = 93784 // 1d 2h
 	s.Status.Backends.Storage, s.Status.Backends.Index, s.Status.Backends.Events = "fs", "sqlite", "log"
 	s.Status.DICOM.Listen, s.Status.DICOM.AllowListEntries, s.Status.DICOM.RemoteAEs = ":11112", 2, 1

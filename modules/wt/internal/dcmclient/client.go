@@ -36,6 +36,9 @@ type Config struct {
 	// BackupTimeout bounds the wait for an index backup. Default
 	// DefaultBackupTimeout (110 seconds).
 	BackupTimeout time.Duration
+	// SendTimeout bounds the wait for a send of a study. Default
+	// DefaultSendTimeout (110 seconds).
+	SendTimeout time.Duration
 }
 
 // Client is a LibreDCM control-API client.
@@ -46,6 +49,7 @@ type Client struct {
 	read   time.Duration
 	action time.Duration
 	backup time.Duration
+	send   time.Duration
 }
 
 // New validates the configuration and builds a client.
@@ -90,8 +94,11 @@ func New(cfg Config) (*Client, error) {
 	if cfg.BackupTimeout <= 0 {
 		cfg.BackupTimeout = DefaultBackupTimeout
 	}
+	if cfg.SendTimeout <= 0 {
+		cfg.SendTimeout = DefaultSendTimeout
+	}
 	return &Client{base: u, token: token, http: &http.Client{Transport: tr, Timeout: cfg.Timeout}, read: cfg.ReadTimeout, action: cfg.ActionTimeout,
-		backup: cfg.BackupTimeout}, nil
+		backup: cfg.BackupTimeout, send: cfg.SendTimeout}, nil
 }
 
 // URL returns the configured LibreDCM URL (never the token).
@@ -118,6 +125,9 @@ type APIError struct {
 	Status  int
 	Message string
 	Code    string
+	// body is the whole answer, for the one refusal that carries a result
+	// (a send of which no instance arrived, DCM-SRS-092).
+	body []byte
 }
 
 func (e *APIError) Error() string { return fmt.Sprintf("LibreDCM: %s (HTTP %d)", e.Message, e.Status) }
@@ -142,6 +152,11 @@ func Refused(err error) bool {
 }
 
 func (c *Client) do(ctx context.Context, method, path string, in, out any) error {
+	return c.doH(ctx, method, path, nil, in, out)
+}
+
+// doH is do with extra request headers.
+func (c *Client) doH(ctx context.Context, method, path string, hdr http.Header, in, out any) error {
 	var body io.Reader
 	if in != nil {
 		b, err := json.Marshal(in)
@@ -153,6 +168,9 @@ func (c *Client) do(ctx context.Context, method, path string, in, out any) error
 	req, err := http.NewRequestWithContext(ctx, method, c.base.String()+path, body)
 	if err != nil {
 		return err
+	}
+	for k, v := range hdr {
+		req.Header[k] = v
 	}
 	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("Accept", "application/json")
@@ -177,7 +195,7 @@ func (c *Client) do(ctx context.Context, method, path string, in, out any) error
 		if e.Error == "" {
 			e.Error = http.StatusText(resp.StatusCode)
 		}
-		return &APIError{Status: resp.StatusCode, Message: e.Error, Code: e.Code}
+		return &APIError{Status: resp.StatusCode, Message: e.Error, Code: e.Code, body: data}
 	}
 	if out == nil {
 		return nil

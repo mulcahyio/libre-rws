@@ -40,9 +40,10 @@ type pending struct {
 	// "ack_<i>" belongs to acks[i].
 	acks []dcmclient.PlanWarning
 
-	edit *dcmclient.ConfigEdit // configuration edit
-	echo *dcmclient.EchoTarget // C-ECHO test
-	lic  *licencePending       // licence action
+	edit *dcmclient.ConfigEdit  // configuration edit
+	echo *dcmclient.EchoTarget  // C-ECHO test
+	lic  *licencePending        // licence action
+	send *dcmclient.SendRequest // send of a study
 	// shown is the address a configured C-ECHO destination had on the
 	// warning page, or what identifies a licence action's input (file
 	// checksum, site, end of the key).

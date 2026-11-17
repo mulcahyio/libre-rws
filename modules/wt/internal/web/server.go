@@ -10,7 +10,9 @@ import (
 	"html/template"
 	"io/fs"
 	"log/slog"
+	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -72,6 +74,10 @@ func New(cfg Config, acct *accounts.Store, reg *fleet.Registry, log *slog.Logger
 		"counts":       counts,
 		"licenceLabel": licenceLabel,
 		"byteSize":     byteSize,
+		"fmtDA":        fmtDA,
+		"fmtPN":        fmtPN,
+		"addr":         func(h string, p int) string { return net.JoinHostPort(h, strconv.Itoa(p)) },
+		"pathEsc":      url.PathEscape,
 	}
 	pages, err := fs.Glob(assets, "templates/*.html")
 	if err != nil {
@@ -185,6 +191,20 @@ func (s *Server) routes() []route {
 		{"GET /i/{inst}/backups", O, s.inst(s.backupsPage)},
 		{"POST /i/{inst}/backup/review", O, s.inst(s.backupReview)},
 		{"POST /i/{inst}/backup/apply", O, s.inst(s.backupApply)},
+		// Studies (WT-SRS-025, -026): Operators search and browse; sending
+		// a study is for an Admin (risk control of WT-HAZ-07, D52).
+		{"GET /i/{inst}/studies", O, s.inst(s.studiesPage)},
+		{"POST /i/{inst}/studies/search", O, s.inst(s.studiesSearch)},
+		{"GET /i/{inst}/studies/{uid}", O, s.inst(s.studyPageH)},
+		{"GET /i/{inst}/studies/{uid}/series/{suid}", O, s.inst(s.seriesPage)},
+		{"POST /i/{inst}/studies/{uid}/send/review", A, s.inst(s.sendReview)},
+		{"POST /i/{inst}/studies/{uid}/send/apply", A, s.inst(s.sendApply)},
+		// LibreDCM audit records (Admin) and log lines (Operator); the CSV
+		// export of both is for an Admin (WT-SRS-029, -030, -037, D53).
+		{"GET /i/{inst}/audit", A, s.inst(s.ringPage(true, false))},
+		{"GET /i/{inst}/audit.csv", A, s.inst(s.ringPage(true, true))},
+		{"GET /i/{inst}/logs", O, s.inst(s.ringPage(false, false))},
+		{"GET /i/{inst}/logs.csv", A, s.inst(s.ringPage(false, true))},
 		// Addresses of 0.1, which had one LibreDCM: they lead to the same
 		// page of the only instance, or to the fleet page when there are
 		// several. They never pick an instance by themselves.

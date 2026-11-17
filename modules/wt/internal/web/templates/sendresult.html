@@ -1,0 +1,30 @@
+{{define "title"}}Send result{{end}}
+{{define "content"}}
+<section class="card">
+{{with .R}}
+<h1>Send: {{if eq .Outcome "complete"}}<span class="state success">complete</span>{{else if eq .Outcome "partial"}}<span class="state open">partial</span>{{else}}<span class="state open">failed</span>{{end}}</h1>
+{{if eq .Outcome "complete"}}<p class="msg info">The destination accepted all {{.Completed}} instance(s).</p>
+{{else if eq .Outcome "partial"}}<p class="msg error" role="alert">Only part of the study arrived: {{.Completed}} accepted, {{.Failed}} failed, {{.Warning}} accepted with a warning.</p>
+{{else}}<p class="msg error" role="alert">No instance was accepted by the destination ({{.Failed}} failed). See the node's log.</p>{{end}}
+<dl>
+<dt>Patient</dt><dd><b>{{.Plan.PatientName | fmtPN | orDash}}</b>, Patient ID <b>{{.Plan.PatientID}}</b></dd>
+<dt>Study</dt><dd>{{orDash (fmtDA .Plan.StudyDate)}} {{.Plan.StudyDescription}} <code class="uid">{{.Plan.StudyInstanceUID}}</code></dd>
+<dt>Destination</dt><dd><b>{{.Plan.Destination.Name}}</b>, AE <code>{{.Plan.Destination.AETitle}}</code> at <code>{{addr .Plan.Destination.Host .Plan.Destination.Port}}</code></dd>
+<dt>From instance</dt><dd><b>{{$.I.Name}}</b></dd>
+<dt>Instances</dt><dd>{{.Instances}} in the plan; {{.Completed}} accepted, {{.Warning}} with a warning, {{.Failed}} failed</dd>
+<dt>Duration</dt><dd>{{.DurationMS}} ms</dd>
+<dt>Request ID</dt><dd><code>{{$.RequestID}}</code></dd>
+</dl>
+<h2>Per instance</h2>
+{{if .FailedUIDs}}<p>Failed (not accepted by the destination):</p>
+<table class="narrow"><thead><tr><th>SOP Instance UID</th><th>Result</th></tr></thead>
+<tbody>{{range .FailedUIDs}}<tr><td><code class="uid">{{.}}</code></td><td>failed</td></tr>{{end}}</tbody></table>{{end}}
+{{if .WarningUIDs}}<p>Accepted with a warning:</p>
+<table class="narrow"><thead><tr><th>SOP Instance UID</th><th>Result</th></tr></thead>
+<tbody>{{range .WarningUIDs}}<tr><td><code class="uid">{{.}}</code></td><td>warning</td></tr>{{end}}</tbody></table>{{end}}
+<p>Every other instance of the plan ({{.Completed}}) was accepted by the destination.</p>
+{{if .Note}}<p><small>{{.Note}}</small></p>{{end}}
+{{end}}
+<p><a href="{{.Back}}">Back to the study</a></p>
+</section>
+{{end}}

@@ -152,6 +152,9 @@ var functions = []function{
 	{"echo", "C-ECHO test", "echo", accounts.Operator},
 	{"license", "Licence", "license", accounts.Viewer},
 	{"backup", "Backup", "backups", accounts.Operator},
+	{"studies", "Studies", "studies", accounts.Operator},
+	{"logs", "Logs", "logs", accounts.Operator},
+	{"audit", "LibreDCM audit", "audit", accounts.Admin},
 }
 
 type functionView struct {
@@ -358,6 +361,10 @@ func (s *Server) exceptions(w http.ResponseWriter, r *http.Request, rc *reqCtx, 
 	if err != nil {
 		data["Error"] = err.Error()
 	}
+	// The list shows patient data: no record, no page (WT-SRS-033).
+	if !s.viewed(w, r, rc, ic, "exceptions.view", state) {
+		return
+	}
 	data["Conflicts"] = list
 	s.renderI(w, r, http.StatusOK, "exceptions", rc, ic, data)
 }
@@ -376,6 +383,9 @@ func (s *Server) exception(w http.ResponseWriter, r *http.Request, rc *reqCtx, i
 	actions := []string{"reject"}
 	if d.Conflict.Kind == "patient_id" {
 		actions = []string{"correct_incoming", "correct_existing", "reject"}
+	}
+	if !s.viewed(w, r, rc, ic, "exception.view", d.Conflict.ID) {
+		return
 	}
 	allowed, why := ic.snap.ActionsAllowed()
 	s.renderI(w, r, http.StatusOK, "exception", rc, ic, map[string]any{"D": d, "C": d.Conflict, "Actions": actions,

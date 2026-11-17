@@ -180,7 +180,16 @@ never stops DICOM services) and lets an administrator acknowledge the
 unlicensed notice, install a licence file, activate online or download an
 activation request file. An operator or administrator can start an index
 backup from Libre WT when the backup folder below is set; Libre WT shows the
-file, its size and its SHA-256 checksum, and the list of backups. Libre WT does
+file, its size and its SHA-256 checksum, and the list of backups. Operators
+and administrators can search the studies of the node and open a study and
+its series (no images: Libre WT is not a viewer); an administrator can send
+a study, or some of its series, to one of the node's configured C-MOVE
+destinations after checking the patient on a warning page. Administrators
+read the node's recent audit records, operators and administrators its
+recent log lines, and administrators can export both as CSV. Every search
+and every page with patient data is written to the Libre WT audit log
+(`librewt.db`, which then holds patient IDs: protect the Libre WT data
+folder). Libre WT does
 not start, stop or restart LibreDCM: use the commands above.
 
 **Control API (for Libre WT):** with the admin token, `/control/v1` on the
