@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Destinations · dcm-1 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    
+    <a href="/about">About</a>
+    <a href="/account">oper <span class="role">operator</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="d509f688c40f5c5bde43746ee58859c4a9c295f6ee96bdde9b3d9aeac319c549"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-1</b>
+    <span class="label">AE title</span> <code>LIBREDCM1</code>
+    <span class="label">Node ID</span> <code>dcm-1</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-1/">Dashboard</a>
+    <a href="/i/dcm-1/status">Status</a>
+    <a href="/i/dcm-1/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-1/config">Configuration</a>
+    <a href="/i/dcm-1/remote-aes">Destinations</a>
+    <a href="/i/dcm-1/allow-list">Allow-list</a>
+    <a href="/i/dcm-1/echo">C-ECHO test</a>
+    <a href="/i/dcm-1/license">Licence</a>
+    <a href="/i/dcm-1/backups">Backup</a>
+    <a href="/i/dcm-1/studies">Studies</a>
+    <a href="/i/dcm-1/logs">Logs</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-1:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<h1>C-MOVE destinations</h1>
+<p class="lead">The destinations in force on this node now, read at 2026-11-17 00:51:45 UTC. A C-MOVE, and a send from Libre WT, can go only to these.</p>
+
+<table>
+<thead><tr><th>Name</th><th>Host</th><th>Port</th><th>AE title</th><th>Source</th></tr></thead>
+<tbody><tr><td><b>SPARE</b></td><td><code>192.0.2.10</code></td><td>104</td><td><code>SPARE</code></td><td>overlay</td></tr><tr><td><b>STORESCP</b></td><td><code>dcmtk</code></td><td>11113</td><td><code>STORESCP</code></td><td>overlay</td></tr></tbody>
+</table>
+
+<p><small>Source: <b>file</b> is <code>config.yaml</code>, <b>overlay</b> is a change made from a console, <b>env</b> is an environment variable on the host (it can't be changed here).</small></p>
+<div class="actions">
+<a class="button" href="/i/dcm-1/echo">C-ECHO test…</a>
+
+</div>
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

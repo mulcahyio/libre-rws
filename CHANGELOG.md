@@ -31,7 +31,7 @@ LibreDCM's behaviour unless stated.
     compared with the file on the node), LibreDCM audit records, logs, CSV
     export, the Libre WT audit log and a scan for the admin tokens. Synthetic
     data only. Record: `docs/releases/librewt-v0.2.0-rc.1-verification/`.
-  - User guide with screenshots of all 36 pages in light and dark
+  - User guide with screenshots of all 35 pages in light and dark
     (`docs/librewt/user-guide.md`), made by `scripts/e2e/wt-screenshots.mjs`
     (headless Chromium, no packages), which also fails when a page is
     wider than its window.

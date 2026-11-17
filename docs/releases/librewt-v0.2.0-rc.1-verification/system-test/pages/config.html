@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuration · dcm-1 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    
+    <a href="/about">About</a>
+    <a href="/account">oper <span class="role">operator</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="d509f688c40f5c5bde43746ee58859c4a9c295f6ee96bdde9b3d9aeac319c549"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-1</b>
+    <span class="label">AE title</span> <code>LIBREDCM1</code>
+    <span class="label">Node ID</span> <code>dcm-1</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-1/">Dashboard</a>
+    <a href="/i/dcm-1/status">Status</a>
+    <a href="/i/dcm-1/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-1/config">Configuration</a>
+    <a href="/i/dcm-1/remote-aes">Destinations</a>
+    <a href="/i/dcm-1/allow-list">Allow-list</a>
+    <a href="/i/dcm-1/echo">C-ECHO test</a>
+    <a href="/i/dcm-1/license">Licence</a>
+    <a href="/i/dcm-1/backups">Backup</a>
+    <a href="/i/dcm-1/studies">Studies</a>
+    <a href="/i/dcm-1/logs">Logs</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-1:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<h1>Configuration</h1>
+<p class="lead">The settings this node runs with now, read at 2026-11-17 00:51:45 UTC. Secrets are never sent to Libre WT: they show only as "set" or "not set".</p>
+<p><small>Digest of the live settings: <code class="uid">sha256:95306968c0ddda6dcc82a003396b021d4aae92f49b7b7572a8c2844ba483574e</code></small></p>
+
+<table>
+<thead><tr><th>Setting</th><th>Value</th><th>Source</th><th>Change</th></tr></thead>
+<tbody>
+<tr>
+<td><code>admin.addr</code></td>
+<td><code>:8081</code><br></td>
+<td>env <small><code>LIBRE_DCM_ADMIN_ADDR</code></small></td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>admin.log_level</code></td>
+<td><code>info</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>admin.log_format</code></td>
+<td><code>json</code><br></td>
+<td>env <small><code>LIBRE_DCM_LOG_FORMAT</code></small></td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>admin.shutdown_timeout</code></td>
+<td><code>30s</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>admin.node_id</code></td>
+<td><code>dcm-1</code><br></td>
+<td>env <small><code>LIBRE_DCM_NODE_ID</code></small></td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>admin.token</code></td>
+<td><span class="state">not set</span> <small>secret, not shown</small></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>admin.token_file</code></td>
+<td><code>/run/wtsys/dcm-1.token</code><br></td>
+<td>env <small><code>LIBRE_DCM_ADMIN_TOKEN_FILE</code></small></td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>admin.tls_cert_file</code></td>
+<td><span class="empty">—</span></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>admin.tls_key_file</code></td>
+<td><span class="empty">—</span></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.ae_title</code></td>
+<td><code>LIBREDCM1</code><br></td>
+<td>env <small><code>LIBRE_DCM_AE_TITLE</code></small></td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.listen</code></td>
+<td><code>:11112</code><br></td>
+<td>env <small><code>LIBRE_DCM_LISTEN</code></small></td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.allow_any_called_ae_title</code></td>
+<td><code>false</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.accept_any_sop_class</code></td>
+<td><code>false</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.max_associations</code></td>
+<td><code>64</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.max_pdu_length</code></td>
+<td><code>131072</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.handshake_timeout</code></td>
+<td><code>30s</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.idle_timeout</code></td>
+<td><code>5m0s</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.find_limit</code></td>
+<td><code>1000</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.get_max_bytes</code></td>
+<td><code>1073741824</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.tls_cert_file</code></td>
+<td><span class="empty">—</span></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.tls_key_file</code></td>
+<td><span class="empty">—</span></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.remote_aes</code></td>
+<td><span class="empty">—</span></td>
+<td>default</td>
+<td><span class="state live">live</span> <small>changes without a restart</small></td>
+</tr><tr>
+<td><code>dicom.allowed_aes</code></td>
+<td><span class="empty">—</span></td>
+<td>default</td>
+<td><span class="state live">live</span> <small>changes without a restart</small></td>
+</tr><tr>
+<td><code>dicom.find_case_sensitive_names</code></td>
+<td><code>false</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.audit_log_off</code></td>
+<td><code>false</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.events_omit_patient_id</code></td>
+<td><code>false</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.audit_omit_patient_id</code></td>
+<td><code>false</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.patient_conflict_policy</code></td>
+<td><code>quarantine</code><br></td>
+<td>env <small><code>LIBRE_DCM_PATIENT_CONFLICT_POLICY</code></small></td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.patient_conflict_visibility</code></td>
+<td><code>hidden</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>dicom.patient_conflict_coerce_patient_id</code></td>
+<td><code>false</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>storage.driver</code></td>
+<td><code>fs</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>storage.path</code></td>
+<td><code>/var/lib/libredcm/blobs</code><br></td>
+<td>env <small><code>LIBRE_DCM_STORAGE_PATH</code></small></td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>storage.s3.endpoint</code></td>
+<td><span class="empty">—</span></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>storage.s3.bucket</code></td>
+<td><span class="empty">—</span></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>storage.s3.region</code></td>
+<td><span class="empty">—</span></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>storage.s3.prefix</code></td>
+<td><span class="empty">—</span></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>storage.s3.access_key</code></td>
+<td><span class="state">not set</span> <small>secret, not shown</small></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>storage.s3.secret_key</code></td>
+<td><span class="state">not set</span> <small>secret, not shown</small></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>storage.s3.insecure</code></td>
+<td><code>false</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>storage.s3.create_bucket</code></td>
+<td><code>false</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>index.driver</code></td>
+<td><code>sqlite</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>index.dsn</code></td>
+<td><code>file:/var/lib/libredcm/index.db</code><br></td>
+<td>env <small><code>LIBRE_DCM_INDEX_DSN</code></small></td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>events.driver</code></td>
+<td><code>log</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>events.url</code></td>
+<td><span class="empty">—</span></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>events.stream</code></td>
+<td><span class="empty">—</span></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>events.replicas</code></td>
+<td><code>0</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>events.max_age_days</code></td>
+<td><code>0</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>events.legacy_subjects</code></td>
+<td><code>true</code><br></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>license.file</code></td>
+<td><code>/var/lib/libredcm/license.lic</code><br></td>
+<td>env <small><code>LIBRE_DCM_LICENSE_FILE</code></small></td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>license.server</code></td>
+<td><span class="empty">—</span></td>
+<td>default</td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>license.data_dir</code></td>
+<td><code>/var/lib/libredcm</code><br></td>
+<td>env <small><code>LIBRE_DCM_LICENSE_DATA</code></small></td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>control.backup_dir</code></td>
+<td><code>/var/lib/libredcm/backups</code><br></td>
+<td>env <small><code>LIBRE_DCM_CONTROL_BACKUP_DIR</code></small></td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr><tr>
+<td><code>control.overlay_file</code></td>
+<td><span class="state">set</span> <small>secret, not shown</small></td>
+<td>env <small><code>LIBRE_DCM_CONTROL_OVERLAY_FILE</code></small></td>
+<td><span class="state restart">restart</span> <small>read-only here</small></td>
+</tr>
+</tbody>
+</table>
+<p class="msg info">Settings marked <b>restart</b> can't be changed from Libre WT. Change them in <code>config.yaml</code> or the environment on the host, then restart the node with the installer script or Docker. Settings with reloadable=false take effect after a restart. Restart with the installer script or Docker.</p>
+
+<h2>Live settings</h2>
+<p>The C-MOVE <a href="/i/dcm-1/remote-aes">destinations</a> and the calling-AE <a href="/i/dcm-1/allow-list">allow-list</a> change without a restart.</p>
+
+
+<table class="narrow">
+<thead><tr><th>Console-made version</th><th>When</th><th>By</th><th>Kind</th><th>Reason</th><th>Holds</th></tr></thead>
+<tbody>
+<tr><td>current</td><td colspan="5" class="empty">none: no change was made from a console</td></tr>
+<tr><td>previous</td><td colspan="5" class="empty">none: nothing to roll back to</td></tr>
+</tbody>
+</table>
+<p><small>Changes made here are kept in an overlay file that LibreDCM owns. A setting the overlay holds replaces the value of config.yaml as a whole; environment variables still win. One previous version is kept for rollback.</small></p>
+
+
+
+
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

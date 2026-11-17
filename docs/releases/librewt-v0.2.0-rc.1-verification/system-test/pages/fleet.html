@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fleet · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    
+    <a href="/about">About</a>
+    <a href="/account">view <span class="role">viewer</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="7eedb40f8de4bd49e3c97f56c32f1943737cf94a17ea486850e02d7d7fb43daf"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<main>
+
+<h1>Fleet</h1>
+<p class="lead">Every LibreDCM instance configured in Libre WT, by cluster label. Read at 2026-11-17 00:51:43 UTC; each row is at most a few seconds old. An instance that can't be reached shows no values.</p>
+
+<h2>Cluster <b>wtsys</b></h2>
+<table class="fleet">
+<thead><tr><th>Instance</th><th>Health</th><th>Version</th><th>Uptime</th><th>Licence</th><th>Open associations</th><th>Stored</th><th>Not stored</th><th>Rejected associations</th><th>Outbox pending</th><th>Open exceptions</th></tr></thead>
+<tbody>
+
+<tr>
+<td><a href="/i/dcm-1/"><b>dcm-1</b></a><br><small><code>LIBREDCM1 · dcm-1</code></small>
+<br><span class="flag warn">plain HTTP</span></td>
+
+<td>
+  
+  <span class="state reachable">ready</span>
+</td>
+<td>0.2.0-wt-rc1</td>
+
+<td>1s</td>
+<td>not enforced (source build)</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td><a href="/i/dcm-1/exceptions">0</a></td>
+
+
+</tr>
+
+<tr>
+<td><a href="/i/dcm-2/"><b>dcm-2</b></a><br><small><code>LIBREDCM2 · dcm-2</code></small>
+<br><span class="flag warn">plain HTTP</span></td>
+
+<td>
+  
+  <span class="state reachable">ready</span>
+</td>
+<td>0.2.0-wt-rc1</td>
+
+<td>1s</td>
+<td>missing, notice not acknowledged</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td><a href="/i/dcm-2/exceptions">0</a></td>
+
+
+</tr>
+
+</tbody>
+</table>
+
+<p><small>"Stored" and "Not stored" count C-STORE requests since the node started. "Settings differ" compares the settings that change without a restart (C-MOVE destinations and the calling-AE allow-list) between the instances that share a cluster label. The licence state never stops DICOM services.</small></p>
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

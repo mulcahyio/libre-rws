@@ -1,0 +1,95 @@
+PASS ENV-1 Libre WT answers /healthz
+PASS SYS-01 a fresh Libre WT leads every page to the first-run page
+PASS SYS-02 first run refuses a password under 12 characters
+PASS SYS-03 first run creates the Admin and logs in
+PASS SYS-04 the first-run page stops working once an account exists
+PASS SYS-05 a failed login does not reveal whether the user exists
+PASS SYS-06-oper Admin creates the operator account
+PASS SYS-06-view Admin creates the viewer account
+PASS SYS-07 a state change without the CSRF token is refused (HTTP 403)
+PASS SYS-08 Operator and Viewer log in
+PASS SYS-10 fleet page lists both instances under their cluster label
+PASS SYS-11 fleet page shows the licence state of both nodes (dcm-2 unlicensed, not acknowledged)
+PASS SYS-12-dcm-1 dashboard of dcm-1 shows the banner and readiness
+PASS SYS-13-dcm-1 plain-HTTP warning shown for dcm-1 (WT-SRS-036)
+PASS SYS-14-dcm-1 status page of dcm-1 shows readiness and the host restart note
+PASS SYS-12-dcm-2 dashboard of dcm-2 shows the banner and readiness
+PASS SYS-13-dcm-2 plain-HTTP warning shown for dcm-2 (WT-SRS-036)
+PASS SYS-14-dcm-2 status page of dcm-2 shows readiness and the host restart note
+PASS SYS-15 about page shows the Libre WT version and each node
+PASS SYS-16 an unknown instance gives not found (HTTP 404)
+PASS DATA-1 synthetic study generated (2 series x 2 instances + 1 conflicting instance)
+PASS DATA-2 storescu stored the 4 instances of the study on dcm-1
+PASS DATA-3 storescu sent the conflicting instance (LibreDCM accepts and holds it)
+PASS SYS-20 Study Exceptions lists the held instance with its incoming Patient ID
+PASS SYS-21 detail shows archived and incoming patient; a Viewer gets no edit controls
+PASS SYS-22 a Viewer can't open the edit review (HTTP 403)
+PASS SYS-23 Admin sees LibreDCM's plan on the warning page
+PASS SYS-24 the edit is refused without a reason
+PASS SYS-25 Admin rejects the incoming image after approval
+PASS SYS-26 the same confirmation can't be used twice
+PASS SYS-30 a Viewer can't open the configuration (HTTP 403)
+PASS SYS-31 Operator reads the configuration without change controls
+PASS SYS-32 the admin token is not on the configuration page
+PASS SYS-33 an empty allow-list is shown as a warning
+PASS SYS-34 adding a destination shows LibreDCM's plan with the difference
+PASS SYS-35 Admin applies the destination change
+PASS SYS-36a the plan for SPARE removes nothing
+PASS SYS-36 Admin adds a second destination SPARE
+PASS SYS-37 both destinations are in force
+PASS SYS-38 rollback shows the plan (SPARE removed)
+PASS SYS-39 rollback applied
+PASS SYS-40 after the rollback only STORESCP remains
+PASS SYS-41 reload of dcm-1 applied
+PASS SYS-42 an Operator can't change the configuration (HTTP 403)
+PASS SYS-45 Operator C-ECHO to STORESCP succeeds
+PASS SYS-46 an Operator can't test a free address (HTTP 403)
+PASS SYS-47 Admin C-ECHO from dcm-1 to the free address dcm-2 succeeds
+PASS SYS-50 a Viewer can't search studies (HTTP 403)
+PASS SYS-51 a search with only * is not sent
+PASS SYS-52 Operator finds the study by Patient ID wildcard
+PASS SYS-53 the rejected conflicting image is not listed
+PASS SYS-54 study page lists both series; an Operator sees no send control
+PASS SYS-55 series page lists its 2 instances
+PASS SYS-56 an Operator can't send (HTTP 403)
+PASS SYS-57 a send naming another Patient ID gets no approval
+PASS SYS-58 send warning page shows the patient and the destination
+PASS SYS-59 send of the whole study: complete, 4 instances accepted
+PASS SYS-60 storescp received all 4 instances byte-identical (data set SHA-256)
+{"sop": "1.2.826.0.1.3680043.8.498.42081939649156194781233976853230622853", "result": "identical", "transfer_syntax": "1.2.840.10008.1.2.1", "patient_id": "WTSYS-0001", "sent_sha256": "5c3e95f8da3db426697c39cf33eb9664ef4b387c3f9d6478ffec68545d3a56b6", "received_sha256": "5c3e95f8da3db426697c39cf33eb9664ef4b387c3f9d6478ffec68545d3a56b6"}
+{"sop": "1.2.826.0.1.3680043.8.498.47869297122721154603977906110875024289", "result": "identical", "transfer_syntax": "1.2.840.10008.1.2.1", "patient_id": "WTSYS-0001", "sent_sha256": "e387ad1699549482276b72193b31d6734554cfb5d1e30bc8e70139e2fa2e18e1", "received_sha256": "e387ad1699549482276b72193b31d6734554cfb5d1e30bc8e70139e2fa2e18e1"}
+{"sop": "1.2.826.0.1.3680043.8.498.48105081348409817453019539342377653087", "result": "identical", "transfer_syntax": "1.2.840.10008.1.2.1", "patient_id": "WTSYS-0001", "sent_sha256": "0412ee7c1f9bcb175ee253537aa5e38b4eae8ba734450b057e993913d1281eaf", "received_sha256": "0412ee7c1f9bcb175ee253537aa5e38b4eae8ba734450b057e993913d1281eaf"}
+{"sop": "1.2.826.0.1.3680043.8.498.72598813599745306171826493794732979651", "result": "identical", "transfer_syntax": "1.2.840.10008.1.2.1", "patient_id": "WTSYS-0001", "sent_sha256": "87433ebf8be905770b2eae161c3e4a343a9d0bbda6c1ab35e2d417e938570f42", "received_sha256": "87433ebf8be905770b2eae161c3e4a343a9d0bbda6c1ab35e2d417e938570f42"}
+{"expected": 4, "received_files": 4, "identical": 4, "ok": true}
+
+PASS CTL-1 control: the comparison reports a received file with one flipped pixel byte as DIFFERENT
+PASS SYS-61 send of one series plans 2 instances in 1 series
+PASS SYS-62 send of one series: complete, 2 accepted
+PASS SYS-63 the 2 instances of the series are byte-identical
+PASS SYS-70 licence page of the source build: not enforced, DICOM keeps running
+PASS SYS-71 dcm-2 unlicensed: reloads blocked until acknowledged; a Viewer has no controls
+PASS SYS-71b the unlicensed, not acknowledged official node stores images (C-STORE)
+PASS SYS-72 the reload of dcm-2 is refused before the acknowledgement and links to the licence page
+PASS SYS-73 the acknowledgement is refused when another user name is typed
+PASS SYS-74 Admin acknowledges the unlicensed notice of dcm-2
+PASS SYS-75 the reload of dcm-2 works after the acknowledgement
+PASS SYS-76 the activation request is handed out as a file download (attachment; filename="libredcm-activation-request-dcm-2-20261117T005146Z.txt")
+PASS SYS-77a Admin restricts the allow-list of dcm-2 to MODALITY1
+PASS SYS-77b dcm-2 now refuses the calling AE INTRUDER
+PASS SYS-77 the unlicensed official node still stores images from MODALITY1 (C-STORE)
+PASS SYS-80 a Viewer can't open backups (HTTP 403)
+PASS SYS-81 Operator backup: file, size and SHA-256 shown, index-only note
+PASS SYS-82 the backup file on the node has the SHA-256 shown (acc297ce66778de3…)
+PASS SYS-83 backups page lists the backup with user and reason
+PASS SYS-90 an Operator can't read LibreDCM audit records (HTTP 403)
+PASS SYS-91 Admin reads LibreDCM audit records naming the WT user and reason
+PASS SYS-92 Admin exports the audit records as CSV
+PASS SYS-93 Operator reads the log lines with the memory-buffer note
+PASS SYS-94 an Operator can't export logs (HTTP 403)
+PASS SYS-95 Libre WT audit log records every action (missing: [])
+PASS SYS-96 an Operator can't read the Libre WT audit log (HTTP 403)
+PASS SYS-97 a user changes their own password and logs in with the new one
+PASS SYS-98 after logout the session no longer works
+PASS SYS-99 no admin token in any of 97 pages or in the Libre WT log
+SUMMARY 87 checks, 87 passed, 0 failed: []
+exit=0

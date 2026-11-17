@@ -1,0 +1,9 @@
+wt-1  | {"time":"2026-11-17T00:51:42.240131627Z","level":"INFO","msg":"LibreDCM instance configured","module":"librewt","instance":"dcm-1","cluster":"wtsys","url":"http://dcm-1:8081"}
+wt-1  | {"time":"2026-11-17T00:51:42.240195015Z","level":"WARN","msg":"plain HTTP to a LibreDCM that is not on this machine: the admin token and patient data are not encrypted; use https:// and ca_file","module":"librewt","instance":"dcm-1","url":"http://dcm-1:8081"}
+wt-1  | {"time":"2026-11-17T00:51:42.240197701Z","level":"INFO","msg":"LibreDCM instance configured","module":"librewt","instance":"dcm-2","cluster":"wtsys","url":"http://dcm-2:8081"}
+wt-1  | {"time":"2026-11-17T00:51:42.240199464Z","level":"WARN","msg":"plain HTTP to a LibreDCM that is not on this machine: the admin token and patient data are not encrypted; use https:// and ca_file","module":"librewt","instance":"dcm-2","url":"http://dcm-2:8081"}
+wt-1  | {"time":"2026-11-17T00:51:42.243580953Z","level":"WARN","msg":"no accounts yet: open Libre WT in a browser to create the first administrator","module":"librewt","listen":":8090"}
+wt-1  | {"time":"2026-11-17T00:51:42.243587178Z","level":"WARN","msg":"serving plain HTTP: set tls_cert_file/tls_key_file unless Libre WT is only reachable from this machine","module":"librewt","listen":":8090"}
+wt-1  | {"time":"2026-11-17T00:51:42.243720681Z","level":"INFO","msg":"LibreWT starting","module":"librewt","version":"0.2.0-rc.1","listen":":8090","https":false,"instances":2}
+wt-1  | {"time":"2026-11-17T00:51:43.293364693Z","level":"INFO","msg":"instance identity remembered","module":"librewt","instance":"dcm-1","node_id":"dcm-1","ae_title":"LIBREDCM1"}
+wt-1  | {"time":"2026-11-17T00:51:43.295009758Z","level":"INFO","msg":"instance identity remembered","module":"librewt","instance":"dcm-2","node_id":"dcm-2","ae_title":"LIBREDCM2"}

@@ -1,0 +1,72 @@
+docs/librewt/images/login-light.webp	Log in · Libre WT
+docs/librewt/images/fleet-light.webp	Fleet · Libre WT
+docs/librewt/images/about-light.webp	About · Libre WT
+docs/librewt/images/dashboard-light.webp	Dashboard · dcm-1 · Libre WT
+docs/librewt/images/status-light.webp	Status · dcm-1 · Libre WT
+docs/librewt/images/exceptions-light.webp	Study Exceptions · dcm-1 · Libre WT
+docs/librewt/images/exception-light.webp	Exception 1cea95cc502cbca4180785c8 · dcm-1 · Libre WT
+docs/librewt/images/exception-review-light.webp	Review edit · dcm-1 · Libre WT
+docs/librewt/images/config-light.webp	Configuration · dcm-1 · Libre WT
+docs/librewt/images/config-edit-light.webp	Edit configuration · dcm-1 · Libre WT
+docs/librewt/images/config-review-light.webp	Review: Change the C-MOVE destinations · dcm-1 · Libre WT
+docs/librewt/images/reload-review-light.webp	Review: Reload the configuration · dcm-1 · Libre WT
+docs/librewt/images/rollback-review-light.webp	Review: Roll back to the previous version · dcm-1 · Libre WT
+docs/librewt/images/remote-aes-light.webp	Destinations · dcm-1 · Libre WT
+docs/librewt/images/allow-list-light.webp	Allow-list · dcm-2 · Libre WT
+docs/librewt/images/echo-light.webp	C-ECHO test · dcm-1 · Libre WT
+docs/librewt/images/echo-review-light.webp	Review: C-ECHO test · dcm-1 · Libre WT
+docs/librewt/images/echo-result-light.webp	C-ECHO result · dcm-1 · Libre WT
+docs/librewt/images/license-light.webp	Licence · dcm-1 · Libre WT
+docs/librewt/images/license-unlicensed-light.webp	Licence · dcm-2 · Libre WT
+docs/librewt/images/license-ack-review-light.webp	Review: Acknowledge the unlicensed notice · dcm-2 · Libre WT
+docs/librewt/images/backups-light.webp	Backup · dcm-1 · Libre WT
+docs/librewt/images/backup-review-light.webp	Review: backup · dcm-1 · Libre WT
+docs/librewt/images/backup-result-light.webp	Backup done · dcm-1 · Libre WT
+docs/librewt/images/studies-light.webp	Studies · dcm-1 · Libre WT
+docs/librewt/images/studies-search-light.webp	Studies · dcm-1 · Libre WT
+docs/librewt/images/study-light.webp	Study · dcm-1 · Libre WT
+docs/librewt/images/series-light.webp	Series · dcm-1 · Libre WT
+docs/librewt/images/send-review-light.webp	Review: send a study · dcm-1 · Libre WT
+docs/librewt/images/send-result-light.webp	Send result · dcm-1 · Libre WT
+docs/librewt/images/dcm-audit-light.webp	LibreDCM audit records · dcm-1 · Libre WT
+docs/librewt/images/logs-light.webp	Logs · dcm-1 · Libre WT
+docs/librewt/images/wt-audit-light.webp	Audit log · Libre WT
+docs/librewt/images/users-light.webp	Users · Libre WT
+docs/librewt/images/account-light.webp	Account · Libre WT
+docs/librewt/images/login-dark.webp	Log in · Libre WT
+docs/librewt/images/fleet-dark.webp	Fleet · Libre WT
+docs/librewt/images/about-dark.webp	About · Libre WT
+docs/librewt/images/dashboard-dark.webp	Dashboard · dcm-1 · Libre WT
+docs/librewt/images/status-dark.webp	Status · dcm-1 · Libre WT
+docs/librewt/images/exceptions-dark.webp	Study Exceptions · dcm-1 · Libre WT
+docs/librewt/images/exception-dark.webp	Exception 1cea95cc502cbca4180785c8 · dcm-1 · Libre WT
+docs/librewt/images/exception-review-dark.webp	Review edit · dcm-1 · Libre WT
+docs/librewt/images/config-dark.webp	Configuration · dcm-1 · Libre WT
+docs/librewt/images/config-edit-dark.webp	Edit configuration · dcm-1 · Libre WT
+docs/librewt/images/config-review-dark.webp	Review: Change the C-MOVE destinations · dcm-1 · Libre WT
+docs/librewt/images/reload-review-dark.webp	Review: Reload the configuration · dcm-1 · Libre WT
+docs/librewt/images/rollback-review-dark.webp	Review: Roll back to the previous version · dcm-1 · Libre WT
+docs/librewt/images/remote-aes-dark.webp	Destinations · dcm-1 · Libre WT
+docs/librewt/images/allow-list-dark.webp	Allow-list · dcm-2 · Libre WT
+docs/librewt/images/echo-dark.webp	C-ECHO test · dcm-1 · Libre WT
+docs/librewt/images/echo-review-dark.webp	Review: C-ECHO test · dcm-1 · Libre WT
+docs/librewt/images/echo-result-dark.webp	C-ECHO result · dcm-1 · Libre WT
+docs/librewt/images/license-dark.webp	Licence · dcm-1 · Libre WT
+docs/librewt/images/license-unlicensed-dark.webp	Licence · dcm-2 · Libre WT
+docs/librewt/images/license-ack-review-dark.webp	Review: Acknowledge the unlicensed notice · dcm-2 · Libre WT
+docs/librewt/images/backups-dark.webp	Backup · dcm-1 · Libre WT
+docs/librewt/images/backup-review-dark.webp	Review: backup · dcm-1 · Libre WT
+docs/librewt/images/backup-result-dark.webp	Backup done · dcm-1 · Libre WT
+docs/librewt/images/studies-dark.webp	Studies · dcm-1 · Libre WT
+docs/librewt/images/studies-search-dark.webp	Studies · dcm-1 · Libre WT
+docs/librewt/images/study-dark.webp	Study · dcm-1 · Libre WT
+docs/librewt/images/series-dark.webp	Series · dcm-1 · Libre WT
+docs/librewt/images/send-review-dark.webp	Review: send a study · dcm-1 · Libre WT
+docs/librewt/images/send-result-dark.webp	Send result · dcm-1 · Libre WT
+docs/librewt/images/dcm-audit-dark.webp	LibreDCM audit records · dcm-1 · Libre WT
+docs/librewt/images/logs-dark.webp	Logs · dcm-1 · Libre WT
+docs/librewt/images/wt-audit-dark.webp	Audit log · Libre WT
+docs/librewt/images/users-dark.webp	Users · Libre WT
+docs/librewt/images/account-dark.webp	Account · Libre WT
+done, 0 failed, 0 wider than 1280 px
+screenshots exit=0

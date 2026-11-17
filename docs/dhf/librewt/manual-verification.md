@@ -169,11 +169,11 @@ a study of 2 series × 2 CT instances (`WTSYS^ALPHA`, `WTSYS-0001`) and one
 instance of the same study under another patient. Every check, its result
 and the pages are in the record
 [`docs/releases/librewt-v0.2.0-rc.1-verification/`](../../releases/librewt-v0.2.0-rc.1-verification/README.md).
-A browser walkthrough of every page in light and dark (72 screenshots,
+A browser walkthrough of every page in light and dark (70 screenshots,
 `docs/librewt/images/`) was checked by eye and by a page-width check; it
 found the layout defect fixed in this card (tables wider than the page).
 
-- WT-SRS-001: every page fetched over HTTP through the published port; screenshots of all 36 pages in light and dark checked; no page wider than its window after the fix (2026-11-17, system test record)
+- WT-SRS-001: every page fetched over HTTP through the published port; screenshots of all 35 pages in light and dark checked; no page wider than its window after the fix (2026-11-17, system test record)
 - WT-SRS-002: fresh console leads to first run; first run refuses a short password, creates the Admin, then stops working (SYS-01…04, 2026-11-17)
 - WT-SRS-003: failed login gives the same answer for an existing and an unknown user (SYS-05, 2026-11-17)
 - WT-SRS-004: request without CSRF token refused 403; Viewer and Operator refused on Admin pages (SYS-07, -22, -30, -42, -96, 2026-11-17)

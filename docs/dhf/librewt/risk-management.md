@@ -299,7 +299,7 @@ but not built:
 
 | Found | Effect | Handling |
 |---|---|---|
-| Tables on the configuration, LibreDCM audit and log pages were wider than the page (up to 4164 px for logs): the last column ("Change": live or restart-only) was cut off at 1280 px | A reader could miss whether a setting is restart-only (WT-HAZ-11, information). No wrong value shown | Fixed in this card (`app.css`: long values wrap). The screenshot script now fails when any page is wider than its 1280 px window; checked on all 72 screenshots (0 too wide; the old style sheet gives 6) |
+| Tables on the configuration, LibreDCM audit and log pages were wider than the page (up to 4164 px for logs): the last column ("Change": live or restart-only) was cut off at 1280 px | A reader could miss whether a setting is restart-only (WT-HAZ-11, information). No wrong value shown | Fixed in this card (`app.css`: long values wrap). The screenshot script now fails when any page is wider than its 1280 px window; checked on all 70 screenshots (0 too wide; the old style sheet gives 6) |
 | The destinations form describes the whole list: a hand-made request that names only one new entry plans the removal of the others | None through the browser (the page always posts every row). The warning page lists each "removed" entry before approval (WT-SRS-021) | No change. The system test now posts the form as the page builds it; noted in the user guide |
 | pydicom's sample `CT_small.dcm` ends with Data Set Trailing Padding (FFFC,FFFC); DCMTK `storescu` drops it, so the received data set differed from the file | Test data only; LibreDCM sends the data set it received unchanged | The test data generator removes the padding; the comparison then matches byte for byte |
 

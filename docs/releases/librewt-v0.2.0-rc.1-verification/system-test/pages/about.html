@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    
+    <a href="/about">About</a>
+    <a href="/account">view <span class="role">viewer</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="7eedb40f8de4bd49e3c97f56c32f1943737cf94a17ea486850e02d7d7fb43daf"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<main>
+
+<h1>About</h1>
+<section class="card narrow">
+<dl>
+<dt>Libre WT</dt><dd>version <b>0.2.0-rc.1</b></dd>
+<dt>Product</dt><dd>Libre WT (Watch Tower), management console of the Libre RWS PACS. Libre Systems.</dd>
+</dl>
+<p><small>Libre WT does not display images and is not used for diagnosis.</small></p>
+</section>
+<h2>LibreDCM instances</h2>
+<table>
+<thead><tr><th>Instance</th><th>Cluster</th><th>LibreDCM version</th><th>Node ID</th><th>AE title</th><th>Admin listener</th><th>State</th></tr></thead>
+<tbody><tr>
+<td><a href="/i/dcm-1/"><b>dcm-1</b></a></td>
+<td>wtsys</td>
+
+<td>0.2.0-wt-rc1</td>
+<td><code>dcm-1</code></td>
+<td><code>LIBREDCM1</code></td>
+
+<td><code>http://dcm-1:8081</code></td>
+<td><span class="state reachable">reachable</span></td>
+</tr><tr>
+<td><a href="/i/dcm-2/"><b>dcm-2</b></a></td>
+<td>wtsys</td>
+
+<td>0.2.0-wt-rc1</td>
+<td><code>dcm-2</code></td>
+<td><code>LIBREDCM2</code></td>
+
+<td><code>http://dcm-2:8081</code></td>
+<td><span class="state reachable">reachable</span></td>
+</tr></tbody>
+</table>
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

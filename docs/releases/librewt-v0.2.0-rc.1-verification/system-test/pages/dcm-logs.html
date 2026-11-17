@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logs · dcm-1 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    
+    <a href="/about">About</a>
+    <a href="/account">oper <span class="role">operator</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="d509f688c40f5c5bde43746ee58859c4a9c295f6ee96bdde9b3d9aeac319c549"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-1</b>
+    <span class="label">AE title</span> <code>LIBREDCM1</code>
+    <span class="label">Node ID</span> <code>dcm-1</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-1/">Dashboard</a>
+    <a href="/i/dcm-1/status">Status</a>
+    <a href="/i/dcm-1/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-1/config">Configuration</a>
+    <a href="/i/dcm-1/remote-aes">Destinations</a>
+    <a href="/i/dcm-1/allow-list">Allow-list</a>
+    <a href="/i/dcm-1/echo">C-ECHO test</a>
+    <a href="/i/dcm-1/license">Licence</a>
+    <a href="/i/dcm-1/backups">Backup</a>
+    <a href="/i/dcm-1/studies">Studies</a>
+    <a href="/i/dcm-1/logs">Logs</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-1:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<h1>Logs</h1>
+
+<p class="msg warn" role="note">This page shows only the most recent log lines that instance <b>dcm-1</b> keeps in memory (2000 at most, lost at restart), without audit records. The site's log collector holds the full log.</p>
+
+<form method="get" class="card">
+<div class="tiles">
+
+<label>Lowest level <select name="level"><option value="debug" >debug</option><option value="info" selected>info</option><option value="warn" >warn</option><option value="error" >error</option></select></label>
+
+<label>Period <select name="period"><option value="15m" >last 15 minutes</option><option value="1h" selected>last 1 hour</option><option value="6h" >last 6 hours</option><option value="24h" >last 24 hours</option><option value="7d" >last 7 days</option><option value="all" >last all held</option></select></label>
+<label>At most <select name="limit"><option value="200" selected>200</option><option value="500" >500</option><option value="1000" >1000</option></select></label>
+</div>
+<div class="actions"><button class="primary">Show</button></div>
+
+</form>
+<p class="lead">27 shown, read at 2026-11-17 00:51:46 UTC, newest first.</p>
+
+<table>
+<thead><tr><th>Time</th><th>Level</th><th>Message</th><th>Details</th></tr></thead>
+<tbody><tr><td>2026-11-17 00:51:45</td><td>INFO</td><td>control send finished</td>
+<td><small><code>completed=2</code> <code>component=dimse</code> <code>destination=STORESCP</code> <code>failed=0</code> <code>instances=2</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>seconds=0.084078502</code> <code>warning=0</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>INFO</td><td>association released</td>
+<td><small><code>called_ae=STORESCP</code> <code>calling_ae=LIBREDCM1</code> <code>component=dimse</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>INFO</td><td>association established</td>
+<td><small><code>addr=dcmtk:11113</code> <code>called_ae=STORESCP</code> <code>calling_ae=LIBREDCM1</code> <code>component=dimse</code> <code>contexts=1</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>tls=false</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>INFO</td><td>control send finished</td>
+<td><small><code>completed=4</code> <code>component=dimse</code> <code>destination=STORESCP</code> <code>failed=0</code> <code>instances=4</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>seconds=0.165625924</code> <code>warning=0</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>INFO</td><td>association released</td>
+<td><small><code>called_ae=STORESCP</code> <code>calling_ae=LIBREDCM1</code> <code>component=dimse</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>INFO</td><td>association established</td>
+<td><small><code>addr=dcmtk:11113</code> <code>called_ae=STORESCP</code> <code>calling_ae=LIBREDCM1</code> <code>component=dimse</code> <code>contexts=1</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>tls=false</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>INFO</td><td>configuration reloaded</td>
+<td><small><code>allowed_aes=0</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>remote_aes=1</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>INFO</td><td>configuration changed through the control API</td>
+<td><small><code>allowed_aes=0</code> <code>kind=rollback</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>remote_aes=1</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>INFO</td><td>configuration changed through the control API</td>
+<td><small><code>allowed_aes=0</code> <code>kind=edit</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>remote_aes=2</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>INFO</td><td>configuration changed through the control API</td>
+<td><small><code>allowed_aes=0</code> <code>kind=edit</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>remote_aes=1</code> </small></td></tr><tr><td>2026-11-17 00:51:44</td><td>WARN</td><td>patient association conflict</td>
+<td><small><code>component=dimse</code> <code>existing_study=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code> <code>kind=patient_id</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>policy=quarantine</code> <code>sop_instance_uid=1.2.826.0.1.3680043.8.498.26654680604352703302689466530243453135</code> <code>study=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code> </small></td></tr><tr><td>2026-11-17 00:51:44</td><td>INFO</td><td>scp accepted connection</td>
+<td><small><code>component=dimse</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>remote=172.25.0.4:49266</code> </small></td></tr><tr><td>2026-11-17 00:51:43</td><td>INFO</td><td>event</td>
+<td><small><code>module=LibreDCM</code> <code>msg_id=1.2.826.0.1.3680043.8.498.42081939649156194781233976853230622853@2026-11-17T00:51:43.967165125Z#legacy</code> <code>node=dcm-1</code> <code>payload={&#34;event_id&#34;:&#34;1.2.826.0.1.3680043.8.498.42081939649156194781233976853230622853@2026-11-17T00:51:43.967165125Z&#34;,&#34;occurred_at&#34;:&#34;2026-11-17T00:51:43.967165125Z&#34;,&#34;node&#34;:&#34;dcm-1&#34;,&#34;source_ae&#34;:&#34;MODALITY1&#34;,&#34;patient_id&#34;:&#34;WTSYS-0001&#34;,&#34;study_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;,&#34;series_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.87849984865098589814739279884759674822&#34;,&#34;sop_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.42081939649156194781233976853230622853&#34;,&#34;sop_class_uid&#34;:&#34;1.2.840.10008.5.1.4.1.1.2&#34;,&#34;modality&#34;:&#34;CT&#34;,&#34;accession_number&#34;:&#34;WTACC0001&#34;,&#34;transfer_syntax_uid&#34;:&#34;1.2.840.10008.1.2.1&#34;,&#34;blob_key&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457/1.2.826.0.1.3680043.8.498.87849984865098589814739279884759674822/1.2.826.0.1.3680043.8.498.42081939649156194781233976853230622853.dcm&#34;,&#34;size_bytes&#34;:39144}</code> <code>subject=rws.dicom.instance.stored</code> </small></td></tr><tr><td>2026-11-17 00:51:43</td><td>INFO</td><td>event</td>
+<td><small><code>module=LibreDCM</code> <code>msg_id=1.2.826.0.1.3680043.8.498.42081939649156194781233976853230622853@2026-11-17T00:51:43.967165125Z</code> <code>node=dcm-1</code> <code>payload={&#34;event_id&#34;:&#34;1.2.826.0.1.3680043.8.498.42081939649156194781233976853230622853@2026-11-17T00:51:43.967165125Z&#34;,&#34;occurred_at&#34;:&#34;2026-11-17T00:51:43.967165125Z&#34;,&#34;node&#34;:&#34;dcm-1&#34;,&#34;source_ae&#34;:&#34;MODALITY1&#34;,&#34;patient_id&#34;:&#34;WTSYS-0001&#34;,&#34;study_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;,&#34;series_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.87849984865098589814739279884759674822&#34;,&#34;sop_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.42081939649156194781233976853230622853&#34;,&#34;sop_class_uid&#34;:&#34;1.2.840.10008.5.1.4.1.1.2&#34;,&#34;modality&#34;:&#34;CT&#34;,&#34;accession_number&#34;:&#34;WTACC0001&#34;,&#34;transfer_syntax_uid&#34;:&#34;1.2.840.10008.1.2.1&#34;,&#34;blob_key&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457/1.2.826.0.1.3680043.8.498.87849984865098589814739279884759674822/1.2.826.0.1.3680043.8.498.42081939649156194781233976853230622853.dcm&#34;,&#34;size_bytes&#34;:39144}</code> <code>subject=libre.dcm.instance.stored</code> </small></td></tr><tr><td>2026-11-17 00:51:43</td><td>INFO</td><td>event</td>
+<td><small><code>module=LibreDCM</code> <code>msg_id=1.2.826.0.1.3680043.8.498.47869297122721154603977906110875024289@2026-11-17T00:51:43.9645581Z#legacy</code> <code>node=dcm-1</code> <code>payload={&#34;event_id&#34;:&#34;1.2.826.0.1.3680043.8.498.47869297122721154603977906110875024289@2026-11-17T00:51:43.9645581Z&#34;,&#34;occurred_at&#34;:&#34;2026-11-17T00:51:43.9645581Z&#34;,&#34;node&#34;:&#34;dcm-1&#34;,&#34;source_ae&#34;:&#34;MODALITY1&#34;,&#34;patient_id&#34;:&#34;WTSYS-0001&#34;,&#34;study_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;,&#34;series_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.87849984865098589814739279884759674822&#34;,&#34;sop_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.47869297122721154603977906110875024289&#34;,&#34;sop_class_uid&#34;:&#34;1.2.840.10008.5.1.4.1.1.2&#34;,&#34;modality&#34;:&#34;CT&#34;,&#34;accession_number&#34;:&#34;WTACC0001&#34;,&#34;transfer_syntax_uid&#34;:&#34;1.2.840.10008.1.2.1&#34;,&#34;blob_key&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457/1.2.826.0.1.3680043.8.498.87849984865098589814739279884759674822/1.2.826.0.1.3680043.8.498.47869297122721154603977906110875024289.dcm&#34;,&#34;size_bytes&#34;:39144}</code> <code>subject=rws.dicom.instance.stored</code> </small></td></tr><tr><td>2026-11-17 00:51:43</td><td>INFO</td><td>event</td>
+<td><small><code>module=LibreDCM</code> <code>msg_id=1.2.826.0.1.3680043.8.498.47869297122721154603977906110875024289@2026-11-17T00:51:43.9645581Z</code> <code>node=dcm-1</code> <code>payload={&#34;event_id&#34;:&#34;1.2.826.0.1.3680043.8.498.47869297122721154603977906110875024289@2026-11-17T00:51:43.9645581Z&#34;,&#34;occurred_at&#34;:&#34;2026-11-17T00:51:43.9645581Z&#34;,&#34;node&#34;:&#34;dcm-1&#34;,&#34;source_ae&#34;:&#34;MODALITY1&#34;,&#34;patient_id&#34;:&#34;WTSYS-0001&#34;,&#34;study_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;,&#34;series_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.87849984865098589814739279884759674822&#34;,&#34;sop_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.47869297122721154603977906110875024289&#34;,&#34;sop_class_uid&#34;:&#34;1.2.840.10008.5.1.4.1.1.2&#34;,&#34;modality&#34;:&#34;CT&#34;,&#34;accession_number&#34;:&#34;WTACC0001&#34;,&#34;transfer_syntax_uid&#34;:&#34;1.2.840.10008.1.2.1&#34;,&#34;blob_key&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457/1.2.826.0.1.3680043.8.498.87849984865098589814739279884759674822/1.2.826.0.1.3680043.8.498.47869297122721154603977906110875024289.dcm&#34;,&#34;size_bytes&#34;:39144}</code> <code>subject=libre.dcm.instance.stored</code> </small></td></tr><tr><td>2026-11-17 00:51:43</td><td>INFO</td><td>event</td>
+<td><small><code>module=LibreDCM</code> <code>msg_id=1.2.826.0.1.3680043.8.498.48105081348409817453019539342377653087@2026-11-17T00:51:43.961863446Z#legacy</code> <code>node=dcm-1</code> <code>payload={&#34;event_id&#34;:&#34;1.2.826.0.1.3680043.8.498.48105081348409817453019539342377653087@2026-11-17T00:51:43.961863446Z&#34;,&#34;occurred_at&#34;:&#34;2026-11-17T00:51:43.961863446Z&#34;,&#34;node&#34;:&#34;dcm-1&#34;,&#34;source_ae&#34;:&#34;MODALITY1&#34;,&#34;patient_id&#34;:&#34;WTSYS-0001&#34;,&#34;study_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;,&#34;series_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.66909903622038196999920286247274247361&#34;,&#34;sop_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.48105081348409817453019539342377653087&#34;,&#34;sop_class_uid&#34;:&#34;1.2.840.10008.5.1.4.1.1.2&#34;,&#34;modality&#34;:&#34;CT&#34;,&#34;accession_number&#34;:&#34;WTACC0001&#34;,&#34;transfer_syntax_uid&#34;:&#34;1.2.840.10008.1.2.1&#34;,&#34;blob_key&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457/1.2.826.0.1.3680043.8.498.66909903622038196999920286247274247361/1.2.826.0.1.3680043.8.498.48105081348409817453019539342377653087.dcm&#34;,&#34;size_bytes&#34;:39144}</code> <code>subject=rws.dicom.instance.stored</code> </small></td></tr><tr><td>2026-11-17 00:51:43</td><td>INFO</td><td>event</td>
+<td><small><code>module=LibreDCM</code> <code>msg_id=1.2.826.0.1.3680043.8.498.48105081348409817453019539342377653087@2026-11-17T00:51:43.961863446Z</code> <code>node=dcm-1</code> <code>payload={&#34;event_id&#34;:&#34;1.2.826.0.1.3680043.8.498.48105081348409817453019539342377653087@2026-11-17T00:51:43.961863446Z&#34;,&#34;occurred_at&#34;:&#34;2026-11-17T00:51:43.961863446Z&#34;,&#34;node&#34;:&#34;dcm-1&#34;,&#34;source_ae&#34;:&#34;MODALITY1&#34;,&#34;patient_id&#34;:&#34;WTSYS-0001&#34;,&#34;study_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;,&#34;series_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.66909903622038196999920286247274247361&#34;,&#34;sop_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.48105081348409817453019539342377653087&#34;,&#34;sop_class_uid&#34;:&#34;1.2.840.10008.5.1.4.1.1.2&#34;,&#34;modality&#34;:&#34;CT&#34;,&#34;accession_number&#34;:&#34;WTACC0001&#34;,&#34;transfer_syntax_uid&#34;:&#34;1.2.840.10008.1.2.1&#34;,&#34;blob_key&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457/1.2.826.0.1.3680043.8.498.66909903622038196999920286247274247361/1.2.826.0.1.3680043.8.498.48105081348409817453019539342377653087.dcm&#34;,&#34;size_bytes&#34;:39144}</code> <code>subject=libre.dcm.instance.stored</code> </small></td></tr><tr><td>2026-11-17 00:51:43</td><td>INFO</td><td>event</td>
+<td><small><code>module=LibreDCM</code> <code>msg_id=1.2.826.0.1.3680043.8.498.72598813599745306171826493794732979651@2026-11-17T00:51:43.958856816Z#legacy</code> <code>node=dcm-1</code> <code>payload={&#34;event_id&#34;:&#34;1.2.826.0.1.3680043.8.498.72598813599745306171826493794732979651@2026-11-17T00:51:43.958856816Z&#34;,&#34;occurred_at&#34;:&#34;2026-11-17T00:51:43.958856816Z&#34;,&#34;node&#34;:&#34;dcm-1&#34;,&#34;source_ae&#34;:&#34;MODALITY1&#34;,&#34;patient_id&#34;:&#34;WTSYS-0001&#34;,&#34;study_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;,&#34;series_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.66909903622038196999920286247274247361&#34;,&#34;sop_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.72598813599745306171826493794732979651&#34;,&#34;sop_class_uid&#34;:&#34;1.2.840.10008.5.1.4.1.1.2&#34;,&#34;modality&#34;:&#34;CT&#34;,&#34;accession_number&#34;:&#34;WTACC0001&#34;,&#34;transfer_syntax_uid&#34;:&#34;1.2.840.10008.1.2.1&#34;,&#34;blob_key&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457/1.2.826.0.1.3680043.8.498.66909903622038196999920286247274247361/1.2.826.0.1.3680043.8.498.72598813599745306171826493794732979651.dcm&#34;,&#34;size_bytes&#34;:39144}</code> <code>subject=rws.dicom.instance.stored</code> </small></td></tr><tr><td>2026-11-17 00:51:43</td><td>INFO</td><td>event</td>
+<td><small><code>module=LibreDCM</code> <code>msg_id=1.2.826.0.1.3680043.8.498.72598813599745306171826493794732979651@2026-11-17T00:51:43.958856816Z</code> <code>node=dcm-1</code> <code>payload={&#34;event_id&#34;:&#34;1.2.826.0.1.3680043.8.498.72598813599745306171826493794732979651@2026-11-17T00:51:43.958856816Z&#34;,&#34;occurred_at&#34;:&#34;2026-11-17T00:51:43.958856816Z&#34;,&#34;node&#34;:&#34;dcm-1&#34;,&#34;source_ae&#34;:&#34;MODALITY1&#34;,&#34;patient_id&#34;:&#34;WTSYS-0001&#34;,&#34;study_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;,&#34;series_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.66909903622038196999920286247274247361&#34;,&#34;sop_instance_uid&#34;:&#34;1.2.826.0.1.3680043.8.498.72598813599745306171826493794732979651&#34;,&#34;sop_class_uid&#34;:&#34;1.2.840.10008.5.1.4.1.1.2&#34;,&#34;modality&#34;:&#34;CT&#34;,&#34;accession_number&#34;:&#34;WTACC0001&#34;,&#34;transfer_syntax_uid&#34;:&#34;1.2.840.10008.1.2.1&#34;,&#34;blob_key&#34;:&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457/1.2.826.0.1.3680043.8.498.66909903622038196999920286247274247361/1.2.826.0.1.3680043.8.498.72598813599745306171826493794732979651.dcm&#34;,&#34;size_bytes&#34;:39144}</code> <code>subject=libre.dcm.instance.stored</code> </small></td></tr><tr><td>2026-11-17 00:51:43</td><td>INFO</td><td>scp accepted connection</td>
+<td><small><code>component=dimse</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>remote=172.25.0.4:49252</code> </small></td></tr><tr><td>2026-11-17 00:51:41</td><td>INFO</td><td>DICOM listener started</td>
+<td><small><code>addr=[::]:11112</code> <code>ae_title=LIBREDCM1</code> <code>component=dimse</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>tls=false</code> </small></td></tr><tr><td>2026-11-17 00:51:41</td><td>INFO</td><td>component starting</td>
+<td><small><code>component=event-outbox</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> </small></td></tr><tr><td>2026-11-17 00:51:41</td><td>INFO</td><td>component starting</td>
+<td><small><code>component=config-reload</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> </small></td></tr><tr><td>2026-11-17 00:51:41</td><td>INFO</td><td>admin endpoint listening</td>
+<td><small><code>addr=:8081</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> </small></td></tr><tr><td>2026-11-17 00:51:41</td><td>INFO</td><td>component starting</td>
+<td><small><code>component=dimse-gateway</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> </small></td></tr><tr><td>2026-11-17 00:51:41</td><td>INFO</td><td>LibreDCM starting</td>
+<td><small><code>events=log</code> <code>index=sqlite</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>storage=fs</code> <code>version=0.2.0-wt-rc1</code> </small></td></tr></tbody>
+</table>
+
+<p><small>Most recent log lines held in memory on this node, without audit records. Lines below the node&#39;s configured log level are not written and are not held.</small></p>
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study Exceptions · dcm-1 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    
+    <a href="/about">About</a>
+    <a href="/account">view <span class="role">viewer</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="7eedb40f8de4bd49e3c97f56c32f1943737cf94a17ea486850e02d7d7fb43daf"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-1</b>
+    <span class="label">AE title</span> <code>LIBREDCM1</code>
+    <span class="label">Node ID</span> <code>dcm-1</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-1/">Dashboard</a>
+    <a href="/i/dcm-1/status">Status</a>
+    <a href="/i/dcm-1/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-1/license">Licence</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-1:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<h1>Study Exceptions</h1>
+<p class="lead">Study exceptions of instance <b>dcm-1</b>: images LibreDCM held because they contradict the patient, study or series already in the archive. Nothing here changes until an administrator resolves it.</p>
+<nav class="tabs"><a href="/i/dcm-1/exceptions?state=active" aria-current="page">active</a><a href="/i/dcm-1/exceptions?state=open" >open</a><a href="/i/dcm-1/exceptions?state=accepted" >accepted</a><a href="/i/dcm-1/exceptions?state=resolved" >resolved</a><a href="/i/dcm-1/exceptions?state=all" >all</a></nav>
+
+
+<table>
+<thead><tr><th>Last received</th><th>Problem</th><th>State</th><th>Archived patient</th><th>Incoming patient</th><th>Study</th><th>Images</th><th>From</th><th></th></tr></thead>
+<tbody>
+
+<tr>
+<td>2026-11-17 00:51</td>
+<td>Patient ID differs</td>
+<td><span class="state open">Held</span></td>
+<td><code>WTSYS-0001</code></td>
+<td><code>WTSYS-9999</code><br><small>WTSYS^OTHER</small></td>
+<td><small>20260101 WT SYSTEM TEST<br><code class="uid">1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code></small></td>
+<td>1</td>
+<td>MODALITY1</td>
+<td><a class="button" href="/i/dcm-1/exceptions/78a3ea353410158613b391e1">Open</a></td>
+</tr>
+
+</tbody>
+</table>
+
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

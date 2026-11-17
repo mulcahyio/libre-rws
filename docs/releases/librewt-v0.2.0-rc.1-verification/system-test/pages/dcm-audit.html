@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LibreDCM audit records · dcm-1 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    <a href="/users">Users</a><a href="/audit">Audit log</a>
+    <a href="/about">About</a>
+    <a href="/account">admin <span class="role">admin</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="dd0e4b8267be811336678952ac23bce86394a2e1476b12b7170bc42bbf265795"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-1</b>
+    <span class="label">AE title</span> <code>LIBREDCM1</code>
+    <span class="label">Node ID</span> <code>dcm-1</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-1/">Dashboard</a>
+    <a href="/i/dcm-1/status">Status</a>
+    <a href="/i/dcm-1/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-1/config">Configuration</a>
+    <a href="/i/dcm-1/remote-aes">Destinations</a>
+    <a href="/i/dcm-1/allow-list">Allow-list</a>
+    <a href="/i/dcm-1/echo">C-ECHO test</a>
+    <a href="/i/dcm-1/license">Licence</a>
+    <a href="/i/dcm-1/backups">Backup</a>
+    <a href="/i/dcm-1/studies">Studies</a>
+    <a href="/i/dcm-1/logs">Logs</a>
+    <a href="/i/dcm-1/audit">LibreDCM audit</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-1:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<h1>LibreDCM audit records</h1>
+
+<p class="msg warn" role="note">This page shows only the most recent audit records that instance <b>dcm-1</b> keeps in memory (1000 at most, lost at restart). The site's log collector holds the full audit record.</p>
+
+
+<form method="get" class="card">
+<div class="tiles">
+
+<label>Event type (starts with) <input name="type" value="" maxlength="64" placeholder="DICOMInstancesTransferred"></label>
+<label>Outcome <select name="outcome"><option value="" selected>any</option><option value="success" >success</option><option value="minor-failure" >minor-failure</option><option value="serious-failure" >serious-failure</option><option value="major-failure" >major-failure</option><option value="pending" >pending</option></select></label>
+
+<label>Period <select name="period"><option value="15m" >last 15 minutes</option><option value="1h" selected>last 1 hour</option><option value="6h" >last 6 hours</option><option value="24h" >last 24 hours</option><option value="7d" >last 7 days</option><option value="all" >last all held</option></select></label>
+<label>At most <select name="limit"><option value="100" selected>100</option><option value="250" >250</option><option value="500" >500</option></select></label>
+</div>
+<div class="actions"><button class="primary">Show</button> <a class="button" href="/i/dcm-1/audit.csv?period=1h&amp;limit=100">Export as CSV</a></div>
+<p><small>The export holds the entries shown with this filter and is recorded in the Libre WT audit log.</small></p>
+</form>
+<p class="lead">30 shown, read at 2026-11-17 00:51:46 UTC, newest first.</p>
+
+<table>
+<thead><tr><th>Time</th><th>Event</th><th>Outcome</th><th>Who</th><th>Details</th></tr></thead>
+<tbody><tr><td>2026-11-17 00:51:46</td><td>SecurityAlert.backup</td><td>success</td><td>oper</td>
+<td><small><code>action=backup</code> <code>bytes=102400</code> <code>component=control</code> <code>duration_ms=5</code> <code>endpoint=/control/v1/backup</code> <code>file=index-dcm-1-20261117T005146Z.db</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=result</code> <code>reason=system test: backup</code> <code>request_id=7854fc6696c2e8e2f22d1ba2482c146a</code> <code>sha256=acc297ce66778de31398df81865720dd3176ca3bfbb3bcbdaaf0afedefcf8f00</code> </small></td></tr><tr><td>2026-11-17 00:51:46</td><td>SecurityAlert.backup</td><td>pending</td><td>oper</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/backup</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=start</code> <code>reason=system test: backup</code> <code>request_id=7854fc6696c2e8e2f22d1ba2482c146a</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>DICOMInstancesTransferred.sent</td><td>success</td><td>admin</td>
+<td><small><code>action=send</code> <code>called_ae=STORESCP</code> <code>completed=2</code> <code>component=control</code> <code>destination=STORESCP</code> <code>destination_host=dcmtk</code> <code>destination_port=11113</code> <code>endpoint=/control/v1/send</code> <code>failed=0</code> <code>instances=2</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>op=control-send</code> <code>patient_ids=[&#34;WTSYS-0001&#34;]</code> <code>phase=result</code> <code>reason=system test: send one series</code> <code>request_id=b5b80408ef0c3822afcaae03d79834ee</code> <code>series=1</code> <code>studies=[&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;]</code> <code>warning=0</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>DICOMInstancesTransferred.sent</td><td>pending</td><td>admin</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/send</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=start</code> <code>reason=system test: send one series</code> <code>request_id=b5b80408ef0c3822afcaae03d79834ee</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>DICOMInstancesTransferred.sent</td><td>success</td><td>admin</td>
+<td><small><code>action=send</code> <code>called_ae=STORESCP</code> <code>completed=4</code> <code>component=control</code> <code>destination=STORESCP</code> <code>destination_host=dcmtk</code> <code>destination_port=11113</code> <code>endpoint=/control/v1/send</code> <code>failed=0</code> <code>instances=4</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>op=control-send</code> <code>patient_ids=[&#34;WTSYS-0001&#34;]</code> <code>phase=result</code> <code>reason=system test: send study</code> <code>request_id=7d7136d2d7dcf7a96831ed5e1766a3b4</code> <code>series=2</code> <code>studies=[&#34;1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;]</code> <code>warning=0</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>DICOMInstancesTransferred.sent</td><td>pending</td><td>admin</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/send</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=start</code> <code>reason=system test: send study</code> <code>request_id=7d7136d2d7dcf7a96831ed5e1766a3b4</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>Query</td><td>success</td><td>admin</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/studies</code> <code>keys=[&#34;StudyInstanceUID=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;]</code> <code>module=LibreDCM</code> <code>more=false</code> <code>node=dcm-1</code> <code>offset=0</code> <code>op=control-query</code> <code>rows=2</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>Query</td><td>success</td><td>admin</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/studies</code> <code>keys=[&#34;StudyInstanceUID=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;]</code> <code>module=LibreDCM</code> <code>more=false</code> <code>node=dcm-1</code> <code>offset=0</code> <code>op=control-query</code> <code>rows=1</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>Query</td><td>success</td><td>oper</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/studies</code> <code>keys=[&#34;SeriesInstanceUID=1.2.826.0.1.3680043.8.498.87849984865098589814739279884759674822&#34;,&#34;StudyInstanceUID=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;]</code> <code>module=LibreDCM</code> <code>more=false</code> <code>node=dcm-1</code> <code>offset=0</code> <code>op=control-query</code> <code>rows=2</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>Query</td><td>success</td><td>oper</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/studies</code> <code>keys=[&#34;StudyInstanceUID=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;]</code> <code>module=LibreDCM</code> <code>more=false</code> <code>node=dcm-1</code> <code>offset=0</code> <code>op=control-query</code> <code>rows=2</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>Query</td><td>success</td><td>oper</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/studies</code> <code>keys=[&#34;StudyInstanceUID=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457&#34;]</code> <code>module=LibreDCM</code> <code>more=false</code> <code>node=dcm-1</code> <code>offset=0</code> <code>op=control-query</code> <code>rows=1</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>Query</td><td>success</td><td>oper</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/studies</code> <code>keys=[&#34;PatientID=WTSYS-00*&#34;]</code> <code>module=LibreDCM</code> <code>more=false</code> <code>node=dcm-1</code> <code>offset=0</code> <code>op=control-query</code> <code>rows=1</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>NetworkEntry.verification</td><td>success</td><td>admin</td>
+<td><small><code>action=echo</code> <code>called_ae=LIBREDCM2</code> <code>component=control</code> <code>duration_ms=0</code> <code>endpoint=/control/v1/echo</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=result</code> <code>reason=system test: echo free address</code> <code>request_id=973f1a3d3712afd40bde0114433d474f</code> <code>result=success</code> <code>source=ad-hoc</code> <code>target=dcm-2:11112</code> <code>tls=false</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>NetworkEntry.verification</td><td>pending</td><td>admin</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/echo</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=start</code> <code>reason=system test: echo free address</code> <code>request_id=973f1a3d3712afd40bde0114433d474f</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>NetworkEntry.verification</td><td>success</td><td>oper</td>
+<td><small><code>action=echo</code> <code>called_ae=STORESCP</code> <code>component=control</code> <code>duration_ms=41</code> <code>endpoint=/control/v1/echo</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=result</code> <code>reason=system test: echo</code> <code>request_id=f60fbcdd68e4108a9f47fe0517c2eb2c</code> <code>result=success</code> <code>source=configured</code> <code>target=dcmtk:11113</code> <code>tls=false</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>NetworkEntry.verification</td><td>pending</td><td>oper</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/echo</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=start</code> <code>reason=system test: echo</code> <code>request_id=f60fbcdd68e4108a9f47fe0517c2eb2c</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>SecurityAlert.configuration-changed</td><td>success</td><td>admin</td>
+<td><small><code>acknowledged_warnings=[]</code> <code>action=reload</code> <code>allow_list_added=[]</code> <code>allow_list_enforced=false</code> <code>allow_list_removed=[]</code> <code>change=reload</code> <code>changed=false</code> <code>component=control</code> <code>digest_after=sha256:7c3c32d37423a41912038e15823aea3447243b35ff8b2b763e0c7b8ea656e88d</code> <code>digest_before=sha256:7c3c32d37423a41912038e15823aea3447243b35ff8b2b763e0c7b8ea656e88d</code> <code>endpoint=/control/v1/reload</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=result</code> <code>reason=system test: reload</code> <code>remote_aes_added=[]</code> <code>remote_aes_changed=[]</code> <code>remote_aes_removed=[]</code> <code>request_id=5cd4bf52ca0b6cc2562bd76b666010a5</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>SecurityAlert.configuration-changed</td><td>pending</td><td>admin</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/reload</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=start</code> <code>reason=system test: reload</code> <code>request_id=5cd4bf52ca0b6cc2562bd76b666010a5</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>SecurityAlert.configuration-changed</td><td>success</td><td>admin</td>
+<td><small><code>acknowledged_warnings=[&#34;remote_ae_removed&#34;]</code> <code>action=config/rollback</code> <code>allow_list_added=[]</code> <code>allow_list_enforced=false</code> <code>allow_list_removed=[]</code> <code>change=rollback</code> <code>changed=true</code> <code>component=control</code> <code>digest_after=sha256:7c3c32d37423a41912038e15823aea3447243b35ff8b2b763e0c7b8ea656e88d</code> <code>digest_before=sha256:78f4df63f5bb1d9cee0c1d551fced7847d595b4f77bd497810e1871c5e0bbfbd</code> <code>endpoint=/control/v1/config/rollback</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=result</code> <code>reason=system test: undo SPARE</code> <code>remote_aes_added=[]</code> <code>remote_aes_changed=[]</code> <code>remote_aes_removed=[&#34;SPARE&#34;]</code> <code>request_id=b0674334dfc84b61adc875d12d9c95b0</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>SecurityAlert.configuration-changed</td><td>pending</td><td>admin</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/config/rollback</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=start</code> <code>reason=system test: undo SPARE</code> <code>request_id=b0674334dfc84b61adc875d12d9c95b0</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>SecurityAlert.configuration-changed</td><td>success</td><td>admin</td>
+<td><small><code>acknowledged_warnings=[]</code> <code>action=config</code> <code>allow_list_added=[]</code> <code>allow_list_enforced=false</code> <code>allow_list_removed=[]</code> <code>change=edit</code> <code>changed=true</code> <code>component=control</code> <code>digest_after=sha256:78f4df63f5bb1d9cee0c1d551fced7847d595b4f77bd497810e1871c5e0bbfbd</code> <code>digest_before=sha256:7c3c32d37423a41912038e15823aea3447243b35ff8b2b763e0c7b8ea656e88d</code> <code>endpoint=/control/v1/config</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=result</code> <code>reason=system test: second destination</code> <code>remote_aes_added=[&#34;SPARE&#34;]</code> <code>remote_aes_changed=[]</code> <code>remote_aes_removed=[]</code> <code>request_id=6e3aa1400a501ec37afd2caa26dfa0e0</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>SecurityAlert.configuration-changed</td><td>pending</td><td>admin</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/config</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=start</code> <code>reason=system test: second destination</code> <code>request_id=6e3aa1400a501ec37afd2caa26dfa0e0</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>SecurityAlert.configuration-changed</td><td>success</td><td>admin</td>
+<td><small><code>acknowledged_warnings=[]</code> <code>action=config</code> <code>allow_list_added=[]</code> <code>allow_list_enforced=false</code> <code>allow_list_removed=[]</code> <code>change=edit</code> <code>changed=true</code> <code>component=control</code> <code>digest_after=sha256:7c3c32d37423a41912038e15823aea3447243b35ff8b2b763e0c7b8ea656e88d</code> <code>digest_before=sha256:95306968c0ddda6dcc82a003396b021d4aae92f49b7b7572a8c2844ba483574e</code> <code>endpoint=/control/v1/config</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=result</code> <code>reason=system test: add DCMTK destination</code> <code>remote_aes_added=[&#34;STORESCP&#34;]</code> <code>remote_aes_changed=[]</code> <code>remote_aes_removed=[]</code> <code>request_id=e6eee4cc64e4ccfa99f71491ff73a9c4</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>SecurityAlert.configuration-changed</td><td>pending</td><td>admin</td>
+<td><small><code>component=control</code> <code>endpoint=/control/v1/config</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>phase=start</code> <code>reason=system test: add DCMTK destination</code> <code>request_id=e6eee4cc64e4ccfa99f71491ff73a9c4</code> </small></td></tr><tr><td>2026-11-17 00:51:45</td><td>PatientRecord.conflict-resolved</td><td>success</td><td>admin</td>
+<td><small><code>action=reject</code> <code>component=dimse</code> <code>conflict_id=78a3ea353410158613b391e1</code> <code>error=</code> <code>existing_patient_id=WTSYS-0001</code> <code>files_rewritten=0</code> <code>incoming_patient_id=WTSYS-9999</code> <code>kind=patient_id</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>reason=system test: synthetic conflicting image</code> <code>study=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code> </small></td></tr><tr><td>2026-11-17 00:51:44</td><td>PatientRecord.conflict-detected</td><td>minor-failure</td><td>AE MODALITY1</td>
+<td><small><code>action=open</code> <code>called_ae=LIBREDCM1</code> <code>coerced=false</code> <code>component=dimse</code> <code>conflict_id=78a3ea353410158613b391e1</code> <code>existing_patient_id=WTSYS-0001</code> <code>existing_study=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code> <code>incoming_patient_id=WTSYS-9999</code> <code>kind=patient_id</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>policy=quarantine</code> <code>remote=172.25.0.4:49266</code> <code>series=1.2.826.0.1.3680043.8.498.16918692657021722771147954900234215529</code> <code>sop_instance_uid=1.2.826.0.1.3680043.8.498.26654680604352703302689466530243453135</code> <code>stored_patient_id=WTSYS-9999</code> <code>study=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code> </small></td></tr><tr><td>2026-11-17 00:51:43</td><td>DICOMInstancesTransferred.received</td><td>success</td><td>AE MODALITY1</td>
+<td><small><code>called_ae=LIBREDCM1</code> <code>component=dimse</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>patient_id=WTSYS-0001</code> <code>remote=172.25.0.4:49252</code> <code>sop_instance_uid=1.2.826.0.1.3680043.8.498.42081939649156194781233976853230622853</code> <code>study=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code> </small></td></tr><tr><td>2026-11-17 00:51:43</td><td>DICOMInstancesTransferred.received</td><td>success</td><td>AE MODALITY1</td>
+<td><small><code>called_ae=LIBREDCM1</code> <code>component=dimse</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>patient_id=WTSYS-0001</code> <code>remote=172.25.0.4:49252</code> <code>sop_instance_uid=1.2.826.0.1.3680043.8.498.47869297122721154603977906110875024289</code> <code>study=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code> </small></td></tr><tr><td>2026-11-17 00:51:43</td><td>DICOMInstancesTransferred.received</td><td>success</td><td>AE MODALITY1</td>
+<td><small><code>called_ae=LIBREDCM1</code> <code>component=dimse</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>patient_id=WTSYS-0001</code> <code>remote=172.25.0.4:49252</code> <code>sop_instance_uid=1.2.826.0.1.3680043.8.498.48105081348409817453019539342377653087</code> <code>study=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code> </small></td></tr><tr><td>2026-11-17 00:51:43</td><td>DICOMInstancesTransferred.received</td><td>success</td><td>AE MODALITY1</td>
+<td><small><code>called_ae=LIBREDCM1</code> <code>component=dimse</code> <code>module=LibreDCM</code> <code>node=dcm-1</code> <code>patient_id=WTSYS-0001</code> <code>remote=172.25.0.4:49252</code> <code>sop_instance_uid=1.2.826.0.1.3680043.8.498.72598813599745306171826493794732979651</code> <code>study=1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code> </small></td></tr></tbody>
+</table>
+
+<p><small>Most recent audit records held in memory on this node. The buffer is lost at restart; the log stream is the audit record of the site.</small></p>
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

@@ -1,0 +1,11 @@
+fmt rc=0
+vet rc=0
+vet official rc=0
+test race rc=0
+test official rc=0
+gosec rc=0
+govulncheck rc=0
+qms scripts done
+bash -n wt-system-test.sh ok
+node --check wt-screenshots.mjs ok
+END

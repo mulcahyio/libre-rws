@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studies · dcm-1 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    
+    <a href="/about">About</a>
+    <a href="/account">oper <span class="role">operator</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="d509f688c40f5c5bde43746ee58859c4a9c295f6ee96bdde9b3d9aeac319c549"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-1</b>
+    <span class="label">AE title</span> <code>LIBREDCM1</code>
+    <span class="label">Node ID</span> <code>dcm-1</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-1/">Dashboard</a>
+    <a href="/i/dcm-1/status">Status</a>
+    <a href="/i/dcm-1/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-1/config">Configuration</a>
+    <a href="/i/dcm-1/remote-aes">Destinations</a>
+    <a href="/i/dcm-1/allow-list">Allow-list</a>
+    <a href="/i/dcm-1/echo">C-ECHO test</a>
+    <a href="/i/dcm-1/license">Licence</a>
+    <a href="/i/dcm-1/backups">Backup</a>
+    <a href="/i/dcm-1/studies">Studies</a>
+    <a href="/i/dcm-1/logs">Logs</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-1:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<h1>Studies</h1>
+<p class="msg info" role="note"><b>Libre WT is not a diagnostic viewer.</b> It shows no images. Use a cleared viewer for reading and diagnosis.</p>
+<p class="lead">Search the studies indexed on instance <b>dcm-1</b>. Every search is recorded under your name in the audit logs of Libre WT and LibreDCM. Use <code>*</code> for any characters and <code>?</code> for one character.</p>
+
+<form method="post" action="/i/dcm-1/studies/search" class="card">
+<input type="hidden" name="csrf" value="d509f688c40f5c5bde43746ee58859c4a9c295f6ee96bdde9b3d9aeac319c549">
+<div class="tiles">
+<label>Patient ID <input name="patient_id" value="WTSYS-00*" maxlength="64" autocomplete="off"></label>
+<label>Patient name <input name="patient_name" value="" maxlength="64" autocomplete="off" placeholder="DOE^J*"></label>
+<label>Study date from <input type="date" name="date_from" value=""></label>
+<label>Study date to <input type="date" name="date_to" value=""></label>
+<label>Modality <input name="modality" value="" maxlength="16" placeholder="CT"></label>
+<label>Accession number <input name="accession" value="" maxlength="64" autocomplete="off"></label>
+<label>Study Instance UID <input name="study_uid" value="" maxlength="64" autocomplete="off"></label>
+</div>
+<div class="actions"><button class="primary">Search</button></div>
+<p><small>A search needs at least one value. The whole archive is never listed.</small></p>
+</form>
+
+
+<h2>1 study</h2>
+<p class="lead">Answered by instance <b>dcm-1</b> at 2026-11-17 00:51:45 UTC. Instances held as a patient conflict are not listed.</p>
+
+
+<table>
+<thead><tr><th>Patient ID</th><th>Patient name</th><th>Birth date</th><th>Study date</th><th>Accession</th><th>Description</th><th>Modalities</th><th>Series</th><th>Instances</th><th></th></tr></thead>
+<tbody><tr>
+<td><b>WTSYS-0001</b></td>
+<td>WTSYS ALPHA</td>
+<td>1970-01-01</td>
+<td>2026-01-01</td>
+<td>WTACC0001</td>
+<td>WT SYSTEM TEST</td>
+<td>CT</td>
+<td>2</td>
+<td>4</td>
+<td><a href="/i/dcm-1/studies/1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457">Open</a></td>
+</tr></tbody>
+</table>
+
+
+
+
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>
