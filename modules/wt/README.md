@@ -55,7 +55,9 @@ LibreDCM: that is done on the host (see `deploy/workstation/INSTALL.md`,
 "Day-to-day").
 
 Design file: `docs/dhf/librewt/` (SRS, risk, security). Status: draft, not
-yet approved for clinical use.
+yet approved for clinical use. User guide with screenshots of every page:
+[`docs/librewt/user-guide.md`](../../docs/librewt/user-guide.md). System
+test against real LibreDCM containers: `scripts/e2e/wt-system-test.sh`.
 
 ## Run with one LibreDCM
 

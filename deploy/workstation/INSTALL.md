@@ -192,6 +192,46 @@ and every page with patient data is written to the Libre WT audit log
 folder). Libre WT does
 not start, stop or restart LibreDCM: use the commands above.
 
+**Install Libre WT on this workstation (container, DRAFT for approval).**
+The installer scripts do not install Libre WT yet; do it by hand. Libre WT
+runs next to LibreDCM on the same Docker network and is published on this
+PC only (`127.0.0.1:8090`). Synthetic example; use your own token.
+
+1. Give LibreDCM an admin token: put a long random value in `.env`
+   (`LIBRE_DCM_ADMIN_TOKEN=...`) and run `./LibreDCM.sh upgrade`
+   (Windows: `LibreDCM.ps1 upgrade`).
+2. Put the same token in a file only you can read, for example
+   `~/librewt/dcm.token` (mode 0644 is needed so the container user 65532
+   can read the mounted file; keep the folder itself private, mode 0700).
+3. Build and start Libre WT on LibreDCM's network (`libredcm_default` for
+   the workstation install):
+
+   ```sh
+   docker build -f deploy/docker/Dockerfile.wt --build-arg VERSION=0.2.0 -t libre/wt:0.2.0 .
+   docker run -d --name librewt --restart unless-stopped --network libredcm_default \
+     -e LIBRE_WT_DCM_URL=http://libredcm:8081 -e LIBRE_WT_DCM_TOKEN_FILE=/run/librewt/dcm.token \
+     -v "$HOME/librewt/dcm.token:/run/librewt/dcm.token:ro" -v librewt-data:/var/lib/librewt \
+     -p 127.0.0.1:8090:8090 --read-only --cap-drop ALL --security-opt no-new-privileges:true libre/wt:0.2.0
+   ```
+
+4. Open http://127.0.0.1:8090 and create the first administrator (there
+   is no default account). Then add Operator and Viewer accounts under
+   **Users**.
+5. Back up the `librewt-data` volume (`librewt.db`: accounts, audit log,
+   remembered node identities; it holds patient IDs from searches) with
+   your other records.
+
+The pages are described, with screenshots, in the
+[Libre WT user guide](../../docs/librewt/user-guide.md). Before you open
+Libre WT to other PCs, serve it over HTTPS (`LIBRE_WT_TLS_CERT`,
+`LIBRE_WT_TLS_KEY`) and give LibreDCM's admin listener TLS too; Libre WT
+warns on every page while it reaches a node by plain HTTP over a network.
+With the command above the warning shows even though both containers run
+on this PC: Docker's network name `libredcm` is not a loopback address.
+Several nodes: see `modules/wt/README.md`. (Checked 2026-11-17 with the
+release-candidate images: Libre WT started read-only, created the first
+administrator and showed the node `ready` on its fleet page.)
+
 **Control API (for Libre WT):** with the admin token, `/control/v1` on the
 same port shows the node's status and counters (`/control/v1/status`), the
 running settings with every secret hidden (`/control/v1/config`), the remote

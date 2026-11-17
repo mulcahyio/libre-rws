@@ -157,3 +157,52 @@ tests with the fake control API only), a study with several series.
 - WT-SRS-029: LibreDCM audit page with the send and query records of a real node (2026-11-16)
 - WT-SRS-030: log page of a real node for an Operator (2026-11-16)
 - WT-SRS-037: CSV export of a real node's audit records as an attachment; refused for an Operator (2026-11-16)
+
+**2026-11-17, Hermes (pre-baseline, release-candidate evidence, card
+WT-0.2/9):** scripted **system test** (`scripts/e2e/wt-system-test.sh`,
+stack `deploy/compose/docker-compose.wt-system.yml`): LibreDCM `dcm-1`
+(source build, AE `LIBREDCM1`) and `dcm-2` (official build without a
+licence, AE `LIBREDCM2`), Libre WT 0.2.0-rc.1 with both as instances under
+cluster label `wtsys`, and DCMTK (`storescp` as destination `STORESCP`,
+`storescu`), all as containers built from this branch. Synthetic data only:
+a study of 2 series × 2 CT instances (`WTSYS^ALPHA`, `WTSYS-0001`) and one
+instance of the same study under another patient. Every check, its result
+and the pages are in the record
+[`docs/releases/librewt-v0.2.0-rc.1-verification/`](../../releases/librewt-v0.2.0-rc.1-verification/README.md).
+A browser walkthrough of every page in light and dark (72 screenshots,
+`docs/librewt/images/`) was checked by eye and by a page-width check; it
+found the layout defect fixed in this card (tables wider than the page).
+
+- WT-SRS-001: every page fetched over HTTP through the published port; screenshots of all 36 pages in light and dark checked; no page wider than its window after the fix (2026-11-17, system test record)
+- WT-SRS-002: fresh console leads to first run; first run refuses a short password, creates the Admin, then stops working (SYS-01…04, 2026-11-17)
+- WT-SRS-003: failed login gives the same answer for an existing and an unknown user (SYS-05, 2026-11-17)
+- WT-SRS-004: request without CSRF token refused 403; Viewer and Operator refused on Admin pages (SYS-07, -22, -30, -42, -96, 2026-11-17)
+- WT-SRS-005: logout ends the session (SYS-98, 2026-11-17)
+- WT-SRS-007: held instance listed with its incoming Patient ID (SYS-20, 2026-11-17)
+- WT-SRS-008: archived and incoming patient side by side (SYS-21, 2026-11-17)
+- WT-SRS-009: reject of the incoming image through the warning page; refused without a reason; confirmation refused a second time with 409 (SYS-23…26, 2026-11-17)
+- WT-SRS-012: Admin creates an Operator and a Viewer; a user changes their own password (SYS-06, -97, 2026-11-17)
+- WT-SRS-013: two real nodes configured with their own token files (SYS-10, 2026-11-17)
+- WT-SRS-014: banner on every instance page; unknown instance 404 (SYS-12, -16, 2026-11-17)
+- WT-SRS-016: fleet page with both nodes under their cluster label and their licence states (SYS-10, -11, 2026-11-17)
+- WT-SRS-017: status pages of both nodes with readiness and the host restart note (SYS-14, 2026-11-17)
+- WT-SRS-019: configuration page for an Operator, no change controls, token not shown (SYS-31, -32, 2026-11-17)
+- WT-SRS-020: empty allow-list warning; destinations with source `overlay` (SYS-33, -37, 2026-11-17)
+- WT-SRS-021: destination added through LibreDCM's plan; second destination planned without removing the first; allow-list of dcm-2 restricted and in force (INTRUDER refused, MODALITY1 stores) (SYS-34…37, -77a, -77b, 2026-11-17)
+- WT-SRS-022: rollback removes the second destination; reload of dcm-1; reload of the unlicensed dcm-2 refused with a link to the licence page until acknowledged, then done (SYS-38…41, -72, -75, 2026-11-17)
+- WT-SRS-024: Operator C-ECHO to a configured destination succeeds; Operator refused a free address (403); Admin C-ECHO to a free address succeeds (SYS-45…47, 2026-11-17)
+- WT-SRS-025: Operator finds the study by Patient ID wildcard; `*` alone not sent; rejected image not listed; study page with both series; series page with its instances (SYS-51…55, 2026-11-17)
+- WT-SRS-026: wrong Patient ID gets no approval; whole study (4 instances) and one series (2 instances) sent to DCMTK, every received data set byte-identical to the stored one, with a tamper control (SYS-57…63, CTL-1, 2026-11-17)
+- WT-SRS-027: licence page "not enforced" on the source build; unlicensed official build: acknowledgement refused with another user's name, accepted with the Admin's own; activation request handed out as a file download (SYS-70…76, 2026-11-17)
+- WT-SRS-028: Operator backup of dcm-1; the SHA-256 shown equals the SHA-256 of the file copied from the node; backup listed with user and reason (SYS-81…83, 2026-11-17)
+- WT-SRS-029: Admin reads LibreDCM audit records naming the Libre WT user and reason; Operator refused (SYS-90, -91, 2026-11-17)
+- WT-SRS-030: Operator reads the node's log lines with the memory-buffer statement (SYS-93, 2026-11-17)
+- WT-SRS-032: neither admin token in any of the pages fetched, the Libre WT log or the saved record (SYS-99 and runner scan, 2026-11-17)
+- WT-SRS-033: Libre WT audit log holds logins, setup, configuration, C-ECHO, licence, backup, send, resolve and export records (SYS-95, 2026-11-17)
+- WT-SRS-034: role refusals across Viewer and Operator for every Admin-only or Operator function tried (SYS-22, -30, -42, -46, -50, -56, -80, -90, -94, -96, 2026-11-17)
+- WT-SRS-036: plain-HTTP warning on both instances (SYS-13, 2026-11-17)
+- WT-SRS-037: Admin exports the LibreDCM audit records as a CSV attachment; Operator refused the log export (SYS-92, -94, 2026-11-17)
+
+Still not done at system level: HTTPS between Libre WT and LibreDCM and for
+the console, the installer scripts on Windows, a partial or failed send to a
+real destination, an identity change of a real node (automated tests only).

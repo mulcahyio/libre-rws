@@ -274,3 +274,44 @@ New points:
 No new dependency (`go.mod` and `go.sum` unchanged; `encoding/csv` is
 standard library). gosec v2.30.0 and govulncheck v1.9.0 results are in the
 pull request.
+
+### State at the release candidate (card WT-0.2/9, 2026-11-17)
+
+Card WT-0.2/9 added no function. It ran Libre WT against real LibreDCM
+containers (system test, 87 checks), reviewed every page in a browser, and
+fixed one layout defect. Security-relevant results, from the record in
+`docs/releases/librewt-v0.2.0-rc.1-verification/`:
+
+| Threat | Checked at system level | Checks |
+|---|---|---|
+| WT-TM-01 (passwords, first run, sessions) | Fresh install leads to first run; first run refuses a short password and stops once an account exists; a failed login gives the same answer for an unknown user; logout ends the session; a user changes their own password | SYS-01…05, -97, -98 |
+| WT-TM-02 (CSRF) | A state change without the CSRF token is refused (HTTP 403) | SYS-07 |
+| WT-TM-09 (action flow) | Every action needs the warning page, reason and approval; an approval can't be used twice; an exception edit without a reason is refused | SYS-23…26, all action checks |
+| WT-TM-03, WT-TM-10 (roles) | Viewer refused on configuration, studies, backups and edit review; Operator refused on configuration change, free C-ECHO, send, LibreDCM audit records, log export and the Libre WT audit log | SYS-22, -30, -42, -46, -50, -56, -80, -90, -94, -96 |
+| WT-TM-12 (secrets) | Neither admin token appears in any of the pages fetched (97 in the recorded run), in the Libre WT log, or anywhere in the saved record (the runner scans every file); the configuration page shows the token as "not set"/"set" only; plain-HTTP warning on every instance page | SYS-13, -32, -99; runner token scan |
+| WT-TM-13 (patient data) | Search with `*` only not sent; study pages refused to Viewers | SYS-50, -51 |
+| HAZ-005/-007 (allow-list) | An allow-list change made in Libre WT takes effect on the node: the calling AE `INTRUDER` is refused, `MODALITY1` stores | SYS-77a, -77b |
+| HAZ-010 (licence never affects DICOM) | The unlicensed official build stores images before and after the acknowledgement | SYS-71b, SYS-77 |
+
+Test stack hardening (`deploy/compose/docker-compose.wt-system.yml`):
+read-only root file systems, all capabilities dropped,
+`no-new-privileges`, only Libre WT published and only on 127.0.0.1, tokens
+created at random per run outside the repository and mounted read-only.
+
+Not exercised at system level (stays open): HTTPS between Libre WT and
+LibreDCM (unit tests only), HTTPS of the console, the installer scripts
+(PowerShell not run), a second factor (not built).
+
+The screenshot tool (`scripts/e2e/wt-screenshots.mjs`) turns off the CSP
+in its own test browser (`Page.setBypassCSP`) so it can fill forms through
+the DevTools protocol. This concerns the test browser only; the product's
+CSP is unchanged and still blocks every script.
+
+### Dependencies and static analysis (card WT-0.2/9)
+
+No new Go dependency (`go.mod`, `go.sum` unchanged); SBOM unchanged. The
+test tools use the Python standard library, pydicom 2.3.1 and DCMTK 3.6.7
+inside the existing `rws-e2e-dcmtk` image, and Node 26 with no packages.
+gosec v2.30.0: 0 issues. govulncheck v1.9.0: no vulnerability called by the
+code (4 in required modules, not reachable). Logs in the verification
+record.

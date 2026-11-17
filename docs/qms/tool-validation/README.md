@@ -28,6 +28,8 @@ command output from 2026-11-10 unless stated.
 | `scripts/qms/release-verify.sh` | repo version | High | Used for 0.2.0-beta.1; review of the script | Fit with findings |
 | DCMTK | 3.6.7 (image `rws-e2e-dcmtk`) | Medium | Reference implementation; behaviour cross-checked by Go end-to-end tests | Fit |
 | LibreDVT | 0.1.0-dev (branch `feat/libredvt-v0.1`; engines pinned in `modules/dvt/worker/requirements.txt`) | High | Scripted positive controls with the real engines (CI job `libredvt`), failure injection, mutation check, end-to-end comparison with DCMTK | Fit for v0.1 use, pending review |
+| Libre WT system test (`scripts/e2e/wt-system-test.sh`, `.py`, `wt_make_data.py`, `wt_compare.py`) | repo version (card WT-0.2/9) | High | Positive control of the comparison, failure injection (no console; already-used console), tightened vacuous checks, independence from the product code, failures on real discrepancies during development | Fit for Libre WT 0.2 verification, pending review |
+| `scripts/e2e/wt-screenshots.mjs` | repo version (card WT-0.2/9) | Low (documentation only) | Negative control of its page-width check | Fit |
 | AI coding tools | Claude (Hermes, Claude Code) | Low | Output controlled by review, CI and tests (SOP-011 §3) | Fit |
 
 ## Go toolchain
@@ -218,6 +220,59 @@ command output from 2026-11-10 unless stated.
 - **Re-validate:** any change under `modules/dvt/` or `Dockerfile.dvt`
   (CI job `libredvt` re-runs activities 1–3 automatically), any engine or
   base-image version change, or a new step type.
+
+## Libre WT system test (card WT-0.2/9, 2026-11-17)
+
+- **Intended use:** verify Libre WT end to end against real LibreDCM
+  containers (source build and unlicensed official build) and DCMTK, through
+  the web pages as Viewer, Operator and Admin; its log becomes a Libre WT
+  release verification record. Files: `scripts/e2e/wt-system-test.sh`
+  (runner), `wt-system-test.py` (checks), `wt_make_data.py` (synthetic
+  data), `wt_compare.py` (sent against received), stack
+  `deploy/compose/docker-compose.wt-system.yml`.
+- **Risk: high** (SOP-011: a test tool whose output is a verification
+  record). A check that passes wrongly would hide a defect in a risk
+  control.
+- **Independence:** written in Python (standard library on the host;
+  pydicom and DCMTK in the `rws-e2e-dcmtk` image); it imports no Libre WT
+  or LibreDCM code and checks DICOM effects with DCMTK, not with the
+  product's libraries.
+- **Activities and results (2026-11-17):**
+  - Positive control of the comparison: `wt_compare.py --tamper` flips one
+    pixel byte of one received file; it must report `DIFFERENT` and exit 1.
+    Runs inside every system test as check CTL-1 (passed: 3 identical, 1
+    different, exit 1).
+  - Failure injection 1, no console: the test against an address where
+    nothing listens fails ENV-1 and exits 1 after 90 s.
+  - Failure injection 2, wrong state: the test against a console that was
+    already set up (accounts exist, data changed) exits 1. The first try
+    left 19 checks passing; each was reviewed. Negative checks that passed
+    only because a session was missing were tightened to also require a
+    logged-in page, the exact refusal code (403, 409) or the expected
+    content; afterwards 13 passed, each for a real reason (the console was
+    in fact set up, the stores and the logout worked).
+  - Real discrepancies found during development made it fail as it
+    should: a hand-made destinations request removed the existing entry
+    (SYS-37 failed; the test now posts the form as the page builds it), and
+    the received data sets differed because DCMTK drops Data Set Trailing
+    Padding (SYS-60 failed; the generator now writes files without it).
+  - The runner exits non-zero when any check fails, and scans every saved
+    file for both admin tokens.
+- **Limits:** one fixed scenario with synthetic data; HTTPS and the
+  installer scripts are not covered; it runs locally, not in CI (D59).
+- **Re-validate:** when the test changes, or when the pages it parses
+  change their form field names.
+
+## `scripts/e2e/wt-screenshots.mjs`
+
+- **Intended use:** screenshots of every Libre WT page in light and dark
+  for the user guide, and a check that no page is wider than its 1280 px
+  window. Documentation only; not a verification record.
+- **Risk: low.**
+- **Negative control (2026-11-17):** with the style sheet before the fix
+  of card WT-0.2/9 it reported 6 pages wider than the window
+  (configuration 1297 px, LibreDCM audit 1532 px, logs 4164 px, each in
+  light and dark) and exited 1; with the fix, 0.
 
 ## AI coding tools
 

@@ -359,6 +359,38 @@ restart. No certificate generation. No image display, upload, download or
 deletion. No cluster-wide action. No instance management in the browser. No
 scripts in pages.
 
+### 7a. System-level verification (card WT-0.2/9, 2026-11-17)
+
+The system test runs Libre WT against real LibreDCM containers, the way a
+site installs them. It is a test configuration, not a product
+configuration.
+
+```mermaid
+flowchart LR
+  T["wt-system-test.py<br/>(host, Python stdlib)"] -- "HTTP forms, cookies, CSRF<br/>127.0.0.1:18090" --> WT["Libre WT<br/>libre/wt"]
+  WT -- "control API v1<br/>token dcm-1" --> D1["dcm-1<br/>libre/dcm (source build)"]
+  WT -- "control API v1<br/>token dcm-2" --> D2["dcm-2<br/>libre/dcm official,<br/>no licence"]
+  K["dcmtk<br/>storescp :11113,<br/>storescu, pydicom"] -- "C-STORE" --> D1
+  K -- "C-STORE" --> D2
+  D1 -- "C-STORE (send, C-ECHO)" --> K
+  T -. "docker compose exec / cp" .-> K
+  T -. "docker compose cp (backup file)" .-> D1
+```
+
+| Item | Path | Role |
+|---|---|---|
+| Stack | `deploy/compose/docker-compose.wt-system.yml` | Two LibreDCM nodes, Libre WT, DCMTK on a private network; only Libre WT is published, on 127.0.0.1 |
+| Runner | `scripts/e2e/wt-system-test.sh` | Writes random tokens and the Libre WT configuration outside the repository, starts the stack, runs the test, saves the logs, scans the record for the tokens |
+| Test | `scripts/e2e/wt-system-test.py` | 87 checks (`SYS-xx`, `DATA-x`, `CTL-1`) through the web pages, as Viewer, Operator and Admin |
+| Test data | `scripts/e2e/wt_make_data.py` | Synthetic study (2 series × 2 instances) and one conflicting instance, from pydicom's public sample with every identifier and UID replaced |
+| Comparison | `scripts/e2e/wt_compare.py` | Received instances against sent instances: SHA-256 of the data set after the File Meta Information; `--tamper` is its positive control |
+| Screenshots | `scripts/e2e/wt-screenshots.mjs` | Headless Chromium over the DevTools protocol (Node, no packages): every page in light and dark, and a check that no page is wider than its window. Documentation only |
+
+The test tools share no code with Libre WT or LibreDCM (Python and
+Node against Go), so a defect in the product's libraries can't hide in the
+test. Their validation is in `../../qms/tool-validation/README.md`
+("Libre WT system test").
+
 ## 8. Open decisions for Patrick
 
 Hermes chose these defaults where the instruction of 2026-11-14 left room.
@@ -424,3 +456,7 @@ Each can be changed before the code that depends on it is merged.
 | D56 | Opening Study Exceptions pages | Audited now, like every other page with patient data; when the record can't be written the page is not shown (card WT-0.2/8) | WT-SRS-033 asks for every page that shows patient data; 0.1 did not record views | Leave the 0.1 pages unaudited |
 | D57 | Filters of the audit and log pages | Fixed choices for outcome, level, period (15 minutes to 7 days, or all) and number; event type as a prefix of at most 64 letters, digits, `.`, `_`, `-`. Other values fall back to the default and are not sent (card WT-0.2/8) | No free text reaches LibreDCM or the export file name; a period is what people ask for ("the last hour") | Free date and time fields |
 | D58 | "Per-instance result" of a send | The counts, plus every failed and every warning SOP Instance UID LibreDCM reports; every other instance of the plan was accepted (card WT-0.2/8) | It is exactly what LibreDCM returns; listing every accepted UID would need another query, which LibreDCM audits as an access | List all instances with their result |
+| D59 | Where the system test runs | Locally, before a Libre WT release, with `scripts/e2e/wt-system-test.sh` (about 1 minute after the images are built); its log is the verification record. Not in GitHub CI (card WT-0.2/9) | It needs the DCMTK image `rws-e2e-dcmtk`, which is built locally today, and an official LibreDCM build | Add a CI job that builds the DCMTK image and runs it on every pull request |
+| D60 | Version of this release | Release candidate label `0.2.0-rc.1` for Libre WT in the verification record; no tag. Proposal for the tag: the next repository pre-release `v0.3.0-beta.1`, which carries LibreDCM control API v1 and Libre WT 0.2.0 (card WT-0.2/9) | One repository, one version line (CHANGELOG); LibreDCM's control API is a new feature, so the minor version goes up | Tag Libre WT separately (`wt-v0.2.0-beta.1`) |
+| D61 | Screenshots in the repository | 72 WebP files (36 pages, light and dark), about 5 MB, in `docs/librewt/images/`, made by `scripts/e2e/wt-screenshots.mjs` from the system-test stack (card WT-0.2/9) | The user guide is versioned with the code it describes | Keep them in Drive and link them |
+| D62 | Long values in tables | They wrap inside their cell (`overflow-wrap: anywhere`), so no page is wider than the window (card WT-0.2/9, found by the screenshot check) | A cut-off column hid "restart" or "live" on the configuration page | Horizontal scrolling per table |
