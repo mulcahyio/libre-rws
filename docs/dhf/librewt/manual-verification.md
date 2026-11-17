@@ -111,3 +111,49 @@ only).
 
 - WT-SRS-027: licence page of a real source-build node for Viewer and Admin, acknowledgement refused below Admin, licence file upload with checksum, LibreDCM's refusal shown, oversized upload refused (2026-11-16, see above)
 - WT-SRS-028: index backup on a real node by an Operator, checksum on the page equal to the file on disk, list and history shown, Viewer refused (2026-11-16)
+
+**2026-11-16, Hermes (pre-baseline, development evidence, card WT-0.2/8):**
+LibreDCM and Libre WT built from branch `feat/librewt-0.2-studies` and run
+on Linux as two processes: LibreDCM `manual-dcm-8` (AE `ARCHIVE1`, empty
+allow-list, one configured destination `STORESCP=127.0.0.1:11399`, token
+file) managed by Libre WT as instance `dcm-1`. DCMTK `storescu` (container
+`rws-e2e-dcmtk`, host network) stored two pydicom sample files
+(`CT_small.dcm`, Patient ID `1CT1`; `MR_small.dcm`, Patient ID `4MR1`;
+public synthetic test data, no real patient data) into LibreDCM. DCMTK
+`storescp` (same image) listened as `STORESCP` on port 11399. Walked with
+`curl` and two cookie jars (Admin and Operator) by a scratch script. Seen:
+a search with `*` only refused before sending (422, "give at least one
+search value"); a date-range search by the Operator listed both studies
+(`4MR1`, `1CT1`) with the "not a diagnostic viewer" statement; study page
+200 without a send form for the Operator; series page listed the study,
+series and SOP Instance UIDs; the Operator's send review refused (403).
+For the Admin the study page offered the send form with Patient ID `4MR1`
+and destination `STORESCP: STORESCP at 127.0.0.1:11399`; a review naming
+another Patient ID was refused by LibreDCM (422, "not indexed under this
+Patient ID") with no approval issued; the review showed "Patient
+CompressedSamples MR1, Patient ID 4MR1" in the warning and "send 1
+instance(s) of CompressedSamples MR1 (Patient ID 4MR1) to STORESCP" in the
+approval box; an approval without a reason was refused (422); the approved
+send (with extra `destination` and `patient_id` form fields, ignored)
+answered "complete", "The destination accepted all 1 instance(s)", and
+`storescp` wrote the file `MR.1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457`
+(9708 bytes); the same approval a second time was refused (409). The
+LibreDCM audit page (Admin) showed `DICOMInstancesTransferred.sent`
+(`pending` then `success`) under `admin1` with `op=control-send`, and four
+`Query` records of `op1`; the CSV export came as
+`text/csv; charset=utf-8` with `Content-Disposition: attachment`
+(`librewt-dcm-1-audit-…csv`, 11 lines); the audit page and the log export
+were refused for the Operator (403); the log page (Operator) showed the
+in-memory statement and 14 lines. The Libre WT audit log held the search
+(1), study and series views (3), send reviews (3), the approval (1), audit
+page views (2), the export (1) and the log view (1). The token was in no
+saved page and not in the Libre WT log (0 matches each). Not done by hand:
+a browser walkthrough with screenshots, HTTPS between Libre WT and
+LibreDCM, a partial or failed send against a real destination (automated
+tests with the fake control API only), a study with several series.
+
+- WT-SRS-025: study search with a date range by an Operator on a real node with two stored studies, study and series pages, search without a value refused (2026-11-16, see above)
+- WT-SRS-026: send of a real study to a real DCMTK storescp by an Admin; patient on the warning page and in the approval box; wrong Patient ID refused; file received (2026-11-16)
+- WT-SRS-029: LibreDCM audit page with the send and query records of a real node (2026-11-16)
+- WT-SRS-030: log page of a real node for an Operator (2026-11-16)
+- WT-SRS-037: CSV export of a real node's audit records as an attachment; refused for an Operator (2026-11-16)

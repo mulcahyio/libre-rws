@@ -32,16 +32,23 @@ Web management console for LibreDCM, part of Libre RWS. It has:
 - **C-ECHO test**: from the node to a configured destination (Operator and
   Admin) or to another address (Admin), with the result or the stage that
   failed;
-- audit log of logins, user changes, page openings of configuration pages,
-  reviews, approvals, results and accepted instance identities, with a
-  filter per instance.
+- **Studies** (Operator, Admin): search, study and series pages, no images;
+  **Send** (Admin) a study or some series to a configured destination after
+  a warning page that shows the patient;
+- **LibreDCM audit** (Admin) and **Logs** (Operator, Admin): the node's
+  recent audit records and log lines with filters; CSV export (Admin);
+- audit log of logins, user changes, page openings of configuration pages
+  and of every page with patient data, searches, exports, reviews,
+  approvals, results and accepted instance identities, with a filter per
+  instance.
 
 All roles see the fleet, dashboard, status, about and Study Exceptions pages.
-Operators also see the configuration, destinations and allow-list and run
-C-ECHO tests to configured destinations. Only an Admin changes the
-configuration, reloads, rolls back, tests a free address, resolves
-exceptions, accepts a new instance identity, manages users and reads the
-audit log.
+Operators also see the configuration, destinations and allow-list, run
+C-ECHO tests to configured destinations, start backups, search studies and
+read logs. Only an Admin changes the configuration, reloads, rolls back,
+tests a free address, sends studies, reads LibreDCM's audit records,
+exports, handles the licence, resolves exceptions, accepts a new instance
+identity, manages users and reads the audit log.
 
 Libre WT does not display images. It does not start, stop or restart
 LibreDCM: that is done on the host (see `deploy/workstation/INSTALL.md`,
@@ -232,6 +239,62 @@ TLS (the device's certificate is not checked). A failure shows the stage:
 **connect** (network or TLS), **association** (the device refused the
 node's AE title or the negotiation) or **echo**.
 
+## Studies and send
+
+**Studies** on an instance (Operator, Admin) searches the studies the node
+has indexed. Libre WT shows no images: **it is not a diagnostic viewer.**
+
+- Search by Patient ID or name (`*` for any characters, `?` for one), a
+  study date range, a modality, an accession number or a Study Instance UID.
+  At least one value is needed; `*` alone is not a value. The values are
+  sent by `POST` and never appear in an address.
+- 50 studies per page. When more match, the page says so and offers the
+  next page. Instances held as a patient conflict are listed only when the
+  node is set to show them (marked "held").
+- Open a study to see its series, and a series to see its instances
+  (identifiers only).
+- Every search and every opened study or series page is written to the
+  Libre WT audit log, with the values searched for, before the node is
+  asked. The node records the search again under your name. `librewt.db`
+  therefore holds patient IDs: protect the Libre WT data folder.
+
+**Send** (Admin) sends a study, or the series you tick, to one of the
+node's configured C-MOVE destinations:
+
+1. On the study page choose the destination and press **Review the
+   send…**. Nothing is sent yet.
+2. The warning page shows, as the node plans it: the patient's name, ID and
+   birth date (prominently), the study date, description and accession
+   number, the number of series and instances, and the destination's AE
+   title and address. **Check the patient.** Images that reach the wrong
+   device can't be called back.
+3. Give a reason, tick the box that names the patient and press **Send**.
+   The approval is valid once, for 10 minutes, for exactly this plan. If the
+   study gained or lost images, or the destination's address changed, the
+   node refuses and nothing is sent.
+
+The result says **complete**, **partial** or **failed** and lists every
+instance the destination did not accept. Libre WT waits up to 110 seconds;
+a longer send still finishes on the node: look for its request ID on the
+**LibreDCM audit** page (event `DICOMInstancesTransferred.sent`). A study
+held as a patient conflict, or listed under two patients, can't be sent
+from the console: resolve it in Study Exceptions first.
+
+## LibreDCM audit records and logs
+
+**LibreDCM audit** (Admin) shows the node's most recent audit records
+(stores, queries, sends, refusals, console actions), newest first, filtered
+by event type, outcome and period. **Logs** (Operator, Admin) shows the most
+recent log lines, filtered by lowest level and period. Both come from a
+fixed-size buffer in the node's memory that is emptied at every restart: the
+site's log collector holds the full record. Opening either page is written
+to the Libre WT audit log.
+
+**Export as CSV** (Admin) downloads the rows shown with the current filter.
+The export is written to the Libre WT audit log first. A cell that starts
+with `=`, `+`, `-` or `@` gets a leading `'`, so a spreadsheet does not run
+it as a formula. The file holds patient data: store it like the audit log.
+
 ## Upgrade from Libre WT 0.1
 
 Replace the program or image; keep the data directory. `librewt.db` is
@@ -239,7 +302,7 @@ upgraded in place at the first start (the audit log gains the instance; a
 table for instance identities is added). Bookmarks to `/exceptions…` keep
 working while one instance is configured. After login the first page is now
 the fleet page. Going back to 0.1 with the upgraded database works; 0.1
-ignores the additions.
+ignores the additions. Opening a Study Exceptions page is now written to the
+audit log.
 
-Not yet: study search and send, LibreDCM audit records and logs (later
-cards of 0.2); OIDC/LDAP, TOTP, IHE IOCM rejection notes to other systems.
+Not yet: OIDC/LDAP, TOTP, IHE IOCM rejection notes to other systems.

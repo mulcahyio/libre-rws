@@ -182,3 +182,34 @@ request of card WT-0.2/7.
 | The licence key and the licence file stay in Libre WT's memory between the warning page and the approval | At most 10 minutes, at most 20 approvals per session, dropped at logout; never written to disk, log or audit log. A memory dump of the Libre WT host would show it, as it would show the admin tokens | Accepted |
 | An Operator can no longer acknowledge the licence notice (D47) | The block only stops configuration reloads, which are Admin actions; DICOM services are not affected | Accepted; open decision D47 |
 | A backup that takes longer than 110 seconds is shown as "outcome not known" | LibreDCM finishes it and lists the file; the page says so; a new backup in the same second is refused by LibreDCM (no overwrite) | Accepted; D49 |
+
+## Libre WT 0.2: controls implemented in card WT-0.2/8 (DRAFT for approval, 2026-11-16)
+
+Prepared by Hermes (Claude) for human review. Card WT-0.2/8 built the
+study search with the study and series pages, the send of a study to a
+configured destination, the LibreDCM audit record page, the log page and
+the CSV export (`architecture.md` §4, "As built (card WT-0.2/8)"). It is
+the last action card: WT-SRS-031…034 are now `Active`. No LibreDCM code
+changed.
+
+| Hazard | Controls now implemented | Verification (tests) | State of the hazard |
+|---|---|---|---|
+| WT-HAZ-07 wrong study sent, or sent to the wrong AE | WT-SRS-026: Admin only (D52); destination chosen from the node's configured list and checked by LibreDCM; the request names the Patient ID the study page showed and LibreDCM refuses a mismatch; Libre WT issues no approval when LibreDCM's plan names another patient, study or destination, has no digest, holds no instance or comes from another node; the warning page shows the patient name, ID and birth date in the warning box, the table and the approval box, with study date, description, accession number, series and instance counts and the destination's name, AE title and address; the approval is bound to the study in the address and the request is taken from the server, never from the approval form; LibreDCM's plan digest is sent and a changed study is refused (nothing sent); no send offered for a study held as a patient conflict or listed under two patients. WT-SRS-031: single-use confirmation, approval box, reason, expected node, audit before sending | `TestSendFlow`, `TestSendWrongPatientGuard`, `TestSendResults`, `TestStudyAndSeriesPages`, `TestRoleTable`, `TestStudiesAuditLogsAgainstRealLibreDCM` | Controls complete for the console. Target residual P2 (R) confirmed for review. Not yet tested with a real study and a real destination in an automated test (manual run: see `manual-verification.md`) |
+| WT-HAZ-13 patient data shown to people who do not need it | WT-SRS-034: study pages Operator and Admin, audit records Admin, logs Operator and Admin, exports Admin; tabs show only what the role may open. WT-SRS-025: no search without a value (`*` alone counts as none); values by `POST`, never in an address. WT-SRS-033: every opening of a search result, study, series, Study Exceptions, audit or log page and every export is audited first; no record, no page or file. `no-store` on every response (0.1) | `TestStudySearch`, `TestStudyAndSeriesPages`, `TestLibreDCMAuditPage`, `TestLogsPage`, `TestCSVExport`, `TestExceptionViewsAudited`, `TestRoleTable` | Controls complete. Target residual P2 (R) confirmed for review |
+| WT-HAZ-17 actions can't be traced | WT-SRS-033: review, approval (before sending; no record, nothing sent) and result of every send, with patient, study, destination, reason, request ID, outcome, counts and failed instances; `unknown` without an answer; searches with their keys and values (D55); exports with filter and row count. LibreDCM's own `Query` record names the Libre WT user. WT-SRS-029: Admins read LibreDCM's recent audit records in the console | `TestSendFlow`, `TestSendResults`, `TestStudySearch`, `TestCSVExport`, `TestStudiesAuditLogsAgainstRealLibreDCM` | Controls complete for all actions. Target residual P2 (A) confirmed for review |
+| WT-HAZ-11 status misleads (log page) | WT-SRS-030: the log page says it shows only the recent lines kept in memory, without audit records; the time of reading is shown | `TestLogsPage` | Controls complete |
+| WT-HAZ-08 secret disclosed | WT-SRS-032 for the new pages: LibreDCM's text is shown as text; no token or key is in the new pages; filter values outside the offered choices are not sent; the export file name comes from the configured instance name and the time | `TestLibreDCMAuditPage`, `TestStudySearch`, `TestCSVExport` | Controls complete for the console |
+
+Mutation check (2026-11-16): the mutants and their result are in the pull
+request of card WT-0.2/8.
+
+### New risks from this implementation (ISO 14971 §7.5)
+
+| Risk | Assessment | Handling |
+|---|---|---|
+| A CSV export can carry a formula that a spreadsheet program runs (CSV injection): AE titles, log messages and patient names come from outside | Every cell that starts with `=`, `+`, `-`, `@`, tab or carriage return gets a leading apostrophe (WT-SRS-037). S2, P1 | Accepted; `TestCSVCell`, `TestCSVExport` |
+| An exported file leaves the console's access control | Admin only; every export audited with filter and row count; the page says so. The file is then the site's responsibility. S3, P2 | Accepted; D53 |
+| `librewt.db` now holds patient identifiers (search values in the audit log, D55) | The file was already sensitive (password hashes, actions). It lives next to the configuration, readable by the Libre WT service account only (installer). S3, P1 | Accepted; install guide says to protect the data folder |
+| A send that takes longer than 110 seconds is shown as "outcome not known" | LibreDCM finishes it; the page gives the request ID to look up in LibreDCM's audit records; a new send needs a new review | Accepted; D54 |
+| Study Exceptions pages are refused when the audit log can't be written (D56) | The audit log is a local SQLite file; when it fails, actions are refused already. DICOM services are not affected | Accepted |
+| The card asked for Operators to send; the build keeps Admin only (D52) | Stricter than asked; no risk control weakened. A site with Operators who send today must use an Admin account until Patrick decides | Open decision D52 |

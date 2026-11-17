@@ -55,6 +55,12 @@ type Client interface {
 	LicenseActivate(ctx context.Context, key, site string, env dcmclient.Envelope) (dcmclient.LicenseResult, error)
 	Backups(ctx context.Context) (dcmclient.BackupList, error)
 	Backup(ctx context.Context, env dcmclient.Envelope) (dcmclient.BackupResult, error)
+
+	Studies(ctx context.Context, q dcmclient.StudyQuery, operator string) (dcmclient.StudyResult, error)
+	SendPlan(ctx context.Context, s dcmclient.SendRequest, exp dcmclient.Identity) (dcmclient.SendPlanAnswer, error)
+	Send(ctx context.Context, s dcmclient.SendRequest, digest string, env dcmclient.Envelope) (dcmclient.SendResult, error)
+	AuditRecords(ctx context.Context, q dcmclient.RingQuery) (dcmclient.Ring, error)
+	LogLines(ctx context.Context, q dcmclient.RingQuery) (dcmclient.Ring, error)
 }
 
 // IdentityStore remembers the identity of each instance (the accounts

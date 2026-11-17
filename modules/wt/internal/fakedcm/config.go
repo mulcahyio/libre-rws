@@ -121,9 +121,16 @@ func (s *Server) configPaths(w http.ResponseWriter, r *http.Request) bool {
 		"/control/v1/license": "GET", "/control/v1/license/ack": "POST", "/control/v1/license/request": "POST",
 		"/control/v1/license/install": "POST", "/control/v1/license/activate": "POST",
 		"/control/v1/backups": "GET", "/control/v1/backup": "POST",
+		"/control/v1/studies": "GET", "/control/v1/send/plan": "POST", "/control/v1/send": "POST",
+		"/control/v1/audit": "GET", "/control/v1/logs": "GET",
 	}
 	if s.Legacy || !strings.Contains(known[path], r.Method) {
 		return false
+	}
+	feature := map[string]string{"/control/v1/studies": "studies", "/control/v1/send/plan": "send", "/control/v1/send": "send",
+		"/control/v1/audit": "audit", "/control/v1/logs": "logs"}
+	if f, ok := feature[path]; ok && !s.hasFeature(f) {
+		return false // a node without the function does not serve it
 	}
 	if (path == "/control/v1/config" && r.Method == http.MethodPost) || strings.HasPrefix(path, "/control/v1/config/") {
 		if !s.hasFeature("config-edit") {
@@ -196,6 +203,12 @@ func (s *Server) configPaths(w http.ResponseWriter, r *http.Request) bool {
 		h := s.Cfg.History
 		h.Instance = inst
 		write(w, 200, h)
+	case path == "/control/v1/studies":
+		s.studies(w, r, inst)
+	case path == "/control/v1/send/plan" || path == "/control/v1/send":
+		s.send(w, path, body, inst)
+	case path == "/control/v1/audit" || path == "/control/v1/logs":
+		s.ring(w, r, inst)
 	case isPlan:
 		out := map[string]any{"instance": inst, "plan": s.Cfg.Plan}
 		if path == "/control/v1/config/rollback/plan" {

@@ -230,3 +230,47 @@ New points:
 No new dependency (`go.mod` and `go.sum` unchanged; `mime/multipart` and
 `unicode/utf8` are standard library). gosec v2.30.0 and govulncheck v1.9.0
 results are in the pull request.
+
+### State after card WT-0.2/8 (2026-11-16)
+
+Card WT-0.2/8 added the study search with study and series pages, the send
+of a study, the LibreDCM audit record page, the log page and the CSV export.
+It is the last action card, so the threats of the action flow can now be
+judged for every action. Status (C = control verified, P = partly, O =
+open):
+
+| ID | Status | What is verified now | Tests |
+|---|---|---|---|
+| WT-TM-09 | C | Send: CSRF token, single-use confirmation bound to session, instance, action, study and LibreDCM's plan; approval box naming the patient; reason. The request comes from the server-side approval; fields added to the approval form are ignored; an approval for one study can't send another (study in the address checked) nor be used on another instance. With cards WT-0.2/6 and /7 every action of WT-SRS-031 is covered | `TestSendFlow`, `TestSendWrongPatientGuard`, `TestRoleTable` |
+| WT-TM-10 | C | 10 new addresses in the reviewed role table (studies: Operator; send: Admin, D52; audit records and both exports: Admin; logs: Operator, D53), each walked for every role. Controls and tabs shown only to roles that can use them | `TestRoleTable`, `TestStudyAndSeriesPages`, `TestLogsPage` |
+| WT-TM-11 | C | Send: no review while the node differs; the expected node is sent with the plan and the send; a plan, a search answer or a study answer that names another node is not shown and gets no approval | `TestSendWrongPatientGuard`, `TestStudySearch` |
+| WT-TM-12 | C | No token or key on the new pages or in their audit records; search values and filters never in a page address except the fixed filter choices of the audit and log pages (no patient data) | `TestStudySearch`, `TestLibreDCMAuditPage`, `TestConfigPage`, `TestLicenceKeyIsMasked` |
+| WT-TM-13 | P | Study, audit and log pages: role limits, `no-store`, search values by `POST`, every opening audited (no record, no page), Study Exceptions views audited too (D56); exports Admin only and audited (no record, no file). Gap that stays: screens and exported files can be copied; no second factor yet | `TestStudySearch`, `TestStudyAndSeriesPages`, `TestLibreDCMAuditPage`, `TestLogsPage`, `TestCSVExport`, `TestExceptionViewsAudited` |
+| WT-TM-14 | C | Markup in LibreDCM's error text, patient names, audit fields and log messages is shown as text; log and audit lines are parsed as JSON and printed as text, never as markup | `TestStudySearch`, `TestLibreDCMAuditPage`, `TestActionRefusalsAreShown` |
+| WT-TM-16 | P | Searches are bounded (50 rows per page, 200 for series and instances; LibreDCM allows four queries at once and pages up to 10 000 rows); no search without a value; ring reads bounded by the fixed limits (at most 500 records or 1000 lines) | `TestStudySearch`, `TestStudySearchMore`, `TestRingFilterQuery` |
+| WT-TM-18 | C | Every action, page opening with patient data, audit or log view and export is recorded with user, address, instance, target and outcome; approvals before sending; searches with their values (D55); LibreDCM's own `Query` record names the Libre WT user | `TestSendFlow`, `TestSendResults`, `TestStudySearch`, `TestCSVExport`, `TestStudiesAuditLogsAgainstRealLibreDCM` |
+
+New points:
+
+- **CSV export (new download).** `GET /i/{i}/audit.csv` and `/logs.csv`,
+  Admin only: `text/csv; charset=utf-8`, `Content-Disposition:
+  attachment`, `nosniff`, `no-store` and the strict CSP of every response.
+  The file name is built from the configured instance name and the time.
+  Cells that a spreadsheet would run as a formula (starting with `=`, `+`,
+  `-`, `@`, tab, carriage return) get a leading apostrophe (CSV injection,
+  WT-SRS-037). The export is audited before the file is sent.
+- **Patient identifiers in `librewt.db`.** The audit log keeps the values
+  of each search (D55). Protect the Libre WT data folder like the LibreDCM
+  index; back it up as a record.
+- **Study UIDs in addresses.** Study and series pages carry the Study and
+  Series Instance UID in their address (`GET`), so they can be linked and
+  reloaded. UIDs are not names or patient IDs; the search values that are
+  (Patient ID, name, accession number) are sent by `POST` only.
+- **Send timeout.** Libre WT waits 110 seconds for a send (D54), then
+  records `unknown`; LibreDCM finishes the send.
+
+### Dependencies and static analysis (card WT-0.2/8)
+
+No new dependency (`go.mod` and `go.sum` unchanged; `encoding/csv` is
+standard library). gosec v2.30.0 and govulncheck v1.9.0 results are in the
+pull request.

@@ -14,6 +14,40 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **Libre WT: study browser, send to a destination, LibreDCM audit records
+  and logs (card WT-0.2/8, issue #20; WT-SRS-025, -026, -029…034 and the
+  new -037 now `Active`).**
+  - Study search per instance (Operator, Admin): Patient ID and name with
+    `*` and `?`, study date range, modality, accession number, Study
+    Instance UID. Values go by `POST`, never in an address; a search without
+    a value (or `*` alone) is refused before it is sent. 50 studies per
+    page, with "more studies match" and a next page. Each search is in the
+    Libre WT audit log (with its values) before LibreDCM is asked, under the
+    user's name, and LibreDCM records it again.
+  - Study page (patient, study, series) and series page (instances by
+    identifier only). Libre WT shows no images; every page says it is not a
+    diagnostic viewer. Each opening is audited (no record, no page).
+  - Send a study, or chosen series, to a configured destination (Admin):
+    warning page with the patient's name, ID and birth date in the warning,
+    the table and the approval box, the study, the series and instance
+    counts and the destination's AE title and address, as LibreDCM plans
+    them. No approval when LibreDCM's plan names another patient, study or
+    destination, has no digest, holds nothing, or comes from another node;
+    no send form for a study held as a patient conflict or listed under two
+    patients. The approval is bound to the study and LibreDCM's plan
+    digest; LibreDCM refuses a send whose study changed. The result shows
+    complete, partial or failed with every failed instance.
+  - LibreDCM audit record page (Admin) and log page (Operator, Admin):
+    recent records or lines kept in the node's memory, newest first, with
+    filters (event type, outcome, level, period, number) and the statement
+    that the site's log collector holds the full record.
+  - CSV export of the audit records and logs shown (Admin): a download,
+    audited before the file is sent; cells a spreadsheet would run as a
+    formula get a leading apostrophe.
+
+  Kept against the card text: sending stays Admin only (D52; the card said
+  Operator and Admin, but Admin only is a listed risk control of
+  WT-HAZ-07). No new dependency. No change to LibreDCM.
 - **Libre WT: licence management and index backup (card WT-0.2/7, issue
   #20; WT-SRS-027 and -028 now `Active`).**
   - Licence page per instance (all roles): state, message, days left,
@@ -353,6 +387,9 @@ LibreDCM's behaviour unless stated.
   OS-package vulnerabilities; justified exceptions expire (`.trivyignore.yaml`).
 
 ### Changed
+- Libre WT: opening the Study Exceptions list or one exception is now
+  written to the Libre WT audit log, like every page with patient data;
+  when the record can't be written the page is not shown (D56, WT-SRS-033).
 - Libre WT: Study Exceptions moved from `/exceptions…` to
   `/i/<instance>/exceptions…`. The old addresses lead to the same page when
   there is one instance, and to the fleet page when there are several.

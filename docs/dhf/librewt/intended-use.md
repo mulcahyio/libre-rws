@@ -32,7 +32,7 @@ queue.
 | UN-WT-10 | I can find a study and send it to a workstation, and a slip can't send it to the wrong place or send the wrong patient's study | U1 | WT-SRS-025, -026, -031 |
 | UN-WT-11 | I handle the licence from the console, and a licence problem never stops patient care | U1 | WT-SRS-027 |
 | UN-WT-12 | I can back up the index before maintenance without logging in to the host, and a backup can't damage anything | U1 | WT-SRS-028 |
-| UN-WT-13 | I can see what happened on a node (audit records, logs) and who did what in the console | U1, U5 | WT-SRS-029, -030, -033 |
+| UN-WT-13 | I can see what happened on a node (audit records, logs) and who did what in the console | U1, U5 | WT-SRS-029, -030, -033, -037 |
 | UN-WT-14 | People see and do only what their role allows | U1, U5 | WT-SRS-034, -032 |
 
 UN-WT-05…14 were added 2026-11-14 for Libre WT 0.2 (issue #20). Their
@@ -97,12 +97,12 @@ confirmation, audit on both sides.
 | Change destinations or allow-list | Live-reloadable configuration | Admin | Adds a new modality or workstation; removes a retired one | **Yes** | WT-SRS-021, -031 |
 | Reload, rollback | Live reload (same path as SIGHUP) | Admin | Applies a change made in the file on the host; undoes the last console change | **Yes** | WT-SRS-022, -031 |
 | C-ECHO test | C-ECHO client (`-echo`) | Operator, Admin (free address: Admin) | Proves that a node reaches a workstation or PACS before relying on it | No (network test only) | WT-SRS-024 |
-| Study search | Index query, same rules as C-FIND | Operator, Admin | Confirms that a study arrived; finds the study to send | No (shows patient data) | WT-SRS-025 |
-| Send study | Same send path as C-MOVE | Admin | Sends a study to a configured workstation or PACS, for example after a failed automatic route | **Yes** (patient data leaves the archive) | WT-SRS-026, -031 |
+| Study search | Index query, same rules as C-FIND | Operator, Admin | Confirms that a study arrived; opens a study to see its series and a series to see its instances (identifiers only, no images); finds the study to send | No (shows patient data) | WT-SRS-025 |
+| Send study | Same send path as C-MOVE | Admin (D52) | Sends a study, or chosen series, to a configured workstation or PACS, for example after a failed automatic route | **Yes** (patient data leaves the archive) | WT-SRS-026, -031 |
 | Licence | Licensing (`-license-status`, `-request`, `-activate`, `-install`, `-ack`) | View: all. Acknowledge, request, install, activate: Admin (D47) | Sees the licence state; acknowledges the notice; installs or activates a licence | Licence only. Never DICOM services | WT-SRS-027, -031 |
 | Backup | Online `-backup` | Operator, Admin | Makes a snapshot of the index before maintenance | Writes a new file on the node; changes nothing else | WT-SRS-028, -031 |
-| LibreDCM audit records | Structured audit records | Admin | Looks at recent stores, queries, exports and rejections | No (shows patient data) | WT-SRS-029 |
-| LibreDCM logs | Logs | Operator, Admin | Looks for the cause of a problem | No | WT-SRS-030 |
+| LibreDCM audit records | Structured audit records | Admin; CSV export: Admin (D53) | Looks at recent stores, queries, exports and rejections; exports them for an investigation | No (shows patient data) | WT-SRS-029, -037 |
+| LibreDCM logs | Logs | Operator, Admin; CSV export: Admin (D53) | Looks for the cause of a problem | No | WT-SRS-030, -037 |
 | Study Exceptions | Patient-conflict control API | View: all. Resolve: Admin | As in 0.1, now per instance | **Yes** | WT-SRS-007…010 |
 | Users, console audit log | (Libre WT itself) | Admin | As in 0.1; the audit log now names the instance | No | WT-SRS-011, -012, -033 |
 
@@ -120,7 +120,7 @@ image display (not console functions).
 | US-WT-02 | Act on one node of several (Operator, Admin) | Acting on the wrong node (similar names, several browser tabs) | WT-HAZ-05 | Instance in every address and banner; no selected instance in the session; identity check; confirmation bound to the instance (WT-SRS-014, -015, -031) |
 | US-WT-03 | Add or remove an allow-list rule or a destination (Admin) | Typo; removing a modality still in use; emptying the list; wrong address for a destination | WT-HAZ-06 | Plan page with the exact difference; LibreDCM validation; warnings with their own boxes; rollback; C-ECHO test afterwards (WT-SRS-021, -022, -024) |
 | US-WT-04 | Change one node of a cluster and forget the others (Admin) | Nodes behave differently | WT-HAZ-12 | Divergence flag on the fleet page (WT-SRS-023) |
-| US-WT-05 | Send a study (Admin) | Wrong patient's study; wrong destination | WT-HAZ-07 | Destination from the configured list only; warning page with patient, study and destination; LibreDCM checks the Patient ID (WT-SRS-026) |
+| US-WT-05 | Send a study (Admin) | Wrong patient's study; wrong destination | WT-HAZ-07 | Destination from the configured list only; warning page with the patient (name, ID, birth date) shown prominently, study and destination address; approval box names the patient; LibreDCM checks the Patient ID; no approval for a plan about another patient, study or destination (WT-SRS-026) |
 | US-WT-06 | Check health (all roles) | Reading old values as current; missing an unreachable node | WT-HAZ-11 | Unreachable shown as unreachable with the time of last contact; time of reading on every status page (WT-SRS-016, -017) |
 | US-WT-07 | Handle the licence (view: all; actions: Admin) | Expecting images to stop; installing the wrong licence | WT-HAZ-09 | Statement that DICOM keeps running; invalid licence refused, old one kept (WT-SRS-027) |
 | US-WT-08 | Back up (Operator, Admin) | Believing images are included; many backups filling the disk | WT-HAZ-10 | Statement on the page; LibreDCM free-space check and one backup at a time (WT-SRS-028) |

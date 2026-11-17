@@ -1,0 +1,55 @@
+{{define "title"}}Studies{{end}}
+{{define "content"}}
+<h1>Studies</h1>
+<p class="msg info" role="note"><b>Libre WT is not a diagnostic viewer.</b> It shows no images. Use a cleared viewer for reading and diagnosis.</p>
+<p class="lead">Search the studies indexed on instance <b>{{.I.Name}}</b>. Every search is recorded under your name in the audit logs of Libre WT and LibreDCM. Use <code>*</code> for any characters and <code>?</code> for one character.</p>
+{{if .Error}}<p class="msg error" role="alert">{{.Error}}</p>{{end}}
+<form method="post" action="{{.Base}}/studies/search" class="card">
+<input type="hidden" name="csrf" value="{{.CSRF}}">
+<div class="tiles">
+<label>Patient ID <input name="patient_id" value="{{.F.PatientID}}" maxlength="64" autocomplete="off"></label>
+<label>Patient name <input name="patient_name" value="{{.F.PatientName}}" maxlength="64" autocomplete="off" placeholder="DOE^J*"></label>
+<label>Study date from <input type="date" name="date_from" value="{{.F.DateFrom}}"></label>
+<label>Study date to <input type="date" name="date_to" value="{{.F.DateTo}}"></label>
+<label>Modality <input name="modality" value="{{.F.Modality}}" maxlength="16" placeholder="CT"></label>
+<label>Accession number <input name="accession" value="{{.F.Accession}}" maxlength="64" autocomplete="off"></label>
+<label>Study Instance UID <input name="study_uid" value="{{.F.StudyUID}}" maxlength="64" autocomplete="off"></label>
+</div>
+<div class="actions"><button class="primary">Search</button></div>
+<p><small>A search needs at least one value. The whole archive is never listed.</small></p>
+</form>
+{{if .Searched}}
+{{with .R}}
+<h2>{{.Count}} {{if eq .Count 1}}study{{else}}studies{{end}}{{if $.Cursor}} (next page){{end}}</h2>
+<p class="lead">Answered by instance <b>{{$.I.Name}}</b> at {{fmtStamp $.ReadAt}}.{{if eq .Held "flagged"}} Instances held as a patient conflict are listed and marked.{{else}} Instances held as a patient conflict are not listed.{{end}}</p>
+{{if .More}}<p class="msg warn" role="alert">More studies match than are shown ({{.Count}} shown). Narrow the search, or show the next page.</p>{{end}}
+{{if .Rows}}
+<table>
+<thead><tr><th>Patient ID</th><th>Patient name</th><th>Birth date</th><th>Study date</th><th>Accession</th><th>Description</th><th>Modalities</th><th>Series</th><th>Instances</th><th></th></tr></thead>
+<tbody>{{range .Rows}}<tr>
+<td><b>{{index . "PatientID"}}</b>{{if index . "ConflictID"}} <span class="flag warn">held: patient conflict</span>{{end}}</td>
+<td>{{fmtPN (index . "PatientName")}}</td>
+<td>{{fmtDA (index . "PatientBirthDate")}}</td>
+<td>{{fmtDA (index . "StudyDate")}}</td>
+<td>{{index . "AccessionNumber"}}</td>
+<td>{{index . "StudyDescription"}}</td>
+<td>{{index . "ModalitiesInStudy"}}</td>
+<td>{{index . "NumberOfStudyRelatedSeries"}}</td>
+<td>{{index . "NumberOfStudyRelatedInstances"}}</td>
+<td><a href="{{$.Base}}/studies/{{pathEsc (index . "StudyInstanceUID")}}">Open</a></td>
+</tr>{{end}}</tbody>
+</table>
+{{else}}<p>No study matches.</p>{{end}}
+{{if .More}}
+<form method="post" action="{{$.Base}}/studies/search">
+<input type="hidden" name="csrf" value="{{$.CSRF}}">
+<input type="hidden" name="patient_id" value="{{$.F.PatientID}}"><input type="hidden" name="patient_name" value="{{$.F.PatientName}}">
+<input type="hidden" name="date_from" value="{{$.F.DateFrom}}"><input type="hidden" name="date_to" value="{{$.F.DateTo}}">
+<input type="hidden" name="modality" value="{{$.F.Modality}}"><input type="hidden" name="accession" value="{{$.F.Accession}}">
+<input type="hidden" name="study_uid" value="{{$.F.StudyUID}}"><input type="hidden" name="cursor" value="{{.Cursor}}">
+<button>Next page</button>
+</form>
+{{end}}
+{{end}}
+{{end}}
+{{end}}

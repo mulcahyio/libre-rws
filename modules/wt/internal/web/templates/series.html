@@ -1,0 +1,17 @@
+{{define "title"}}Series{{end}}
+{{define "content"}}
+<p><a href="{{.Back}}">← Back to the study</a></p>
+<h1>Instances of a series</h1>
+<p class="msg info" role="note"><b>Libre WT is not a diagnostic viewer.</b> It lists identifiers only and shows no images. Use a cleared viewer for reading and diagnosis.</p>
+<p class="lead">Study <code class="uid">{{.UID}}</code>, series <code class="uid">{{.SUID}}</code>. Answered by instance <b>{{.I.Name}}</b> at {{fmtStamp .ReadAt}}.</p>
+{{with .R}}
+{{if .More}}<p class="msg warn" role="alert">More instances exist than are shown ({{.Count}} shown). <a href="{{$.Base}}/studies/{{pathEsc $.UID}}/series/{{pathEsc $.SUID}}?cursor={{.Cursor}}">Next page</a></p>{{end}}
+{{if .Rows}}
+<table>
+<thead><tr><th>Number</th><th>SOP Instance UID</th><th>SOP Class UID</th><th>Transfer syntax</th></tr></thead>
+<tbody>{{range .Rows}}<tr><td>{{index . "InstanceNumber"}}</td><td><code class="uid">{{index . "SOPInstanceUID"}}</code>{{if index . "ConflictID"}} <span class="flag warn">held: patient conflict</span>{{end}}</td>
+<td><code class="uid">{{index . "SOPClassUID"}}</code></td><td><code class="uid">{{index . "TransferSyntaxUID"}}</code></td></tr>{{end}}</tbody>
+</table>
+{{else}}<p>No instance is listed.</p>{{end}}
+{{end}}
+{{end}}
