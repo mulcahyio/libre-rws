@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study · dcm-1 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    
+    <a href="/about">About</a>
+    <a href="/account">oper <span class="role">operator</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="d509f688c40f5c5bde43746ee58859c4a9c295f6ee96bdde9b3d9aeac319c549"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-1</b>
+    <span class="label">AE title</span> <code>LIBREDCM1</code>
+    <span class="label">Node ID</span> <code>dcm-1</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-1/">Dashboard</a>
+    <a href="/i/dcm-1/status">Status</a>
+    <a href="/i/dcm-1/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-1/config">Configuration</a>
+    <a href="/i/dcm-1/remote-aes">Destinations</a>
+    <a href="/i/dcm-1/allow-list">Allow-list</a>
+    <a href="/i/dcm-1/echo">C-ECHO test</a>
+    <a href="/i/dcm-1/license">Licence</a>
+    <a href="/i/dcm-1/backups">Backup</a>
+    <a href="/i/dcm-1/studies">Studies</a>
+    <a href="/i/dcm-1/logs">Logs</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-1:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<p><a href="/i/dcm-1/studies">← Back to the search</a></p>
+<h1>Study</h1>
+<p class="msg info" role="note"><b>Libre WT is not a diagnostic viewer.</b> It shows no images. Use a cleared viewer for reading and diagnosis.</p>
+
+
+<section class="card">
+<dl>
+<dt>Patient ID</dt><dd><b>WTSYS-0001</b></dd>
+<dt>Patient name</dt><dd><b>WTSYS ALPHA</b></dd>
+<dt>Birth date</dt><dd>1970-01-01</dd>
+<dt>Study date</dt><dd>2026-01-01</dd>
+<dt>Description</dt><dd>WT SYSTEM TEST</dd>
+<dt>Accession</dt><dd>WTACC0001</dd>
+<dt>Modalities</dt><dd>CT</dd>
+<dt>Series / instances</dt><dd>2 / 4</dd>
+<dt>Study UID</dt><dd><code class="uid">1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code></dd>
+</dl>
+<p><small>Answered by instance <b>dcm-1</b> at 2026-11-17 00:51:45 UTC.</small></p>
+</section>
+
+
+
+
+<h2>Series</h2>
+
+
+<table>
+<thead><tr><th>Number</th><th>Modality</th><th>Description</th><th>Instances</th><th>Series UID</th><th></th></tr></thead>
+<tbody><tr>
+<td>1</td><td>CT</td><td>WT SERIES 1</td>
+<td>2</td><td><code class="uid">1.2.826.0.1.3680043.8.498.87849984865098589814739279884759674822</code></td>
+<td><a href="/i/dcm-1/studies/1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457/series/1.2.826.0.1.3680043.8.498.87849984865098589814739279884759674822">Instances</a></td>
+</tr><tr>
+<td>2</td><td>CT</td><td>WT SERIES 2</td>
+<td>2</td><td><code class="uid">1.2.826.0.1.3680043.8.498.66909903622038196999920286247274247361</code></td>
+<td><a href="/i/dcm-1/studies/1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457/series/1.2.826.0.1.3680043.8.498.66909903622038196999920286247274247361">Instances</a></td>
+</tr></tbody>
+</table>
+
+
+
+
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

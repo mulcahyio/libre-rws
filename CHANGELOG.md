@@ -14,6 +14,35 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **Libre WT 0.2 release candidate: system test, user guide, risk
+  management report (card WT-0.2/9, issue #20).**
+  - System test against real containers
+    (`scripts/e2e/wt-system-test.sh`, stack
+    `deploy/compose/docker-compose.wt-system.yml`): two LibreDCM nodes (a
+    source build and an unlicensed official build), Libre WT and DCMTK. 87
+    checks through the web pages as Viewer, Operator and Admin cover every
+    Libre WT function: first run, accounts, roles, CSRF, fleet, dashboard,
+    status, Study Exceptions with an edit, configuration, destination and
+    allow-list changes (the allow-list change takes effect on the node),
+    rollback, reload (blocked until the licence notice is acknowledged on
+    the unlicensed node), C-ECHO, studies, send of a study and of one series
+    to DCMTK `storescp` with every received data set byte-identical to the
+    stored one, licence acknowledgement and request file, backup (checksum
+    compared with the file on the node), LibreDCM audit records, logs, CSV
+    export, the Libre WT audit log and a scan for the admin tokens. Synthetic
+    data only. Record: `docs/releases/librewt-v0.2.0-rc.1-verification/`.
+  - User guide with screenshots of all 35 pages in light and dark
+    (`docs/librewt/user-guide.md`), made by `scripts/e2e/wt-screenshots.mjs`
+    (headless Chromium, no packages), which also fails when a page is
+    wider than its window.
+  - Install steps for Libre WT next to the workstation LibreDCM
+    (`deploy/workstation/INSTALL.md`), checked with the candidate images.
+  - Risk management report for Libre WT 0.2 with the residual risk of every
+    hazard and the benefit-risk statement (`docs/dhf/librewt/risk-management.md`),
+    system-level entries in both manual-verification files, tool validation
+    of the system test, and open decisions D59…D62.
+
+  No new dependency. No change to LibreDCM.
 - **Libre WT: study browser, send to a destination, LibreDCM audit records
   and logs (card WT-0.2/8, issue #20; WT-SRS-025, -026, -029…034 and the
   new -037 now `Active`).**
@@ -401,6 +430,12 @@ LibreDCM's behaviour unless stated.
   behaviour change: the example configuration decodes identically with both.
 
 ### Fixed
+- Libre WT: tables on the configuration, LibreDCM audit record and log
+  pages could be wider than the page (the log page up to 4164 px), which cut
+  off the last column (for example "live"/"restart" on the configuration
+  page). Long values now wrap inside their cell; native form controls
+  follow the dark colour scheme. Found by the screenshot review of card
+  WT-0.2/9 (D62).
 - C-FIND: an identifier containing a command (0000) or file-meta (0002)
   group element made the response unencodable and dropped the association;
   such elements are now ignored (found by fuzzing, ANOM-008).

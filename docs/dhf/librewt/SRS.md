@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Document | DHF-WT-SRS |
-| Status | **DRAFT** (2026-11-10, v0.1 scope approved by Patrick Mulcahy in chat, recorded in issue #15). §5 added 2026-11-14 for v0.2 (issue #20), **DRAFT for approval**: rows are `Draft` until the pull request that implements and verifies them; WT-SRS-013…018, -023, -035 and -036 are `Active` since card WT-0.2/5 (2026-11-16). WT-SRS-019…022 and -024 are `Active` since card WT-0.2/6 (2026-11-16); WT-SRS-027 and -028 are `Active` since card WT-0.2/7 (2026-11-16); WT-SRS-025, -026, -029…034 and -037 are `Active` since card WT-0.2/8 (2026-11-16), the last action card. Must be reviewed and approved at the QMS baseline |
+| Status | **DRAFT** (2026-11-10, v0.1 scope approved by Patrick Mulcahy in chat, recorded in issue #15). §5 added 2026-11-14 for v0.2 (issue #20), **DRAFT for approval**: rows are `Draft` until the pull request that implements and verifies them; WT-SRS-013…018, -023, -035 and -036 are `Active` since card WT-0.2/5 (2026-11-16). WT-SRS-019…022 and -024 are `Active` since card WT-0.2/6 (2026-11-16); WT-SRS-027 and -028 are `Active` since card WT-0.2/7 (2026-11-16); WT-SRS-025, -026, -029…034 and -037 are `Active` since card WT-0.2/8 (2026-11-16), the last action card. Card WT-0.2/9 (2026-11-17) added system-level verification of the rows in `manual-verification.md` (system test against real LibreDCM containers); no row changed. Must be reviewed and approved at the QMS baseline |
 | Software item | Libre WT (Watch Tower): management console of the Libre RWS PACS; v0.1 covers the Study Exceptions queue for LibreDCM |
 | Safety class | B with class-C depth for the resolve path (it changes patient identity on stored images through LibreDCM; HAZ-013, HAZ-014 in `../libredcm/risk-management.md`) |
 

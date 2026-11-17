@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review: send a study · dcm-1 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    <a href="/users">Users</a><a href="/audit">Audit log</a>
+    <a href="/about">About</a>
+    <a href="/account">admin <span class="role">admin</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="dd0e4b8267be811336678952ac23bce86394a2e1476b12b7170bc42bbf265795"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-1</b>
+    <span class="label">AE title</span> <code>LIBREDCM1</code>
+    <span class="label">Node ID</span> <code>dcm-1</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-1/">Dashboard</a>
+    <a href="/i/dcm-1/status">Status</a>
+    <a href="/i/dcm-1/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-1/config">Configuration</a>
+    <a href="/i/dcm-1/remote-aes">Destinations</a>
+    <a href="/i/dcm-1/allow-list">Allow-list</a>
+    <a href="/i/dcm-1/echo">C-ECHO test</a>
+    <a href="/i/dcm-1/license">Licence</a>
+    <a href="/i/dcm-1/backups">Backup</a>
+    <a href="/i/dcm-1/studies">Studies</a>
+    <a href="/i/dcm-1/logs">Logs</a>
+    <a href="/i/dcm-1/audit">LibreDCM audit</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-1:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<p><a href="/i/dcm-1/studies/1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457">← Back to the study</a></p>
+<h1>Review: send a study</h1>
+<section class="warning" role="alert">
+<h2>⚠ Check the patient before you send</h2>
+<p class="patient">Patient <b class="diff">WTSYS ALPHA</b>, Patient ID <b class="diff">WTSYS-0001</b>, born 1970-01-01</p>
+<p>Instance <b>dcm-1</b> (node ID <code>dcm-1</code>, AE title <code>LIBREDCM1</code>) will send <b>4</b> instance(s) in <b>2</b> series of this patient's study to <b>STORESCP</b>. Images that reach the wrong device can't be called back.</p>
+</section>
+<table class="narrow">
+<tbody>
+<tr><th>Patient name</th><td><b>WTSYS ALPHA</b></td></tr>
+<tr><th>Patient ID</th><td><b>WTSYS-0001</b></td></tr>
+<tr><th>Birth date</th><td>1970-01-01</td></tr>
+<tr><th>Study date</th><td>2026-01-01</td></tr>
+<tr><th>Study description</th><td>WT SYSTEM TEST</td></tr>
+<tr><th>Accession number</th><td>WTACC0001</td></tr>
+<tr><th>Study UID</th><td><code class="uid">1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code></td></tr>
+<tr><th>What</th><td>the whole study: 2 series, 4 instance(s)</td></tr>
+<tr><th>Destination</th><td><b>STORESCP</b>, AE title <code>STORESCP</code> at <code>dcmtk:11113</code></td></tr>
+<tr><th>Sent from</th><td>instance <b>dcm-1</b>, calling AE <code>LIBREDCM1</code></td></tr>
+</tbody>
+</table>
+<h2>Series</h2>
+<table class="narrow">
+<thead><tr><th>Series UID</th><th>Modality</th><th>Instances</th></tr></thead>
+<tbody><tr><td><code class="uid">1.2.826.0.1.3680043.8.498.66909903622038196999920286247274247361</code></td><td>CT</td><td>2</td></tr><tr><td><code class="uid">1.2.826.0.1.3680043.8.498.87849984865098589814739279884759674822</code></td><td>CT</td><td>2</td></tr></tbody>
+</table>
+<p><small>Instances held as a patient conflict are never sent. Each instance is sent in the encoding it is stored in.</small></p>
+<form method="post" action="/i/dcm-1/studies/1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457/send/apply" class="card">
+<input type="hidden" name="csrf" value="dd0e4b8267be811336678952ac23bce86394a2e1476b12b7170bc42bbf265795">
+<input type="hidden" name="confirm" value="fa1a0258aaa1de172adcf8c895448e4dc764d22ae624ae11bb9d364781739aa6">
+<label>Reason (recorded in the audit trails of Libre WT and LibreDCM) <textarea name="reason" required maxlength="500" rows="2"></textarea></label>
+<label class="check"><input type="checkbox" name="approve" value="yes" required> I checked the patient: send 4 instance(s) of <b>WTSYS ALPHA</b> (Patient ID <b>WTSYS-0001</b>) to STORESCP</label>
+<div class="actions">
+<button class="primary danger">Send</button>
+<a class="button" href="/i/dcm-1/studies/1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457">Cancel</a>
+</div>
+<p><small>This approval is valid for 10 minutes, once, and for exactly this plan. If the study, its instances or the destination change before you send, LibreDCM refuses and nothing is sent.</small></p>
+</form>
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

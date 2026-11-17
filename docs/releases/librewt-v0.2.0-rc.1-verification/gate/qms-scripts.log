@@ -1,0 +1,17 @@
+wrote docs/dhf/libredcm/generated/trace-matrix.md
+Requirements: 71 (67 active). Active with verification: 67. Active without verification: 0. Tags pointing at unknown IDs: 0. Tags pointing at retired IDs: 0.
+rc=0
+wrote docs/dhf/librewt/generated/trace-matrix.md
+Requirements: 37 (37 active). Active with verification: 37. Active without verification: 0. Tags pointing at unknown IDs: 0. Tags pointing at retired IDs: 0.
+rc=0
+Requirements: 34 (34 active). Active with verification: 34. Active without verification: 0. Tags pointing at unknown IDs: 0. Tags pointing at retired IDs: 0.
+rc=0
+User needs: 18. Requirements: 71 (70 not retired). Not traced to a need: 0. Unknown or retired citations: 0.
+rc=0
+User needs: 14. Requirements: 37 (37 not retired). Not traced to a need: 0. Unknown or retired citations: 0.
+rc=0
+User needs: 6. Requirements: 34 (34 not retired). Not traced to a need: 0. Unknown or retired citations: 0.
+rc=0
+Ran 13 tests in 0.369s
+
+OK

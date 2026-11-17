@@ -1,0 +1,24 @@
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/cmd/libredcm	1.957s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/blob	1.020s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/control	5.239s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm	1.047s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/events	1.366s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway	3.883s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/index	2.580s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/licensing	1.043s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/cmd/libredvt	1.071s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	39.750s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/plan	1.048s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/report	1.033s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/result	1.026s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	1.042s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/store	1.049s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/web	1.078s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/cmd/librewt	3.273s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/accounts	1.534s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/dcmclient	1.282s
+?   	github.com/mulcahyio/libre-rws/modules/wt/internal/fakedcm	[no test files]
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/fleet	1.517s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/web	15.051s
+ok  	github.com/mulcahyio/libre-rws/platform/config	1.013s
+ok  	github.com/mulcahyio/libre-rws/platform/runtime	1.078s

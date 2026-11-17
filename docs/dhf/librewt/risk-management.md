@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Document | DHF-WT-RMF |
-| Status | **DRAFT** (2026-11-10, prepared by Hermes/Claude for human review); v0.2 analysis added 2026-11-14, **DRAFT for approval**; verification of the first v0.2 controls added 2026-11-16 (card WT-0.2/5) |
+| Status | **DRAFT** (2026-11-10, prepared by Hermes/Claude for human review); v0.2 analysis added 2026-11-14, **DRAFT for approval**; verification of the first v0.2 controls added 2026-11-16 (card WT-0.2/5); risk management report for 0.2 (residual risk, benefit-risk) added 2026-11-17 (card WT-0.2/9), **DRAFT for approval** |
 | Procedure | QMS-SOP-003 (same scales and matrix as LibreDCM) |
 
 Libre WT's main hazard is the one it exists to control: a study filed under
@@ -213,3 +213,130 @@ request of card WT-0.2/8.
 | A send that takes longer than 110 seconds is shown as "outcome not known" | LibreDCM finishes it; the page gives the request ID to look up in LibreDCM's audit records; a new send needs a new review | Accepted; D54 |
 | Study Exceptions pages are refused when the audit log can't be written (D56) | The audit log is a local SQLite file; when it fails, actions are refused already. DICOM services are not affected | Accepted |
 | The card asked for Operators to send; the build keeps Admin only (D52) | Stricter than asked; no risk control weakened. A site with Operators who send today must use an Admin account until Patrick decides | Open decision D52 |
+
+## Libre WT 0.2: risk management report (DRAFT for approval, 2026-11-17)
+
+Prepared by Hermes (Claude) for human review at the end of card WT-0.2/9
+(issue #20). It closes the risk management of Libre WT 0.2.0 (release
+candidate `0.2.0-rc.1`, not tagged) under QMS-SOP-003 §8 and ISO 14971
+§8–9. It must be reviewed and signed by the person responsible for risk
+management (Patrick Mulcahy) before the release; until then every
+statement here is a proposal.
+
+### Scope and evidence
+
+- **Hazards:** WT-HAZ-01…04 (0.1) and WT-HAZ-05…17 (0.2) in this file, with
+  the system-level hazards HAZ-013…016 in `../libredcm/risk-management.md`.
+- **Controls:** WT-SRS-001…037, all `Active`
+  (`python3 scripts/qms/trace.py --module librewt --prefix WT --check`:
+  37 active, 37 verified), and LibreDCM DCM-SRS-077/078 and 080…097.
+- **Verification:** the unit and integration tests named in the card
+  sections above (the trace matrix `generated/trace-matrix.md` lists every
+  test per requirement), the tests against a real LibreDCM process
+  (`realdcm_test.go`, `realconfig_test.go`, `reallicence_test.go`,
+  `realstudies_test.go`), the risk-control mutation checks of cards
+  WT-0.2/5…8 (every mutant killed, recorded in their pull requests), and
+  the **system test** of card WT-0.2/9: 87 checks against two real LibreDCM
+  containers (a source build and an unlicensed official build), Libre WT
+  and DCMTK, all passed. Record:
+  [`docs/releases/librewt-v0.2.0-rc.1-verification/`](../../releases/librewt-v0.2.0-rc.1-verification/README.md).
+
+### Residual risk per hazard
+
+Residual P is the estimate with every control in place and verified. Risk
+class from the matrix in QMS-SOP-003 §6.4 (A acceptable, R reduce as far as
+possible, then acceptable with rationale).
+
+| Hazard | S | Initial | Controls (requirements) | Verified by (examples; full list in the trace matrix) | Residual P | Residual |
+|---|---|---|---|---|---|---|
+| WT-HAZ-01 wrong exception edit | S4 | P3 U | WT-SRS-008, -009, -010, -004, -011, -031 | `TestReviewAndApproveEdit`, `TestNoAuditNoEdit`; system test SYS-21…26 (Viewer has no edit control, plan shown, no edit without reason, confirmation single-use) | P2 | R |
+| WT-HAZ-02 unauthorised use | S4 | P3 U | WT-SRS-001…005, -012, -034 | `TestRoleTable`, `TestViewerRole`, login and session tests; SYS-01…08, -22, -30, -42, -50, -56, -80, -90, -94, -96, -98 | P2 | R |
+| WT-HAZ-03 exceptions not noticed | S3 | P3 R | WT-SRS-007, -016 (open exceptions on the fleet page); LibreDCM metric | `TestFleetPage`; SYS-20 | P3 | R |
+| WT-HAZ-04 admin token disclosed | S4 | P2 R | WT-SRS-006, -032 | `TestInstancesConfiguration`, `TestConfigAgainstRealLibreDCM`; SYS-32, SYS-99 (no token in any of the pages or the log) and the token scan of the saved record | P1 | R (see note 1) |
+| WT-HAZ-05 wrong instance | S4 | P3 U | WT-SRS-013…015, -031 | `TestInstanceFromAddressOnly`, `TestIdentityChangeBlocksActionsUntilAccepted`, `TestLibreDCMRefusesWrongNode`, `TestConfigEditFlow`; SYS-10, -12, -16 | P1 | R |
+| WT-HAZ-06 configuration change breaks or opens traffic | S4 | P3 U | WT-SRS-019…022, -031, -034 | `TestConfigEditFlow`, `TestConfigEditWarningsAndRefusals`, `TestPlanChangedAfterReview`; SYS-33…42, SYS-77a/b (allow-list change takes effect: INTRUDER refused, MODALITY1 stores) | P2 | R |
+| WT-HAZ-07 wrong study sent | S3 | P3 R | WT-SRS-026, -031, -034 | `TestSendFlow`, `TestSendWrongPatientGuard`, `TestSendResults`; SYS-56…63 (wrong Patient ID gets no approval; study and single series received byte-identical) and control CTL-1 | P2 | R |
+| WT-HAZ-08 secret disclosed | S4 | P3 U | WT-SRS-019, -027, -032, -036 | `TestConfigDropsRedactedValues`, `TestLicenceKeyIsMasked`, `TestPlainHTTPWarningOnPages`; SYS-13, -32, -99 | P1 | R |
+| WT-HAZ-09 licence mis-action | S3 | P2 R | WT-SRS-027, -031 | `TestLicenceAckFlow`, `TestLicenceInstallFlow`; SYS-70…77 (unlicensed official build: reload blocked, acknowledgement refused with another user's name, then accepted; C-STORE works throughout) | P1 | A |
+| WT-HAZ-10 backup harms the node | S3 | P3 R | WT-SRS-028, -031 | `TestBackupFlow`, `TestLicenceAndBackupAgainstRealLibreDCM`; SYS-80…83 (SHA-256 on the page equals the file on the node) | P1 | A |
+| WT-HAZ-11 status misleads | S3 | P3 R | WT-SRS-016…018, -030, -035 | `TestUnreachableShowsNoOldValues`, `TestStatusReadIsCachedAndShared`; SYS-10…15, -93 | P2 | R |
+| WT-HAZ-12 cluster drift | S3 | P3 R | WT-SRS-023 | `TestDivergenceWithinCluster`; the fleet screenshot shows "settings differ" for the two test nodes | P2 | R |
+| WT-HAZ-13 patient data overexposed | S3 | P3 R | WT-SRS-025, -029, -030, -033, -034, -037 | `TestStudySearch`, `TestExceptionViewsAudited`, `TestCSVExport`; SYS-50…55, -90, -94, -95 | P2 | R |
+| WT-HAZ-14 C-ECHO misuse | S2 | P3 R | WT-SRS-024, -031 | `TestEcho`; SYS-45…47 | P2 | A |
+| WT-HAZ-15 unreviewed reload or rollback | S4 | P2 R | WT-SRS-022, -031 | `TestReloadAndRollback`, `TestPlanChangedAfterReview`; SYS-38…41, -72, -75 | P1 | R |
+| WT-HAZ-16 console load | S3 | P2 R | status cache, bounded search, timeouts | `TestStatusReadIsCachedAndShared`, `TestStudySearch` | P1 | A |
+| WT-HAZ-17 actions not traceable | S2 | P3 R | WT-SRS-010, -011, -031, -033 | `TestNoAuditNoConfigAction`, `TestSendFlow`, `TestStudiesAuditLogsAgainstRealLibreDCM`; SYS-91, -95 (LibreDCM records name the Libre WT user and reason; WT log holds every action kind) | P2 | A |
+
+Note 1: the 0.1 table above rates WT-HAZ-04 residual "A". With S4 and P1
+the matrix of QMS-SOP-003 §6.4 gives **R**. This report corrects the class
+to R; the rationale is the same as for WT-HAZ-08.
+
+### Rationale for the residual risks in class R
+
+For each R row, the controls listed are all that are feasible in 0.2
+without a larger risk; further reduction needs functions that are planned
+but not built:
+
+- **WT-HAZ-01, -05, -06, -07, -15** (an Admin acts on the wrong item,
+  instance or setting): the remaining cause is a trained person who reads
+  the warning page and approves the wrong thing. Each page shows LibreDCM's
+  own plan, the instance banner and, for a send, the patient three times;
+  LibreDCM refuses when anything changed. A second person's approval
+  ("four eyes") would reduce it further; it is not in 0.2 (candidate for
+  0.3).
+- **WT-HAZ-02, -04, -08** (credentials or secrets): remaining causes are a
+  stolen Admin password and plain HTTP between Libre WT and LibreDCM.
+  Planned: a second factor (TOTP), OIDC/LDAP, per-user identity towards
+  LibreDCM. Today the console warns about plain HTTP on every page and the
+  install guide asks for HTTPS on a network.
+- **WT-HAZ-03, -11, -12** (something not noticed): the console shows the
+  facts and the time they were read; it can't make people look. Alert rules
+  for the site's monitoring are planned.
+- **WT-HAZ-13** (patient data): the data is needed for the function; access
+  is limited to Operators and Admins and every view is audited.
+
+### Anomalies found in this verification
+
+| Found | Effect | Handling |
+|---|---|---|
+| Tables on the configuration, LibreDCM audit and log pages were wider than the page (up to 4164 px for logs): the last column ("Change": live or restart-only) was cut off at 1280 px | A reader could miss whether a setting is restart-only (WT-HAZ-11, information). No wrong value shown | Fixed in this card (`app.css`: long values wrap). The screenshot script now fails when any page is wider than its 1280 px window; checked on all 70 screenshots (0 too wide; the old style sheet gives 6) |
+| The destinations form describes the whole list: a hand-made request that names only one new entry plans the removal of the others | None through the browser (the page always posts every row). The warning page lists each "removed" entry before approval (WT-SRS-021) | No change. The system test now posts the form as the page builds it; noted in the user guide |
+| pydicom's sample `CT_small.dcm` ends with Data Set Trailing Padding (FFFC,FFFC); DCMTK `storescu` drops it, so the received data set differed from the file | Test data only; LibreDCM sends the data set it received unchanged | The test data generator removes the padding; the comparison then matches byte for byte |
+
+### New risks from the controls (ISO 14971 §7.5), whole release
+
+The card sections above list them (click-through habit, identity trusted on
+first use, unaudited pages refused when the audit log fails, outcome not
+known after 110 s, uploaded licence file, `librewt.db` holding patient
+identifiers, CSV files leaving the console). Each is accepted there with its
+open decision (D33, D35, D43, D44, D47…D49, D52…D58). None is unacceptable.
+
+### Overall residual risk and benefit-risk (QMS-SOP-003 §8)
+
+**Overall residual risk (proposal):** with all 37 Libre WT requirements
+active and verified, no hazard of Libre WT 0.2 is unacceptable. Five hazards
+are acceptable (WT-HAZ-09, -10, -14, -16, -17); twelve are in class R and
+reduced as far as possible for this release, with the rationale above. The
+combination of the R risks does not create a new hazard: they share one
+cause (an authorised person approving the wrong plan, or a stolen
+password), and the same controls (warning pages, LibreDCM's plan checks,
+audit on both sides) apply to all of them.
+
+**Benefit-risk (proposal):** Libre WT replaces hand edits of LibreDCM
+configuration files, command-line licence and backup steps and direct
+database work with one console that shows the plan before any change, asks
+for a reason, sends the operator's name and is audited on both sides. Without
+it the same tasks are done with fewer checks. The benefit (fewer manual
+errors on the archive, wrong-patient conflicts resolved with a reviewed
+plan, faster detection of node problems) outweighs the residual risk.
+Libre WT shows no images and makes no diagnostic claim.
+
+**Before clinical use** (carried forward, not blockers for a beta):
+TOTP/second factor, OIDC/LDAP, per-user identity towards LibreDCM, HTTPS
+between Libre WT and LibreDCM by default, alert rules for open exceptions,
+a second-person approval for sends and allow-list changes (proposal), and
+the decisions D1…D58 in `architecture.md` §8.
+
+**Release recommendation (proposal):** Libre WT 0.2.0 may be released as a
+beta (pre-release, not for clinical use) once Patrick has reviewed this
+report, the open decisions and pull requests #21…#29.

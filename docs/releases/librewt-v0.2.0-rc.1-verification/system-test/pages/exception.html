@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exception 78a3ea353410158613b391e1 · dcm-1 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    
+    <a href="/about">About</a>
+    <a href="/account">view <span class="role">viewer</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="7eedb40f8de4bd49e3c97f56c32f1943737cf94a17ea486850e02d7d7fb43daf"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-1</b>
+    <span class="label">AE title</span> <code>LIBREDCM1</code>
+    <span class="label">Node ID</span> <code>dcm-1</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-1/">Dashboard</a>
+    <a href="/i/dcm-1/status">Status</a>
+    <a href="/i/dcm-1/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-1/license">Licence</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-1:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<p><a href="/i/dcm-1/exceptions">← Study Exceptions</a></p>
+<h1>Patient ID differs <span class="state open">Held</span></h1>
+<p class="lead">Study <code class="uid">1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code>, series <code class="uid">1.2.826.0.1.3680043.8.498.16918692657021722771147954900234215529</code>. Received from <b>MODALITY1</b>, first 2026-11-17 00:51, last 2026-11-17 00:51.</p>
+<div class="compare">
+<section class="card">
+<h2>In the archive</h2>
+
+<dl>
+<dt>Patient ID</dt><dd><code>WTSYS-0001</code></dd>
+<dt>Name</dt><dd>WTSYS^ALPHA</dd>
+<dt>Birth date</dt><dd>19700101</dd>
+<dt>Sex</dt><dd>O</dd>
+</dl>
+<p><small>4 archived image(s) in study <code class="uid">1.2.826.0.1.3680043.8.498.56687551518392031475065304184876135457</code></small></p>
+
+</section>
+<section class="card held">
+<h2>Incoming (held)</h2>
+<dl>
+<dt>Patient ID</dt><dd><code class="diff">WTSYS-9999</code></dd>
+<dt>Name</dt><dd class="diff">WTSYS^OTHER</dd>
+<dt>Birth date</dt><dd class="">19700101</dd>
+<dt>Sex</dt><dd class="">O</dd>
+</dl>
+<p><small>Accession WTACC0001 · 20260101 WT SYSTEM TEST</small></p>
+</section>
+</div>
+
+<h2>Held images (1)</h2>
+<table>
+<thead><tr><th>Series</th><th>Modality</th><th>Image</th><th>SOP Instance UID</th><th>Stored Patient ID</th><th>Received</th></tr></thead>
+<tbody><tr><td>9 WT CONFLICT</td><td>CT</td><td>1</td><td><code class="uid">1.2.826.0.1.3680043.8.498.26654680604352703302689466530243453135</code></td><td><code>WTSYS-9999</code></td><td>2026-11-17 00:51</td></tr></tbody>
+</table>
+
+
+  <p class="msg info">Only an administrator can resolve exceptions.</p>
+
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

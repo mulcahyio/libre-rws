@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edit configuration · dcm-1 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    <a href="/users">Users</a><a href="/audit">Audit log</a>
+    <a href="/about">About</a>
+    <a href="/account">admin <span class="role">admin</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="dd0e4b8267be811336678952ac23bce86394a2e1476b12b7170bc42bbf265795"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-1</b>
+    <span class="label">AE title</span> <code>LIBREDCM1</code>
+    <span class="label">Node ID</span> <code>dcm-1</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-1/">Dashboard</a>
+    <a href="/i/dcm-1/status">Status</a>
+    <a href="/i/dcm-1/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-1/config">Configuration</a>
+    <a href="/i/dcm-1/remote-aes">Destinations</a>
+    <a href="/i/dcm-1/allow-list">Allow-list</a>
+    <a href="/i/dcm-1/echo">C-ECHO test</a>
+    <a href="/i/dcm-1/license">Licence</a>
+    <a href="/i/dcm-1/backups">Backup</a>
+    <a href="/i/dcm-1/studies">Studies</a>
+    <a href="/i/dcm-1/logs">Logs</a>
+    <a href="/i/dcm-1/audit">LibreDCM audit</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-1:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<p><a href="/i/dcm-1/config">← Back to the configuration</a></p>
+<h1>Edit destinations or allow-list</h1>
+<p class="lead">Only these two settings change without a restart. Nothing changes when you press a button below: Libre WT first shows exactly what LibreDCM would change on instance <b>dcm-1</b>, and you approve it there.</p>
+
+
+<h2>C-MOVE destinations</h2>
+
+<form method="post" action="/i/dcm-1/config/review" class="card">
+<input type="hidden" name="csrf" value="dd0e4b8267be811336678952ac23bce86394a2e1476b12b7170bc42bbf265795">
+<input type="hidden" name="setting" value="remote_aes">
+<table>
+<thead><tr><th>Name</th><th>Host</th><th>Port</th><th>AE title</th><th>Remove</th></tr></thead>
+<tbody>
+<tr><td><input name="name" value="" maxlength="64" placeholder="new name" aria-label="Name of a new destination"></td>
+<td><input name="host" value="" maxlength="253" aria-label="Host of a new destination"></td><td><input name="port" value="" inputmode="numeric" maxlength="5" size="6" aria-label="Port of a new destination"></td>
+<td><input name="ae_title" value="" maxlength="16" size="17" aria-label="AE title of a new destination"></td><td><small>new</small></td></tr>
+<tr><td><input name="name" value="" maxlength="64" placeholder="new name" aria-label="Name of a new destination"></td>
+<td><input name="host" value="" maxlength="253" aria-label="Host of a new destination"></td><td><input name="port" value="" inputmode="numeric" maxlength="5" size="6" aria-label="Port of a new destination"></td>
+<td><input name="ae_title" value="" maxlength="16" size="17" aria-label="AE title of a new destination"></td><td><small>new</small></td></tr>
+<tr><td><input name="name" value="" maxlength="64" placeholder="new name" aria-label="Name of a new destination"></td>
+<td><input name="host" value="" maxlength="253" aria-label="Host of a new destination"></td><td><input name="port" value="" inputmode="numeric" maxlength="5" size="6" aria-label="Port of a new destination"></td>
+<td><input name="ae_title" value="" maxlength="16" size="17" aria-label="AE title of a new destination"></td><td><small>new</small></td></tr>
+
+</tbody>
+</table>
+<p><small>To rename a destination, remove it and add it under the new name. Empty rows are ignored. An empty AE title means the name is used.</small></p>
+<div class="actions"><button class="primary" >Review the change…</button></div>
+</form>
+
+<h2>Calling-AE allow-list</h2>
+
+
+<form method="post" action="/i/dcm-1/config/review" class="card">
+<input type="hidden" name="csrf" value="dd0e4b8267be811336678952ac23bce86394a2e1476b12b7170bc42bbf265795">
+<input type="hidden" name="setting" value="allow_list">
+<p class="msg warn">The allow-list is empty now: every calling AE may connect.</p>
+<label>Rules, one per line: <code>AE</code>, <code>AE@IP</code> or <code>AE@network/prefix</code>
+<textarea name="rules" rows="10" spellcheck="false"></textarea></label>
+<p><small>An empty list lets every calling AE connect; LibreDCM asks you to acknowledge that. A device that is not on the list can no longer store or retrieve images.</small></p>
+<div class="actions"><button class="primary" >Review the change…</button></div>
+</form>
+
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

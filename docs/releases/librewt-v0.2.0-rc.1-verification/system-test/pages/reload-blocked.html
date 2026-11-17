@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reload: not possible · dcm-2 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    <a href="/users">Users</a><a href="/audit">Audit log</a>
+    <a href="/about">About</a>
+    <a href="/account">admin <span class="role">admin</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="dd0e4b8267be811336678952ac23bce86394a2e1476b12b7170bc42bbf265795"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-2</b>
+    <span class="label">AE title</span> <code>LIBREDCM2</code>
+    <span class="label">Node ID</span> <code>dcm-2</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-2/">Dashboard</a>
+    <a href="/i/dcm-2/status">Status</a>
+    <a href="/i/dcm-2/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-2/config">Configuration</a>
+    <a href="/i/dcm-2/remote-aes">Destinations</a>
+    <a href="/i/dcm-2/allow-list">Allow-list</a>
+    <a href="/i/dcm-2/echo">C-ECHO test</a>
+    <a href="/i/dcm-2/license">Licence</a>
+    <a href="/i/dcm-2/backups">Backup</a>
+    <a href="/i/dcm-2/studies">Studies</a>
+    <a href="/i/dcm-2/logs">Logs</a>
+    <a href="/i/dcm-2/audit">LibreDCM audit</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-2:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<section class="card narrow">
+<h1>Reload: not possible</h1>
+<p class="msg error" role="alert">LibreDCM blocks configuration changes on this instance until the licence notice is acknowledged. Nothing was changed. DICOM services keep running. Acknowledge the notice (on the host: LibreDCM -license-ack NAME), then try again.</p>
+<p><a href="/i/dcm-2/license">Open the licence page of this instance</a></p>
+<p><a href="/i/dcm-2/config">Back</a></p>
+</section>
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

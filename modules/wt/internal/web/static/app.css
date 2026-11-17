@@ -86,4 +86,10 @@ table.narrow { max-width: 46rem; }
 .state.restart, .state.unknown { border-color: var(--muted); color: var(--muted); }
 label.warnbox { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-line); border-radius: .35rem; padding: .5rem .7rem; }
 td input { max-width: 100%; }
+/* Found by the 0.2 screenshot review: an unbreakable value (a long setting,
+   a UID) widened tables past the page, cutting off the last column. */
+:root { color-scheme: light dark; }
+td code, td:last-child { overflow-wrap: anywhere; }
+td > code.uid { display: inline-block; min-width: 16ch; }
+fieldset { border: 1px solid var(--line); border-radius: .35rem; }
 button[disabled] { opacity: .5; cursor: not-allowed; }

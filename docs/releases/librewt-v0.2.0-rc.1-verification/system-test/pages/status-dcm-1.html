@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Status · dcm-1 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    
+    <a href="/about">About</a>
+    <a href="/account">view <span class="role">viewer</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="7eedb40f8de4bd49e3c97f56c32f1943737cf94a17ea486850e02d7d7fb43daf"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-1</b>
+    <span class="label">AE title</span> <code>LIBREDCM1</code>
+    <span class="label">Node ID</span> <code>dcm-1</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-1/">Dashboard</a>
+    <a href="/i/dcm-1/status">Status</a>
+    <a href="/i/dcm-1/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-1/license">Licence</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-1:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<h1>Status</h1>
+
+<p class="lead">Read by Libre WT at <b>2026-11-17 00:51:43 UTC</b> (node clock: 2026-11-17 00:51:43 UTC). Reload the page for a new reading.</p>
+<div class="compare">
+<section class="card">
+<h2>Identity</h2>
+<dl>
+<dt>Node ID</dt><dd><code>dcm-1</code></dd>
+<dt>AE title</dt><dd><code>LIBREDCM1</code></dd>
+<dt>Version</dt><dd>0.2.0-wt-rc1</dd>
+<dt>Uptime</dt><dd>1s</dd>
+<dt>Settings digest</dt><dd><code class="uid">sha256:95306968c0ddda6dcc82a003396b021d4aae92f49b7b7572a8c2844ba483574e</code></dd>
+</dl>
+</section>
+<section class="card">
+<h2>Backends and listeners</h2>
+<dl>
+<dt>Storage</dt><dd>fs</dd>
+<dt>Index</dt><dd>sqlite</dd>
+<dt>Events</dt><dd>log</dd>
+<dt>DICOM listener</dt><dd><code>:11112</code>, TLS off</dd>
+<dt>Admin listener</dt><dd>TLS off</dd>
+<dt>Allow-list rules</dt><dd>0 (every calling AE may connect)</dd>
+<dt>C-MOVE destinations</dt><dd>0</dd>
+</dl>
+</section>
+<section class="card">
+<h2>Licence</h2>
+<p>not enforced (source build)</p>
+
+<p><small>The licence state never stops DICOM services.</small></p>
+</section>
+</div>
+
+<h2>Readiness: <span class="state reachable">ready</span></h2>
+<table class="narrow">
+<thead><tr><th>Check</th><th>Result</th></tr></thead>
+<tbody><tr><td>events</td><td><span class="state reachable">ok</span></td></tr><tr><td>index</td><td><span class="state reachable">ok</span></td></tr><tr><td>storage</td><td><span class="state reachable">ok</span></td></tr></tbody>
+</table>
+
+<h2>Counters since the node started</h2>
+
+<table class="narrow">
+<thead><tr><th>DICOM service</th><th>Counter</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>Associations (all services, C-ECHO included)</td><td>open now</td><td>0</td></tr>
+<tr><td>Associations</td><td>total</td><td>0</td></tr>
+<tr><td>Associations</td><td>rejected</td><td>0</td></tr>
+<tr><td>C-STORE</td><td>all results</td><td>0</td></tr>
+<tr><td>C-FIND</td><td>total</td><td>0</td></tr>
+<tr><td>C-MOVE and C-GET sub-operations</td><td>all results</td><td>0</td></tr>
+<tr><td>Events</td><td>outbox pending</td><td>0</td></tr>
+<tr><td>Events</td><td>publish failures</td><td>0</td></tr>
+<tr><td>Study Exceptions</td><td>open</td><td>0</td></tr>
+</tbody>
+</table>
+
+
+<section class="card">
+<h2>Start, stop and restart</h2>
+<p>Libre WT does not start, stop or restart LibreDCM. Do this on the host of the node: with the installer script (<code>LibreDCM.ps1 restart</code> on Windows, <code>./libredcm.sh restart</code> on macOS and Linux; see "Day-to-day" in the LibreDCM install guide, <code>deploy/workstation/INSTALL.md</code>) or with Docker (<code>docker compose restart</code> in the install folder). Settings that need a restart are changed in the node's configuration on the host.</p>
+</section>
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

@@ -1,0 +1,79 @@
+# Libre WT system test stack (verification only, not for production).
+#
+# Two real LibreDCM nodes, Libre WT and a DCMTK storescp as C-MOVE
+# destination, on one private network. Started and checked by
+# scripts/e2e/wt-system-test.sh, which writes the admin tokens and the
+# Libre WT configuration into WT_SYS_RUN first and saves the logs as
+# verification records.
+#
+#   dcm-1  source build (licence not enforced)
+#   dcm-2  official build without a licence (unlicensed notice, reload
+#          blocked until acknowledged; DICOM services keep running)
+#   wt     Libre WT, published on 127.0.0.1:${WT_SYS_PORT:-18090} only
+#   dcmtk  DCMTK + pydicom: storescp on 11113 (destination STORESCP),
+#          storescu and the synthetic test data generator
+#
+# Only synthetic test data is used. Nothing is published on a network.
+name: wtsys
+services:
+  dcm-1:
+    image: "libre/dcm:${WT_SYS_TAG:-wt-system}"
+    environment:
+      LIBRE_DCM_NODE_ID: dcm-1
+      LIBRE_DCM_AE_TITLE: LIBREDCM1
+      LIBRE_DCM_ADMIN_TOKEN_FILE: /run/wtsys/dcm-1.token
+      LIBRE_DCM_CONTROL_BACKUP_DIR: /var/lib/libredcm/backups
+      LIBRE_DCM_PATIENT_CONFLICT_POLICY: quarantine
+      LIBRE_DCM_LOG_FORMAT: json
+    volumes:
+      - "dcm-1-data:/var/lib/libredcm"
+      - "${WT_SYS_RUN:?set WT_SYS_RUN}/dcm-1.token:/run/wtsys/dcm-1.token:ro"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
+  dcm-2:
+    image: "libre/dcm:${WT_SYS_TAG:-wt-system}-official"
+    environment:
+      LIBRE_DCM_NODE_ID: dcm-2
+      LIBRE_DCM_AE_TITLE: LIBREDCM2
+      LIBRE_DCM_ADMIN_TOKEN_FILE: /run/wtsys/dcm-2.token
+      LIBRE_DCM_CONTROL_BACKUP_DIR: /var/lib/libredcm/backups
+      LIBRE_DCM_LOG_FORMAT: json
+    volumes:
+      - "dcm-2-data:/var/lib/libredcm"
+      - "${WT_SYS_RUN:?set WT_SYS_RUN}/dcm-2.token:/run/wtsys/dcm-2.token:ro"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
+  wt:
+    image: "libre/wt:${WT_SYS_TAG:-wt-system}"
+    command: ["-config", "/run/wtsys/librewt.yaml"]
+    environment:
+      LIBRE_WT_LISTEN: ":8090"
+    ports:
+      - "127.0.0.1:${WT_SYS_PORT:-18090}:8090"
+    volumes:
+      - "wt-data:/var/lib/librewt"
+      - "${WT_SYS_RUN:?set WT_SYS_RUN}/librewt.yaml:/run/wtsys/librewt.yaml:ro"
+      - "${WT_SYS_RUN:?set WT_SYS_RUN}/dcm-1.token:/run/wtsys/dcm-1.token:ro"
+      - "${WT_SYS_RUN:?set WT_SYS_RUN}/dcm-2.token:/run/wtsys/dcm-2.token:ro"
+    depends_on: [dcm-1, dcm-2]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
+  dcmtk:
+    image: rws-e2e-dcmtk
+    entrypoint: ["storescp", "--output-directory", "/recv", "--aetitle", "STORESCP", "11113"]
+    tmpfs:
+      - /recv
+      - /tmp
+    volumes:
+      - "../../scripts/e2e:/e2e:ro"
+
+volumes:
+  dcm-1-data:
+  dcm-2-data:
+  wt-data:

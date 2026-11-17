@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Licence · dcm-2 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    
+    <a href="/about">About</a>
+    <a href="/account">view <span class="role">viewer</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="7eedb40f8de4bd49e3c97f56c32f1943737cf94a17ea486850e02d7d7fb43daf"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-2</b>
+    <span class="label">AE title</span> <code>LIBREDCM2</code>
+    <span class="label">Node ID</span> <code>dcm-2</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-2/">Dashboard</a>
+    <a href="/i/dcm-2/status">Status</a>
+    <a href="/i/dcm-2/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-2/license">Licence</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-2:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<h1>Licence</h1>
+<p class="msg info" role="note"><b>DICOM services keep running whatever the licence state.</b> The licence never stops, delays or refuses storing, finding or sending images. When the node is unlicensed, only administrators see warnings, and configuration reloads wait until the notice is acknowledged.</p>
+<p class="lead">Read at 2026-11-17 00:51:45 UTC.</p>
+
+
+<p class="msg warn" role="alert">The unlicensed notice is not acknowledged. Configuration reloads of this instance are blocked until an administrator acknowledges it. DICOM services are not affected.</p>
+<table class="narrow">
+<tbody>
+<tr><th>State</th><td><b>missing</b> <span class="state open">not licensed</span></td></tr>
+<tr><th>Message</th><td>no license installed; activate with a license key or a license file</td></tr>
+<tr><th>Days left</th><td>—</td></tr>
+<tr><th>Expires</th><td>—</td></tr>
+<tr><th>Customer</th><td>—</td></tr>
+<tr><th>Site</th><td>—</td></tr>
+<tr><th>Term</th><td>—</td></tr>
+<tr><th>Licence key</th><td>—</td></tr>
+<tr><th>Machine fingerprint</th><td><code class="uid">fp1-000000000000-8f08abace3a7-f1eb8b4bdcfd</code></td></tr>
+<tr><th>Acknowledgement</th><td>none</td></tr>
+</tbody>
+</table>
+<p><small>DICOM services run in every licence state. Licensing never stops them.</small></p>
+
+
+
+
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>

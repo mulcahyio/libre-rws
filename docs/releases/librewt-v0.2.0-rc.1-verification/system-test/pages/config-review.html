@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review: Change the C-MOVE destinations · dcm-1 · Libre WT</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="" width="28" height="28"><span>Libre <b>WT</b></span></a>
+  
+  <nav>
+    <a href="/">Fleet</a>
+    <a href="/users">Users</a><a href="/audit">Audit log</a>
+    <a href="/about">About</a>
+    <a href="/account">admin <span class="role">admin</span></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="csrf" value="dd0e4b8267be811336678952ac23bce86394a2e1476b12b7170bc42bbf265795"><button class="link">Log out</button></form>
+  </nav>
+  
+</header>
+
+<section class="instance" aria-label="LibreDCM instance">
+  <div class="ident">
+    <span class="label">Instance</span> <b class="iname">dcm-1</b>
+    <span class="label">AE title</span> <code>LIBREDCM1</code>
+    <span class="label">Node ID</span> <code>dcm-1</code>
+    <span class="label">Cluster</span> <b>wtsys</b>
+    <span class="state reachable">reachable</span>
+  </div>
+  <nav class="tabs">
+    <a href="/i/dcm-1/">Dashboard</a>
+    <a href="/i/dcm-1/status">Status</a>
+    <a href="/i/dcm-1/exceptions">Study Exceptions</a>
+    <a href="/i/dcm-1/config">Configuration</a>
+    <a href="/i/dcm-1/remote-aes">Destinations</a>
+    <a href="/i/dcm-1/allow-list">Allow-list</a>
+    <a href="/i/dcm-1/echo">C-ECHO test</a>
+    <a href="/i/dcm-1/license">Licence</a>
+    <a href="/i/dcm-1/backups">Backup</a>
+    <a href="/i/dcm-1/studies">Studies</a>
+    <a href="/i/dcm-1/logs">Logs</a>
+    <a href="/i/dcm-1/audit">LibreDCM audit</a>
+    
+    <a href="/">Other instances (2 configured)</a>
+  </nav>
+  
+  
+  
+  <p class="msg warn" role="alert">The connection from Libre WT to this instance uses plain HTTP over the network (<code>http://dcm-1:8081</code>): the admin token and patient data are not encrypted on the way. Set an <code>https://</code> address and a CA file for it.</p>
+</section>
+
+<main>
+
+<p><a href="/i/dcm-1/config/edit">← Back</a></p>
+<h1>Review: Change the C-MOVE destinations</h1>
+<section class="warning" role="alert">
+<h2>⚠ Warning: this changes which devices can connect to, or receive images from, this node</h2>
+<p>The change is made on instance <b>dcm-1</b> (node ID <code>dcm-1</code>, AE title <code>LIBREDCM1</code>), cluster <b>wtsys</b>. Other nodes of the cluster are not changed.</p>
+
+
+<p>LibreDCM keeps the change in its own overlay file; <code>config.yaml</code> is not rewritten. The version in force now is kept for one rollback.</p>
+<p>This is the plan LibreDCM made. LibreDCM refuses the change when its settings are no longer the ones this plan was made for.</p>
+</section>
+
+
+
+
+
+<h2>C-MOVE destinations</h2>
+<table>
+<thead><tr><th>Change</th><th>Name</th><th>Now</th><th>After</th></tr></thead>
+<tbody>
+<tr><td><span class="state success">added</span></td><td><b>STORESCP</b></td><td>—</td><td><code class="diff">dcmtk:11113</code> AE <code class="diff">STORESCP</code></td></tr>
+
+
+</tbody>
+</table>
+
+
+
+
+<form method="post" action="/i/dcm-1/config/apply" class="card">
+<input type="hidden" name="csrf" value="dd0e4b8267be811336678952ac23bce86394a2e1476b12b7170bc42bbf265795">
+<input type="hidden" name="confirm" value="bec58ff484b5072e2b47fb549ab6bec866188aa061746120112cfe8beac4d8df">
+
+
+<label>Reason (recorded in the audit trails of Libre WT and LibreDCM) <textarea name="reason" required maxlength="500" rows="3"></textarea></label>
+<label class="check"><input type="checkbox" name="approve" value="yes" required> I have checked the change above and approve it for instance dcm-1</label>
+<div class="actions">
+<button class="primary danger">Approve and apply</button>
+<a class="button" href="/i/dcm-1/config/edit">Cancel</a>
+</div>
+<p><small>This approval is valid for 10 minutes, once, and for this plan only.</small></p>
+</form>
+
+</main>
+<footer>Libre WT 0.2.0-rc.1 · 2 LibreDCM instance(s) configured · Libre RWS is a Libre Systems product</footer>
+</body>
+</html>
