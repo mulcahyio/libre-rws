@@ -1,0 +1,240 @@
+$ movescu -d -S -aet DCMTKMOVE -aem DCMTKMOVE -aec LIBREDCM --port 11113 -od /tmp/rx1 -k QueryRetrieveLevel=STUDY -k StudyInstanceUID=1.3.6.1.4.1.67686.9.1.900.1 dcs-gw 11112
+
+D: DcmDataDictionary: Loading file: /usr/share/libdcmtk17/dicom.dic
+D: DcmDataDictionary: Loading file: /usr/share/libdcmtk17/private.dic
+D: $dcmtk: movescu v3.6.7 2022-04-22 $
+D: 
+D: Request Parameters:
+D: ====================== BEGIN A-ASSOCIATE-RQ =====================
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    
+D: Their Implementation Version Name: 
+D: Application Context Name:    1.2.840.10008.3.1.1.1
+D: Calling Application Name:    DCMTKMOVE
+D: Called Application Name:     LIBREDCM
+D: Responding Application Name: LIBREDCM
+D: Our Max PDU Receive Size:    16384
+D: Their Max PDU Receive Size:  0
+D: Presentation Contexts:
+D:   Context ID:        1 (Proposed)
+D:     Abstract Syntax: =FINDStudyRootQueryRetrieveInformationModel
+D:     Proposed SCP/SCU Role: Default
+D:     Proposed Transfer Syntax(es):
+D:       =LittleEndianExplicit
+D:       =BigEndianExplicit
+D:       =LittleEndianImplicit
+D:   Context ID:        3 (Proposed)
+D:     Abstract Syntax: =MOVEStudyRootQueryRetrieveInformationModel
+D:     Proposed SCP/SCU Role: Default
+D:     Proposed Transfer Syntax(es):
+D:       =LittleEndianExplicit
+D:       =BigEndianExplicit
+D:       =LittleEndianImplicit
+D: Requested Extended Negotiation: none
+D: Accepted Extended Negotiation:  none
+D: Requested User Identity Negotiation: none
+D: User Identity Negotiation Response:  none
+D: ======================= END A-ASSOCIATE-RQ ======================
+I: Requesting Association
+D: setting network send timeout to 60 seconds
+D: setting network receive timeout to 60 seconds
+D: Constructing Associate RQ PDU
+D: PDU Type: Associate Accept, PDU Length: 214 + 6 bytes PDU header
+D:   02  00  00  00  00  d6  00  01  00  00  4c  49  42  52  45  44
+D:   43  4d  20  20  20  20  20  20  20  20  44  43  4d  54  4b  4d
+D:   4f  56  45  20  20  20  20  20  20  20  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  10  00  00  15  31  2e
+D:   32  2e  38  34  30  2e  31  30  30  30  38  2e  33  2e  31  2e
+D:   31  2e  31  21  00  00  1b  01  00  00  00  40  00  00  13  31
+D:   2e  32  2e  38  34  30  2e  31  30  30  30  38  2e  31  2e  32
+D:   2e  31  21  00  00  1b  03  00  00  00  40  00  00  13  31  2e
+D:   32  2e  38  34  30  2e  31  30  30  30  38  2e  31  2e  32  2e
+D:   31  50  00  00  37  51  00  00  04  00  02  00  00  52  00  00
+D:   1b  31  2e  33  2e  36  2e  31  2e  34  2e  31  2e  36  37  36
+D:   38  36  2e  31  2e  31  2e  31  2e  30  2e  32  55  00  00  0c
+D:   4c  49  42  52  45  44  43  4d  5f  30  5f  32
+D: Parsing an A-ASSOCIATE PDU
+D: Association Parameters Negotiated:
+D: ====================== BEGIN A-ASSOCIATE-AC =====================
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.1.1.0.2
+D: Their Implementation Version Name: LIBREDCM_0_2
+D: Application Context Name:    1.2.840.10008.3.1.1.1
+D: Calling Application Name:    DCMTKMOVE
+D: Called Application Name:     LIBREDCM
+D: Responding Application Name: LIBREDCM
+D: Our Max PDU Receive Size:    16384
+D: Their Max PDU Receive Size:  131072
+D: Presentation Contexts:
+D:   Context ID:        1 (Accepted)
+D:     Abstract Syntax: =FINDStudyRootQueryRetrieveInformationModel
+D:     Proposed SCP/SCU Role: Default
+D:     Accepted SCP/SCU Role: Default
+D:     Accepted Transfer Syntax: =LittleEndianExplicit
+D:   Context ID:        3 (Accepted)
+D:     Abstract Syntax: =MOVEStudyRootQueryRetrieveInformationModel
+D:     Proposed SCP/SCU Role: Default
+D:     Accepted SCP/SCU Role: Default
+D:     Accepted Transfer Syntax: =LittleEndianExplicit
+D: Requested Extended Negotiation: none
+D: Accepted Extended Negotiation:  none
+D: Requested User Identity Negotiation: none
+D: User Identity Negotiation Response:  none
+D: ======================= END A-ASSOCIATE-AC ======================
+I: Association Accepted (Max Send PDV: 131060)
+I: Sending Move Request
+D: ===================== OUTGOING DIMSE MESSAGE ====================
+D: Message Type                  : C-MOVE RQ
+D: Presentation Context ID       : 3
+D: Message ID                    : 1
+D: Affected SOP Class UID        : MOVEStudyRootQueryRetrieveInformationModel
+D: Data Set                      : present
+D: Priority                      : medium
+D: Move Destination              : DCMTKMOVE
+D: ======================= END DIMSE MESSAGE =======================
+I: Request Identifiers:
+I: 
+I: # Dicom-Data-Set
+I: # Used TransferSyntax: Little Endian Explicit
+I: (0008,0052) CS [STUDY]                                  #   6, 1 QueryRetrieveLevel
+I: (0020,000d) UI [1.3.6.1.4.1.67686.9.1.900.1]            #  28, 1 StudyInstanceUID
+I: 
+D: Association Received: dcs-gw
+D: setting network send timeout to 60 seconds
+D: setting network receive timeout to 60 seconds
+D: PDU Type: Associate Request, PDU Length: 314 + 6 bytes PDU header
+D:   01  00  00  00  01  3a  00  01  00  00  44  43  4d  54  4b  4d
+D:   4f  56  45  20  20  20  20  20  20  20  4c  49  42  52  45  44
+D:   43  4d  20  20  20  20  20  20  20  20  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  10  00  00  15  31  2e
+D:   32  2e  38  34  30  2e  31  30  30  30  38  2e  33  2e  31  2e
+D:   31  2e  31  20  00  00  4d  01  00  00  00  30  00  00  19  31
+D:   2e  32  2e  38  34  30  2e  31  30  30  30  38  2e  35  2e  31
+D:   2e  34  2e  31  2e  31  2e  32  40  00  00  13  31  2e  32  2e
+D:   38  34  30  2e  31  30  30  30  38  2e  31  2e  32  2e  31  40
+D:   00  00  11  31  2e  32  2e  38  34  30  2e  31  30  30  30  38
+D:   2e  31  2e  32  20  00  00  4d  03  00  00  00  30  00  00  19
+D:   31  2e  32  2e  38  34  30  2e  31  30  30  30  38  2e  35  2e
+D:   31  2e  34  2e  31  2e  31  2e  34  40  00  00  13  31  2e  32
+D:   2e  38  34  30  2e  31  30  30  30  38  2e  31  2e  32  2e  31
+D:   40  00  00  11  31  2e  32  2e  38  34  30  2e  31  30  30  30
+D:   38  2e  31  2e  32  50  00  00  37  51  00  00  04  00  02  00
+D:   00  52  00  00  1b  31  2e  33  2e  36  2e  31  2e  34  2e  31
+D:   2e  36  37  36  38  36  2e  31  2e  31  2e  31  2e  30  2e  32
+D:   55  00  00  0c  4c  49  42  52  45  44  43  4d  5f  30  5f  32
+D: 
+D: Parsing an A-ASSOCIATE PDU
+I: Sub-Association Received
+D: Parameters:
+D: ====================== BEGIN A-ASSOCIATE-RQ =====================
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.1.1.0.2
+D: Their Implementation Version Name: LIBREDCM_0_2
+D: Application Context Name:    1.2.840.10008.3.1.1.1
+D: Calling Application Name:    LIBREDCM
+D: Called Application Name:     DCMTKMOVE
+D: Responding Application Name: 
+D: Our Max PDU Receive Size:    16384
+D: Their Max PDU Receive Size:  131072
+D: Presentation Contexts:
+D:   Context ID:        1 (Proposed)
+D:     Abstract Syntax: =CTImageStorage
+D:     Proposed SCP/SCU Role: Default
+D:     Proposed Transfer Syntax(es):
+D:       =LittleEndianExplicit
+D:       =LittleEndianImplicit
+D:   Context ID:        3 (Proposed)
+D:     Abstract Syntax: =MRImageStorage
+D:     Proposed SCP/SCU Role: Default
+D:     Proposed Transfer Syntax(es):
+D:       =LittleEndianExplicit
+D:       =LittleEndianImplicit
+D: Requested Extended Negotiation: none
+D: Accepted Extended Negotiation:  none
+D: Requested User Identity Negotiation: none
+D: User Identity Negotiation Response:  none
+D: ======================= END A-ASSOCIATE-RQ ======================
+D: Constructing Associate AC PDU
+I: Sub-Association Acknowledged (Max Send PDV: 131060)
+D: ====================== BEGIN A-ASSOCIATE-AC =====================
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.1.1.0.2
+D: Their Implementation Version Name: LIBREDCM_0_2
+D: Application Context Name:    1.2.840.10008.3.1.1.1
+D: Calling Application Name:    LIBREDCM
+D: Called Application Name:     DCMTKMOVE
+D: Responding Application Name: 
+D: Our Max PDU Receive Size:    16384
+D: Their Max PDU Receive Size:  131072
+D: Presentation Contexts:
+D:   Context ID:        1 (Accepted)
+D:     Abstract Syntax: =CTImageStorage
+D:     Proposed SCP/SCU Role: Default
+D:     Accepted SCP/SCU Role: Default
+D:     Accepted Transfer Syntax: =LittleEndianExplicit
+D:   Context ID:        3 (Accepted)
+D:     Abstract Syntax: =MRImageStorage
+D:     Proposed SCP/SCU Role: Default
+D:     Accepted SCP/SCU Role: Default
+D:     Accepted Transfer Syntax: =LittleEndianExplicit
+D: Requested Extended Negotiation: none
+D: Accepted Extended Negotiation:  none
+D: Requested User Identity Negotiation: none
+D: User Identity Negotiation Response:  none
+D: ======================= END A-ASSOCIATE-AC ======================
+D: DcmDataset::read() TransferSyntax="Little Endian Implicit"
+I: Received Store Request
+D: ===================== INCOMING DIMSE MESSAGE ====================
+D: Message Type                  : C-STORE RQ
+D: Presentation Context ID       : 1
+D: Message ID                    : 1
+D: Affected SOP Class UID        : CTImageStorage
+D: Affected SOP Instance UID     : 1.3.6.1.4.1.67686.9.1.900.1.1.1
+D: Data Set                      : present
+D: Priority                      : medium
+D: ======================= END DIMSE MESSAGE =======================
+D: DcmDataset::read() TransferSyntax="Little Endian Explicit"
+D: DcmFileFormat::checkMetaHeaderValue() Version of MetaHeader is ok: 0x0001
+D: DcmFileFormat::checkMetaHeaderValue() use SOPClassUID [1.2.840.10008.5.1.4.1.1.2] from Dataset
+D: DcmFileFormat::checkMetaHeaderValue() use SOPInstanceUID [1.3.6.1.4.1.67686.9.1.900.1.1.1] from Dataset
+D: DcmFileFormat::checkMetaHeaderValue() use new TransferSyntaxUID [Little Endian Explicit] on writing following Dataset
+D: DcmFileFormat::validateMetaInfo() found 7 Elements in DcmMetaInfo 'metinf'
+D: DcmDataset::read() TransferSyntax="Little Endian Implicit"
+I: Received Store Request
+D: ===================== INCOMING DIMSE MESSAGE ====================
+D: Message Type                  : C-STORE RQ
+D: Presentation Context ID       : 3
+D: Message ID                    : 2
+D: Affected SOP Class UID        : MRImageStorage
+D: Affected SOP Instance UID     : 1.3.6.1.4.1.67686.9.1.900.1.2.1
+D: Data Set                      : present
+D: Priority                      : medium
+D: ======================= END DIMSE MESSAGE =======================
+D: DcmDataset::read() TransferSyntax="Little Endian Explicit"
+D: DcmFileFormat::checkMetaHeaderValue() Version of MetaHeader is ok: 0x0001
+D: DcmFileFormat::checkMetaHeaderValue() use SOPClassUID [1.2.840.10008.5.1.4.1.1.4] from Dataset
+D: DcmFileFormat::checkMetaHeaderValue() use SOPInstanceUID [1.3.6.1.4.1.67686.9.1.900.1.2.1] from Dataset
+D: DcmFileFormat::checkMetaHeaderValue() use new TransferSyntaxUID [Little Endian Explicit] on writing following Dataset
+D: DcmFileFormat::validateMetaInfo() found 7 Elements in DcmMetaInfo 'metinf'
+D: DcmDataset::read() TransferSyntax="Little Endian Implicit"
+I: Received Final Move Response
+D: ===================== INCOMING DIMSE MESSAGE ====================
+D: Message Type                  : C-MOVE RSP
+D: Message ID Being Responded To : 1
+D: Affected SOP Class UID        : MOVEStudyRootQueryRetrieveInformationModel
+D: Remaining Suboperations       : 0
+D: Completed Suboperations       : 2
+D: Failed Suboperations          : 0
+D: Warning Suboperations         : 0
+D: Data Set                      : none
+D: DIMSE Status                  : 0x0000: Success: Sub-operations complete - No failures or warnings
+D: ======================= END DIMSE MESSAGE =======================
+I: Releasing Association
+
+exit status: 0

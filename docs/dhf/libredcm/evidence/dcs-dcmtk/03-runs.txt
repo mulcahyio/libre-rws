@@ -1,0 +1,41 @@
+== DCMTK: $dcmtk: echoscu v3.6.7 2022-04-22 $
+10-echoscu.log: exit status: 0
+11-echoscu-wrong-called-ae.log: exit status: 1
+12-echoscu-allowlist-ok.log: exit status: 0
+13-echoscu-allowlist-refused.log: exit status: 1
+14-storescu-native.log: exit status: 0
+15-dcmsend-compressed.log: exit status: 0
+16-storescu-bigendian.log: exit status: 0
+17-storescu-no-study-uid.log: exit status: 169
+18-storescu-duplicate.log: exit status: 0
+19-storescu-conflict-quarantine.log: exit status: 0
+20-storescu-conflict-reject.log: exit status: 167
+21-storescu-conflict-coerce.log: exit status: 0
+22-findscu-patient-root-patient.log: exit status: 0
+23-findscu-study-root-study.log: exit status: 0
+24-findscu-study-date-range.log: exit status: 0
+25-findscu-modalities-in-study.log: exit status: 0
+26-findscu-utf8-name.log: exit status: 0
+27-findscu-series-uid-list.log: exit status: 0
+28-findscu-image.log: exit status: 0
+29-findscu-patient-level-in-study-root.log: exit status: 0
+30-findscu-conflict-hidden.log: exit status: 0
+31-findscu-find-limit.log: exit status: 0
+32-movescu-native.log: exit status: 0
+33-movescu-compressed-dest-uncompressed-only.log: exit status: 69
+34-movescu-compressed-dest-accepts-all.log: exit status: 0
+35-movescu-unknown-destination.log: exit status: 69
+36-movescu-universal-refused.log: exit status: 69
+37-movescu-patient-root.log: exit status: 0
+38-getscu-native.log: exit status: 0
+39-getscu-compressed.log: exit status: 0
+40-echoscu-tls.log: exit status: 0
+41-echoscu-plain-to-tls.log: exit status: 1
+== files received by movescu: rx1=2 rx2=0 rx3=7; getscu: get1=2 get2=0
+rx3 MR.1.3.6.1.4.1.67686.9.1.900.2.1.1: (0002,0010) UI =RLELossless                             #  20, 1 TransferSyntaxUID
+rx3 MR.1.3.6.1.4.1.67686.9.1.900.2.1.2: (0002,0010) UI =JPEG2000LosslessOnly                    #  22, 1 TransferSyntaxUID
+rx3 MR.1.3.6.1.4.1.67686.9.1.900.2.1.3: (0002,0010) UI =JPEGLSLossless                          #  22, 1 TransferSyntaxUID
+rx3 SC.1.3.6.1.4.1.67686.9.1.900.2.2.1: (0002,0010) UI =JPEGExtended:Process2+4                 #  22, 1 TransferSyntaxUID
+rx3 SC.1.3.6.1.4.1.67686.9.1.900.2.2.2: (0002,0010) UI =JPEGBaseline                            #  22, 1 TransferSyntaxUID
+rx3 SC.1.3.6.1.4.1.67686.9.1.900.2.2.3: (0002,0010) UI =JPEGLossless:Non-hierarchical-1stOrderPrediction #  22, 1 TransferSyntaxUID
+rx3 SC.1.3.6.1.4.1.67686.9.1.900.2.2.4: (0002,0010) UI =JPEG2000                                #  22, 1 TransferSyntaxUID

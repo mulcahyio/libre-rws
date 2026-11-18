@@ -157,3 +157,12 @@ on 2026-11-17). The UID layout is the controlled document
 | DCM-SRS-098 | LibreDCM shall identify itself in every association it accepts or requests (A-ASSOCIATE-AC and A-ASSOCIATE-RQ) and in the File Meta of every Part 10 file it writes with Implementation Class UID `1.3.6.1.4.1.67686.1.1.1.<major>.<minor>` and Implementation Version Name `LIBREDCM_<major>_<minor>`, both derived from the build version reported by `-version`; a build without a release version shall identify as version 0.0. | Active | |
 | DCM-SRS-099 | UIDs that Libre Systems products generate shall be made by the shared UID generator as `1.3.6.1.4.1.67686.2.<product>.<site>.<time>.<counter>` (uid-registry.md §5). Every generated UID shall be valid (digits and dots only, at most 64 characters, no empty component, no leading zero), unique when generated concurrently, strictly increasing within a generator, and, with a state file, unique and increasing across restarts even when the clock is set back; the generator shall refuse to issue a UID when it cannot record its state. | Active | |
 | DCM-SRS-100 | Shipped code shall not contain UIDs under the test-data arc `1.3.6.1.4.1.67686.9` or gonetdicom's UID root `1.2.826.0.1.3680043.10.541`. | Active | |
+
+## 9. DICOM Conformance Statement
+
+Added 2026-11-18 (issue #32, Kanban card t_c3527a34). The statement is
+`dicom-conformance-statement.md` (DHF-DCM-DCS, DRAFT for approval).
+
+| ID | Requirement | Status | Risk control for |
+|---|---|---|---|
+| DCM-SRS-101 | The DICOM Conformance Statement shall list exactly the Verification, Query/Retrieve and Storage SOP classes, storage transfer syntaxes, association parameters, DICOM listener settings and C-FIND keys per level (with matching types and whether each key is returned) that LibreDCM implements, and a check run in CI shall fail when the statement and the code disagree. | Active | |

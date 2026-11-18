@@ -1,0 +1,56 @@
+# Stored Part 10 files in dcs-gw: transfer syntax and implementation identification
+== ./1.3.6.1.4.1.67686.9.1.900.1/1.3.6.1.4.1.67686.9.1.900.1.1/1.3.6.1.4.1.67686.9.1.900.1.1.1.dcm
+(0002,0002) UI =CTImageStorage                          #  26, 1 MediaStorageSOPClassUID
+(0002,0010) UI =LittleEndianExplicit                    #  20, 1 TransferSyntaxUID
+(0002,0012) UI [1.3.6.1.4.1.67686.1.1.1.0.2]            #  28, 1 ImplementationClassUID
+(0002,0013) SH [LIBREDCM_0_2]                           #  12, 1 ImplementationVersionName
+== ./1.3.6.1.4.1.67686.9.1.900.1/1.3.6.1.4.1.67686.9.1.900.1.2/1.3.6.1.4.1.67686.9.1.900.1.2.1.dcm
+(0002,0002) UI =MRImageStorage                          #  26, 1 MediaStorageSOPClassUID
+(0002,0010) UI =LittleEndianImplicit                    #  18, 1 TransferSyntaxUID
+(0002,0012) UI [1.3.6.1.4.1.67686.1.1.1.0.2]            #  28, 1 ImplementationClassUID
+(0002,0013) SH [LIBREDCM_0_2]                           #  12, 1 ImplementationVersionName
+== ./1.3.6.1.4.1.67686.9.1.900.2/1.3.6.1.4.1.67686.9.1.900.2.1/1.3.6.1.4.1.67686.9.1.900.2.1.1.dcm
+(0002,0002) UI =MRImageStorage                          #  26, 1 MediaStorageSOPClassUID
+(0002,0010) UI =RLELossless                             #  20, 1 TransferSyntaxUID
+(0002,0012) UI [1.3.6.1.4.1.67686.1.1.1.0.2]            #  28, 1 ImplementationClassUID
+(0002,0013) SH [LIBREDCM_0_2]                           #  12, 1 ImplementationVersionName
+== ./1.3.6.1.4.1.67686.9.1.900.2/1.3.6.1.4.1.67686.9.1.900.2.1/1.3.6.1.4.1.67686.9.1.900.2.1.2.dcm
+(0002,0002) UI =MRImageStorage                          #  26, 1 MediaStorageSOPClassUID
+(0002,0010) UI =JPEG2000LosslessOnly                    #  22, 1 TransferSyntaxUID
+(0002,0012) UI [1.3.6.1.4.1.67686.1.1.1.0.2]            #  28, 1 ImplementationClassUID
+(0002,0013) SH [LIBREDCM_0_2]                           #  12, 1 ImplementationVersionName
+== ./1.3.6.1.4.1.67686.9.1.900.2/1.3.6.1.4.1.67686.9.1.900.2.1/1.3.6.1.4.1.67686.9.1.900.2.1.3.dcm
+(0002,0002) UI =MRImageStorage                          #  26, 1 MediaStorageSOPClassUID
+(0002,0010) UI =JPEGLSLossless                          #  22, 1 TransferSyntaxUID
+(0002,0012) UI [1.3.6.1.4.1.67686.1.1.1.0.2]            #  28, 1 ImplementationClassUID
+(0002,0013) SH [LIBREDCM_0_2]                           #  12, 1 ImplementationVersionName
+== ./1.3.6.1.4.1.67686.9.1.900.2/1.3.6.1.4.1.67686.9.1.900.2.2/1.3.6.1.4.1.67686.9.1.900.2.2.1.dcm
+(0002,0002) UI =SecondaryCaptureImageStorage            #  26, 1 MediaStorageSOPClassUID
+(0002,0010) UI =JPEGExtended:Process2+4                 #  22, 1 TransferSyntaxUID
+(0002,0012) UI [1.3.6.1.4.1.67686.1.1.1.0.2]            #  28, 1 ImplementationClassUID
+(0002,0013) SH [LIBREDCM_0_2]                           #  12, 1 ImplementationVersionName
+== ./1.3.6.1.4.1.67686.9.1.900.2/1.3.6.1.4.1.67686.9.1.900.2.2/1.3.6.1.4.1.67686.9.1.900.2.2.2.dcm
+(0002,0002) UI =SecondaryCaptureImageStorage            #  26, 1 MediaStorageSOPClassUID
+(0002,0010) UI =JPEGBaseline                            #  22, 1 TransferSyntaxUID
+(0002,0012) UI [1.3.6.1.4.1.67686.1.1.1.0.2]            #  28, 1 ImplementationClassUID
+(0002,0013) SH [LIBREDCM_0_2]                           #  12, 1 ImplementationVersionName
+== ./1.3.6.1.4.1.67686.9.1.900.2/1.3.6.1.4.1.67686.9.1.900.2.2/1.3.6.1.4.1.67686.9.1.900.2.2.3.dcm
+(0002,0002) UI =SecondaryCaptureImageStorage            #  26, 1 MediaStorageSOPClassUID
+(0002,0010) UI =JPEGLossless:Non-hierarchical-1stOrderPrediction #  22, 1 TransferSyntaxUID
+(0002,0012) UI [1.3.6.1.4.1.67686.1.1.1.0.2]            #  28, 1 ImplementationClassUID
+(0002,0013) SH [LIBREDCM_0_2]                           #  12, 1 ImplementationVersionName
+== ./1.3.6.1.4.1.67686.9.1.900.2/1.3.6.1.4.1.67686.9.1.900.2.2/1.3.6.1.4.1.67686.9.1.900.2.2.4.dcm
+(0002,0002) UI =SecondaryCaptureImageStorage            #  26, 1 MediaStorageSOPClassUID
+(0002,0010) UI =JPEG2000                                #  22, 1 TransferSyntaxUID
+(0002,0012) UI [1.3.6.1.4.1.67686.1.1.1.0.2]            #  28, 1 ImplementationClassUID
+(0002,0013) SH [LIBREDCM_0_2]                           #  12, 1 ImplementationVersionName
+== ./1.3.6.1.4.1.67686.9.1.900.3/1.3.6.1.4.1.67686.9.1.900.3.1/1.3.6.1.4.1.67686.9.1.900.3.1.1.dcm
+(0002,0002) UI =MRImageStorage                          #  26, 1 MediaStorageSOPClassUID
+(0002,0010) UI =LittleEndianExplicit                    #  20, 1 TransferSyntaxUID
+(0002,0012) UI [1.3.6.1.4.1.67686.1.1.1.0.2]            #  28, 1 ImplementationClassUID
+(0002,0013) SH [LIBREDCM_0_2]                           #  12, 1 ImplementationVersionName
+== ./conflicts/1.3.6.1.4.1.67686.9.1.900.1/1.3.6.1.4.1.67686.9.1.900.1.9.1-dmylo34gdeh3.dcm
+(0002,0002) UI =CTImageStorage                          #  26, 1 MediaStorageSOPClassUID
+(0002,0010) UI =LittleEndianExplicit                    #  20, 1 TransferSyntaxUID
+(0002,0012) UI [1.3.6.1.4.1.67686.1.1.1.0.2]            #  28, 1 ImplementationClassUID
+(0002,0013) SH [LIBREDCM_0_2]                           #  12, 1 ImplementationVersionName

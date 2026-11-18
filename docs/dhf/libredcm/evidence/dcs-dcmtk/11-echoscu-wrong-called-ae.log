@@ -1,0 +1,38 @@
+$ echoscu -d -aet DCMTKECHO -aec NOTLIBREDCM dcs-gw 11112
+
+D: $dcmtk: echoscu v3.6.7 2022-04-22 $
+D: 
+D: DcmDataDictionary: Loading file: /usr/share/libdcmtk17/dicom.dic
+D: DcmDataDictionary: Loading file: /usr/share/libdcmtk17/private.dic
+D: Request Parameters:
+D: ====================== BEGIN A-ASSOCIATE-RQ =====================
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    
+D: Their Implementation Version Name: 
+D: Application Context Name:    1.2.840.10008.3.1.1.1
+D: Calling Application Name:    DCMTKECHO
+D: Called Application Name:     NOTLIBREDCM
+D: Responding Application Name: NOTLIBREDCM
+D: Our Max PDU Receive Size:    16384
+D: Their Max PDU Receive Size:  0
+D: Presentation Contexts:
+D:   Context ID:        1 (Proposed)
+D:     Abstract Syntax: =VerificationSOPClass
+D:     Proposed SCP/SCU Role: Default
+D:     Proposed Transfer Syntax(es):
+D:       =LittleEndianImplicit
+D: Requested Extended Negotiation: none
+D: Accepted Extended Negotiation:  none
+D: Requested User Identity Negotiation: none
+D: User Identity Negotiation Response:  none
+D: ======================= END A-ASSOCIATE-RQ ======================
+I: Requesting Association
+D: setting network send timeout to 60 seconds
+D: setting network receive timeout to 60 seconds
+D: Constructing Associate RQ PDU
+F: Association Rejected:
+F: Result: Rejected Permanent, Source: Service User
+F: Reason: Called AE Title Not Recognized
+
+exit status: 1

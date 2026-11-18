@@ -1,0 +1,17 @@
+$ getscu -v -S -aet DCMTKGET -aec LIBREDCM -od /tmp/get2 -k QueryRetrieveLevel=STUDY -k StudyInstanceUID=1.3.6.1.4.1.67686.9.1.900.2 dcs-gw 11112
+
+I: Requesting Association
+I: Association Accepted (Max Send PDV: 131060)
+I: Sending C-GET Request (MsgID 1)
+I: Received C-GET Response (Refused: OutOfResourcesSubOperations)
+E: DIMSE status is: Refused: OutOfResourcesSubOperations
+I: Final status report from last C-GET message:
+I:   Number of Remaining Suboperations : 0
+I:   Number of Completed Suboperations : 0
+I:   Number of Failed Suboperations    : 7
+I:   Number of Warning Suboperations   : 0
+I: Releasing Association
+E: Association Release Failed: 0006:0316 DUL P-Data PDU arrived
+I: Aborting Association
+
+exit status: 0

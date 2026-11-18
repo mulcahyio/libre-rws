@@ -1,0 +1,57 @@
+$ findscu -v -P -aet DCMTKFIND -aec LIBREDCM dcs-gw 11112 -k QueryRetrieveLevel=PATIENT -k PatientID= -k PatientName= -k PatientBirthDate= -k PatientSex= -k NumberOfPatientRelatedStudies=
+
+I: Requesting Association
+I: Association Accepted (Max Send PDV: 131060)
+I: Sending Find Request (MsgID 1)
+I: Request Identifiers:
+I: 
+I: # Dicom-Data-Set
+I: # Used TransferSyntax: Little Endian Explicit
+I: (0008,0052) CS [PATIENT]                                #   8, 1 QueryRetrieveLevel
+I: (0010,0010) PN (no value available)                     #   0, 0 PatientName
+I: (0010,0020) LO (no value available)                     #   0, 0 PatientID
+I: (0010,0030) DA (no value available)                     #   0, 0 PatientBirthDate
+I: (0010,0040) CS (no value available)                     #   0, 0 PatientSex
+I: (0020,1200) IS (no value available)                     #   0, 0 NumberOfPatientRelatedStudies
+I: 
+I: ---------------------------
+I: Find Response: 1 (Pending)
+I: 
+I: # Dicom-Data-Set
+I: # Used TransferSyntax: Little Endian Explicit
+I: (0008,0052) CS [PATIENT ]                               #   8, 1 QueryRetrieveLevel
+I: (0010,0010) PN [DCS^ALPHA ]                             #  10, 1 PatientName
+I: (0010,0020) LO [DCS-P1]                                 #   6, 1 PatientID
+I: (0010,0030) DA (no value available)                     #   0, 0 PatientBirthDate
+I: (0010,0040) CS [O ]                                     #   2, 1 PatientSex
+I: (0020,1200) IS [1 ]                                     #   2, 1 NumberOfPatientRelatedStudies
+I: 
+I: ---------------------------
+I: Find Response: 2 (Pending)
+I: 
+I: # Dicom-Data-Set
+I: # Used TransferSyntax: Little Endian Explicit
+I: (0008,0005) CS [ISO_IR 192]                             #  10, 1 SpecificCharacterSet
+I: (0008,0052) CS [PATIENT ]                               #   8, 1 QueryRetrieveLevel
+I: (0010,0010) PN [Müller^Hans]                           #  12, 1 PatientName
+I: (0010,0020) LO [DCS-P2]                                 #   6, 1 PatientID
+I: (0010,0030) DA (no value available)                     #   0, 0 PatientBirthDate
+I: (0010,0040) CS [F ]                                     #   2, 1 PatientSex
+I: (0020,1200) IS [1 ]                                     #   2, 1 NumberOfPatientRelatedStudies
+I: 
+I: ---------------------------
+I: Find Response: 3 (Pending)
+I: 
+I: # Dicom-Data-Set
+I: # Used TransferSyntax: Little Endian Explicit
+I: (0008,0052) CS [PATIENT ]                               #   8, 1 QueryRetrieveLevel
+I: (0010,0010) PN [DCS^GAMMA ]                             #  10, 1 PatientName
+I: (0010,0020) LO [DCS-P3]                                 #   6, 1 PatientID
+I: (0010,0030) DA (no value available)                     #   0, 0 PatientBirthDate
+I: (0010,0040) CS [F ]                                     #   2, 1 PatientSex
+I: (0020,1200) IS [1 ]                                     #   2, 1 NumberOfPatientRelatedStudies
+I: 
+I: Received Final Find Response (Success)
+I: Releasing Association
+
+exit status: 0

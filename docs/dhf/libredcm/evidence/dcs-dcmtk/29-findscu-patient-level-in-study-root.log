@@ -1,0 +1,16 @@
+$ findscu -v -S -aet DCMTKFIND -aec LIBREDCM dcs-gw 11112 -k QueryRetrieveLevel=PATIENT -k PatientID=
+
+I: Requesting Association
+I: Association Accepted (Max Send PDV: 131060)
+I: Sending Find Request (MsgID 1)
+I: Request Identifiers:
+I: 
+I: # Dicom-Data-Set
+I: # Used TransferSyntax: Little Endian Explicit
+I: (0008,0052) CS [PATIENT]                                #   8, 1 QueryRetrieveLevel
+I: (0010,0020) LO (no value available)                     #   0, 0 PatientID
+I: 
+I: Received Final Find Response (Error: DataSetDoesNotMatchSOPClass)
+I: Releasing Association
+
+exit status: 0

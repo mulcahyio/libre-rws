@@ -1,0 +1,10 @@
+time=2026-11-18T19:56:38.682Z level=INFO msg="LibreDCM starting" module=LibreDCM node=e787284a19d9 version=0.2.0-dcs.1 storage=fs index=sqlite events=log
+time=2026-11-18T19:56:38.682Z level=INFO msg="admin endpoint listening" module=LibreDCM node=e787284a19d9 addr=:8081
+time=2026-11-18T19:56:38.682Z level=INFO msg="component starting" module=LibreDCM node=e787284a19d9 component=dimse-gateway
+time=2026-11-18T19:56:38.682Z level=INFO msg="component starting" module=LibreDCM node=e787284a19d9 component=config-reload
+time=2026-11-18T19:56:38.682Z level=INFO msg="component starting" module=LibreDCM node=e787284a19d9 component=event-outbox
+time=2026-11-18T19:56:38.682Z level=INFO msg="DICOM listener started" module=LibreDCM node=e787284a19d9 component=dimse addr=[::]:11112 ae_title=LIBREDCM tls=false
+time=2026-11-18T19:56:44.808Z level=INFO msg="scp accepted connection" module=LibreDCM node=e787284a19d9 component=dimse remote=172.26.0.7:53892
+time=2026-11-18T19:56:44.864Z level=INFO msg="scp accepted connection" module=LibreDCM node=e787284a19d9 component=dimse remote=172.26.0.7:53904
+time=2026-11-18T19:56:44.864Z level=INFO msg=audit module=LibreDCM node=e787284a19d9 component=dimse audit=true event=SecurityAlert.association-rejected outcome=minor-failure calling_ae=INTRUDER remote=172.26.0.7:53904
+time=2026-11-18T19:56:44.864Z level=WARN msg="scp rejected association" module=LibreDCM node=e787284a19d9 component=dimse remote=172.26.0.7:53904 called_ae=LIBREDCM calling_ae=INTRUDER reason="Calling AE Title \"INTRUDER\" is not allowed"

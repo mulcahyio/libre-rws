@@ -60,6 +60,8 @@ jobs:
           python3 scripts/qms/needs.py --module librewt --prefix WT
       - name: Document link check
         run: python3 scripts/qms/mdlinks.py
+      - name: DICOM Conformance Statement check (independent of the Go test)
+        run: python3 scripts/qms/dcs.py
       - name: QMS script validation tests (QMS-SOP-011)
         run: python3 -m unittest scripts/qms/test_qms_tools.py
       - uses: actions/upload-artifact@v4
