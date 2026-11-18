@@ -1,0 +1,12 @@
+# LibreDCM conformance statement evidence (2026-11-18T19:56:33Z)
+git: fd86d655131b7dbda0327486e4d817b7bdf3a7f5 on feat/dicom-conformance-statement; modified tracked paths: 0
+docker: 29.9.2
+image libre/dcm:dcs built with VERSION=0.2.0-dcs.1: sha256:c78c19021cb06fb9bb79691190c9c458f7db88d65015496a869fb911f0535d09
+LibreDCM -version: 0.2.0-dcs.1
+DCMTK image: rws-e2e-dcmtk sha256:a43f0e598a80880690838e1c6537342e7301aca6f181766cfa2d94a76bbe6487
+pynetdicom image: libre/dvt:engines sha256:46124df7dae5e41e72387b22cb46f9bb2915a54a347cc1d23f066985f9b118e6
+dcs-gw health: healthy
+dcs-allow health: healthy
+dcs-reject health: healthy
+dcs-coerce health: healthy
+dcs-tls health: healthy

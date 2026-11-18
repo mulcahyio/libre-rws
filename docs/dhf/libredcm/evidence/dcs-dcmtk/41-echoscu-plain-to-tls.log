@@ -1,0 +1,6 @@
+$ echoscu -v -to 10 -ta 10 -aet DCMTKTLS -aec LIBREDCM dcs-tls 11112
+
+I: Requesting Association
+F: Association Request Failed: 0006:0317 Peer aborted Association (or never connected)
+
+exit status: 1

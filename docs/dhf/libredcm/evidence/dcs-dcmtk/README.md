@@ -46,13 +46,14 @@ exit status of every DCMTK command is at the end of its log and listed in
 | 35 | `movescu` to unknown destination `NOWHERE` | A801 | As expected |
 | 36 | `movescu` with an empty Study Instance UID only | A900 (5.2.7.7) | As expected |
 | 37 | `movescu` Patient Root | Success | As expected |
-| 38 | `getscu -d` of the native study | 121 of 121 proposed role selections accepted; 2 completed; Success | As expected |
+| 38 | `getscu -d` of the native study | SCP role accepted for the storage classes of Table 1-1; 2 completed; Success | As expected: 106 storage contexts accepted with the SCP role; the 14 retired storage classes `getscu` also proposes refused (abstract syntax not supported); 2 completed |
 | 39 | `getscu` of the compressed study | 7 failed, A702 (deviation 3); DCMTK's release then fails with "DUL P-Data PDU arrived" (DCMTK does not read the Failed SOP Instance UID List; note in 3.3.1) | As expected |
 | 40 | `echoscu +tla +cf tls.crt` to `dcs-tls` | TLS 1.3 connection, certificate verified, Success (8.4.2) | As expected |
 | 41 | Plain `echoscu` to `dcs-tls` | Refused (7.3.1.2) | As expected, exit 1 |
 | 60 | pynetdicom probes | TLS 1.1 refused, 1.2 and 1.3 accepted; asynchronous operations window not answered (1/1); no SOP class extended negotiation reply; user identity ignored, no response; unknown SOP class refused (abstract syntax not supported) and Deflated-only context refused (transfer syntaxes not supported); C-GET with a missing storage context ends the association without a final response (ANOM-011) | As expected; ANOM-011 recorded |
 | 70 | `dcmdump -M` of all stored files | Stored transfer syntaxes = received ones; Implementation Class UID `1.3.6.1.4.1.67686.1.1.1.0.2`, Version Name `LIBREDCM_0_2` in every file | As expected |
-| 80 | Gateway logs of the five containers | Audit records (`audit=true`) for stored, query, sent, conflict and allow-list rejection | As expected |
+| 80 | Gateway logs of the five containers | Audit records (`audit=true`) for stored, query, sent, conflict and allow-list rejection | As expected: 14 received, 9 query, 7 sent, 3 conflict-detected, 1 association-rejected |
+| 90 | Mutation check of the two drift checks (`90-mutation-check.log`) | Each product-code mutant that makes the statement wrong fails `TestConformanceStatementMatchesCode` and, where it checks that table, `dcs.py` | Go test killed 5/5 (transfer syntax removed, matching type changed, Q/R class removed, default `find_limit` changed, return key dropped); `dcs.py` killed 4/4 applicable (it does not check default values, by design). Source restored, `git diff` clean |
 
 ## How to rerun
 
@@ -62,10 +63,13 @@ From the repository root, with Docker and the two tool images present:
 bash docs/dhf/libredcm/evidence/dcs-dcmtk/scripts/evidence.sh
 ```
 
-The script deletes the old logs in this directory, builds the image, writes
-new logs and removes its containers and network. Compare with
-`git diff --stat`; the logs contain times, container IDs and random parts of
-storage keys, so lines of that kind always change.
+The script deletes the old logs in this directory (including
+`90-mutation-check.log`), builds the image, writes new logs and removes its
+containers and network. Compare with `git diff --stat`; the logs contain
+times, container IDs and random parts of storage keys, so lines of that kind
+always change. The mutation check is separate:
+`bash docs/dhf/libredcm/evidence/dcs-dcmtk/scripts/mutation-check.sh > docs/dhf/libredcm/evidence/dcs-dcmtk/90-mutation-check.log`
+(run it only on a clean tree; it edits and restores product files).
 
 ## Other records of this change
 

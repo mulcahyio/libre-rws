@@ -1,0 +1,6 @@
+M1-transfer-syntax: go=killed (exit 1) dcs.py=killed (exit 1) ::     conformance_statement_test.go:393: block "transfer-syntaxes" differs from the code:
+M2-matching-type: go=killed (exit 1) dcs.py=killed (exit 1) ::     conformance_statement_test.go:393: block "query-keys-study" differs from the code:
+M3-qr-class: go=killed (exit 1) dcs.py=killed (exit 1) ::     conformance_statement_test.go:393: block "dimse-sop-classes" differs from the code:
+M4-default: go=killed (exit 1) dcs.py=survived (exit 0) ::     conformance_statement_test.go:393: block "configuration" differs from the code:
+M5-return-key: go=killed (exit 1) dcs.py=killed (exit 1) ::     conformance_statement_test.go:393: block "query-keys-series" differs from the code:
+modules restored: clean

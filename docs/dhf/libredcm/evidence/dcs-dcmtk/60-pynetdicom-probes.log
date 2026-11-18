@@ -1,0 +1,33 @@
+/scr/pynetdicom-probes.py:161: DeprecationWarning: ssl.TLSVersion.TLSv1_1 is deprecated
+  ctx.minimum_version = ver
+/scr/pynetdicom-probes.py:162: DeprecationWarning: ssl.TLSVersion.TLSv1_1 is deprecated
+  ctx.maximum_version = ver
+
+== Asynchronous Operations Window proposed (5 invoked, 5 performed)
+established; acceptor asynchronous operations window: (1, 1)
+acceptor max PDU: 131072
+acceptor implementation: 1.3.6.1.4.1.67686.1.1.1.0.2 LIBREDCM_0_2
+
+== SOP Class Extended Negotiation (relational queries) proposed
+established; acceptor SOP class extended negotiation: {} (none returned)
+
+== User Identity Negotiation (username, positive response requested)
+established; user identity response from acceptor: none
+C-ECHO status: 0x0000
+
+== C-GET of study 1 (CT + MR) with a storage context for CT Image Storage only
+C-GET: no response (association aborted or timed out)
+C-STORE sub-operations received: ['1.2.840.10008.5.1.4.1.1.2']
+C-ECHO on the same association afterwards: no response
+association aborted: True  established: False
+
+== Presentation contexts: unknown SOP class; CT Image Storage in Deflated Explicit VR Little Endian only
+rejected: context 1 1.3.6.1.4.1.67686.9.1.900.99 result 3 (Abstract Syntax Not Supported)
+rejected: context 3 1.2.840.10008.5.1.4.1.1.2 result 4 (Transfer Syntax(es) Not Supported)
+accepted: context 5 1.2.840.10008.1.1 transfer syntax 1.2.840.10008.1.2.1
+
+== DICOM TLS listener: protocol versions
+TLSv1.1: refused (SSLError: [SSL: TLSV1_ALERT_PROTOCOL_VERSION] tlsv1 alert protocol version (_ssl.c:1011))
+TLSv1.2: accepted, negotiated TLSv1.2 cipher ECDHE-ECDSA-AES128-GCM-SHA256
+TLSv1.3: accepted, negotiated TLSv1.3 cipher TLS_AES_128_GCM_SHA256
+pynetdicom probes exit status: 0

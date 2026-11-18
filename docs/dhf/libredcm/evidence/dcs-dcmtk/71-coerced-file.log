@@ -1,0 +1,23 @@
+# Held conflict copy in dcs-coerce (patient_conflict_coerce_patient_id=true): Patient ID and Original Attributes Sequence
+== ./conflicts/1.3.6.1.4.1.67686.9.1.900.1/1.3.6.1.4.1.67686.9.1.900.1.9.1-dmylo35c0efc.dcm
+(0010,0020) LO [B000_DCS-OTHER]                         #  14, 1 PatientID
+  (fffe,e000) na (Item with explicit length #=2)          #  28, 1 Item
+    (0010,0020) LO [ABCD1234]                               #   8, 1 PatientID
+  (fffe,e00d) na (ItemDelimitationItem for re-encoding)   #   0, 0 ItemDelimitationItem
+  (fffe,e000) na (Item with explicit length #=2)          #  28, 1 Item
+    (0010,0020) LO [1234ABCD]                               #   8, 1 PatientID
+  (fffe,e00d) na (ItemDelimitationItem for re-encoding)   #   0, 0 ItemDelimitationItem
+(fffe,e0dd) na (SequenceDelimitationItem for re-encod.) #   0, 0 SequenceDelimitationItem
+(0400,0561) SQ (Sequence with explicit length #=1)      # 118, 1 OriginalAttributesSequence
+  (fffe,e000) na (Item with explicit length #=5)          # 110, 1 Item
+    (0400,0550) SQ (Sequence with explicit length #=1)      #  26, 1 ModifiedAttributesSequence
+      (fffe,e000) na (Item with explicit length #=1)          #  18, 1 Item
+        (0010,0020) LO [DCS-OTHER]                              #  10, 1 PatientID
+      (fffe,e00d) na (ItemDelimitationItem for re-encoding)   #   0, 0 ItemDelimitationItem
+    (fffe,e0dd) na (SequenceDelimitationItem for re-encod.) #   0, 0 SequenceDelimitationItem
+    (0400,0562) DT [20261118195645.058402+0000]             #  26, 1 AttributeModificationDateTime
+    (0400,0563) LO [LibreDCM]                               #   8, 1 ModifyingSystem
+    (0400,0564) LO (no value available)                     #   0, 0 SourceOfPreviousValues
+    (0400,0565) CS [COERCE]                                 #   6, 1 ReasonForTheAttributeModification
+  (fffe,e00d) na (ItemDelimitationItem for re-encoding)   #   0, 0 ItemDelimitationItem
+(fffe,e0dd) na (SequenceDelimitationItem for re-encod.) #   0, 0 SequenceDelimitationItem

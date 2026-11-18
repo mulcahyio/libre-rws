@@ -1,0 +1,13 @@
+$ storescu -v -aet DCMTKSTORE -aec LIBREDCM dcs-gw 11112 /data/conflict-s1-other-patient.dcm
+
+I: checking input files ...
+I: Requesting Association
+I: Association Accepted (Max Send PDV: 131060)
+I: Sending file: /data/conflict-s1-other-patient.dcm
+I: Converting transfer syntax: Little Endian Explicit -> Little Endian Explicit
+I: Sending Store Request (MsgID 1, CT)
+XMIT: .
+I: Received Store Response (Success)
+I: Releasing Association
+
+exit status: 0

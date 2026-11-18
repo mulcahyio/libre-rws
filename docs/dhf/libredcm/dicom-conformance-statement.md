@@ -230,8 +230,10 @@ neither (sections 1.3, 1.4).
 <!-- dcs:end storage-sop-classes -->
 
 With `accept_any_sop_class: true` (off by default) LibreDCM also accepts any
-other proposed abstract syntax, including private SOP classes, and stores
-such objects like the classes above (section 5.2.5.2).
+other proposed abstract syntax, including retired and private SOP classes,
+and stores such objects like the classes above (section 5.2.5.2). Without it,
+retired Storage SOP Classes (for example Ultrasound Image Storage (Retired))
+are refused (evidence 38).
 
 **Table 1-2. Supported Transfer Syntaxes** (generated)
 
@@ -775,10 +777,11 @@ As 5.2.7.7, with the PATIENT level (evidence 37).
   otherwise).
 - LibreDCM sends the C-STORE sub-operations on the same association. It
   accepts SCP/SCU role selection for every Storage SOP Class of Table 1-1 (it
-  agrees to be the SCU of the storage classes; evidence 38: all 121 role
-  selections DCMTK `getscu` proposed were accepted). It sends each instance on
-  an accepted presentation context for its SOP class, in the syntax the
-  requestor accepted.
+  agrees to be the SCU of the storage classes; evidence 38: the SCP role was
+  accepted for all 106 storage classes of DCMTK `getscu`'s proposal that are
+  in Table 1-1; the 14 retired classes it also proposes were refused). It
+  sends each instance on an accepted presentation context for its SOP class,
+  in the syntax the requestor accepted.
 - Only instances stored in Implicit or Explicit VR Little Endian are sent;
   instances stored compressed are failed sub-operations (deviation 3; evidence
   39). The total size is capped by `get_max_bytes`.

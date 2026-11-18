@@ -1,0 +1,24 @@
+$ movescu -v -P -aet DCMTKMOVE -aem DCMTKMOVE -aec LIBREDCM --port 11113 -od /tmp/rx1 -k QueryRetrieveLevel=PATIENT -k PatientID=DCS-P1 dcs-gw 11112
+
+I: Requesting Association
+I: Association Accepted (Max Send PDV: 131060)
+I: Sending Move Request (MsgID 1)
+I: Request Identifiers:
+I: 
+I: # Dicom-Data-Set
+I: # Used TransferSyntax: Little Endian Explicit
+I: (0008,0052) CS [PATIENT]                                #   8, 1 QueryRetrieveLevel
+I: (0010,0020) LO [DCS-P1]                                 #   6, 1 PatientID
+I: 
+I: Sub-Association Received
+I: Sub-Association Acknowledged (Max Send PDV: 131060)
+I: Received Store Request (MsgID 1, CT)
+RECV: ...
+W: DICOM file already exists, overwriting: /tmp/rx1/CT.1.3.6.1.4.1.67686.9.1.900.1.1.1
+I: Received Store Request (MsgID 2, MR)
+RECV: .
+W: DICOM file already exists, overwriting: /tmp/rx1/MR.1.3.6.1.4.1.67686.9.1.900.1.2.1
+I: Received Final Move Response (Success)
+I: Releasing Association
+
+exit status: 0

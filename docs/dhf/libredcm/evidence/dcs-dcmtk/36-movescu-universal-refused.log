@@ -1,0 +1,17 @@
+$ movescu -v -S -aet DCMTKMOVE -aem DCMTKMOVE -aec LIBREDCM --port 11113 -od /tmp/rx1 -k QueryRetrieveLevel=STUDY -k StudyInstanceUID= dcs-gw 11112
+
+I: Requesting Association
+I: Association Accepted (Max Send PDV: 131060)
+I: Sending Move Request (MsgID 1)
+I: Request Identifiers:
+I: 
+I: # Dicom-Data-Set
+I: # Used TransferSyntax: Little Endian Explicit
+I: (0008,0052) CS [STUDY]                                  #   6, 1 QueryRetrieveLevel
+I: (0020,000d) UI (no value available)                     #   0, 0 StudyInstanceUID
+I: 
+W: Move response with error status (Error: DataSetDoesNotMatchSOPClass)
+I: Received Final Move Response (Error: DataSetDoesNotMatchSOPClass)
+I: Releasing Association
+
+exit status: 69
