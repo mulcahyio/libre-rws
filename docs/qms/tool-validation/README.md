@@ -220,6 +220,18 @@ command output from 2026-11-10 unless stated.
 - **Re-validate:** any change under `modules/dvt/` or `Dockerfile.dvt`
   (CI job `libredvt` re-runs activities 1–3 automatically), any engine or
   base-image version change, or a new step type.
+- **Change 2026-11-18 (issue #30, worker 0.1.1):** the worker now sends
+  LibreDVT's own Implementation Class UID and Version Name
+  (`1.3.6.1.4.1.67686.1.3.1.<major>.<minor>`, `LIBREDVT_<major>_<minor>`,
+  passed from Go as `--impl-uid`/`--impl-version`) instead of pynetdicom's,
+  and writes them in the File Meta of files its Storage SCP receives
+  (DVT-SRS-082). Verdict logic, engines and versions are unchanged.
+  Re-validation (real output, `docker build -f deploy/docker/Dockerfile.dvt
+  --target test`): 57 tests passed, 0 failed, including activities 1–3
+  unchanged and the new `TestWorkerSendsLibreDVTIdentification` (the
+  A-ASSOCIATE-RQ read off the wire and a received file's (0002,0012)/(0002,0013)
+  carry LibreDVT's values). Mutation check: see the PR. Fit for use, pending
+  review.
 
 ## Libre WT system test (card WT-0.2/9, 2026-11-17)
 

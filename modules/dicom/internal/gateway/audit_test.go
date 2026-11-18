@@ -40,7 +40,7 @@ func TestAuditRecords(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	study, series := "1.2.826.0.1.3680043.10.999.30", "1.2.826.0.1.3680043.10.999.30.1"
+	study, series := "1.3.6.1.4.1.67686.9.1.30", "1.3.6.1.4.1.67686.9.1.30.1"
 	res, err := scu.CStore(ctx, ae.StoreRequest{AffectedSOPClassUID: string(uid.CTImageStorage),
 		AffectedSOPInstanceUID: series + ".1", Data: ctImage(study, series, series+".1", 1)})
 	if err != nil || res.Status != status.Success {
@@ -73,7 +73,7 @@ func TestOmitPatientID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	study, series := "1.2.826.0.1.3680043.10.999.40", "1.2.826.0.1.3680043.10.999.40.1"
+	study, series := "1.3.6.1.4.1.67686.9.1.40", "1.3.6.1.4.1.67686.9.1.40.1"
 	res, err := scu.CStore(ctx, ae.StoreRequest{AffectedSOPClassUID: string(uid.CTImageStorage),
 		AffectedSOPInstanceUID: series + ".1", Data: ctImage(study, series, series+".1", 1)})
 	if err != nil || res.Status != status.Success {

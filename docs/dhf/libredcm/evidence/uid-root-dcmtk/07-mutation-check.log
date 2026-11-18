@@ -1,0 +1,66 @@
+MUTANT version-name-format: KILLED: --- FAIL: TestImplementationLayout --- FAIL: TestImplementationFromBuildVersion --- FAIL: TestImplementationIdentification 
+        dicomuid_test.go:39: Implementation(1, "0.2.0") = "1.3.6.1.4.1.67686.1.1.1.0.2", "LIBREDCM_02"; want "1.3.6.1.4.1.67686.1.1.1.0.2", "LIBREDCM_0_2"
+        dicomuid_test.go:39: Implementation(1, "v0.2.0-beta.1") = "1.3.6.1.4.1.67686.1.1.1.0.2", "LIBREDCM_02"; want "1.3.6.1.4.1.67686.1.1.1.0.2", "LIBREDCM_0_2"
+        dicomuid_test.go:39: Implementation(1, "0.2.0-beta.1-12-gabc1234") = "1.3.6.1.4.1.67686.1.1.1.0.2", "LIBREDCM_02"; want "1.3.6.1.4.1.67686.1.1.1.0.2", "LIBREDCM_0_2"
+MUTANT uid-arc: KILLED: --- FAIL: TestImplementationLayout --- FAIL: TestImplementationFromBuildVersion --- FAIL: TestImplementationIdentification 
+        dicomuid_test.go:39: Implementation(1, "0.2.0") = "1.3.6.1.4.1.67686.3.1.1.0.2", "LIBREDCM_0_2"; want "1.3.6.1.4.1.67686.1.1.1.0.2", "LIBREDCM_0_2"
+        dicomuid_test.go:39: Implementation(1, "v0.2.0-beta.1") = "1.3.6.1.4.1.67686.3.1.1.0.2", "LIBREDCM_0_2"; want "1.3.6.1.4.1.67686.1.1.1.0.2", "LIBREDCM_0_2"
+        dicomuid_test.go:39: Implementation(1, "0.2.0-beta.1-12-gabc1234") = "1.3.6.1.4.1.67686.3.1.1.0.2", "LIBREDCM_0_2"; want "1.3.6.1.4.1.67686.1.1.1.0.2", "LIBREDCM_0_2"
+MUTANT uid-subarc: KILLED: --- FAIL: TestImplementationLayout --- FAIL: TestImplementationFromBuildVersion --- FAIL: TestImplementationIdentification 
+        dicomuid_test.go:39: Implementation(1, "0.2.0") = "1.3.6.1.4.1.67686.1.1.2.0.2", "LIBREDCM_0_2"; want "1.3.6.1.4.1.67686.1.1.1.0.2", "LIBREDCM_0_2"
+        dicomuid_test.go:39: Implementation(1, "v0.2.0-beta.1") = "1.3.6.1.4.1.67686.1.1.2.0.2", "LIBREDCM_0_2"; want "1.3.6.1.4.1.67686.1.1.1.0.2", "LIBREDCM_0_2"
+        dicomuid_test.go:39: Implementation(1, "0.2.0-beta.1-12-gabc1234") = "1.3.6.1.4.1.67686.1.1.2.0.2", "LIBREDCM_0_2"; want "1.3.6.1.4.1.67686.1.1.1.0.2", "LIBREDCM_0_2"
+MUTANT scp-no-classuid: KILLED: --- FAIL: TestImplementationIdentification --- FAIL: TestEveryAssociationConfigSetsImplementation 
+        identity_test.go:123: A-ASSOCIATE-AC carries "1.2.826.0.1.3680043.10.541.1" / "LIBREDCM_0_0", want "1.3.6.1.4.1.67686.1.1.1.0.0" / "LIBREDCM_0_0"
+        identity_test.go:137: /src/modules/dicom/internal/gateway/gateway.go: ae.ServerConfig literal does not set ImplementationClassUID: dcm.ImplementationClassUID
+MUTANT move-no-versionname: KILLED: --- FAIL: TestImplementationIdentification --- FAIL: TestEveryAssociationConfigSetsImplementation 
+        identity_test.go:165: C-MOVE A-ASSOCIATE-RQ carries "1.3.6.1.4.1.67686.1.1.1.0.0" / "GONETDICOM_001", want "1.3.6.1.4.1.67686.1.1.1.0.0" / "LIBREDCM_0_0"
+        identity_test.go:137: /src/modules/dicom/internal/gateway/retrieve.go: ae.Config literal does not set ImplementationVersionName: dcm.ImplementationVersionName
+MUTANT echo-no-classuid: KILLED: --- FAIL: TestEveryAssociationConfigSetsImplementation 
+        identity_test.go:137: /src/modules/dicom/internal/control/echo.go: ae.Config literal does not set ImplementationClassUID: dcm.ImplementationClassUID
+MUTANT part10-meta-uid: KILLED: --- FAIL: TestImplementationFromBuildVersion --- FAIL: TestImplementationIdentification 
+        identity_test.go:39: Part 10 meta lacks "\x02\x00\x12\x00UI\x1c\x001.3.6.1.4.1.67686.1.1.1.0.0\x00"
+        identity_test.go:144: (0002,0012) = "1.2.826.0.1.3680043.10.541.1", want "1.3.6.1.4.1.67686.1.1.1.0.0"
+MUTANT part10-meta-name: KILLED: --- FAIL: TestImplementationFromBuildVersion --- FAIL: TestImplementationIdentification 
+        identity_test.go:39: Part 10 meta lacks "\x02\x00\x13\x00SH\f\x00LIBREDCM_0_0"
+        identity_test.go:147: (0002,0013) = "LIBREDCM_020", want "LIBREDCM_0_0"
+MUTANT valid-leading-zero: KILLED: --- FAIL: TestValid 
+        dicomuid_test.go:68: Valid("1.02") accepted an invalid UID
+        dicomuid_test.go:68: Valid("00") accepted an invalid UID
+MUTANT valid-length: KILLED: --- FAIL: TestValid 
+        dicomuid_test.go:68: Valid("1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1") accepted an invalid UID
+MUTANT gen-no-persist: KILLED: --- FAIL: TestGeneratorMonotonicAcrossRestart --- FAIL: TestGeneratorFailsClosed 
+        dicomuid_test.go:225: after restart 1.3.6.1.4.1.67686.2.1.814134317462.1795023482015000.0 is not after time 1795027082015000 counter 0
+        dicomuid_test.go:315: issued 1.3.6.1.4.1.67686.2.1.877070473563.1002000000.0 without being able to record the time mark
+MUTANT gen-no-overflow: KILLED: --- FAIL: TestGeneratorFrozenAndBackwardClock --- FAIL: TestGeneratorMonotonicAcrossRestart 
+        dicomuid_test.go:164: UID 1.3.6.1.4.1.67686.2.1.7.1795027082000000.1000000 does not increase or counter overflows
+        dicomuid_test.go:238: configured site restart gave 1.3.6.1.4.1.67686.2.1.12.1795027083000003.1000000
+MUTANT gen-no-lock: KILLED: --- FAIL: TestGeneratorUniqueUnderConcurrency 
+          /src/platform/dicomuid/dicomuid_test.go:109 +0x10f
+          /src/platform/dicomuid/dicomuid_test.go:109 +0x10f
+          /src/platform/dicomuid/dicomuid_test.go:106 +0x18b
+MUTANT gen-backward-clock: KILLED: --- FAIL: TestGeneratorFrozenAndBackwardClock --- FAIL: TestGeneratorMonotonicAcrossRestart 
+        dicomuid_test.go:164: UID 1.3.6.1.4.1.67686.2.1.7.1795027082000000.0 does not increase or counter overflows
+        dicomuid_test.go:225: after restart 1.3.6.1.4.1.67686.2.1.959056495392.1795023482015000.0 is not after time 1795027082015000 counter 0
+MUTANT gen-restart-floor: KILLED: --- FAIL: TestGeneratorMonotonicAcrossRestart 
+        dicomuid_test.go:225: after restart 1.3.6.1.4.1.67686.2.1.582225059012.1795023482015000.0 is not after time 1795027082015000 counter 0
+MUTANT gen-damaged-state: KILLED: --- FAIL: TestGeneratorFailsClosed 
+        dicomuid_test.go:288: garbage state file accepted
+MUTANT arch-testdata-in-code: BUILD FAILED (proves nothing)
+MUTANT dvt-no-impl-args: KILLED: --- FAIL: TestImplementationIdentification 
+        identity_test.go:38: echo: worker arguments lack LibreDVT's identification: echo --host h --port 104 --called-aet A --calling-aet B --timeout 30
+        identity_test.go:38: reject: worker arguments lack LibreDVT's identification: reject --host h --port 104 --called-aet A --calling-aet B --timeout 30
+        identity_test.go:38: store: worker arguments lack LibreDVT's identification: store --host h --port 104 --called-aet A --calling-aet B --timeout 30
+MUTANT dvt-version-name: KILLED: --- FAIL: TestImplementationIdentification 
+        identity_test.go:25: Implementation("0.1.0") = "1.3.6.1.4.1.67686.1.3.1.0.1", "LIBREDVT_01"; want "1.3.6.1.4.1.67686.1.3.1.0.1", "LIBREDVT_0_1"
+        identity_test.go:25: Implementation("v0.2.0-beta.1") = "1.3.6.1.4.1.67686.1.3.1.0.2", "LIBREDVT_02"; want "1.3.6.1.4.1.67686.1.3.1.0.2", "LIBREDVT_0_2"
+        identity_test.go:25: Implementation("1.12.3-4-gabc") = "1.3.6.1.4.1.67686.1.3.1.1.12", "LIBREDVT_112"; want "1.3.6.1.4.1.67686.1.3.1.1.12", "LIBREDVT_1_12"
+tree restored clean
+done
+mutant builds
+--- FAIL: TestTestDataArcOnlyInTests (0.00s)
+    identity_test.go:172: /src/platform/dicomuid/generator.go contains the test-data UID arc 1.3.6.1.4.1.67686.9
+FAIL
+FAIL	github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm	0.006s
+FAIL
+tree restored clean

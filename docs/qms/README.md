@@ -20,6 +20,7 @@ its design file can support the system's 510(k).
 | Other SOPs (design control, risk management, CAPA, complaints/MDR, supplier control, training, audits and management review, labeling/UDI, cybersecurity, tool validation) | See the procedure index in the quality manual §7.1 |
 | [sop-010-vulnerability-management.md](sop-010-vulnerability-management.md) | Draft; mailbox, response times, ISAO and support policy need approval |
 | [sop-011-tool-validation.md](sop-011-tool-validation.md) and [tool-validation/README.md](tool-validation/README.md) (executed 2026-11-10) | Draft for approval |
+| [uid-registry.md](uid-registry.md): DICOM UID root `1.3.6.1.4.1.67686`, layout and allocation log (QMS-REG-001) | Layout approved 2026-11-17 (issue #30); text draft for approval |
 
 ## Design files (`docs/dhf/<module>/`)
 

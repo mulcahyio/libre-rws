@@ -117,7 +117,7 @@ func TestAuditRingHonoursPatientIDOmission(t *testing.T) {
 	rt := newRT()
 	testConfig = nil
 	addr, _, _ := startGateway(t, ctx, nil)
-	storeOne(t, ctx, addr, "1.2.826.0.1.3680043.10.999.71")
+	storeOne(t, ctx, addr, "1.3.6.1.4.1.67686.9.1.71")
 	got := ring(rt)
 	for _, want := range []string{`"event":"DICOMInstancesTransferred.received"`, `"patient_id":"P001"`, `"audit":true`} {
 		if !strings.Contains(got, want) {
@@ -141,7 +141,7 @@ func TestAuditRingHonoursPatientIDOmission(t *testing.T) {
 	rt = newRT()
 	testConfig = func(c *Config) { c.AuditOmitPatientID = true }
 	addr, _, _ = startGateway(t, ctx, nil)
-	storeOne(t, ctx, addr, "1.2.826.0.1.3680043.10.999.72")
+	storeOne(t, ctx, addr, "1.3.6.1.4.1.67686.9.1.72")
 	got = ring(rt)
 	if !strings.Contains(got, `"event":"DICOMInstancesTransferred.received"`) {
 		t.Fatalf("no store record in the ring:\n%s", got)
@@ -154,7 +154,7 @@ func TestAuditRingHonoursPatientIDOmission(t *testing.T) {
 	rt = newRT()
 	testConfig = func(c *Config) { c.AuditLogOff = true }
 	addr, _, _ = startGateway(t, ctx, nil)
-	storeOne(t, ctx, addr, "1.2.826.0.1.3680043.10.999.73")
+	storeOne(t, ctx, addr, "1.3.6.1.4.1.67686.9.1.73")
 	if n := rt.Audit.Len(); n != 0 {
 		t.Fatalf("audit ring holds %d records although audit_log_off is set:\n%s", n, ring(rt))
 	}

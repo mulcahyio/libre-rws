@@ -57,6 +57,11 @@ type Data struct {
 }
 
 func defaultData() Data {
+	// Audit records and log lines are dated an hour ago, so they stay inside
+	// Libre WT's default 24-hour window whatever day the tests run (they
+	// were fixed dates and dropped out of the window after a day).
+	base := time.Now().UTC().Add(-time.Hour).Truncate(time.Minute)
+	at := func(min int) string { return base.Add(time.Duration(min) * time.Minute).Format(time.RFC3339) }
 	inst := func(series, n string) map[string]string {
 		return map[string]string{"SOPInstanceUID": series + "." + n, "InstanceNumber": n, "SOPClassUID": "1.2.840.10008.5.1.4.1.1.2",
 			"TransferSyntaxUID": "1.2.840.10008.1.2.1"}
@@ -81,23 +86,23 @@ func defaultData() Data {
 	return Data{
 		Held: "hidden",
 		Studies: []Study{
-			study("1.2.826.0.1.3680043.10.1.1", "PAT-001", "DOE^JANE", "19700101", "20261101", "ACC-1001", "CT CHEST", `CT`,
-				series("1.2.826.0.1.3680043.10.1.1.1", "CT", "1", "AXIAL", 3), series("1.2.826.0.1.3680043.10.1.1.2", "CT", "2", "CORONAL", 2)),
-			study("1.2.826.0.1.3680043.10.1.2", "PAT-002", "DOE^JOHN", "19710202", "20261105", "ACC-1002", "MR BRAIN", `MR`,
-				series("1.2.826.0.1.3680043.10.1.2.1", "MR", "1", "T1", 2)),
+			study("1.3.6.1.4.1.67686.9.2.1", "PAT-001", "DOE^JANE", "19700101", "20261101", "ACC-1001", "CT CHEST", `CT`,
+				series("1.3.6.1.4.1.67686.9.2.1.1", "CT", "1", "AXIAL", 3), series("1.3.6.1.4.1.67686.9.2.1.2", "CT", "2", "CORONAL", 2)),
+			study("1.3.6.1.4.1.67686.9.2.2", "PAT-002", "DOE^JOHN", "19710202", "20261105", "ACC-1002", "MR BRAIN", `MR`,
+				series("1.3.6.1.4.1.67686.9.2.2.1", "MR", "1", "T1", 2)),
 		},
 		FailUIDs: map[string]bool{},
 		Audit: []map[string]any{
-			{"time": "2026-11-16T09:00:00Z", "level": "INFO", "msg": "audit", "audit": true, "event": "DICOMInstancesTransferred.received",
-				"outcome": "success", "calling_ae": "CT1", "patient_ids": []any{"PAT-001"}, "studies": []any{"1.2.826.0.1.3680043.10.1.1"}},
-			{"time": "2026-11-16T09:05:00Z", "level": "INFO", "msg": "audit", "audit": true, "event": "SecurityAlert.association-rejected",
+			{"time": at(0), "level": "INFO", "msg": "audit", "audit": true, "event": "DICOMInstancesTransferred.received",
+				"outcome": "success", "calling_ae": "CT1", "patient_ids": []any{"PAT-001"}, "studies": []any{"1.3.6.1.4.1.67686.9.2.1"}},
+			{"time": at(5), "level": "INFO", "msg": "audit", "audit": true, "event": "SecurityAlert.association-rejected",
 				"outcome": "minor-failure", "calling_ae": "=HYPERLINK(\"http://x\")", "remote": "10.9.9.9:4000"},
 		},
 		Logs: []map[string]any{
-			{"time": "2026-11-16T08:59:00Z", "level": "DEBUG", "msg": "association negotiated", "calling_ae": "CT1"},
-			{"time": "2026-11-16T09:00:00Z", "level": "INFO", "msg": "stored instance", "sop_class": "CT"},
-			{"time": "2026-11-16T09:01:00Z", "level": "WARN", "msg": "outbox publish retry", "attempt": 2},
-			{"time": "2026-11-16T09:02:00Z", "level": "ERROR", "msg": "+cmd|' /C calc'!A0 storage write failed", "path": "/data/blob"},
+			{"time": at(-1), "level": "DEBUG", "msg": "association negotiated", "calling_ae": "CT1"},
+			{"time": at(0), "level": "INFO", "msg": "stored instance", "sop_class": "CT"},
+			{"time": at(1), "level": "WARN", "msg": "outbox publish retry", "attempt": 2},
+			{"time": at(2), "level": "ERROR", "msg": "+cmd|' /C calc'!A0 storage write failed", "path": "/data/blob"},
 		},
 	}
 }

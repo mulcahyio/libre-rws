@@ -38,6 +38,7 @@ type Config struct {
 	StandardPath string        // dicom-validator standard directory
 	Edition      string        // DICOM standard edition, e.g. 2026d
 	Timeout      time.Duration // per engine invocation
+	Version      string        // LibreDVT build version: sets the DICOM identification (DVT-SRS-082)
 }
 
 // Output of one process.

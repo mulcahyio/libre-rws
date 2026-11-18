@@ -74,7 +74,14 @@ licence texts and the download page.
 - Version identification is in place: `LibreDCM -version` and `/version`
   report the build version set from the release tag (DCM-SRS-057, verified by
   `TestVersionInfo`).
+- DICOM identification (added 2026-11-18, issue #30): LibreDCM identifies
+  itself to every DICOM peer and in every stored file with Implementation
+  Class UID `1.3.6.1.4.1.67686.1.1.1.<major>.<minor>` and Implementation
+  Version Name `LIBREDCM_<major>_<minor>`, taken from the same build version
+  (DCM-SRS-098; layout in `uid-registry.md`, QMS-REG-001). The DICOM UID root
+  is not a UDI: the UDI needs an FDA-accredited issuing agency (GS1, HIBCC or
+  ICCBBA) account in Libre Systems' name.
 - **Gap:** the start-up log line includes the version, but there is no UDI
   field yet and no "not for clinical use" statement at start-up. Add both
-  (UDI empty until assigned) when the UID root and the company exist;
-  tracked with the labeling items of the release checklist.
+  (UDI empty until assigned) when the company and its issuing-agency account
+  exist; tracked with the labeling items of the release checklist.

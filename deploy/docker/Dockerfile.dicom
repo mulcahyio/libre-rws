@@ -30,7 +30,7 @@ ARG VERSION=dev
 ARG BUILD_TAGS=
 ARG BUILD_DATE=
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
-    go build -tags "${BUILD_TAGS}" -ldflags "-s -w -X main.version=${VERSION} -X main.buildDate=${BUILD_DATE}" -o /out/LibreDCM ./modules/dicom/cmd/libredcm
+    go build -tags "${BUILD_TAGS}" -ldflags "-s -w -X github.com/mulcahyio/libre-rws/modules/dicom/internal/buildinfo.Version=${VERSION} -X github.com/mulcahyio/libre-rws/modules/dicom/internal/buildinfo.BuildDate=${BUILD_DATE}" -o /out/LibreDCM ./modules/dicom/cmd/libredcm
 
 # Data directory owned by the distroless "nonroot" user (65532). Distroless has
 # no shell, so it is prepared here and copied across with ownership.

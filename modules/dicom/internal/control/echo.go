@@ -56,9 +56,11 @@ func DICOMEcho(ctx context.Context, t EchoTarget) (string, error) {
 		tlsCfg = &tls.Config{InsecureSkipVerify: true, MinVersion: tls.VersionTLS12} // #nosec G402 -- reachability check of a (often self-signed) peer, not a trust decision; no patient data is sent
 	}
 	scu, err := ae.Dial(ctx, ae.Config{
-		TLS:         tlsCfg,
-		AETitle:     t.CallingAE,
-		DialTimeout: 10 * time.Second,
+		TLS:                       tlsCfg,
+		ImplementationClassUID:    dcm.ImplementationClassUID,
+		ImplementationVersionName: dcm.ImplementationVersionName,
+		AETitle:                   t.CallingAE,
+		DialTimeout:               10 * time.Second,
 		PresentationContexts: []ae.PresentationContext{
 			{AbstractSyntax: verificationSOPClass, TransferSyntaxes: []string{dcm.ImplicitVRLittleEndian}},
 		},

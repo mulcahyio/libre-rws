@@ -73,3 +73,4 @@ the requirement controls.
 |---|---|---|---|
 | DVT-SRS-080 | LibreDVT's DICOM parsing and networking shall not use the libraries LibreDCM uses (godicom, gonetdicom or its fork). | Active | DVT-HAZ-001 |
 | DVT-SRS-081 | LibreDVT shall ship a test plan for LibreDCM that covers at least the checks of `scripts/conformance.sh` (C-ECHO, C-STORE of native and compressed transfer syntaxes, C-FIND, C-MOVE with pixel-data comparison) and the called-AE rejection. | Active | |
+| DVT-SRS-082 | LibreDVT shall identify itself in every association its worker requests or accepts and in the File Meta of every Part 10 file its built-in Storage SCP writes with Implementation Class UID `1.3.6.1.4.1.67686.1.3.1.<major>.<minor>` and Implementation Version Name `LIBREDVT_<major>_<minor>` from its build version (0.0 for a build without a release version), not with the engine library's own values (issue #30, `docs/qms/uid-registry.md`). | Active | |

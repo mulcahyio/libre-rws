@@ -145,3 +145,15 @@ queries and the size of one send.
 | DCM-SRS-095 | A planned change that weakens a risk control (the allow-list becomes empty; the allow-list would refuse a calling AE that was active in the last 24 hours; a destination is removed or pointed at another address) shall carry a warning, and apply shall be refused unless the request acknowledges each such warning by its code. | Active | HAZ-015, HAZ-007, HAZ-005 |
 | DCM-SRS-096 | Control requests shall not degrade DICOM services: results and buffers shall be bounded, at most one backup, one send and four study queries shall run at a time per node, one send shall hold at most 5000 instances, and every action shall have a timeout. | Active | HAZ-004 |
 | DCM-SRS-097 | Every control response shall identify the node (node ID, AE title, version and a digest of the running live-reloadable settings). A state-changing request that carries an expected node ID or AE title that does not match shall be refused without any change. | Active | HAZ-015, HAZ-016 |
+
+## 8. DICOM identification and UIDs
+
+Added 2026-11-18 (issue #30; UID root and layout approved by Patrick Mulcahy
+on 2026-11-17). The UID layout is the controlled document
+`docs/qms/uid-registry.md` (QMS-REG-001). Closes ANOM-007.
+
+| ID | Requirement | Status | Risk control for |
+|---|---|---|---|
+| DCM-SRS-098 | LibreDCM shall identify itself in every association it accepts or requests (A-ASSOCIATE-AC and A-ASSOCIATE-RQ) and in the File Meta of every Part 10 file it writes with Implementation Class UID `1.3.6.1.4.1.67686.1.1.1.<major>.<minor>` and Implementation Version Name `LIBREDCM_<major>_<minor>`, both derived from the build version reported by `-version`; a build without a release version shall identify as version 0.0. | Active | |
+| DCM-SRS-099 | UIDs that Libre Systems products generate shall be made by the shared UID generator as `1.3.6.1.4.1.67686.2.<product>.<site>.<time>.<counter>` (uid-registry.md §5). Every generated UID shall be valid (digits and dots only, at most 64 characters, no empty component, no leading zero), unique when generated concurrently, strictly increasing within a generator, and, with a state file, unique and increasing across restarts even when the clock is set back; the generator shall refuse to issue a UID when it cannot record its state. | Active | |
+| DCM-SRS-100 | Shipped code shall not contain UIDs under the test-data arc `1.3.6.1.4.1.67686.9` or gonetdicom's UID root `1.2.826.0.1.3680043.10.541`. | Active | |

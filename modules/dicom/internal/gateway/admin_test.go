@@ -22,9 +22,9 @@ import (
 )
 
 const (
-	qStudyA = "1.2.826.0.1.3680043.10.999.81"
-	qStudyB = "1.2.826.0.1.3680043.10.999.82"
-	qStudyC = "1.2.826.0.1.3680043.10.999.83"
+	qStudyA = "1.3.6.1.4.1.67686.9.1.81"
+	qStudyB = "1.3.6.1.4.1.67686.9.1.82"
+	qStudyC = "1.3.6.1.4.1.67686.9.1.83"
 )
 
 // queryImage is a synthetic image with the keys the query tests match on.

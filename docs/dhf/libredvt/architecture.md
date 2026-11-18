@@ -67,7 +67,11 @@ request, arguments on the command line, one JSON document on stdout, non-zero
 exit only for worker failures (a failed DICOM check is a normal JSON result).
 Commands: `versions`, `probe`, `iod`, `echo`, `store`, `find`, `move`,
 `reject`. The worker never decides a verdict; Go applies the rules, so the
-pass/fail logic lives in one tested place.
+pass/fail logic lives in one tested place. Network commands also get
+`--impl-uid`/`--impl-version`: LibreDVT's own Implementation Class UID and
+Version Name, computed in Go from the build version (`engine.Implementation`,
+DVT-SRS-082, `docs/qms/uid-registry.md`); the worker sends them instead of
+pynetdicom's and writes them in received files.
 
 ## 4. Test plans
 

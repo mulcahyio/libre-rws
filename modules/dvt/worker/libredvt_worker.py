@@ -22,6 +22,7 @@ Commands:
   reject TARGET-ARGS
   compare --sent FILE... --received DIR
 TARGET-ARGS: --host H --port N --called-aet AE --calling-aet AE --timeout SECONDS
+             [--impl-uid UID --impl-version NAME]  (LibreDVT's DICOM identification, DVT-SRS-082)
 """
 import argparse
 import hashlib
@@ -34,7 +35,7 @@ import time
 
 logging.disable(logging.CRITICAL)  # pynetdicom logs to stderr otherwise
 
-WORKER_VERSION = "0.1.0"
+WORKER_VERSION = "0.1.1"
 
 
 def out(doc):
@@ -145,14 +146,25 @@ def cmd_iod(args):
 
 # ---------------------------------------------------------------- network helpers
 
-def _ae(calling, timeout):
+def _identify(ae, args):
+    """Send LibreDVT's own Implementation Class UID and Version Name (from the
+    Go side) instead of pynetdicom's (DVT-SRS-082)."""
+    if args.impl_uid:
+        ae.implementation_class_uid = args.impl_uid
+    if args.impl_version:
+        ae.implementation_version_name = args.impl_version
+
+
+def _ae(args):
     from pynetdicom import AE
 
-    ae = AE(ae_title=calling)
+    timeout = args.timeout
+    ae = AE(ae_title=args.calling_aet)
     ae.acse_timeout = timeout
     ae.dimse_timeout = timeout
     ae.network_timeout = timeout
     ae.connection_timeout = timeout
+    _identify(ae, args)
     return ae
 
 
@@ -177,7 +189,7 @@ def _status(ds):
 def cmd_echo(args):
     from pynetdicom.sop_class import Verification
 
-    ae = _ae(args.calling_aet, args.timeout)
+    ae = _ae(args)
     ae.add_requested_context(Verification)
     assoc = _associate(ae, args)
     if not assoc.is_established:
@@ -193,7 +205,7 @@ def cmd_echo(args):
 def cmd_reject(args):
     from pynetdicom.sop_class import Verification
 
-    ae = _ae(args.calling_aet, args.timeout)
+    ae = _ae(args)
     ae.add_requested_context(Verification)
     assoc = _associate(ae, args)
     if assoc.is_established:
@@ -218,7 +230,7 @@ def cmd_store(args):
     if len(pairs) > 128:
         print("more than 128 SOP class / transfer syntax pairs in one store step", file=sys.stderr)
         sys.exit(3)
-    ae = _ae(args.calling_aet, args.timeout)
+    ae = _ae(args)
     contexts = [build_context(sc, [ts]) for sc, ts in pairs]
     results = []
     assoc = _associate(ae, args, contexts) if contexts else None
@@ -258,7 +270,7 @@ def cmd_find(args):
     from pydicom.dataset import Dataset
     from pynetdicom.sop_class import StudyRootQueryRetrieveInformationModelFind
 
-    ae = _ae(args.calling_aet, args.timeout)
+    ae = _ae(args)
     ae.add_requested_context(StudyRootQueryRetrieveInformationModelFind)
     assoc = _associate(ae, args)
     if not assoc.is_established:
@@ -298,10 +310,15 @@ def cmd_move(args):
         uid = str(event.request.AffectedSOPInstanceUID)
         name = hashlib.sha256(uid.encode()).hexdigest()[:32] + ".dcm"
         path = os.path.join(args.out, name)
+        meta = event.file_meta
+        if args.impl_uid:  # the file is written by LibreDVT, not pynetdicom (DVT-SRS-082)
+            meta.ImplementationClassUID = args.impl_uid
+        if args.impl_version:
+            meta.ImplementationVersionName = args.impl_version
         # Write the bytes as received (no re-encoding), so pixel comparison is exact.
         with open(path, "wb") as fh:
             fh.write(b"\x00" * 128 + b"DICM")
-            write_file_meta_info(fh, event.file_meta, enforce_standard=True)
+            write_file_meta_info(fh, meta, enforce_standard=True)
             fh.write(event.request.DataSet.getvalue())
         with lock:
             received.append({"sop_instance_uid": uid, "file": path,
@@ -312,6 +329,7 @@ def cmd_move(args):
     scp = AE(ae_title=args.dest_aet)
     scp.network_timeout = args.timeout
     scp.dimse_timeout = args.timeout
+    _identify(scp, args)
     for cx in AllStoragePresentationContexts:
         scp.add_supported_context(cx.abstract_syntax, ALL_TRANSFER_SYNTAXES)
     # Only the target may store to the built-in SCP during this step.
@@ -319,7 +337,7 @@ def cmd_move(args):
     server = scp.start_server(("0.0.0.0", args.scp_port), block=False,
                               evt_handlers=[(evt.EVT_C_STORE, on_store)])
     try:
-        ae = _ae(args.calling_aet, args.timeout)
+        ae = _ae(args)
         ae.add_requested_context(StudyRootQueryRetrieveInformationModelMove)
         assoc = _associate(ae, args)
         if not assoc.is_established:
@@ -416,6 +434,8 @@ def main(argv=None):
         sp.add_argument("--called-aet", required=True)
         sp.add_argument("--calling-aet", required=True)
         sp.add_argument("--timeout", type=float, default=30)
+        sp.add_argument("--impl-uid")
+        sp.add_argument("--impl-version")
 
     for name in ("echo", "reject"):
         target(sub.add_parser(name))

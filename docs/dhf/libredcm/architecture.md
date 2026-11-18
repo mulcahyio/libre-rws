@@ -63,7 +63,7 @@ the functions and types documented in `design/` for the class-C-depth items.
 |---|---|---|---|---|
 | SI-01 | `modules/dicom/cmd/libredcm` | Entry point: flags, configuration loading, wiring of all items, administrative commands (`-echo`, `-gen-cert`, `-backup`, `-license-*`), SIGHUP reloader | Own | — |
 | SI-02 | `modules/dicom/internal/gateway` | DIMSE services: association acceptance (called-AE check, calling-AE allow-list), transfer-syntax selection, C-STORE, C-FIND, C-MOVE, C-GET handlers, audit records, DIMSE metrics | Own | godicom |
-| SI-03 | `modules/dicom/internal/dcm` | Part 10 wrapping without re-encoding, reading the dataset back, attribute extraction, transfer-syntax policy | Own | godicom |
+| SI-03 | `modules/dicom/internal/dcm` | Part 10 wrapping without re-encoding, reading the dataset back, attribute extraction, transfer-syntax policy, LibreDCM's Implementation Class UID and Version Name (DCM-SRS-098) | Own | godicom |
 | SI-04 | `modules/dicom/internal/blob` | Image storage contract (`blob.Store`) with filesystem and S3 implementations | Own | minio-go |
 | SI-05 | `modules/dicom/internal/index` | Index contract (`index.Index`): schema and migrations, transactional upsert of patient/study/series/instance rows with the outbox event, queries, outbox claim/ack, SQLite backup | Own | modernc sqlite, pgx |
 | SI-06 | `modules/dicom/internal/events` | Event publishers (none, log, NATS JetStream) and the outbox relay | Own | nats.go |
@@ -74,6 +74,8 @@ the functions and types documented in `design/` for the class-C-depth items.
 | SI-10 | `third_party/gonetdicom` | DICOM upper layer, PDU and DIMSE codec, association state machine, SCP/SCU | **Own (fork of gonetdicom v0.17.0, MIT)**; verified as LibreDCM code, changes listed in `RWS_FORK.md` | godicom |
 | SI-11 | `third_party/librekey` | LibreKey licence client (verification of signed licences, machine fingerprint, activation) | **Own (copy of the Libre Systems client, Apache-2.0)** | standard library |
 | SI-12 | `deploy/` | Container image (`Dockerfile.dicom`), Compose files, HAProxy config, workstation installer scripts | Own | Docker, distroless base image, HAProxy, NATS, PostgreSQL images (SOUP at system level) |
+| SI-13 | `platform/dicomuid` | Libre Systems UID root and layout (`docs/qms/uid-registry.md`), Implementation Class UID and Version Name per product and version, UID validity check, UID generator (DCM-SRS-098, -099). Added 2026-11-18, issue #30 | Own | standard library |
+| SI-14 | `modules/dicom/internal/buildinfo` | Build version and date, set with `-ldflags -X`: the one source for `-version`, `/version`, licensing, the control API and the Implementation Class UID (DCM-SRS-057, -098). Added 2026-11-18, issue #30 | Own | — |
 
 ### 3.2 Safety classification of items
 
@@ -126,11 +128,16 @@ flowchart TD
   EV --> IDX
   LIC --> LK[SI-11 librekey client]
   GW -. "forbidden import (HAZ-010)" .-> LIC
+  DCM --> UID[SI-13 dicomuid]
+  DCM --> BI[SI-14 buildinfo]
+  CMD --> BI
   linkStyle 16 stroke:#c00,stroke-dasharray:4
 ```
 
 | Rule | Why | How it is enforced |
 |---|---|---|
+| Every association LibreDCM accepts or requests (gonetdicom `ae.Config` / `ae.ServerConfig`) sets the Implementation Class UID and Version Name from SI-03 | gonetdicom fills in its own values for an empty field (ANOM-007, DCM-SRS-098) | Architecture test `TestEveryAssociationConfigSetsImplementation` parses every such literal in shipped code |
+| Shipped code never contains the test-data UID arc or gonetdicom's root | Test UIDs must never reach real data (DCM-SRS-100) | Architecture test `TestTestDataArcOnlyInTests` |
 | The gateway (SI-02) must not import licensing (SI-07) or the LibreKey client (SI-11) | No licence state may refuse, delay or interrupt DICOM services (HAZ-010, DCM-SRS-058) | Architecture test `TestGatewayHasNoLicenseDependency` parses the gateway's imports in CI |
 | `internal/` packages are private to the module | Keeps the module boundary stable for other Libre RWS modules | Go `internal` visibility rule (compiler) |
 | Modules exchange data only through the event bus and DICOM, not through each other's code | Modularity (DEVELOPMENT.md §1) | Package layout; no cross-module imports exist (checked §10) |
@@ -489,3 +496,9 @@ as "C-STORE refused" (changed by issue #5) and points to `deploy/Dockerfile`
 (now `deploy/docker/Dockerfile.dicom`); README says S3 is "planned" and
 names `LIBRE_DCM_FORK.md` (the file is `RWS_FORK.md`). Recorded for the SRS
 and documentation review.
+
+Re-checked 2026-11-18 (issue #30): `go list` shows the new edges drawn in
+§4.1 and no others: `dcm` imports `buildinfo` and `platform/dicomuid`;
+`cmd/libredcm` imports `buildinfo`; `buildinfo` imports nothing;
+`platform/dicomuid` imports only the standard library. The gateway still has
+no edge to licensing.

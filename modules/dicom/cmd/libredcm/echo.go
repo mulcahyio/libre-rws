@@ -29,8 +29,10 @@ func echo(addr, calledAE string, useTLS bool) int {
 		tlsCfg = &tls.Config{InsecureSkipVerify: true, MinVersion: tls.VersionTLS12} // #nosec G402 -- reachability check of a (often self-signed) install, not a trust decision
 	}
 	scu, err := ae.Dial(ctx, ae.Config{
-		TLS:     tlsCfg,
-		AETitle: "LIBREDCM_ECHO",
+		TLS:                       tlsCfg,
+		ImplementationClassUID:    dcm.ImplementationClassUID,
+		ImplementationVersionName: dcm.ImplementationVersionName,
+		AETitle:                   "LIBREDCM_ECHO",
 		PresentationContexts: []ae.PresentationContext{
 			{AbstractSyntax: "1.2.840.10008.1.1", TransferSyntaxes: []string{dcm.ImplicitVRLittleEndian}},
 		},

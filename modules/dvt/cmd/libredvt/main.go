@@ -83,7 +83,7 @@ func defaults() Config {
 func (c Config) engines() engine.Config {
 	e := c.Engines
 	return engine.Config{DciodvfyBin: e.Dciodvfy, DcentvfyBin: e.Dcentvfy, Python: e.Python, Worker: e.Worker,
-		StandardPath: e.StandardPath, Edition: e.Edition, Timeout: e.Timeout}
+		StandardPath: e.StandardPath, Edition: e.Edition, Timeout: e.Timeout, Version: version}
 }
 
 func main() {

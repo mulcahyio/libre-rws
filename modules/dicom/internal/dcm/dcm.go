@@ -13,16 +13,24 @@ import (
 	"strings"
 
 	"github.com/godicom-dev/godicom"
+
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/buildinfo"
+	"github.com/mulcahyio/libre-rws/platform/dicomuid"
 )
 
 const (
 	ImplicitVRLittleEndian = "1.2.840.10008.1.2"
 	ExplicitVRLittleEndian = "1.2.840.10008.1.2.1"
 	ExplicitVRBigEndian    = "1.2.840.10008.1.2.2" // retired, still seen in the wild
-
-	ImplementationClassUID    = "1.2.826.0.1.3680043.10.541.1" // gonetdicom's root; replace with your own org root
-	ImplementationVersionName = "LIBREDCM_020"
 )
+
+// ImplementationClassUID and ImplementationVersionName identify LibreDCM in
+// every association it accepts or requests and in every Part 10 file it
+// writes (DCM-SRS-098): 1.3.6.1.4.1.67686.1.1.1.<major>.<minor> and
+// LIBREDCM_<major>_<minor> under the Libre Systems UID root
+// (docs/qms/uid-registry.md). Both come from the build version in package
+// buildinfo; a build without a release version identifies as 0.0.
+var ImplementationClassUID, ImplementationVersionName = dicomuid.Implementation(dicomuid.LibreDCM, buildinfo.Version)
 
 // IsUncompressed reports whether ts is a native (non-encapsulated) syntax the
 // library can safely re-encode between.

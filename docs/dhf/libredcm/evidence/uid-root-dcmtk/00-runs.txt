@@ -1,0 +1,76 @@
+== echoscu --version
+$dcmtk: echoscu v3.6.7 2022-04-22 $
+
+
+== echoscu -d -aec LIBREDCM uid-gw 11112
+exit 0
+
+== storescu -d CT_small.dcm
+exit 0
+
+== movescu -d study 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322 to MOVESCU (built-in SCP on 11113)
+exit 0
+negative control (libre/dcm:0.2.0-beta.1) echoscu exit 0
+
+== Summary (grep of the logs above)
+-- 01-echoscu.log
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    
+D: Their Implementation Version Name: 
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.1.1.0.2
+D: Their Implementation Version Name: LIBREDCM_0_2
+I: Association Accepted (Max Send PDV: 131060)
+I: Received Echo Response (Success)
+I: Releasing Association
+-- 02-storescu.log
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    
+D: Their Implementation Version Name: 
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.1.1.0.2
+D: Their Implementation Version Name: LIBREDCM_0_2
+I: Association Accepted (Max Send PDV: 131060)
+I: Received Store Response
+I: Releasing Association
+-- 03-movescu.log
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    
+D: Their Implementation Version Name: 
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.1.1.0.2
+D: Their Implementation Version Name: LIBREDCM_0_2
+I: Association Accepted (Max Send PDV: 131060)
+D: Association Received: uid-gw
+I: Sub-Association Received
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.1.1.0.2
+D: Their Implementation Version Name: LIBREDCM_0_2
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.1.1.0.2
+D: Their Implementation Version Name: LIBREDCM_0_2
+I: Received Final Move Response
+-- 05-echoscu-before-0.2.0-beta.1.log
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    
+D: Their Implementation Version Name: 
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.2.826.0.1.3680043.10.541.1
+D: Their Implementation Version Name: LIBREDCM_020
+I: Association Accepted (Max Send PDV: 131060)
+I: Received Echo Response (Success)
+I: Releasing Association
+-- 04-dcmdump-stored-file.log
+stored file: blobs/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322/1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322/1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322.dcm
+(0002,0012) UI [1.3.6.1.4.1.67686.1.1.1.0.2]            #  28, 1 ImplementationClassUID
+(0002,0013) SH [LIBREDCM_0_2]                           #  12, 1 ImplementationVersionName

@@ -175,10 +175,11 @@ requirements on to tests.
 | UN-12 | The service keeps running through node failures, maintenance and restarts | U1 | DCM-SRS-053, -055 |
 | UN-13 | I can monitor the health and load of the service | U1 | DCM-SRS-041, -054 |
 | UN-14 | A licence problem never stops patient care; it is my problem as administrator, not the technologist's | U1, U3 | DCM-SRS-058, -059, -060, -061 |
-| UN-15 | I know exactly which version (and later, which UDI) is running | U1, U5 | DCM-SRS-057 |
-| UN-16 | Modality and viewer engineers can tell what LibreDCM supports before connecting | U2 | DICOM Conformance Statement (planned, blocked on the UID root) |
+| UN-15 | I know exactly which version (and later, which UDI) is running | U1, U5 | DCM-SRS-057, -098 |
+| UN-16 | Modality and viewer engineers can tell what LibreDCM supports before connecting, and which implementation they are talking to | U2 | DCM-SRS-098; DICOM Conformance Statement (planned; the UID root exists since issue #30) |
 | UN-17 | A study never silently changes patient; images that contradict the stored patient are held for me to review and correct deliberately, with a record of what was changed (added 2026-11-10, issue #14) | U1, U4, U5 | DCM-SRS-070, -071, -072, -073, -074, -075, -076, -077, -078, -079 |
 | UN-18 | I can watch and administer LibreDCM from the Libre WT console (status, settings, connectivity tests, licence, backup, finding and sending a study) without logging in to the host, and the console can't break image traffic, send images to the wrong place or show secrets (added 2026-11-14, issue #20; requirements are Draft) | U1, U5 | DCM-SRS-080, -081, -082, -083, -084, -085, -086, -087, -088, -089, -090, -091, -092, -093, -094, -095, -096, -097 |
+| UN-19 | Identifiers LibreDCM creates or identifies itself with belong to Libre Systems and never clash with anyone else's, and test data can never be mistaken for real data (added 2026-11-18, issue #30) | U1, U2 | DCM-SRS-098, -099, -100 |
 
 Requirements that serve no listed user need: none (checked 2026-11-10; see §9).
 

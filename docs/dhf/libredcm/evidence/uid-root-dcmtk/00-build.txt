@@ -1,0 +1,6 @@
+# LibreDCM UID root, DCMTK evidence (2026-11-18T19:06:16Z)
+git: 32b29c9367e2906e2dca3745264a7e364f60fdd6 (+ uncommitted changes of branch feat/uid-root: 0 modified tracked paths)
+docker: 29.9.2
+image libre/dcm:uidroot built with VERSION=0.2.0-uidroot.1: sha256:d6fc1dda0e4f9f92d466de4ce95ff759ab04fbc577df18cbfec58ff0a7150abb
+LibreDCM -version: 0.2.0-uidroot.1
+gateway health: healthy
