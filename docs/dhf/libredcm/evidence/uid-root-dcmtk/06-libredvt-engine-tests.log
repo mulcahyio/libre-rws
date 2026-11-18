@@ -1,0 +1,311 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.dvt
+#1 transferring dockerfile: 3.65kB done
+#1 DONE 0.0s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 DONE 0.6s
+
+#3 docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#3 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.0s done
+#3 CACHED
+
+#4 [internal] load metadata for docker.io/library/python:3.12-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+#4 ...
+
+#5 [internal] load metadata for docker.io/library/golang:1.26.10-bookworm@sha256:5de7c99eb78ca5e515a4c340235d0955ec5964a5071c492c15503d7c267da473
+#5 DONE 0.4s
+
+#4 [internal] load metadata for docker.io/library/python:3.12-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+#4 DONE 0.4s
+
+#6 [internal] load .dockerignore
+#6 transferring context: 96B done
+#6 DONE 0.0s
+
+#7 [build 1/8] FROM docker.io/library/golang:1.26.10-bookworm@sha256:5de7c99eb78ca5e515a4c340235d0955ec5964a5071c492c15503d7c267da473
+#7 resolve docker.io/library/golang:1.26.10-bookworm@sha256:5de7c99eb78ca5e515a4c340235d0955ec5964a5071c492c15503d7c267da473 0.0s done
+#7 DONE 0.0s
+
+#8 [engines 1/7] FROM docker.io/library/python:3.12-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+#8 resolve docker.io/library/python:3.12-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df 0.0s done
+#8 DONE 0.0s
+
+#9 [internal] load build context
+#9 transferring context: 1.19MB 0.0s done
+#9 DONE 0.0s
+
+#10 [build 3/8] COPY go.mod go.sum ./
+#10 CACHED
+
+#11 [build 2/8] WORKDIR /src
+#11 CACHED
+
+#12 [build 4/8] COPY third_party/ third_party/
+#12 CACHED
+
+#13 [engines 2/7] COPY modules/dvt/worker/requirements.txt /opt/libredvt/worker/requirements.txt
+#13 CACHED
+
+#14 [engines 4/7] COPY modules/dvt/worker/build_assets.py /opt/libredvt/worker/build_assets.py
+#14 CACHED
+
+#15 [engines 3/7] RUN pip install --no-deps -r /opt/libredvt/worker/requirements.txt && pip check
+#15 CACHED
+
+#16 [engines 5/7] RUN python /opt/libredvt/worker/build_assets.py /opt/libredvt "2026d"
+#16 CACHED
+
+#17 [engines 6/7] COPY modules/dvt/worker/libredvt_worker.py /opt/libredvt/worker/libredvt_worker.py
+#17 DONE 0.1s
+
+#18 [build 5/8] RUN go mod download
+#18 ...
+
+#19 [engines 7/7] COPY modules/dvt/plans/ /opt/libredvt/plans/
+#19 DONE 0.1s
+
+#18 [build 5/8] RUN go mod download
+#18 DONE 11.9s
+
+#20 [build 6/8] COPY platform/ platform/
+#20 DONE 0.2s
+
+#21 [build 7/8] COPY modules/ modules/
+#21 DONE 0.1s
+
+#22 [build 8/8] RUN go build -ldflags "-s -w -X main.version=dev" -o /out/libredvt ./modules/dvt/cmd/libredvt
+#22 DONE 4.0s
+
+#23 [test 1/9] COPY --from=build /usr/local/go /usr/local/go
+#23 DONE 0.6s
+
+#24 [test 2/9] COPY --from=build /go/pkg/mod /go/pkg/mod
+#24 DONE 0.6s
+
+#25 [test 3/9] WORKDIR /src
+#25 DONE 0.1s
+
+#26 [test 4/9] COPY go.mod go.sum ./
+#26 DONE 0.1s
+
+#27 [test 5/9] COPY third_party/ third_party/
+#27 DONE 0.1s
+
+#28 [test 6/9] COPY platform/ platform/
+#28 DONE 0.1s
+
+#29 [test 7/9] COPY modules/ modules/
+#29 DONE 0.1s
+
+#30 [test 8/9] COPY deploy/ deploy/
+#30 DONE 0.1s
+
+#31 [test 9/9] RUN go test -count=1 -v -tags engines ./modules/dvt/...
+#31 4.754 === RUN   TestNoLibreDCMDICOMLibraries
+#31 4.754 --- PASS: TestNoLibreDCMDICOMLibraries (0.00s)
+#31 4.754 === RUN   TestComposePublishesOnLocalhostByDefault
+#31 4.754 --- PASS: TestComposePublishesOnLocalhostByDefault (0.00s)
+#31 4.754 === RUN   TestImageIsPinnedNonRootAndOffline
+#31 4.754 --- PASS: TestImageIsPinnedNonRootAndOffline (0.00s)
+#31 4.754 === RUN   TestRunCommandExitStatusAndOutputs
+#31 4.754 passed   v                        validate  1 files: 0 errors, 0 warnings, 0 engine errors; verdict pass
+#31 4.754 verdict: pass (good)
+#31 4.754 failed   v                        validate  2 files: 1 errors, 0 warnings, 0 engine errors; verdict fail
+#31 4.754 verdict: fail (bad)
+#31 4.754 plan rejected: plan: yaml: unmarshal errors:
+#31 4.754   line 3: field filez not found in type plan.Step
+#31 4.754 not run  e                        echo      not run: target "nowhere" is not registered
+#31 4.754 run error: target "nowhere" is not registered
+#31 4.754 verdict: fail (n)
+#31 4.754 --- PASS: TestRunCommandExitStatusAndOutputs (0.01s)
+#31 4.754 === RUN   TestValidateCommandDirectories
+#31 4.754 pass               /tmp/TestValidateCommandDirectories2902147847/001/fx/good.dcm
+#31 4.754 verdict: pass (1 files, 0 errors, 0 warnings, 0 engine errors)
+#31 4.754 fail               /tmp/TestValidateCommandDirectories2902147847/001/fx/bad.dcm
+#31 4.754     error   dciodvfy        Modality(0008,0060) Missing attribute for Type 1
+#31 4.754 pass               /tmp/TestValidateCommandDirectories2902147847/001/fx/good.dcm
+#31 4.754 verdict: fail (2 files, 1 errors, 0 warnings, 0 engine errors)
+#31 4.754 --- PASS: TestValidateCommandDirectories (0.01s)
+#31 4.754 PASS
+#31 4.754 ok  	github.com/mulcahyio/libre-rws/modules/dvt/cmd/libredvt	0.028s
+#31 56.56 === RUN   TestParseDciodvfyRealOutput
+#31 56.56 --- PASS: TestParseDciodvfyRealOutput (0.00s)
+#31 56.56 === RUN   TestParseDcentvfyRealOutput
+#31 56.56 --- PASS: TestParseDcentvfyRealOutput (0.00s)
+#31 56.56 === RUN   TestDicom3toolsUntrustworthyOutputIsEngineError
+#31 56.56 --- PASS: TestDicom3toolsUntrustworthyOutputIsEngineError (0.00s)
+#31 56.56 === RUN   TestValidateNonDICOMNotPassedToIODValidators
+#31 56.56 --- PASS: TestValidateNonDICOMNotPassedToIODValidators (0.01s)
+#31 56.56 === RUN   TestValidateEngineFailuresNeverPass
+#31 56.56 === RUN   TestValidateEngineFailuresNeverPass/dciodvfy_missing
+#31 56.56 === RUN   TestValidateEngineFailuresNeverPass/dciodvfy_crashes
+#31 56.56 === RUN   TestValidateEngineFailuresNeverPass/dciodvfy_hangs
+#31 56.56 === RUN   TestValidateEngineFailuresNeverPass/dciodvfy_garbage
+#31 56.56 === RUN   TestValidateEngineFailuresNeverPass/worker_crashes
+#31 56.56 === RUN   TestValidateEngineFailuresNeverPass/worker_garbage
+#31 56.56 === RUN   TestValidateEngineFailuresNeverPass/worker_hangs
+#31 56.56 === RUN   TestValidateEngineFailuresNeverPass/worker_drops_results
+#31 56.56 --- PASS: TestValidateEngineFailuresNeverPass (20.21s)
+#31 56.56     --- PASS: TestValidateEngineFailuresNeverPass/dciodvfy_missing (0.00s)
+#31 56.56     --- PASS: TestValidateEngineFailuresNeverPass/dciodvfy_crashes (0.18s)
+#31 56.56     --- PASS: TestValidateEngineFailuresNeverPass/dciodvfy_hangs (10.01s)
+#31 56.56     --- PASS: TestValidateEngineFailuresNeverPass/dciodvfy_garbage (0.00s)
+#31 56.56     --- PASS: TestValidateEngineFailuresNeverPass/worker_crashes (0.00s)
+#31 56.56     --- PASS: TestValidateEngineFailuresNeverPass/worker_garbage (0.00s)
+#31 56.56     --- PASS: TestValidateEngineFailuresNeverPass/worker_hangs (10.01s)
+#31 56.56     --- PASS: TestValidateEngineFailuresNeverPass/worker_drops_results (0.00s)
+#31 56.56 === RUN   TestVersionsReported
+#31 56.56 --- PASS: TestVersionsReported (0.00s)
+#31 56.56 === RUN   TestPeerTimeoutPassedAndBounded
+#31 56.56 --- PASS: TestPeerTimeoutPassedAndBounded (18.50s)
+#31 56.56 === RUN   TestWorkerSendsLibreDVTIdentification
+#31 56.56 --- PASS: TestWorkerSendsLibreDVTIdentification (2.28s)
+#31 56.56 === RUN   TestImplementationIdentification
+#31 56.56 --- PASS: TestImplementationIdentification (0.00s)
+#31 56.56 === RUN   TestEnginePositiveControlsPerFile
+#31 56.56 --- PASS: TestEnginePositiveControlsPerFile (8.68s)
+#31 56.56 === RUN   TestEnginePositiveControlConsistency
+#31 56.56 --- PASS: TestEnginePositiveControlConsistency (1.71s)
+#31 56.56 === RUN   TestEngineVersionsAndBuiltInStandard
+#31 56.56 --- PASS: TestEngineVersionsAndBuiltInStandard (0.43s)
+#31 56.56 PASS
+#31 56.56 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	51.831s
+#31 56.56 === RUN   TestParseGoodPlan
+#31 56.56 --- PASS: TestParseGoodPlan (0.00s)
+#31 56.56 === RUN   TestParseRejectsMistakesBeforeRunning
+#31 56.56 --- PASS: TestParseRejectsMistakesBeforeRunning (0.00s)
+#31 56.56 === RUN   TestResolveFilesEveryPatternMustMatch
+#31 56.56 --- PASS: TestResolveFilesEveryPatternMustMatch (0.00s)
+#31 56.56 === RUN   TestValidAET
+#31 56.56 --- PASS: TestValidAET (0.00s)
+#31 56.56 PASS
+#31 56.56 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/plan	0.006s
+#31 56.56 === RUN   TestJUnit
+#31 56.56 --- PASS: TestJUnit (0.00s)
+#31 56.56 === RUN   TestHTMLReportSelfContained
+#31 56.56 --- PASS: TestHTMLReportSelfContained (0.00s)
+#31 56.56 PASS
+#31 56.56 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/report	0.005s
+#31 56.56 === RUN   TestDecideVerdictRules
+#31 56.56 --- PASS: TestDecideVerdictRules (0.00s)
+#31 56.56 === RUN   TestValidationFinish
+#31 56.56 --- PASS: TestValidationFinish (0.00s)
+#31 56.56 === RUN   TestRunFinish
+#31 56.56 --- PASS: TestRunFinish (0.00s)
+#31 56.56 PASS
+#31 56.56 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/result	0.004s
+#31 56.56 === RUN   TestNetworkPositiveControls
+#31 56.56 === RUN   TestNetworkPositiveControls/ok
+#31 56.56     integration_test.go:126: [ok] echo    passed   C-ECHO status 0x0000 (Success)
+#31 56.56     integration_test.go:126: [ok] reject  passed   association with calling AE "LIBREDVT", called AE "NOT-FAKEPACS" rejected as expected
+#31 56.56     integration_test.go:126: [ok] store   passed   6 of 6 files stored with status 0x0000
+#31 56.56     integration_test.go:126: [ok] find    passed   1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es)); 1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))
+#31 56.56     integration_test.go:126: [ok] move    passed   6 of 6 expected instances received; pixel data identical for 6 of 6 sent files
+#31 56.56 === RUN   TestNetworkPositiveControls/refuse-store
+#31 56.56     integration_test.go:126: [refuse-store] echo    passed   C-ECHO status 0x0000 (Success)
+#31 56.56     integration_test.go:126: [refuse-store] reject  passed   association with calling AE "LIBREDVT", called AE "NOT-FAKEPACS" rejected as expected
+#31 56.56     integration_test.go:126: [refuse-store] store   failed   fixtures/ct_explicit_le.dcm: C-STORE status 0xA700 ; fixtures/ct_j2k.dcm: C-STORE status 0xA700 ; fixtures/mr_jpeg_ls.dcm: C-STORE status 0xA700 ; fixtures/mr_rle.dcm: C-STORE status 0xA700 ; fixtures/sc_jpeg_baseline.dcm: C-STORE status 0xA700 ; fixtures/sc_jpeg_lossless.dcm: C-STORE status 0xA700 ; 0 of 6 files stored with status 0x0000
+#31 56.56     integration_test.go:126: [refuse-store] find    failed   no studies to query (no earlier store step succeeded)
+#31 56.56     integration_test.go:126: [refuse-store] move    failed   no studies to retrieve (no earlier store step succeeded or no file matched)
+#31 56.56 === RUN   TestNetworkPositiveControls/drop-one
+#31 56.56     integration_test.go:126: [drop-one] echo    passed   C-ECHO status 0x0000 (Success)
+#31 56.56     integration_test.go:126: [drop-one] reject  passed   association with calling AE "LIBREDVT", called AE "NOT-FAKEPACS" rejected as expected
+#31 56.56     integration_test.go:126: [drop-one] store   passed   6 of 6 files stored with status 0x0000
+#31 56.56     integration_test.go:126: [drop-one] find    passed   1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es)); 1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))
+#31 56.56     integration_test.go:126: [drop-one] move    failed   4 expected instance(s) not received: [1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194 1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246 1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322]; 2 of 6 expected instances received; fixtures/ct_explicit_le.dcm: not received; fixtures/ct_j2k.dcm: not received; fixtures/mr_jpeg_ls.dcm: not received; fixtures/sc_jpeg_baseline.dcm: not received; pixel data identical for 2 of 6 sent files
+#31 56.56 === RUN   TestNetworkPositiveControls/alter-pixels
+#31 56.56     integration_test.go:126: [alter-pixels] echo    passed   C-ECHO status 0x0000 (Success)
+#31 56.56     integration_test.go:126: [alter-pixels] reject  passed   association with calling AE "LIBREDVT", called AE "NOT-FAKEPACS" rejected as expected
+#31 56.56     integration_test.go:126: [alter-pixels] store   passed   6 of 6 files stored with status 0x0000
+#31 56.56     integration_test.go:126: [alter-pixels] find    passed   1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es)); 1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))
+#31 56.56     integration_test.go:126: [alter-pixels] move    failed   6 of 6 expected instances received; fixtures/ct_explicit_le.dcm: pixel data differs; fixtures/ct_j2k.dcm: pixel data differs; fixtures/mr_jpeg_ls.dcm: pixel data differs; fixtures/mr_rle.dcm: pixel data differs; fixtures/sc_jpeg_baseline.dcm: pixel data differs; fixtures/sc_jpeg_lossless.dcm: pixel data differs; pixel data identical for 0 of 6 sent files
+#31 56.56 === RUN   TestNetworkPositiveControls/accept-any
+#31 56.56     integration_test.go:126: [accept-any] echo    passed   C-ECHO status 0x0000 (Success)
+#31 56.56     integration_test.go:126: [accept-any] reject  failed   association with calling AE "LIBREDVT", called AE "NOT-FAKEPACS" was accepted; expected a rejection
+#31 56.56     integration_test.go:126: [accept-any] store   passed   6 of 6 files stored with status 0x0000
+#31 56.56     integration_test.go:126: [accept-any] find    passed   1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es)); 1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))
+#31 56.56     integration_test.go:126: [accept-any] move    passed   6 of 6 expected instances received; pixel data identical for 6 of 6 sent files
+#31 56.56 --- PASS: TestNetworkPositiveControls (20.39s)
+#31 56.56     --- PASS: TestNetworkPositiveControls/ok (4.82s)
+#31 56.56     --- PASS: TestNetworkPositiveControls/refuse-store (1.88s)
+#31 56.56     --- PASS: TestNetworkPositiveControls/drop-one (4.45s)
+#31 56.56     --- PASS: TestNetworkPositiveControls/alter-pixels (4.62s)
+#31 56.56     --- PASS: TestNetworkPositiveControls/accept-any (4.61s)
+#31 56.56 === RUN   TestNetworkTargetDownAndProductionGuard
+#31 56.56     integration_test.go:147: [down] echo    failed   association not established: association aborted
+#31 56.56     integration_test.go:147: [down] reject  failed   no association rejection received: no association rejection received (connection failed or aborted)
+#31 56.56     integration_test.go:147: [down] store   failed   association not established: association aborted
+#31 56.56     integration_test.go:147: [down] find    failed   no studies to query (no earlier store step succeeded)
+#31 56.56     integration_test.go:147: [down] move    failed   no studies to retrieve (no earlier store step succeeded or no file matched)
+#31 56.56     integration_test.go:154: [production] echo    passed   C-ECHO status 0x0000 (Success)
+#31 56.56     integration_test.go:154: [production] reject  passed   association with calling AE "LIBREDVT", called AE "NOT-FAKEPACS" rejected as expected
+#31 56.56     integration_test.go:154: [production] store   failed   refused: store steps only run against targets of class lab; fake is production
+#31 56.56     integration_test.go:154: [production] find    failed   no studies to query (no earlier store step succeeded)
+#31 56.56     integration_test.go:154: [production] move    failed   refused: move steps only run against targets of class lab; fake is production
+#31 56.56 --- PASS: TestNetworkTargetDownAndProductionGuard (2.88s)
+#31 56.56 === RUN   TestHappyPathPasses
+#31 56.56 --- PASS: TestHappyPathPasses (0.00s)
+#31 56.56 === RUN   TestProductionGuard
+#31 56.56 --- PASS: TestProductionGuard (0.00s)
+#31 56.56 === RUN   TestEchoAndRejectFailures
+#31 56.56 --- PASS: TestEchoAndRejectFailures (0.00s)
+#31 56.56 === RUN   TestStoreMoveCompareFailures
+#31 56.56 --- PASS: TestStoreMoveCompareFailures (0.00s)
+#31 56.56 === RUN   TestUnknownTargetMeansStepsNotRun
+#31 56.56 --- PASS: TestUnknownTargetMeansStepsNotRun (0.00s)
+#31 56.56 === RUN   TestNativeReencodingIsNotedNotFailed
+#31 56.56 --- PASS: TestNativeReencodingIsNotedNotFailed (0.00s)
+#31 56.56 PASS
+#31 56.56 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	23.283s
+#31 56.56 === RUN   TestTargetsDefaultToProduction
+#31 56.56 --- PASS: TestTargetsDefaultToProduction (0.00s)
+#31 56.56 === RUN   TestTargetValidation
+#31 56.56 --- PASS: TestTargetValidation (0.00s)
+#31 56.56 === RUN   TestResultsNewestFirstAndDelete
+#31 56.56 --- PASS: TestResultsNewestFirstAndDelete (0.00s)
+#31 56.56 === RUN   TestSafeName
+#31 56.56 --- PASS: TestSafeName (0.00s)
+#31 56.56 === RUN   TestSaveUploadZip
+#31 56.56 --- PASS: TestSaveUploadZip (0.00s)
+#31 56.56 PASS
+#31 56.56 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/store	0.008s
+#31 56.56 === RUN   TestRefusesToStartWithoutPassword
+#31 56.56 --- PASS: TestRefusesToStartWithoutPassword (0.00s)
+#31 56.56 === RUN   TestEverythingButLoginAndHealthNeedsSession
+#31 56.56 --- PASS: TestEverythingButLoginAndHealthNeedsSession (0.00s)
+#31 56.56 === RUN   TestSessionExpiresAfterIdle
+#31 56.56 2026/11/18 18:51:09 INFO login ip=127.0.0.1
+#31 56.56 --- PASS: TestSessionExpiresAfterIdle (0.00s)
+#31 56.56 === RUN   TestCSRFAndLoginRateLimit
+#31 56.56 2026/11/18 18:51:09 INFO login ip=127.0.0.1
+#31 56.56 2026/11/18 18:51:09 INFO target saved name=lab class=lab
+#31 56.56 2026/11/18 18:51:09 WARN login failed ip=127.0.0.1
+#31 56.56 2026/11/18 18:51:09 WARN login failed ip=127.0.0.1
+#31 56.56 2026/11/18 18:51:09 WARN login failed ip=127.0.0.1
+#31 56.56 2026/11/18 18:51:09 WARN login failed ip=127.0.0.1
+#31 56.56 2026/11/18 18:51:09 WARN login failed ip=127.0.0.1
+#31 56.56 2026/11/18 18:51:09 WARN login rate limited ip=127.0.0.1
+#31 56.56 --- PASS: TestCSRFAndLoginRateLimit (0.00s)
+#31 56.56 === RUN   TestUploadValidateAndDelete
+#31 56.56 2026/11/18 18:51:09 INFO login ip=127.0.0.1
+#31 56.56 2026/11/18 18:51:09 INFO validation finished id=20261118-185109-e167d814 files=1 verdict=pass
+#31 56.56 2026/11/18 18:51:09 INFO deleted id=20261118-185109-e167d814
+#31 56.56 --- PASS: TestUploadValidateAndDelete (0.00s)
+#31 56.56 PASS
+#31 56.56 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/web	0.011s
+#31 DONE 56.7s
+
+#32 exporting to image
+#32 exporting layers
+#32 exporting layers 4.5s done
+#32 exporting manifest sha256:5dff04585acb0525d9c9e2fedfccc13b7443a348d8321a6aa53b29b4f6e72ccd 0.0s done
+#32 exporting config sha256:caf9eb8dc52779dab1adf40ee16b8fc45b6c7a4bd4bbfd819b5ea993278fc1d9 0.0s done
+#32 exporting attestation manifest sha256:2f4cae12133e852ee320c22289ae946f7cb4008d591341c6b3d031b443dabe80 0.0s done
+#32 exporting manifest list sha256:8218d3a7ae927e470da80c70b9e8cd86888b02823cd0e43125a5e900b59294e3 0.0s done
+#32 naming to moby-dangling@sha256:8218d3a7ae927e470da80c70b9e8cd86888b02823cd0e43125a5e900b59294e3 done
+#32 unpacking to moby-dangling@sha256:8218d3a7ae927e470da80c70b9e8cd86888b02823cd0e43125a5e900b59294e3
+#32 unpacking to moby-dangling@sha256:8218d3a7ae927e470da80c70b9e8cd86888b02823cd0e43125a5e900b59294e3 3.0s done
+#32 DONE 7.5s
+exit=0
