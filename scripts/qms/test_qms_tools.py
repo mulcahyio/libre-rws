@@ -205,5 +205,106 @@ class SoupTests(unittest.TestCase):
         self.assertIn("| `example.com/newdep` | v1.2.3 |", (self.r.dir / "docs/dhf/libredcm/soup.md").read_text())
 
 
+class DcsTests(unittest.TestCase):
+    """dcs.py must pass on the real statement and code, and fail on every kind
+    of disagreement (positive controls) and on missing or garbage inputs
+    (failure injection), never pass."""
+
+    FILES = (
+        "docs/dhf/libredcm/dicom-conformance-statement.md",
+        "third_party/gonetdicom/ae/storage_sop_classes.go",
+        "third_party/gonetdicom/ae/scp.go",
+        "modules/dicom/internal/gateway/gateway.go",
+        "modules/dicom/internal/gateway/query.go",
+        "modules/dicom/internal/dcm/dcm.go",
+        "modules/dicom/internal/index/index.go",
+    )
+    DOC = "docs/dhf/libredcm/dicom-conformance-statement.md"
+
+    def setUp(self):
+        self.r = Repo()
+        shutil.copy(HERE / "dcs.py", self.r.dir / "scripts" / "qms" / "dcs.py")
+        for rel in self.FILES:
+            (self.r.dir / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(REPO / rel, self.r.dir / rel)
+
+    def tearDown(self):
+        self.r.close()
+
+    def edit(self, rel, old, new):
+        p = self.r.dir / rel
+        text = p.read_text(encoding="utf-8")
+        self.assertIn(old, text, f"fixture text not found in {rel}")
+        p.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+    def fails_with(self, *msgs):
+        rc, out = self.r.run("dcs.py", str(self.r.dir))
+        self.assertEqual(rc, 1, out)
+        for m in msgs:
+            self.assertIn(m, out)
+
+    def test_real_statement_passes(self):
+        rc, out = self.r.run("dcs.py", str(self.r.dir))
+        self.assertEqual(rc, 0, out)
+        self.assertIn("0 problems", out)
+        self.assertRegex(out, r"storage \d{3}")
+
+    def test_storage_class_removed_from_document(self):
+        self.edit(self.DOC, "| CT Image Storage | `CTImageStorage` | `1.2.840.10008.5.1.4.1.1.2` | U; LL; L | Y | Y | Y |\n", "")
+        self.fails_with("Storage SOP classes: in the code but not in the document: CTImageStorage")
+
+    def test_storage_class_added_to_code(self):
+        self.edit("third_party/gonetdicom/ae/storage_sop_classes.go",
+                  "\tuid.CTImageStorage,\n", "\tuid.CTImageStorage,\n\tuid.MadeUpStorage,\n")
+        self.fails_with("in the code but not in the document: MadeUpStorage")
+
+    def test_transfer_syntax_removed_from_code(self):
+        self.edit("modules/dicom/internal/dcm/dcm.go", '\t"1.2.840.10008.1.2.5",     // RLE Lossless\n', "")
+        self.fails_with("Transfer syntaxes: in the document but not in the code: 1.2.840.10008.1.2.5")
+
+    def test_query_key_matching_type_changed(self):
+        self.edit("modules/dicom/internal/gateway/query.go",
+                  '"AccessionNumber":                {"st.accession_number", kString}',
+                  '"AccessionNumber":                {"st.accession_number", kExact}')
+        self.fails_with("C-FIND STUDY AccessionNumber: matching type")
+
+    def test_query_level_column_dropped(self):
+        self.edit("modules/dicom/internal/gateway/query.go", '"InstanceNumber"', '"InstanceNumberX"')
+        self.fails_with("C-FIND keys at IMAGE level")
+
+    def test_qr_class_removed_from_server_config(self):
+        self.edit("modules/dicom/internal/gateway/gateway.go",
+                  "\t\tae.StudyRootQueryRetrieveInformationModelGet,\n", "")
+        self.fails_with("Verification and Query/Retrieve SOP classes")
+
+    def test_setting_added_to_code(self):
+        self.edit("modules/dicom/internal/gateway/gateway.go",
+                  '`yaml:"audit_log_off" env:"LIBRE_DCM_AUDIT_LOG_OFF"`',
+                  '`yaml:"audit_log_off" env:"LIBRE_DCM_AUDIT_LOG_OFF"`\n\tNewThing bool `yaml:"new_thing" env:"LIBRE_DCM_NEW_THING"`')
+        self.fails_with("Configuration settings")
+
+    def test_required_section_and_draft_mark(self):
+        self.edit(self.DOC, "## 8 Security\n", "## 8 Safety\n")
+        self.edit(self.DOC, "DRAFT for approval", "Approved")
+        self.fails_with("required section missing: 8 Security", "not marked 'DRAFT for approval'")
+
+    def test_generated_block_missing(self):
+        self.edit(self.DOC, "<!-- dcs:begin transfer-syntaxes -->", "<!-- dcs:begin transfer-syntax -->")
+        self.fails_with("generated table missing: transfer-syntaxes")
+
+    def test_missing_source_fails(self):
+        (self.r.dir / "modules/dicom/internal/dcm/dcm.go").unlink()
+        self.fails_with("source file missing: modules/dicom/internal/dcm/dcm.go")
+
+    def test_garbage_document_fails(self):
+        (self.r.dir / self.DOC).write_text("\x00\x01 not a statement\n", encoding="utf-8")
+        self.fails_with("generated table missing: storage-sop-classes")
+
+    def test_missing_document_fails(self):
+        (self.r.dir / self.DOC).unlink()
+        rc, out = self.r.run("dcs.py", str(self.r.dir))
+        self.assertEqual(rc, 1, out)
+
+
 if __name__ == "__main__":
     unittest.main()

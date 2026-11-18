@@ -14,6 +14,28 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **LibreDCM DICOM Conformance Statement (issue #32, DRAFT for approval).**
+  `docs/dhf/libredcm/dicom-conformance-statement.md` follows the DICOM PS3.2
+  (2026d) Annex N template: SOP classes, transfer syntaxes, association
+  policies, C-FIND keys per level with matching types, C-MOVE destination
+  rules, C-GET role selection, status codes, character sets, configuration,
+  TLS, allow-list and audit, and an honest list of known deviations. No
+  change to LibreDCM's behaviour.
+  - Its tables are generated from the running code by
+    `TestConformanceStatementMatchesCode` (regenerate with `-update-dcs`) and
+    checked again, independently, by the new QMS tool `scripts/qms/dcs.py`
+    in the CI `verify` job (validated by 13 tests in
+    `scripts/qms/test_qms_tools.py`), so the statement cannot drift from the
+    code (DCM-SRS-101).
+  - Every behaviour statement was checked with DCMTK 3.6.7 and pynetdicom
+    3.0.4 against five LibreDCM containers; logs and the rerunnable script
+    are in `docs/dhf/libredcm/evidence/dcs-dcmtk/`.
+  - Found while writing it and recorded in `anomalies.md`, not fixed here:
+    ANOM-011 (C-GET stops without a final response when a matched SOP class
+    has no storage context, and the export audit overstates what was sent),
+    ANOM-012 (C-FIND result limit answers Success), ANOM-013 (C-CANCEL not
+    acted on during C-MOVE/C-GET), ANOM-014 (wrong Called AE Title logged but
+    not audited).
 - **Libre Systems DICOM UID root (issue #30, closes ANOM-007).** Libre
   Systems' own UID root `1.3.6.1.4.1.67686` (IANA Private Enterprise Number
   67686), with its layout as a controlled document
