@@ -7,7 +7,7 @@
 | System under test | LibreDCM image `libre/dcm:dcs` built from this branch with `--build-arg VERSION=0.2.0-dcs.1` (a release-like version, so the Implementation Class UID is `1.3.6.1.4.1.67686.1.1.1.0.2`). Five containers with different settings, see below |
 | Script | [scripts/evidence.sh](scripts/evidence.sh), run by Hermes (Claude) from the repository root; DCMTK commands in [scripts/dcmtk-runs.sh](scripts/dcmtk-runs.sh), probes in [scripts/pynetdicom-probes.py](scripts/pynetdicom-probes.py), test data from [scripts/gen-data.py](scripts/gen-data.py) |
 | Data | pydicom's public sample files only, rewritten with new UIDs under the LibreDCM test-data arc `1.3.6.1.4.1.67686.9.1.900` (uid-registry.md) and synthetic names `DCS^...`. No patient data. List: `01-test-data.txt` |
-| Build record | `00-build.txt`: commit, image ID, `-version`, tool image IDs, container health |
+| Build record | `00-build.txt`: commit, image ID, `-version`, tool image IDs, container health. The logs were made on commit `fd86d65`; only its commit message was later reworded, giving `c98b947` with the identical tree `d9a43d4` (`git rev-parse c98b947^{tree}`). No product, `third_party`, `deploy` or `go.mod` file changed after it |
 
 ## Containers
 
