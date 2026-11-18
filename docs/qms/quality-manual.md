@@ -153,6 +153,7 @@ flowchart LR
 | QMS-SOP-009 | Labeling and UDI | `sop-009-labeling-udi.md` |
 | QMS-SOP-010 | Cybersecurity, vulnerability management and coordinated disclosure | `sop-010-cybersecurity.md` |
 | QMS-SOP-011 | Validation of software tools used in the QMS | `sop-011-tool-validation.md` |
+| QMS-REG-001 | DICOM UID registry: Libre Systems UID root, layout and allocation log (controlled register, owner Patrick Mulcahy) | `uid-registry.md` |
 
 Procedures not yet written are listed in `README.md` with their status.
 

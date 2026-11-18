@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/blob"
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/buildinfo"
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/control"
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/events"
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway"
@@ -24,12 +25,8 @@ import (
 	"github.com/mulcahyio/libre-rws/platform/runtime"
 )
 
-// version and buildDate (YYYY-MM-DD, the release date checked against a
-// license's update period) are set at build time with -ldflags -X.
-var (
-	version   = "dev"
-	buildDate = ""
-)
+// The version and build date are set at build time with -ldflags -X in
+// package buildinfo, the one source of truth (DCM-SRS-057, DCM-SRS-098).
 
 type Config struct {
 	Admin   runtime.AdminConfig `yaml:"admin"`
@@ -92,7 +89,7 @@ func main() {
 	backupTo := flag.String("backup", "", "write a consistent snapshot of the SQLite index to PATH and exit (safe while the module runs)")
 	flag.Parse()
 	if *showVersion {
-		fmt.Println(version)
+		fmt.Println(buildinfo.Version)
 		return
 	}
 	if *healthcheck != "" {
@@ -191,7 +188,7 @@ func build(cfgPath string) (*app, error) {
 		return nil, err
 	}
 	a := &app{}
-	rt := runtime.New("LibreDCM", version, cfg.Admin)
+	rt := runtime.New("LibreDCM", buildinfo.Version, cfg.Admin)
 	a.rt = rt
 	log := rt.Logger
 	ctx := context.Background()
@@ -232,7 +229,7 @@ func build(cfgPath string) (*app, error) {
 
 	gw := gateway.New(cfg.DICOM, rt.NodeID, log, rt.Registry, blobs, idx, pub)
 	a.gw = gw
-	lic, err := licensing.New(cfg.License, version, parseBuildDate(), log, rt.Registry)
+	lic, err := licensing.New(cfg.License, buildinfo.Version, parseBuildDate(), log, rt.Registry)
 	if err != nil {
 		return a, fmt.Errorf("license: %w", err)
 	}
@@ -250,7 +247,7 @@ func build(cfgPath string) (*app, error) {
 	settings := config.Describe(&cfg, fileKeys)
 	api := &control.API{
 		Index: idx, Resolver: gw, Live: gw,
-		Node: control.Node{ID: rt.NodeID, AETitle: cfg.DICOM.AETitle, Version: version, Started: rt.Started(),
+		Node: control.Node{ID: rt.NodeID, AETitle: cfg.DICOM.AETitle, Version: buildinfo.Version, Started: rt.Started(),
 			DICOMListen: cfg.DICOM.Listen, DICOMTLS: cfg.DICOM.TLSCertFile != "", AdminTLS: rt.AdminTLS(),
 			Storage: cfg.Storage.Driver, Index: cfg.Index.Driver, Events: cfg.Events.Driver,
 			AuditLogOff: cfg.DICOM.AuditLogOff},
@@ -279,7 +276,7 @@ func build(cfgPath string) (*app, error) {
 	for old, repl := range config.DeprecatedInUse() {
 		log.Warn("deprecated setting; rename it", "old", old, "new", repl)
 	}
-	log.Info("LibreDCM starting", "version", version,
+	log.Info("LibreDCM starting", "version", buildinfo.Version,
 		"storage", cfg.Storage.Driver, "index", cfg.Index.Driver, "events", cfg.Events.Driver)
 	a.components = components
 	return a, nil

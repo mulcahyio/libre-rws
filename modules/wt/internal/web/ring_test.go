@@ -26,7 +26,7 @@ func TestLibreDCMAuditPage(t *testing.T) {
 	}
 	has(t, "audit page", body, "only the most recent audit records", "The site's log collector holds the full audit record",
 		"<td>SecurityAlert.association-rejected</td><td>minor-failure</td>", "<td>DICOMInstancesTransferred.received</td><td>success</td><td>AE CT1</td>",
-		"<code>studies=[&#34;1.2.826.0.1.3680043.10.1.1&#34;]</code>", "Export as CSV", `href="/i/default/audit.csv?period=24h&amp;limit=100"`,
+		"<code>studies=[&#34;1.3.6.1.4.1.67686.9.2.1&#34;]</code>", "Export as CSV", `href="/i/default/audit.csv?period=24h&amp;limit=100"`,
 		`<td>AE =HYPERLINK(&#34;http://x&#34;)</td>`)
 	if strings.Index(body, "association-rejected") > strings.Index(body, "DICOMInstancesTransferred.received") {
 		t.Fatal("records are not newest first")

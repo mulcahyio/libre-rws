@@ -46,7 +46,7 @@ type EchoResult struct {
 // Echo sends C-ECHO.
 func (c Config) Echo(ctx context.Context, p Peer) (EchoResult, string, error) {
 	var r EchoResult
-	raw, err := c.WorkerCall(ctx, p.processTimeout(1), &r, p.args("echo")...)
+	raw, err := c.WorkerCall(ctx, p.processTimeout(1), &r, c.peerArgs(p, "echo")...)
 	return r, raw, err
 }
 
@@ -61,7 +61,7 @@ type RejectResult struct {
 // Reject tries an association that the target is expected to reject.
 func (c Config) Reject(ctx context.Context, p Peer) (RejectResult, string, error) {
 	var r RejectResult
-	raw, err := c.WorkerCall(ctx, p.processTimeout(1), &r, p.args("reject")...)
+	raw, err := c.WorkerCall(ctx, p.processTimeout(1), &r, c.peerArgs(p, "reject")...)
 	return r, raw, err
 }
 
@@ -86,7 +86,7 @@ type StoreResult struct {
 // Store sends files with C-STORE, each in its own transfer syntax.
 func (c Config) Store(ctx context.Context, p Peer, files []string) (StoreResult, string, error) {
 	var r StoreResult
-	raw, err := c.WorkerCall(ctx, p.processTimeout(len(files)), &r, append(p.args("store"), files...)...)
+	raw, err := c.WorkerCall(ctx, p.processTimeout(len(files)), &r, append(c.peerArgs(p, "store"), files...)...)
 	return r, raw, err
 }
 
@@ -109,7 +109,7 @@ type FindResult struct {
 // Find queries studies by Study Instance UID (Study Root, study level).
 func (c Config) Find(ctx context.Context, p Peer, studies []string) (FindResult, string, error) {
 	var r FindResult
-	args := p.args("find")
+	args := c.peerArgs(p, "find")
 	for _, s := range studies {
 		args = append(args, "--study", s)
 	}
@@ -153,7 +153,7 @@ type SCP struct {
 // only for the duration of the call and writes to outDir.
 func (c Config) Move(ctx context.Context, p Peer, scp SCP, outDir string, studies []string, expectedInstances int) (MoveResult, string, error) {
 	var r MoveResult
-	args := append(p.args("move"), "--dest-aet", scp.AETitle, "--scp-port", strconv.Itoa(scp.Port), "--out", outDir)
+	args := append(c.peerArgs(p, "move"), "--dest-aet", scp.AETitle, "--scp-port", strconv.Itoa(scp.Port), "--out", outDir)
 	for _, s := range studies {
 		args = append(args, "--study", s)
 	}

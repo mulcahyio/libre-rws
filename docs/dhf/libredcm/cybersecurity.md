@@ -146,6 +146,16 @@ card WT-0.2/4. Same scales as §3.
 | TM-34 | I | A stolen admin token is used to search for patients, or query values (patient names) end up in logs | PHI | M | S3 | Token required; no listing without a matching key; 200 rows per page; every query audited with the operator name it sent, the keys and the number of rows; LibreDCM writes the values to that record only and has no access log (DCM-SRS-091) | `TestStudiesAuditAndLogSecrecy`, `TestStudiesNeedTokenAndOperator`, `TestStudiesPagingAndBounds`, `TestStudiesHideHeldConflictInstances`; mutation-checked (card WT-0.2/4) | C | The search widens what the token can read: before, patient data needed a DICOM association from an allowed AE. The values travel in the URL: a reverse proxy in front of the admin port would log them (guidance: connect Libre WT to the admin port directly, with HTTPS). The operator name is asserted (TM-26) | HAZ-009 |
 | TM-35 | T | Crafted values in a configuration edit (AE titles or host names with line breaks, YAML syntax, path elements) corrupt the overlay file or inject settings | Configuration | L | S3 | Values are validated before anything is written (AE title: 1 to 16 printable characters; host: letters, digits, `.`, `-`, `_`, or an IP address; port 1 to 65535); the file is written by a YAML encoder, parsed again strictly before it replaces the old one, and what the loader read back is compared with what was validated (DCM-SRS-093) | `TestValidateRemoteAE`, `TestConfigEditRefusesEverythingElse` (19 invalid values), `TestOverlayFileHoldsOnlyLiveSettings` (an operator name with quotes, a line break and `#` reads back unchanged), `TestOverlayFailedChangeLeavesEverythingAsItWas` (other content written: refused and put back); mutation-checked (card WT-0.2/4) | C | — | HAZ-015 |
 
+## 3b. DICOM identification and UID root (issue #30, 2026-11-18)
+
+| Topic | Assessment |
+|---|---|
+| What changed | LibreDCM sends its own Implementation Class UID and Version Name (`1.3.6.1.4.1.67686.1.1.1.<major>.<minor>`, `LIBREDCM_<major>_<minor>`) instead of gonetdicom's, in associations and Part 10 File Meta (DCM-SRS-098). A UID generator package exists but no product uses it yet (DCM-SRS-099) |
+| Information disclosure | The values name the product and its minor version. They appear only in an A-ASSOCIATE-AC (a peer the allow-list rejected gets an A-ASSOCIATE-RJ, which carries no user information) and in stored files. Before, the library and a fixed version were disclosed in the same places. No new exposure of patient data or secrets. Accepted: DICOM requires the values (PS3.7 D.3.3.2) and the conformance statement will publish them |
+| Spoofing | Any DICOM peer can claim any Implementation Class UID; LibreDCM makes no decision on a peer's values. Unchanged |
+| Generator state file | Holds only a random site number and a time mark; written atomically with mode 0600. A damaged file stops the generator rather than risk repeated UIDs. Not used by any product yet |
+| New attack surface | None: no new port, endpoint, setting, credential or dependency |
+
 ## 4. FDA security control categories (Appendix 1 of the 2026 guidance)
 
 | Category | LibreDCM today | Gap |

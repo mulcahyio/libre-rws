@@ -341,7 +341,7 @@ All results below come from the development sandbox.
 | 3 | ~~S3/MinIO storage backend~~ (0.2.0); local-staged storage with async replication (BACKLOG.md) | High |
 | 4 | Fork changes 2–5 (streaming retrieve, C-GET fixes, calling AE, lazy decode) and upstream PRs | High |
 | 5 | Security: ~~AE allow-listing~~, ~~admin endpoint authentication~~ (0.2.0), audit trail (structured log in 0.2.0; ATNA syslog still to do), TLS by default | High |
-| 6 | RWS-owned DICOM UID root (replace the borrowed Implementation Class UID) | Medium |
+| 6 | ~~RWS-owned DICOM UID root (replace the borrowed Implementation Class UID)~~ (done, issue #30: Libre Systems root `1.3.6.1.4.1.67686`, `docs/qms/uid-registry.md`) | Done |
 | 7 | Helm chart; ~~config hot-reload for `remote_aes`~~ (0.2.0, SIGHUP) | Medium |
 | 8 | ~~C-FIND refinements~~ (0.2.0: case-insensitive names, time ranges, UTF-8 responses); re-encoding responses to the request's character set | Low |
 | 9 | Next modules: Modality Worklist, DICOMweb | Next phase |

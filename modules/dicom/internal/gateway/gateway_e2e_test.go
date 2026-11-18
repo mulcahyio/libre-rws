@@ -137,7 +137,7 @@ func TestEndToEnd(t *testing.T) {
 
 	addr, _, pub := startGateway(t, ctx, map[string]RemoteAE{"DEST": {Host: dh, Port: port}})
 
-	study, series := "1.2.826.0.1.3680043.10.999.1", "1.2.826.0.1.3680043.10.999.1.1"
+	study, series := "1.3.6.1.4.1.67686.9.1.1", "1.3.6.1.4.1.67686.9.1.1.1"
 	sops := []string{series + ".1", series + ".2", series + ".3"}
 
 	// ---- C-ECHO + C-STORE (Explicit VR LE)

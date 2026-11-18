@@ -149,7 +149,7 @@ func TestDICOMListenerTLSOnly(t *testing.T) {
 		if err := scu.CEcho(ctx); err != nil {
 			t.Fatalf("%s C-ECHO: %v", v.name, err)
 		}
-		study, series := "1.2.826.0.1.3680043.10.999.43", "1.2.826.0.1.3680043.10.999.43.1"
+		study, series := "1.3.6.1.4.1.67686.9.1.43", "1.3.6.1.4.1.67686.9.1.43.1"
 		sop := fmt.Sprintf("%s.%d", series, v.ver)
 		res, err := scu.CStore(ctx, ae.StoreRequest{AffectedSOPClassUID: string(uid.CTImageStorage),
 			AffectedSOPInstanceUID: sop, Data: ctImage(study, series, sop, 1)})
@@ -191,7 +191,7 @@ func TestGracefulShutdown(t *testing.T) {
 	n := startNode(t, gwCtx, nil, nil)
 
 	const senders = 4
-	study := "1.2.826.0.1.3680043.10.999.53"
+	study := "1.3.6.1.4.1.67686.9.1.53"
 	var (
 		mu        sync.Mutex
 		succeeded []string
@@ -378,7 +378,7 @@ func TestMetricsExposed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	study, series := "1.2.826.0.1.3680043.10.999.54", "1.2.826.0.1.3680043.10.999.54.1"
+	study, series := "1.3.6.1.4.1.67686.9.1.54", "1.3.6.1.4.1.67686.9.1.54.1"
 	for i := 1; i <= 3; i++ {
 		sop := fmt.Sprintf("%s.%d", series, i)
 		res, err := scu.CStore(ctx, ae.StoreRequest{AffectedSOPClassUID: string(uid.CTImageStorage),

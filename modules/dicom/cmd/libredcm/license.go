@@ -8,11 +8,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/mulcahyio/libre-rws/modules/dicom/internal/buildinfo"
 	"github.com/mulcahyio/libre-rws/modules/dicom/internal/licensing"
 )
 
 func parseBuildDate() time.Time {
-	t, _ := time.Parse("2006-01-02", buildDate)
+	t, _ := time.Parse("2006-01-02", buildinfo.BuildDate)
 	return t
 }
 
@@ -28,7 +29,7 @@ func licenseCommand(cfgPath string, status, request bool, activateKey, installFi
 		return 1
 	}
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	lic, err := licensing.New(cfg.License, version, parseBuildDate(), log, nil)
+	lic, err := licensing.New(cfg.License, buildinfo.Version, parseBuildDate(), log, nil)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "LibreDCM: license:", err)
 		return 1

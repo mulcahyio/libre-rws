@@ -222,12 +222,14 @@ func (g *Gateway) sendChunk(ctx context.Context, dest RemoteAE, group string, ro
 
 	addr := net.JoinHostPort(dest.Host, strconv.Itoa(dest.Port))
 	assoc, err := ae.Dial(ctx, ae.Config{
-		AETitle:              g.cfg.AETitle,
-		MaxPDULength:         g.cfg.MaxPDULength,
-		DialTimeout:          10 * time.Second,
-		IdleTimeout:          g.cfg.IdleTimeout,
-		PresentationContexts: pcs,
-		Logger:               g.log,
+		AETitle:                   g.cfg.AETitle,
+		ImplementationClassUID:    dcm.ImplementationClassUID,
+		ImplementationVersionName: dcm.ImplementationVersionName,
+		MaxPDULength:              g.cfg.MaxPDULength,
+		DialTimeout:               10 * time.Second,
+		IdleTimeout:               g.cfg.IdleTimeout,
+		PresentationContexts:      pcs,
+		Logger:                    g.log,
 	}, addr, dest.AETitle)
 	if err != nil {
 		g.log.Error("retrieve: association to destination failed", "addr", addr, "called_ae", dest.AETitle, "err", err)

@@ -85,7 +85,7 @@ func TestAllowListEndToEnd(t *testing.T) {
 	if err != nil {
 		t.Fatalf("allowed AE rejected: %v", err)
 	}
-	study, series := "1.2.826.0.1.3680043.10.999.7", "1.2.826.0.1.3680043.10.999.7.1"
+	study, series := "1.3.6.1.4.1.67686.9.1.7", "1.3.6.1.4.1.67686.9.1.7.1"
 	res, err := scu.CStore(ctx, ae.StoreRequest{
 		AffectedSOPClassUID: string(uid.CTImageStorage), AffectedSOPInstanceUID: series + ".1",
 		Data: ctImage(study, series, series+".1", 1),

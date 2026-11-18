@@ -146,7 +146,7 @@ func TestPixelDataIntegrity(t *testing.T) {
 	anyDest, anyGot := destination(t, ctx, "ANY", jpegLossless, dcm.ExplicitVRLittleEndian, dcm.ImplicitVRLittleEndian)
 	addr, _, _ := startGateway(t, ctx, map[string]RemoteAE{"IMPL": implDest, "EXPL": explDest, "ANY": anyDest})
 
-	study, series := "1.2.826.0.1.3680043.10.999.7", "1.2.826.0.1.3680043.10.999.7.1"
+	study, series := "1.3.6.1.4.1.67686.9.1.7", "1.3.6.1.4.1.67686.9.1.7.1"
 	sopExpl, sopImpl, sopJPEG := series+".1", series+".2", series+".3"
 	pxExpl, pxImpl := pattern16(16, 16), pattern16(16, 16)
 	pxImpl[0], pxImpl[1] = 0xAB, 0xCD // the two native instances differ

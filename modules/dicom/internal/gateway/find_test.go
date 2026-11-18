@@ -74,7 +74,7 @@ func TestFindRefinementsEndToEnd(t *testing.T) {
 	defer cancel()
 	addr, _, _ := startGateway(t, ctx, nil)
 
-	study, series := "1.2.826.0.1.3680043.10.999.20", "1.2.826.0.1.3680043.10.999.20.1"
+	study, series := "1.3.6.1.4.1.67686.9.1.20", "1.3.6.1.4.1.67686.9.1.20.1"
 	ds := ctImage(study, series, series+".1", 1)
 	_ = ds.SetString(godicom.MustTag("SpecificCharacterSet"), "ISO_IR 100")
 	_ = ds.SetString(godicom.MustTag("PatientName"), "Müller^Hans")

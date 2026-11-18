@@ -14,6 +14,43 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **Libre Systems DICOM UID root (issue #30, closes ANOM-007).** Libre
+  Systems' own UID root `1.3.6.1.4.1.67686` (IANA Private Enterprise Number
+  67686), with its layout as a controlled document
+  (`docs/qms/uid-registry.md`, QMS-REG-001, owner Patrick Mulcahy; layout
+  approved 2026-11-17).
+  - **Changed behaviour:** LibreDCM now identifies itself with
+    Implementation Class UID `1.3.6.1.4.1.67686.1.1.1.<major>.<minor>` and
+    Implementation Version Name `LIBREDCM_<major>_<minor>` (e.g.
+    `LIBREDCM_0_2`) in every association it accepts or requests and in the
+    File Meta (0002,0012)/(0002,0013) of every file it stores (DCM-SRS-098).
+    Before, it used gonetdicom's root `1.2.826.0.1.3680043.10.541.1` with
+    `LIBREDCM_020`, and its C-MOVE sub-operations, `-echo` and the control
+    API C-ECHO test sent `GONETDICOM_001`. Both values come from the build
+    version; development builds identify as 0.0. Stored data sets are not
+    changed.
+  - The build version now lives in package
+    `modules/dicom/internal/buildinfo` (one source for `-version`,
+    `/version`, licensing, the control API and the UID). Builders that set
+    `-X main.version` must use
+    `-X github.com/mulcahyio/libre-rws/modules/dicom/internal/buildinfo.Version`
+    (the Dockerfile and Makefile are updated); CI checks the image reports
+    its build version.
+  - LibreDVT's worker sends and writes LibreDVT's own values
+    (`1.3.6.1.4.1.67686.1.3.1.<major>.<minor>`, `LIBREDVT_<major>_<minor>`,
+    DVT-SRS-082) instead of pynetdicom's. Worker 0.1.1; tool re-validated.
+  - New package `platform/dicomuid`: the layout, a UID validity check and a
+    UID generator (`1.3.6.1.4.1.67686.2.<product>.<site>.<time>.<counter>`,
+    DCM-SRS-099) for the coming IHE work; no product uses it yet.
+  - Our own test data moved to the test-data arc `1.3.6.1.4.1.67686.9`; an
+    architecture test keeps that arc and gonetdicom's root out of shipped
+    code (DCM-SRS-100).
+  - Tested: unit and architecture tests, a test that reads the
+    A-ASSOCIATE-AC, a stored file and LibreDCM's C-MOVE A-ASSOCIATE-RQ, the
+    LibreDVT engine tests (57 passed), and DCMTK 3.6.7 `echoscu`,
+    `storescu`, `movescu` and `dcmdump` against a container built as
+    `0.2.0-uidroot.1` (all show `1.3.6.1.4.1.67686.1.1.1.0.2` /
+    `LIBREDCM_0_2`; logs in `docs/dhf/libredcm/evidence/uid-root-dcmtk/`).
 - **Libre WT 0.2 release candidate: system test, user guide, risk
   management report (card WT-0.2/9, issue #20).**
   - System test against real containers
@@ -430,6 +467,11 @@ LibreDCM's behaviour unless stated.
   behaviour change: the example configuration decodes identically with both.
 
 ### Fixed
+- **Libre WT tests no longer expire (issue #30).** The fake LibreDCM used by
+  the Libre WT tests dated its audit records and log lines 2026-11-16, so
+  `TestLibreDCMAuditPage` and `TestLogsPage` failed from 2026-11-18 on (the
+  records fell outside the default 24-hour window). They are now dated an
+  hour before the test runs. Test code only.
 - Libre WT: tables on the configuration, LibreDCM audit record and log
   pages could be wider than the page (the log page up to 4164 px), which cut
   off the last column (for example "live"/"restart" on the configuration

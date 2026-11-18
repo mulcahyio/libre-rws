@@ -112,8 +112,9 @@ workstation installer end to end.
    admin endpoint auth and an audit trail (ATNA) are still to do.
 5. Helm chart, config hot-reload for `remote_aes`, case-insensitive
    PatientName matching, StudyTime range matching.
-6. Replace `ImplementationClassUID` (currently gonetdicom's root) with an
-   Libre RWS-owned UID root.
+6. ~~Replace `ImplementationClassUID` (gonetdicom's root) with a Libre
+   Systems UID root~~ (done, issue #30: `1.3.6.1.4.1.67686`, see
+   `docs/qms/uid-registry.md`).
 
 ## Naming
 

@@ -4,7 +4,7 @@ export CGO_ENABLED=0
 
 .PHONY: build test test-postgres test-s3 vet image up cluster down conformance workstation
 build:        ## static binaries in ./bin
-	go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o bin/LibreDCM ./modules/dicom/cmd/libredcm
+	go build -trimpath -ldflags "-s -w -X github.com/mulcahyio/libre-rws/modules/dicom/internal/buildinfo.Version=$(VERSION)" -o bin/LibreDCM ./modules/dicom/cmd/libredcm
 	go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o bin/LibreWT ./modules/wt/cmd/librewt
 test:         ## unit + end-to-end DIMSE tests
 	go test ./modules/... ./platform/... -count=1
