@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="LibreDVT" tests="3" failures="0" time="0.765">
+  <testsuite name="TLS refusals" tests="3" failures="0" timestamp="2026-11-19T11:05:30Z" time="0.765">
+    <properties>
+      <property name="run_id" value="20261119-110530-e6cd8096"></property>
+      <property name="plan_sha256" value="f22bce00a14e1799a6552f1fe3817279f8b7604d2dfde2d87bed825996b94b0f"></property>
+      <property name="target" value="dcmtk-tls (dcmtk-tls:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)"></property>
+      <property name="verdict" value="pass"></property>
+      <property name="version.dicom-validator" value="0.9.0"></property>
+      <property name="version.dicom3tools" value="1.00.snapshot.20260927113651"></property>
+      <property name="version.libredvt" value="dev"></property>
+      <property name="version.pydicom" value="3.0.2"></property>
+      <property name="version.pynetdicom" value="3.0.4"></property>
+      <property name="version.python" value="3.12.16"></property>
+      <property name="version.standard-edition" value="2026d"></property>
+      <property name="version.worker" value="0.2.0"></property>
+    </properties>
+    <testcase name="plaintext-refused" classname="libredvt.tls_reject" time="0.110">
+      <properties>
+        <property name="verifies" value="DVT-SRS-105"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass</system-out>
+    </testcase>
+    <testcase name="tls10-refused" classname="libredvt.tls_reject" time="0.114">
+      <properties>
+        <property name="verifies" value="DVT-SRS-105"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass</system-out>
+    </testcase>
+    <testcase name="tls11-refused" classname="libredvt.tls_reject" time="0.113">
+      <properties>
+        <property name="verifies" value="DVT-SRS-105"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass</system-out>
+    </testcase>
+  </testsuite>
+</testsuites>

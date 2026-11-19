@@ -41,22 +41,22 @@ Requirements: 92 (35 active). Active with verification: 35. Active without verif
 | DVT-SRS-080 | Active | `modules/dvt/cmd/libredvt/arch_test.go:TestNoLibreDCMDICOMLibraries` |
 | DVT-SRS-081 | Active | `manual: `libredvt run` of `modules/dvt/plans/libredcm-conformance.yaml` against a LibreDCM container (6 fixtures: Explicit VR LE, RLE, JPEG Baseline, JPEG Lossless, JPEG-LS, JPEG 2000): echo, called-AE rejection, store, find and move with pixel comparison all passed, exit 0; `scripts/conformance.sh` (DCMTK 3.6.7) on the same fixtures and LibreDCM also passed (2026-11-10)` |
 | DVT-SRS-082 | Active | `modules/dvt/internal/engine/identity_engines_test.go:TestWorkerSendsLibreDVTIdentification`<br>`modules/dvt/internal/engine/identity_test.go:TestImplementationIdentification` |
-| DVT-SRS-090 | Draft | **NOT VERIFIED** |
-| DVT-SRS-091 | Draft | **NOT VERIFIED** |
-| DVT-SRS-092 | Draft | **NOT VERIFIED** |
-| DVT-SRS-093 | Draft | **NOT VERIFIED** |
-| DVT-SRS-094 | Draft | **NOT VERIFIED** |
-| DVT-SRS-095 | Draft | **NOT VERIFIED** |
-| DVT-SRS-096 | Draft | **NOT VERIFIED** |
-| DVT-SRS-100 | Draft | **NOT VERIFIED** |
-| DVT-SRS-101 | Draft | **NOT VERIFIED** |
-| DVT-SRS-102 | Draft | **NOT VERIFIED** |
-| DVT-SRS-103 | Draft | **NOT VERIFIED** |
-| DVT-SRS-104 | Draft | **NOT VERIFIED** |
-| DVT-SRS-105 | Draft | **NOT VERIFIED** |
-| DVT-SRS-106 | Draft | **NOT VERIFIED** |
-| DVT-SRS-107 | Draft | **NOT VERIFIED** |
-| DVT-SRS-108 | Draft | **NOT VERIFIED** |
+| DVT-SRS-090 | Draft | `modules/dvt/internal/engine/assoc_test.go:TestAssociateOutputSchemaFailsClosed`<br>`modules/dvt/internal/runner/assoc_engines_test.go:TestRealAssociateNegotiation`<br>`modules/dvt/internal/runner/runner_assoc_test.go:TestAssociatePositiveControls` |
+| DVT-SRS-091 | Draft | `modules/dvt/internal/runner/assoc_engines_test.go:TestRealAssociateNegotiation`<br>`modules/dvt/internal/runner/runner_assoc_test.go:TestAssociatePositiveControls` |
+| DVT-SRS-092 | Draft | `modules/dvt/internal/runner/assoc_engines_test.go:TestRealAssociateRejectAbortCloseGarbageSilence`<br>`modules/dvt/internal/runner/runner_assoc_test.go:TestAssociateExpectedRejection` |
+| DVT-SRS-093 | Draft | `modules/dvt/internal/runner/assoc_engines_test.go:TestRealAssociateNegotiation`<br>`modules/dvt/internal/runner/runner_assoc_test.go:TestAssociatePositiveControls` |
+| DVT-SRS-094 | Draft | `modules/dvt/internal/runner/assoc_engines_test.go:TestRealAssociateNegotiation`<br>`modules/dvt/internal/runner/runner_assoc_test.go:TestAssociatePositiveControls` |
+| DVT-SRS-095 | Draft | `modules/dvt/internal/runner/assoc_engines_test.go:TestRealAssociateRejectAbortCloseGarbageSilence`<br>`modules/dvt/internal/runner/runner_assoc_test.go:TestAssociateAbortCloseGarbageTimeoutAndRelease` |
+| DVT-SRS-096 | Draft | `modules/dvt/internal/runner/runner_assoc_test.go:TestAssociateAbortCloseGarbageTimeoutAndRelease` |
+| DVT-SRS-100 | Draft | `modules/dvt/internal/engine/assoc_test.go:TestAssociateTLSArgumentsArePathsOnly`<br>`modules/dvt/internal/runner/assoc_engines_test.go:TestRealTLSVerification`<br>`modules/dvt/internal/runner/assoc_engines_test.go:TestRealTLSVersions`<br>`modules/dvt/internal/runner/assoc_engines_test.go:TestRealV01EchoOverTLS` |
+| DVT-SRS-101 | Draft | `modules/dvt/internal/runner/assoc_engines_test.go:TestRealTLSVerification`<br>`modules/dvt/internal/store/target_test.go:TestLoadSecretsChecksCAAndClientKeyPair` |
+| DVT-SRS-102 | Draft | `modules/dvt/internal/runner/assoc_engines_test.go:TestRealTLSVerification` |
+| DVT-SRS-103 | Draft | `modules/dvt/cmd/libredvt/arch_test.go:TestNoTLSVerificationBypass` |
+| DVT-SRS-104 | Draft | `modules/dvt/internal/engine/assoc_test.go:TestAssociateTLSArgumentsArePathsOnly`<br>`modules/dvt/internal/runner/assoc_engines_test.go:TestRealMutualTLS`<br>`modules/dvt/internal/store/target_test.go:TestLoadSecretsChecksCAAndClientKeyPair` |
+| DVT-SRS-105 | Draft | `modules/dvt/internal/engine/assoc_test.go:TestTLSProbeOutputSchemaAndNoCredentials`<br>`modules/dvt/internal/runner/assoc_engines_test.go:TestRealTLSReject`<br>`modules/dvt/internal/runner/runner_assoc_test.go:TestProbeVerdictTable`<br>`modules/dvt/internal/runner/runner_assoc_test.go:TestTLSRejectStep` |
+| DVT-SRS-106 | Draft | `modules/dvt/internal/engine/assoc_test.go:TestTLSProbeOutputSchemaAndNoCredentials`<br>`modules/dvt/internal/runner/assoc_engines_test.go:TestRealTLSReject`<br>`modules/dvt/internal/runner/runner_assoc_test.go:TestTLSRejectStep` |
+| DVT-SRS-107 | Draft | `modules/dvt/internal/runner/assoc_engines_test.go:TestRealTLSVerification`<br>`modules/dvt/internal/runner/assoc_engines_test.go:TestRealV01EchoOverTLS` |
+| DVT-SRS-108 | Draft | `modules/dvt/internal/runner/assoc_engines_test.go:TestRealSCPTLSDuringMove`<br>`modules/dvt/internal/runner/runner_assoc_test.go:TestTLSMoveNeedsSCPCertificate` |
 | DVT-SRS-110 | Draft | `modules/dvt/internal/store/target_test.go:TestV01TargetRecordLoadsAsDIMSE`<br>`modules/dvt/internal/store/target_test.go:TestDICOMwebBaseURLRules` |
 | DVT-SRS-111 | Draft | **NOT VERIFIED** |
 | DVT-SRS-112 | Draft | `modules/dvt/internal/store/target_test.go:TestBearerOverHTTPOnlyToLoopback` |
@@ -91,10 +91,10 @@ Requirements: 92 (35 active). Active with verification: 35. Active without verif
 | DVT-SRS-144 | Draft | `modules/dvt/internal/result/evidence_test.go:TestDecideStepVerdictRule`<br>`modules/dvt/internal/result/evidence_test.go:TestApplyEvidenceSetsStatusFromVerdictOnly` |
 | DVT-SRS-145 | Draft | **NOT VERIFIED** |
 | DVT-SRS-146 | Draft | **NOT VERIFIED** |
-| DVT-SRS-150 | Draft | `modules/dvt/internal/runner/runner_v02_test.go:TestSecretFileProblemsFailBeforeConnecting` |
+| DVT-SRS-150 | Draft | `modules/dvt/internal/engine/assoc_test.go:TestAssociateOutputSchemaFailsClosed`<br>`modules/dvt/internal/engine/assoc_test.go:TestTLSProbeOutputSchemaAndNoCredentials`<br>`modules/dvt/internal/runner/assoc_engines_test.go:TestRealAssociateRejectAbortCloseGarbageSilence`<br>`modules/dvt/internal/runner/runner_assoc_test.go:TestAssociateAbortCloseGarbageTimeoutAndRelease`<br>`modules/dvt/internal/runner/runner_v02_test.go:TestSecretFileProblemsFailBeforeConnecting` |
 | DVT-SRS-151 | Draft | **NOT VERIFIED** |
-| DVT-SRS-152 | Draft | `modules/dvt/cmd/libredvt/main_v02_test.go:TestRunWithTargetFileKeepsSecretsOutOfArtefacts`<br>`modules/dvt/internal/redact/redact_test.go:TestTokenAndEncodingsAreRedacted`<br>`modules/dvt/internal/redact/redact_test.go:TestPEMKeyIsRedacted`<br>`modules/dvt/internal/redact/redact_test.go:TestShortFormsAndNilSet`<br>`modules/dvt/internal/report/render_test.go:TestRenderScansEveryArtefactBeforeWriting`<br>`modules/dvt/internal/runner/runner_v02_test.go:TestSecretInjectedIntoOutputIsRedactedAndFailsTheRun` |
-| DVT-SRS-153 | Draft | `modules/dvt/internal/engine/secrets_test.go:TestWorkerNeverGetsSecretsOnArgvOrEnv` |
+| DVT-SRS-152 | Draft | `modules/dvt/cmd/libredvt/main_v02_test.go:TestRunWithTargetFileKeepsSecretsOutOfArtefacts`<br>`modules/dvt/internal/redact/redact_test.go:TestTokenAndEncodingsAreRedacted`<br>`modules/dvt/internal/redact/redact_test.go:TestPEMKeyIsRedacted`<br>`modules/dvt/internal/redact/redact_test.go:TestShortFormsAndNilSet`<br>`modules/dvt/internal/report/render_test.go:TestRenderScansEveryArtefactBeforeWriting`<br>`modules/dvt/internal/runner/runner_assoc_test.go:TestTLSMoveNeedsSCPCertificate`<br>`modules/dvt/internal/runner/runner_v02_test.go:TestSecretInjectedIntoOutputIsRedactedAndFailsTheRun` |
+| DVT-SRS-153 | Draft | `modules/dvt/internal/engine/assoc_test.go:TestAssociateTLSArgumentsArePathsOnly`<br>`modules/dvt/internal/engine/secrets_test.go:TestWorkerNeverGetsSecretsOnArgvOrEnv` |
 | DVT-SRS-154 | Draft | `modules/dvt/internal/plan/plan_v02_test.go:TestParseV02StepTypes`<br>`modules/dvt/internal/plan/plan_v02_test.go:TestV02PlanRulesRejectBeforeRunning` |
-| DVT-SRS-155 | Draft | **NOT VERIFIED** |
+| DVT-SRS-155 | Draft | `modules/dvt/internal/runner/assoc_engines_test.go:TestRealAssociateNegotiation` |
 | DVT-SRS-156 | Draft | **NOT VERIFIED** |

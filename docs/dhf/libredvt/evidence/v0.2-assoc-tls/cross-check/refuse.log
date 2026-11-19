@@ -1,0 +1,2 @@
+passed   refused                  associate 2 assertion(s) checked; verdict pass; association rejected; max PDU 0, Implementation Class UID "", Version Name ""
+verdict: pass (DCMTK storescp refuses every association)

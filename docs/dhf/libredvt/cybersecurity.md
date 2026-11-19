@@ -84,7 +84,9 @@ origin over TLS (or loopback HTTP).
 - Python's `ssl` module (OpenSSL in the pinned base image) may refuse to
   offer TLS 1.0/1.1 at its default security level. Then `tls_reject` with
   `tls_version` is an engine error (fail), which is safe but blocks that
-  check; card 4 records which versions the image can offer.
+  check. Card DVT-0.2/3 showed the pinned image does offer both when the
+  probe lowers the security level (TLS 1.0 and 1.1 handshakes completed
+  against the Go test peer and DCMTK's AES profile).
 - The redaction scan finds configured secret values only. A secret the
   operator never configured (e.g. typed into a plan name) cannot be known;
   the user guide says not to.
@@ -113,7 +115,45 @@ origin over TLS (or loopback HTTP).
   scanned for the configured secrets; a hit is replaced by `[REDACTED]`
   and fails the run (DVT-SRS-152, `evidence-model.md` §7).
 - Until the TLS engine exists, a DIMSE target with a `tls` block refuses
-  every step instead of connecting in clear text.
+  every step instead of connecting in clear text. (Superseded by card
+  DVT-0.2/3 below.)
+
+### Implemented controls (card DVT-0.2/3, 2026-11-19, DRAFT for approval)
+
+- DIMSE TLS is built. Every connection to a TLS target (the `associate`
+  step and the v0.1 `echo`, `store`, `find`, `move`, `reject` steps) uses
+  one client context: TLS 1.2 or the target's 1.3 minimum, certificate
+  chain to the target's CA file or the image trust store, host name checked
+  against subjectAltName only (no Common Name fallback), optional client
+  certificate. A policy check refuses a context without these values
+  (DVT-SRS-100…-104).
+- A v0.1 step against a TLS target fails unless the worker reports a
+  verified TLS connection with a version, so a clear-text or unverified
+  fallback can never pass (DVT-SRS-100, -107).
+- TLS facts (version, cipher, peer subject, issuer, SANs, validity,
+  SHA-256 fingerprint, whether a client certificate was offered) are in the
+  evidence and the step messages of every TLS step (DVT-SRS-107).
+- `tls_reject` probes carry no client certificate, no key and no token, and
+  send at most the A-ASSOCIATE-RQ. Go refuses a probe result that says a
+  client certificate was sent, and passes the probe only the CA path, never
+  the key pair (DVT-SRS-105, -106). Only a clear refusal passes; a timeout,
+  connection error or local error is a problem, not a pass.
+- The CA file and the client certificate/key pair are checked in Go before
+  any connection; messages name the field, never the content.
+- The built-in Storage SCP listens with TLS for a move to a TLS target,
+  verifies the target's client certificate against the target's CA and
+  requires it by default (`move_client_cert: required`). Without
+  `scp_tls_cert`/`scp_tls_key` the move fails; there is no clear-text
+  fallback (DVT-SRS-108).
+- No verification bypass exists in non-test code; an architecture test
+  scans the Go and Python sources for one (DVT-SRS-103).
+- Cipher suites: the client uses OpenSSL's default list for the pinned
+  image (forward-secret suites). A server offering only legacy suites, for
+  example DCMTK's retired AES profile (AES128-SHA), fails the handshake.
+  That is a fail-closed result; the report shows the TLS alert. The
+  refusal probes, by contrast, offer TLS 1.0/1.1 at OpenSSL security level
+  0 so they can see whether a server still accepts them; the pinned image
+  can offer both (shown against the Go test peer and DCMTK).
 
 ## Static analysis (2026-11-10)
 

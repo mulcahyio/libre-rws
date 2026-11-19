@@ -246,6 +246,49 @@ command output from 2026-11-10 unless stated.
   ad-hoc target, and this build with a v0.2 target file. Fit for v0.1 use
   unchanged; the v0.2 functions are not yet released for use (validated
   in card DVT-0.2/6).
+- **Change 2026-11-19 (issue #34, card DVT-0.2/3, DRAFT for approval):**
+  association negotiation (`associate`) and TLS refusal (`tls_reject`)
+  steps, DICOM TLS for every DIMSE step and for the Storage SCP during a
+  move. Re-validation (real output, evidence in
+  `docs/dhf/libredvt/evidence/v0.2-assoc-tls/`):
+  - Positive controls with the real engines against a Go test peer and a
+    synthetic PKI that share no code with the worker (real-engine test
+    stage exit 0, 106 tests passed, 0 failed): wrong host, wrong
+    `server_name`, CN-only names (IP and DNS), unknown CA, expired, not yet
+    valid, incomplete chain, self-signed leaf, system trust store without
+    the test CA, TLS 1.0- and 1.1-only servers, a TLS 1.2 server with a
+    1.3 minimum, client certificate missing/unknown/mismatched; association
+    reject, abort, close, garbage, silence, missing or extra context, other
+    transfer syntax, roles, max PDU, Implementation Class UID and Version
+    Name, release abort. Each fails the step, and after a failed handshake
+    no A-ASSOCIATE-RQ reaches the peer. Correct TLS 1.2 and 1.3 peers pass.
+  - Mutation check: 23 of 23 mutants killed (14 Go, 9 worker), including
+    host-name check off, Common Name fallback, TLS 1.1 accepted (worker and
+    Go verdict), rejected context ignored, expired certificate accepted and
+    clear-text fallback for v0.1 steps. A first run found that the
+    Common-Name control used an IP address, which OpenSSL never matches
+    against the CN, so the CN-fallback mutant survived; a DNS-name CN
+    control was added and kills it.
+  - Independent cross-check: 13 of 13 LibreDVT runs as expected against
+    DCMTK 3.6.7 `storescp` (plain, `--refuse`, `+tls`, `+tls -rc`, wrong
+    host certificate, retired AES profile) and LibreDCM in TLS mode
+    (association, echo, refusals, C-STORE and C-FIND over TLS), with
+    DCMTK `echoscu` against the same servers and the DCMTK servers' own
+    logs confirming each refusal (unsupported protocol, wrong version
+    number, peer did not return a certificate, certificate verify failed).
+    LibreDVT read DCMTK's Implementation Class UID/Version Name and max PDU
+    as documented by DCMTK, and LibreDCM's as given by the UID registry.
+    No private-key material in any of the 77 artefacts.
+  - Deviation: the first cross-check expected LibreDVT's echo to the AES
+    profile server to pass; it failed because that profile offers only
+    AES128-SHA and LibreDVT's client offers forward-secret suites only.
+    The DCMTK log shows "no shared cipher". The expectation was corrected;
+    the behaviour is fail-closed and documented.
+  - Not done here: DICOMweb (card DVT-0.2/4); C-MOVE over TLS against
+    LibreDCM (its move destinations have no TLS; the Go peer covers it).
+    Fit for v0.1 use
+    unchanged; the v0.2 functions are not yet released for use (validated
+    in card DVT-0.2/6).
 
 ## Libre WT system test (card WT-0.2/9, 2026-11-17)
 

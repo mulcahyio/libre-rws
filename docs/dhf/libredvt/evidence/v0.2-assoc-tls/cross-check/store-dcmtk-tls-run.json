@@ -1,0 +1,38 @@
+{
+  "id": "20261119-110540-5cf33c95",
+  "plan": "Store over TLS to DCMTK",
+  "plan_sha256": "2603dba1b6e9ab09ef417b4cd880e73d4663607ac283beaf0e8ba5539bebd76d",
+  "target": "dcmtk-tls",
+  "target_desc": "dcmtk-tls (dcmtk-tls:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)",
+  "started": "2026-11-19T11:05:40.021827575Z",
+  "finished": "2026-11-19T11:05:40.816400545Z",
+  "steps": [
+    {
+      "id": "store-over-tls",
+      "type": "store",
+      "verifies": [
+        "DVT-SRS-100",
+        "DVT-SRS-107"
+      ],
+      "status": "passed",
+      "messages": [
+        "TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject \"O=LibreDVT cross-check,CN=dcmtk-peer\", issuer \"O=LibreDVT cross-check,CN=dvt03-test-ca\", SAN DNS [dcmtk-tls dcmtk-mtls dcmtk-aes], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102; client certificate offered: true",
+        "1 of 1 files stored with status 0x0000"
+      ],
+      "started": "2026-11-19T11:05:40.448164926Z",
+      "duration": 368022286,
+      "details": "{\"associated\": true, \"files\": [{\"file\": \"/plans/fixtures/ct_explicit_le.dcm\", \"sop_instance_uid\": \"1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322\", \"status\": 0, \"study_instance_uid\": \"1.3.6.1.4.1.5962.1.2.1.20040119072730.12322\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.1\"}], \"tls\": {\"cipher\": \"TLS_AES_256_GCM_SHA384\", \"client_cert_sent\": true, \"peer\": {\"issuer\": \"O=LibreDVT cross-check,CN=dvt03-test-ca\", \"not_after\": \"2026-11-20T11:05:19.000Z\", \"not_before\": \"2026-11-19T11:05:19.000Z\", \"san_dns\": [\"dcmtk-tls\", \"dcmtk-mtls\", \"dcmtk-aes\"], \"san_ip\": [], \"sha256\": \"6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102\", \"subject\": \"O=LibreDVT cross-check,CN=dcmtk-peer\"}, \"verified\": true, \"version\": \"TLSv1.3\"}}\n"
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "dev",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "pass"
+}

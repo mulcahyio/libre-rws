@@ -2,7 +2,10 @@ package store
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -394,6 +397,7 @@ func (t Target) LoadSecrets(secretsDir string, into *redact.Set) error {
 	if t.TLS != nil {
 		refs = append(refs, ref{"tls.ca_file", t.TLS.CAFile, 0}, ref{"tls.client_cert_file", t.TLS.ClientCertFile, 0}, ref{"tls.client_key_file", t.TLS.ClientKeyFile, 2})
 	}
+	got := map[string][]byte{}
 	for _, r := range refs {
 		if r.path == "" {
 			continue
@@ -402,6 +406,7 @@ func (t Target) LoadSecrets(secretsDir string, into *redact.Set) error {
 		if err != nil {
 			return fmt.Errorf("%s: %w", r.field, err)
 		}
+		got[r.field] = b
 		switch r.secret {
 		case 1:
 			tok := strings.TrimRight(string(b), "\r\n")
@@ -416,7 +421,45 @@ func (t Target) LoadSecrets(secretsDir string, into *redact.Set) error {
 			into.AddPEM(b)
 		}
 	}
+	return checkTLSFiles(got)
+}
+
+// checkTLSFiles makes sure the CA file holds certificates and the client
+// certificate and key form a usable pair, so a bad file fails the step
+// before any connection (DVT-SRS-101, DVT-SRS-104). Messages never quote
+// file contents.
+func checkTLSFiles(got map[string][]byte) error {
+	if ca, ok := got["tls.ca_file"]; ok && !ValidCAPEM(ca) {
+		return errors.New("tls.ca_file: no usable PEM CA certificate in the file")
+	}
+	cert, okc := got["tls.client_cert_file"]
+	key, okk := got["tls.client_key_file"]
+	if okc && okk {
+		if _, err := tls.X509KeyPair(cert, key); err != nil {
+			return errors.New("tls.client_cert_file, tls.client_key_file: the certificate and private key do not form a usable pair")
+		}
+	}
 	return nil
+}
+
+// ValidCAPEM reports whether b holds only PEM certificates, at least one.
+func ValidCAPEM(b []byte) bool {
+	n := 0
+	for {
+		var blk *pem.Block
+		blk, b = pem.Decode(b)
+		if blk == nil {
+			break
+		}
+		if blk.Type != "CERTIFICATE" {
+			return false
+		}
+		if _, err := x509.ParseCertificate(blk.Bytes); err != nil {
+			return false
+		}
+		n++
+	}
+	return n > 0 && len(bytes.TrimSpace(b)) == 0
 }
 
 // maxRefBytes bounds a referenced certificate, key or token file.

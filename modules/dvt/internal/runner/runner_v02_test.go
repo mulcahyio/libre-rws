@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/engine"
+	"github.com/mulcahyio/libre-rws/modules/dvt/internal/fakepeer"
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/plan"
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/result"
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/store"
@@ -148,12 +149,28 @@ func TestSecretFileProblemsFailBeforeConnecting(t *testing.T) {
 	if r.Verdict != result.Fail || len(f.calls) != 0 || !strings.Contains(strings.Join(r.Steps[0].Messages, ";"), "tls.ca_file") {
 		t.Fatalf("missing CA: %+v calls %v", r.Steps[0], f.calls)
 	}
-	// With a readable CA the echo still does not connect in clear text:
-	// DIMSE TLS is not in this build.
-	tg.TLS.CAFile = secretFile(t, "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----\n")
+	// With a readable CA the echo runs over TLS: the worker gets the TLS
+	// paths, and an echo whose engine reports no verified TLS connection
+	// fails, so a clear-text fallback can never pass (DVT-SRS-100, -107).
+	pki, err := fakepeer.NewPKI(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	tg.TLS.CAFile = pki.Root.File
 	r = run(t, f, setup(t, "name: x\ntarget: t\nsteps:\n  - {id: e, type: echo}\n"), tg)
-	if r.Verdict != result.Fail || len(f.calls) != 0 || !strings.Contains(strings.Join(r.Steps[0].Messages, ";"), "DIMSE over TLS is not available") {
-		t.Fatalf("TLS echo: %+v calls %v", r.Steps[0], f.calls)
+	if r.Verdict != result.Fail || len(f.calls) != 1 || !strings.Contains(strings.Join(r.Steps[0].Messages, ";"), "TLS error") {
+		t.Fatalf("TLS echo without TLS facts: %+v calls %v", r.Steps[0], f.calls)
+	}
+	f.echo.TLS = &result.TLSInfo{Version: "TLSv1.3", Cipher: "TLS_AES_128_GCM_SHA256", Verified: true,
+		Peer: &result.PeerCert{Subject: "CN=peer", Issuer: "CN=test-root-ca", SANDNS: []string{"peer.test"}, SHA256: "ab"}}
+	r = run(t, f, setup(t, "name: x\ntarget: t\nsteps:\n  - {id: e, type: echo}\n"), tg)
+	msgs := strings.Join(r.Steps[0].Messages, ";")
+	if r.Verdict != result.Pass || !strings.Contains(msgs, "TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified") || !strings.Contains(msgs, "peer.test") {
+		t.Fatalf("TLS echo with TLS facts: %+v", r.Steps[0])
+	}
+	f.echo.TLS.Verified = false
+	if r = run(t, f, setup(t, "name: x\ntarget: t\nsteps:\n  - {id: e, type: echo}\n"), tg); r.Verdict != result.Fail {
+		t.Fatalf("unverified TLS passed: %+v", r.Steps[0])
 	}
 	// Web UI: a file outside the secrets directory is refused.
 	tok := secretFile(t, synthToken+"\n")

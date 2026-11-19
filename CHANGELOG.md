@@ -14,6 +14,36 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **LibreDVT v0.2 association negotiation and DICOM TLS tests (issue #34,
+  card DVT-0.2/3, DRAFT for approval).**
+  - New `associate` step: proposes the plan's presentation contexts (with
+    optional role selection and asynchronous operations window) and checks
+    each accepted/rejected result and transfer syntax, an expected
+    A-ASSOCIATE-RJ (result, source, reason), max PDU, Implementation Class
+    UID and Version Name. Abort, closed connection, unparseable PDU and
+    silence fail the step; a failed release is a warning. The worker speaks
+    the association PDUs itself so nothing the target answered is hidden.
+  - New `tls_reject` step: passes only when the target clearly refuses
+    clear text, a TLS 1.0/1.1 handshake, or a client without a certificate.
+    Probes carry no certificate, key or token.
+  - DIMSE targets with a `tls` block now work for every step (the card 2
+    refusal is removed): TLS 1.2+, chain checked against the target's CA
+    (or the image trust store), host name against subjectAltName only, no
+    bypass, optional client certificate; TLS version, cipher and peer
+    certificate facts are in every report. A v0.1 step without verified TLS
+    facts fails. A `move` to a TLS target needs the new
+    `LIBRE_DVT_SCP_TLS_CERT`/`LIBRE_DVT_SCP_TLS_KEY`; the Storage SCP then
+    requires the target's client certificate by default.
+  - Servers offering only legacy cipher suites (no forward secrecy) fail
+    the TLS handshake; this is intended (fail closed).
+  - Tested: unit tests with fake engines; real-engine tests against a new
+    Go test peer and synthetic PKI (wrong host, CN-only names, unknown CA,
+    expired, not yet valid, incomplete chain, self-signed, TLS 1.0/1.1-only,
+    client-certificate cases, reject/abort/close/garbage/silence); mutation
+    check (host-name check off, TLS 1.1 accepted, rejected context ignored,
+    and more); cross-check against DCMTK 3.6.7 storescp/echoscu with and
+    without `+tls` and against LibreDCM in TLS mode. Evidence in
+    `docs/dhf/libredvt/evidence/v0.2-assoc-tls/`. No new dependency.
 - **LibreDVT v0.2 foundation (issue #34, card DVT-0.2/2, DRAFT for
   approval).** First code of v0.2; v0.1 plans, targets and results behave
   as before.
@@ -29,9 +59,9 @@ LibreDCM's behaviour unless stated.
     `wado`, `stow`) and a `limits` block with every rule of
     `plan-schema.md`; a field of another step type is refused even with an
     empty value, and a plan whose steps do not fit the target's protocol is
-    refused before any step runs. Until their engines are built (cards 3
-    and 4) these steps fail without sending anything, and a DIMSE target
-    with TLS refuses every step instead of connecting in clear text.
+    refused before any step runs. Until their engines are built
+    (`associate`/`tls_reject` in card 3, DICOMweb in card 4) these steps
+    fail without sending anything.
   - Production guard extended: `stow`, `qido` and `wado` run only against
     `lab` targets.
   - Protocol-neutral evidence model and one verdict rule

@@ -1,0 +1,19 @@
+# Mutual TLS: the association works with LibreDVT's client certificate and
+# the target refuses a client without one.
+name: Mutual TLS
+target: dcmtk-mtls
+timeout: 10s
+steps:
+  - id: associate-with-client-cert
+    type: associate
+    verifies: [DVT-SRS-104, DVT-SRS-107]
+    contexts:
+      - {abstract_syntax: "1.2.840.10008.1.1", transfer_syntaxes: ["1.2.840.10008.1.2"], expect: accepted}
+  - id: no-client-cert-refused
+    type: tls_reject
+    verifies: [DVT-SRS-105, DVT-SRS-106]
+    mode: no_client_cert
+  - id: plaintext-refused
+    type: tls_reject
+    verifies: [DVT-SRS-105]
+    mode: plaintext

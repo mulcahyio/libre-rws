@@ -1,0 +1,2 @@
+failed   no-client-cert-refused   tls_reject fail tls_reject.refused no_client_cert: expected refused, got accepted dicom_reply: the target answered the A-ASSOCIATE-RQ with A-ASSOCIATE-AC
+verdict: fail (TLS client certificate required)

@@ -61,6 +61,8 @@ Go packages under `modules/dvt/`:
 | `internal/report` | JUnit XML and self-contained HTML (DVT-SRS-043, -044) |
 | `internal/store` | Targets, uploads and results in the data directory (DVT-SRS-020, -045) |
 | `internal/web` | HTTP handlers, sessions, CSRF, login rate limit, embedded templates and CSS (DVT-SRS-060…-062, -066) |
+| `internal/redact` | Secret scan and redaction of artefacts before writing (v0.2, DVT-SRS-152) |
+| `internal/fakepeer` | Test only: synthetic PKI and scripted DICOM upper-layer/TLS peer for the association and TLS controls (v0.2) |
 
 Python worker `modules/dvt/worker/libredvt_worker.py`: one process per
 request, arguments on the command line, one JSON document on stdout, non-zero
@@ -204,6 +206,52 @@ Design decisions (settled here so later cards do not decide them again):
    (DVT-SRS-080, architecture test).
 6. **Compatibility.** Target records without `protocol` are DIMSE; v0.1
    plans, results and reports are unchanged (DVT-SRS-110, -142, -145).
+
+Implementation notes, card DVT-0.2/3 (2026-11-19, Hermes/Claude, DRAFT for
+approval). They settle details the decisions above left open:
+
+1. **`associate` uses a raw PS3.8 client in the worker, not pynetdicom.**
+   pynetdicom hides what the target answered (for example a context missing
+   from the A-ASSOCIATE-AC, an unparseable PDU, or role and asynchronous
+   operations replies). The worker writes and reads the association PDUs
+   itself with the standard library and reports every field; Go checks the
+   shape (`engine.checkAssociate`) and decides (`runner/assoc.go`). v0.1
+   steps keep pynetdicom.
+2. **One TLS client context factory** (`tls_client_context` in the worker) for
+   `associate`, the v0.1 DIMSE steps and later DICOMweb: TLS 1.2 or the
+   target's 1.3 minimum, `CERT_REQUIRED`, `check_hostname`,
+   `hostname_checks_common_name = False`, CA file or the image's trust
+   store, optional client certificate. A policy check refuses any context
+   that does not hold these values, so a code change that weakens one fails
+   the step as an engine error before any connection. The cipher list is
+   OpenSSL's default for the pinned image; a server that offers only legacy
+   suites (for example RSA key exchange with CBC) fails the handshake. That
+   is a fail-closed outcome, recorded in the evidence.
+3. **Refusal probes** (`tls-probe`) build their own narrow context: no
+   client certificate, no token, the old version offered at OpenSSL security
+   level 0 so the image can really offer TLS 1.0 and 1.1. They report an
+   observation (`handshake_completed`, `handshake_alert`, `dicom_reply`, …);
+   `runner.probeVerdict` maps it, and only a clear refusal passes.
+4. **Built-in Storage SCP with TLS** during a `move` to a TLS target uses
+   `scp_tls_cert`/`scp_tls_key`, verifies the target's client certificate
+   against the target's CA and requires it unless the target sets
+   `move_client_cert: optional`. Without the SCP certificate the step fails;
+   there is no clear-text fallback.
+5. **Go test peer `internal/fakepeer`** (test only; an architecture test
+   allows only `_test.go` files to import it): a synthetic PKI built with
+   `crypto/x509` (root, intermediate, unrelated CA; good, wrong-host,
+   CN-only, expired, not-yet-valid, self-signed and client leaves) and a
+   scripted upper-layer peer on `crypto/tls`/`net` that can accept, reject,
+   abort, close, send garbage, stay silent, drop or add a context, answer
+   roles and asynchronous operations, misbehave on release, connect back
+   for a move, and record what it received. It shares no code
+   with the worker (Python `ssl`/OpenSSL), so a defect in one cannot hide a
+   defect in the other.
+6. **No verification bypass anywhere in non-test code**
+   (`TestNoTLSVerificationBypass` scans the Go and Python sources outside
+   `internal/fakepeer` and test files for `InsecureSkipVerify`, `CERT_NONE`,
+   `_create_unverified_context`, a Common Name fallback and a disabled
+   host-name check).
 
 Test-only configuration items added by v0.2 (recorded in the tool
 validation when first used): Orthanc and its DICOMweb plugin (GPL-3.0 /

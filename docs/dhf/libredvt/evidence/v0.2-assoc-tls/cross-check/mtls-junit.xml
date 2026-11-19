@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="LibreDVT" tests="3" failures="0" time="0.827">
+  <testsuite name="Mutual TLS" tests="3" failures="0" timestamp="2026-11-19T11:05:32Z" time="0.827">
+    <properties>
+      <property name="run_id" value="20261119-110532-2357f4d2"></property>
+      <property name="plan_sha256" value="44b86cb10522ea7c7a3deea99ae380b2832be69abb24fe62ac3e8967b9ac65a5"></property>
+      <property name="target" value="dcmtk-mtls (dcmtk-mtls:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)"></property>
+      <property name="verdict" value="pass"></property>
+      <property name="version.dicom-validator" value="0.9.0"></property>
+      <property name="version.dicom3tools" value="1.00.snapshot.20260927113651"></property>
+      <property name="version.libredvt" value="dev"></property>
+      <property name="version.pydicom" value="3.0.2"></property>
+      <property name="version.pynetdicom" value="3.0.4"></property>
+      <property name="version.python" value="3.12.16"></property>
+      <property name="version.standard-edition" value="2026d"></property>
+      <property name="version.worker" value="0.2.0"></property>
+    </properties>
+    <testcase name="associate-with-client-cert" classname="libredvt.associate" time="0.166">
+      <properties>
+        <property name="verifies" value="DVT-SRS-104, DVT-SRS-107"></property>
+      </properties>
+      <system-out>3 assertion(s) checked; verdict pass&#xA;TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=dcmtk-peer&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt03-test-ca&#34;, SAN DNS [dcmtk-tls dcmtk-mtls dcmtk-aes], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102; client certificate offered: true&#xA;association accepted; max PDU 16384, Implementation Class UID &#34;1.2.276.0.7230010.3.0.3.6.7&#34;, Version Name &#34;OFFIS_DCMTK_367&#34;</system-out>
+    </testcase>
+    <testcase name="no-client-cert-refused" classname="libredvt.tls_reject" time="0.118">
+      <properties>
+        <property name="verifies" value="DVT-SRS-105, DVT-SRS-106"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass</system-out>
+    </testcase>
+    <testcase name="plaintext-refused" classname="libredvt.tls_reject" time="0.113">
+      <properties>
+        <property name="verifies" value="DVT-SRS-105"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass</system-out>
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -1,0 +1,18 @@
+# TLS 1.0 and 1.1 must be refused. Against a server that still negotiates
+# them (DCMTK's retired AES profile), this plan must FAIL.
+name: Old TLS versions refused
+target: dcmtk-aes
+timeout: 10s
+steps:
+  - id: echo-tls12
+    type: echo
+  - id: tls10-refused
+    type: tls_reject
+    verifies: [DVT-SRS-105]
+    mode: tls_version
+    tls_version: "1.0"
+  - id: tls11-refused
+    type: tls_reject
+    verifies: [DVT-SRS-105]
+    mode: tls_version
+    tls_version: "1.1"

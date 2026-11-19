@@ -4,6 +4,8 @@ package runner
 
 import (
 	"context"
+	"crypto/tls"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -29,6 +31,8 @@ type Engines interface {
 	Find(ctx context.Context, p engine.Peer, studies []string) (engine.FindResult, string, error)
 	Move(ctx context.Context, p engine.Peer, scp engine.SCP, outDir string, studies []string, expected int) (engine.MoveResult, string, error)
 	Compare(ctx context.Context, sent []string, dir string) ([]engine.CompareFile, string, error)
+	Associate(ctx context.Context, p engine.Peer, req engine.AssociateRequest) (engine.AssociateResult, string, error)
+	TLSProbe(ctx context.Context, p engine.Peer, mode, version string) (engine.ProbeResult, string, error)
 }
 
 // Runner runs plans.
@@ -73,6 +77,11 @@ func (rn *Runner) Run(ctx context.Context, id string, p *plan.Plan, t *store.Tar
 		// be read fails the network steps in preflight (DVT-SRS-141).
 		_ = t.LoadSecrets(rn.SecretsDir, secrets)
 	}
+	if rn.SCP.TLSKey != "" { // the Storage SCP's private key never reaches an artefact either
+		if b, err := os.ReadFile(rn.SCP.TLSKey); err == nil { // #nosec G304 -- path from LibreDVT's own configuration
+			secrets.AddPEM(b)
+		}
+	}
 	ctx = engine.WithSecrets(ctx, secrets)
 	st := &sent{instances: map[string][]string{}}
 	for _, ps := range p.Steps {
@@ -110,7 +119,7 @@ func SecretsFor(t *store.Target, secretsDir string) *redact.Set {
 }
 
 func (rn *Runner) peer(p *plan.Plan, t *store.Target) engine.Peer {
-	return engine.Peer{Host: t.Host, Port: t.Port, CalledAET: t.CalledAET, CallingAET: t.CallingAET, Timeout: p.Timeout}
+	return engine.Peer{Host: t.Host, Port: t.Port, CalledAET: t.CalledAET, CallingAET: t.CallingAET, Timeout: p.Timeout, TLS: engineTLS(t)}
 }
 
 func statusText(st *int) string {
@@ -166,18 +175,59 @@ func (rn *Runner) preflight(ps plan.Step, t *store.Target, s *result.Step, secre
 		refuse(s, ps.Type, t, result.ProblemConfig, "configuration error, nothing was sent: "+err.Error())
 		return false
 	}
-	// Fail safe until the TLS and DICOMweb engines exist: never connect
-	// in clear text to a target configured for TLS, never pass a step that
-	// was not performed (DVT-SRS-150).
-	if v02(ps.Type) {
-		refuse(s, ps.Type, t, result.ProblemEngine, fmt.Sprintf("engine error: the %s step is not available in this build; nothing was sent", ps.Type))
+	// Fail safe until the DICOMweb engine exists (card DVT-0.2/4): never
+	// pass a step that was not performed (DVT-SRS-150).
+	if t.Proto() != store.DIMSE {
+		refuse(s, ps.Type, t, result.ProblemEngine, fmt.Sprintf("engine error: the %s step against a DICOMweb target is not available in this build; nothing was sent", ps.Type))
 		return false
 	}
-	if t.Proto() == store.DIMSE && t.TLS != nil {
-		refuse(s, ps.Type, t, result.ProblemEngine, "engine error: DIMSE over TLS is not available in this build; nothing was sent")
-		return false
+	// DVT-SRS-108: a TLS move needs the Storage SCP's own certificate; it
+	// never falls back to clear text.
+	if ps.Type == plan.Move && t.TLS != nil {
+		if err := rn.checkSCPTLS(secrets); err != nil {
+			refuse(s, ps.Type, t, result.ProblemConfig, "configuration error, nothing was sent: "+err.Error())
+			return false
+		}
 	}
 	return true
+}
+
+// checkSCPTLS makes sure the Storage SCP's certificate and key are set and
+// form a usable pair, and keeps the key out of every artefact
+// (DVT-SRS-108, DVT-SRS-152).
+func (rn *Runner) checkSCPTLS(secrets *redact.Set) error {
+	if rn.SCP.TLSCert == "" || rn.SCP.TLSKey == "" {
+		return errors.New("the built-in Storage SCP has no TLS certificate (settings scp_tls_cert and scp_tls_key); a TLS move does not fall back to clear text")
+	}
+	cert, err := os.ReadFile(rn.SCP.TLSCert) // #nosec G304 -- path from LibreDVT's own configuration
+	if err != nil {
+		return errors.New("scp_tls_cert: file not readable")
+	}
+	key, err := os.ReadFile(rn.SCP.TLSKey) // #nosec G304 -- path from LibreDVT's own configuration
+	if err != nil {
+		return errors.New("scp_tls_key: file not readable")
+	}
+	secrets.AddPEM(key)
+	if _, err := tls.X509KeyPair(cert, key); err != nil {
+		return errors.New("scp_tls_cert, scp_tls_key: the certificate and private key do not form a usable pair")
+	}
+	return nil
+}
+
+// scpConnections records every TLS connection the built-in Storage SCP saw
+// during a TLS move (DVT-SRS-108).
+func scpConnections(s *result.Step, t *store.Target, conns []engine.SCPConnection) {
+	if t == nil || t.TLS == nil {
+		return
+	}
+	for _, c := range conns {
+		if c.Outcome == "completed" && c.TLS != nil {
+			s.Messages = append(s.Messages, fmt.Sprintf("Storage SCP: TLS connection from %s accepted (%s %s, client certificate %q, issuer %q)",
+				c.Peer, c.TLS.Version, c.TLS.Cipher, c.TLS.ClientSubject, c.TLS.ClientIssuer))
+			continue
+		}
+		s.Messages = append(s.Messages, fmt.Sprintf("Storage SCP: TLS connection from %s refused: %s", c.Peer, c.Error))
+	}
 }
 
 func (rn *Runner) step(ctx context.Context, p *plan.Plan, ps plan.Step, t *store.Target, st *sent, s *result.Step, secrets *redact.Set) {
@@ -213,6 +263,7 @@ func (rn *Runner) step(ctx context.Context, p *plan.Plan, ps plan.Step, t *store
 		switch {
 		case err != nil:
 			s.Failf("engine error: " + err.Error())
+		case !v01TLS(s, t, res.TLS, res.TLSError):
 		case !res.Associated:
 			s.Failf("association not established: " + res.Error)
 		case !isSuccess(res.Status):
@@ -234,6 +285,7 @@ func (rn *Runner) step(ctx context.Context, p *plan.Plan, ps plan.Step, t *store
 		switch {
 		case err != nil:
 			s.Failf("engine error: " + err.Error())
+		case !v01TLS(s, t, res.TLS, res.TLSError):
 		case res.Associated:
 			s.Failf(fmt.Sprintf("association with calling AE %q, called AE %q was accepted; expected a rejection", pe.CallingAET, pe.CalledAET))
 		case !res.Rejected:
@@ -252,6 +304,9 @@ func (rn *Runner) step(ctx context.Context, p *plan.Plan, ps plan.Step, t *store
 		s.Details = rawJSON(raw)
 		if err != nil {
 			s.Failf("engine error: " + err.Error())
+			return
+		}
+		if !v01TLS(s, t, res.TLS, res.TLSError) {
 			return
 		}
 		if !res.Associated {
@@ -294,6 +349,9 @@ func (rn *Runner) step(ctx context.Context, p *plan.Plan, ps plan.Step, t *store
 			s.Failf("engine error: " + err.Error())
 			return
 		}
+		if !v01TLS(s, t, res.TLS, res.TLSError) {
+			return
+		}
 		if !res.Associated {
 			s.Failf("association not established: " + res.Error)
 			return
@@ -318,6 +376,12 @@ func (rn *Runner) step(ctx context.Context, p *plan.Plan, ps plan.Step, t *store
 
 	case plan.Move:
 		rn.move(ctx, p, ps, t, st, s)
+
+	case plan.Associate:
+		rn.associate(ctx, p, ps, t, s)
+
+	case plan.TLSReject:
+		rn.tlsReject(ctx, p, ps, t, s)
 
 	default: // unreachable: plan.Parse rejects unknown types; fail safe anyway
 		s.Failf("engine error: step type " + ps.Type + " is not supported")
@@ -384,6 +448,10 @@ func (rn *Runner) move(ctx context.Context, p *plan.Plan, ps plan.Step, t *store
 		s.Failf("engine error: " + err.Error())
 		return
 	}
+	if !v01TLS(s, t, res.TLS, res.TLSError) {
+		return
+	}
+	scpConnections(s, t, res.SCPConnections)
 	if !res.Associated {
 		s.Failf("association not established: " + res.Error)
 		return

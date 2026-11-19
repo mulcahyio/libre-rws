@@ -1,0 +1,7 @@
+# One v0.1 echo step; with a TLS target it must pass only over verified TLS.
+name: Echo
+target: dcmtk-tls
+timeout: 10s
+steps:
+  - id: echo
+    type: echo

@@ -1,0 +1,240 @@
+{
+  "id": "20261119-110529-16d91e4e",
+  "plan": "DCMTK storescp association negotiation over TLS",
+  "plan_sha256": "10427f3e51c06d18f46622b14ce067caec74e2d20b4427ff73307ec855e4e2b0",
+  "target": "dcmtk-tls",
+  "target_desc": "dcmtk-tls (dcmtk-tls:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)",
+  "started": "2026-11-19T11:05:29.402956985Z",
+  "finished": "2026-11-19T11:05:30.358026638Z",
+  "steps": [
+    {
+      "id": "negotiation",
+      "type": "associate",
+      "verifies": [
+        "DVT-SRS-090",
+        "DVT-SRS-091",
+        "DVT-SRS-093",
+        "DVT-SRS-100",
+        "DVT-SRS-101",
+        "DVT-SRS-102",
+        "DVT-SRS-107"
+      ],
+      "status": "passed",
+      "messages": [
+        "11 assertion(s) checked; verdict pass",
+        "TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject \"O=LibreDVT cross-check,CN=dcmtk-peer\", issuer \"O=LibreDVT cross-check,CN=dvt03-test-ca\", SAN DNS [dcmtk-tls dcmtk-mtls dcmtk-aes], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102; client certificate offered: true",
+        "association accepted; max PDU 16384, Implementation Class UID \"1.2.276.0.7230010.3.0.3.6.7\", Version Name \"OFFIS_DCMTK_367\""
+      ],
+      "started": "2026-11-19T11:05:29.829394291Z",
+      "duration": 162869882,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-tls",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-tls:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "dcmtk-tls:11112",
+            "started": "2026-11-19T11:05:29.936Z",
+            "duration_ms": 7,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT cross-check,CN=dcmtk-peer",
+                "issuer": "O=LibreDVT cross-check,CN=dvt03-test-ca",
+                "san_dns": [
+                  "dcmtk-tls",
+                  "dcmtk-mtls",
+                  "dcmtk-aes"
+                ],
+                "not_before": "2026-11-19T11:05:19.000Z",
+                "not_after": "2026-11-20T11:05:19.000Z",
+                "sha256": "6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102"
+              },
+              "client_cert_sent": true
+            }
+          },
+          {
+            "seq": 2,
+            "protocol": "dimse",
+            "operation": "A-ASSOCIATE",
+            "endpoint": "dcmtk-tls:11112",
+            "started": "2026-11-19T11:05:29.944Z",
+            "duration_ms": 41,
+            "outcome": "completed",
+            "association": {
+              "result": "accepted",
+              "max_pdu": 16384,
+              "impl_class_uid": "1.2.276.0.7230010.3.0.3.6.7",
+              "impl_version": "OFFIS_DCMTK_367",
+              "contexts": [
+                {
+                  "id": 1,
+                  "abstract_syntax": "1.2.840.10008.1.1",
+                  "proposed_transfer_syntaxes": [
+                    "1.2.840.10008.1.2"
+                  ],
+                  "result": "accepted",
+                  "accepted_transfer_syntax": "1.2.840.10008.1.2"
+                },
+                {
+                  "id": 3,
+                  "abstract_syntax": "1.2.840.10008.5.1.4.1.1.2",
+                  "proposed_transfer_syntaxes": [
+                    "1.2.840.10008.1.2.1",
+                    "1.2.840.10008.1.2"
+                  ],
+                  "result": "accepted",
+                  "accepted_transfer_syntax": "1.2.840.10008.1.2.1"
+                },
+                {
+                  "id": 5,
+                  "abstract_syntax": "1.2.840.10008.5.1.4.1.1.2",
+                  "proposed_transfer_syntaxes": [
+                    "1.2.840.10008.1.2.4.50"
+                  ],
+                  "result": "rejected",
+                  "reason": "transfer-syntaxes-not-supported (4)"
+                },
+                {
+                  "id": 7,
+                  "abstract_syntax": "1.2.3.4.5",
+                  "proposed_transfer_syntaxes": [
+                    "1.2.840.10008.1.2"
+                  ],
+                  "result": "rejected",
+                  "reason": "abstract-syntax-not-supported (3)"
+                }
+              ],
+              "released": true
+            }
+          },
+          {
+            "seq": 3,
+            "protocol": "dimse",
+            "operation": "A-RELEASE",
+            "endpoint": "dcmtk-tls:11112",
+            "started": "2026-11-19T11:05:29.985Z",
+            "duration_ms": 0,
+            "outcome": "completed"
+          }
+        ],
+        "assertions": [
+          {
+            "id": "assoc.result",
+            "subject": "dcmtk-tls:11112",
+            "expected": "accepted",
+            "actual": "accepted",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.context.result",
+            "subject": "context 1 (1.2.840.10008.1.1)",
+            "expected": "accepted",
+            "actual": "accepted",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.context.transfer_syntax",
+            "subject": "context 1 (1.2.840.10008.1.1)",
+            "expected": "1.2.840.10008.1.2",
+            "actual": "1.2.840.10008.1.2",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.context.result",
+            "subject": "context 3 (1.2.840.10008.5.1.4.1.1.2)",
+            "expected": "accepted",
+            "actual": "accepted",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.context.transfer_syntax",
+            "subject": "context 3 (1.2.840.10008.5.1.4.1.1.2)",
+            "expected": "1.2.840.10008.1.2.1",
+            "actual": "1.2.840.10008.1.2.1",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.context.result",
+            "subject": "context 5 (1.2.840.10008.5.1.4.1.1.2)",
+            "expected": "rejected",
+            "actual": "rejected",
+            "outcome": "pass",
+            "message": "transfer-syntaxes-not-supported (4)"
+          },
+          {
+            "id": "assoc.context.result",
+            "subject": "context 7 (1.2.3.4.5)",
+            "expected": "rejected",
+            "actual": "rejected",
+            "outcome": "pass",
+            "message": "abstract-syntax-not-supported (3)"
+          },
+          {
+            "id": "assoc.max_pdu",
+            "subject": "dcmtk-tls:11112",
+            "expected": "16384",
+            "actual": "16384",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.impl_class_uid",
+            "subject": "dcmtk-tls:11112",
+            "expected": "1.2.276.0.7230010.3.0.3.6.7",
+            "actual": "1.2.276.0.7230010.3.0.3.6.7",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.impl_version",
+            "subject": "dcmtk-tls:11112",
+            "expected": "OFFIS_DCMTK_367",
+            "actual": "OFFIS_DCMTK_367",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.release",
+            "subject": "dcmtk-tls:11112",
+            "expected": "released",
+            "actual": "released",
+            "outcome": "pass"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "echo-over-tls",
+      "type": "echo",
+      "status": "passed",
+      "messages": [
+        "TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject \"O=LibreDVT cross-check,CN=dcmtk-peer\", issuer \"O=LibreDVT cross-check,CN=dvt03-test-ca\", SAN DNS [dcmtk-tls dcmtk-mtls dcmtk-aes], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102; client certificate offered: true",
+        "C-ECHO status 0x0000 (Success)"
+      ],
+      "started": "2026-11-19T11:05:29.99240691Z",
+      "duration": 365570566,
+      "details": "{\"associated\": true, \"status\": 0, \"tls\": {\"cipher\": \"TLS_AES_256_GCM_SHA384\", \"client_cert_sent\": true, \"peer\": {\"issuer\": \"O=LibreDVT cross-check,CN=dvt03-test-ca\", \"not_after\": \"2026-11-20T11:05:19.000Z\", \"not_before\": \"2026-11-19T11:05:19.000Z\", \"san_dns\": [\"dcmtk-tls\", \"dcmtk-mtls\", \"dcmtk-aes\"], \"san_ip\": [], \"sha256\": \"6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102\", \"subject\": \"O=LibreDVT cross-check,CN=dcmtk-peer\"}, \"verified\": true, \"version\": \"TLSv1.3\"}}\n"
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "dev",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "pass"
+}

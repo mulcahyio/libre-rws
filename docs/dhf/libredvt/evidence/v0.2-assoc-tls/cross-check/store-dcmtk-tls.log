@@ -1,0 +1,2 @@
+passed   store-over-tls           store     TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=dcmtk-peer", issuer "O=LibreDVT cross-check,CN=dvt03-test-ca", SAN DNS [dcmtk-tls dcmtk-mtls dcmtk-aes], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102; client certificate offered: true; 1 of 1 files stored with status 0x0000
+verdict: pass (Store over TLS to DCMTK)

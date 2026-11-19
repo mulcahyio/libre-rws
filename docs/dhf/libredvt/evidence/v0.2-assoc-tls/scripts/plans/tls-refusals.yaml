@@ -1,0 +1,19 @@
+# A TLS-only DIMSE port must refuse clear text and TLS 1.0/1.1.
+name: TLS refusals
+target: dcmtk-tls
+timeout: 10s
+steps:
+  - id: plaintext-refused
+    type: tls_reject
+    verifies: [DVT-SRS-105]
+    mode: plaintext
+  - id: tls10-refused
+    type: tls_reject
+    verifies: [DVT-SRS-105]
+    mode: tls_version
+    tls_version: "1.0"
+  - id: tls11-refused
+    type: tls_reject
+    verifies: [DVT-SRS-105]
+    mode: tls_version
+    tls_version: "1.1"

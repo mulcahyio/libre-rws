@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mulcahyio/libre-rws/modules/dvt/internal/fakepeer"
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/redact"
 )
 
@@ -211,7 +212,11 @@ func writeFile(t *testing.T, dir, name, content string) string {
 func TestLoadSecretsChecksEveryReferencedFile(t *testing.T) {
 	dir := t.TempDir()
 	tok := writeFile(t, dir, "tok", synthToken+"\n")
-	ca := writeFile(t, dir, "ca.pem", "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----\n")
+	pki, err := fakepeer.NewPKI(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ca := pki.Root.File
 	empty := writeFile(t, dir, "empty", "")
 	blank := writeFile(t, dir, "blank", " \n\n")
 	short := writeFile(t, dir, "short", "abc\n")
@@ -268,5 +273,62 @@ func TestLoadSecretsChecksEveryReferencedFile(t *testing.T) {
 	s := &redact.Set{}
 	if err := plain.LoadSecrets("/run/secrets", s); err != nil || !s.Empty() {
 		t.Fatalf("plain target: %v", err)
+	}
+}
+
+// Verifies: DVT-SRS-101, DVT-SRS-104
+func TestLoadSecretsChecksCAAndClientKeyPair(t *testing.T) {
+	dir := t.TempDir()
+	pki, err := fakepeer.NewPKI(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a, err := pki.Issue("client-a", fakepeer.LeafOpts{Issuer: pki.Root, CN: "a", Client: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := pki.Issue("client-b", fakepeer.LeafOpts{Issuer: pki.Root, CN: "b", Client: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	key, _ := os.ReadFile(a.KeyFile)
+	base := func() Target {
+		return Target{Name: "d", Host: "h", Port: 1, CalledAET: "A", CallingAET: "B",
+			TLS: &TLS{CAFile: pki.Root.File, ClientCertFile: a.CertFile, ClientKeyFile: a.KeyFile}}
+	}
+	good := base()
+	set := &redact.Set{}
+	if err := good.LoadSecrets("", set); err != nil {
+		t.Fatalf("good pair refused: %v", err)
+	}
+	if !set.Contains(string(key)) {
+		t.Fatal("client key not registered for redaction")
+	}
+	cases := map[string]struct {
+		mod  func(*Target)
+		want string
+	}{
+		"mismatched key": {func(x *Target) { x.TLS.ClientKeyFile = b.KeyFile }, "do not form a usable pair"},
+		"key is a cert":  {func(x *Target) { x.TLS.ClientKeyFile = a.CertFile }, "do not form a usable pair"},
+		"CA is not PEM":  {func(x *Target) { x.TLS.CAFile = writeFile(t, dir, "junk.pem", "not a certificate\n") }, "tls.ca_file: no usable PEM CA certificate"},
+		"CA holds a key": {func(x *Target) { x.TLS.CAFile = a.KeyFile }, "tls.ca_file: no usable PEM CA certificate"},
+		"CA garbage DER": {func(x *Target) {
+			x.TLS.CAFile = writeFile(t, dir, "bad.pem", "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----\n")
+		}, "tls.ca_file"},
+		"CA trailing junk": {func(x *Target) {
+			c, _ := os.ReadFile(pki.Root.File)
+			x.TLS.CAFile = writeFile(t, dir, "tj.pem", string(c)+"junk\n")
+		}, "tls.ca_file"},
+	}
+	for name, c := range cases {
+		x := base()
+		c.mod(&x)
+		err := x.LoadSecrets("", &redact.Set{})
+		if err == nil || !strings.Contains(err.Error(), c.want) {
+			t.Errorf("%s: want %q, got %v", name, c.want, err)
+		}
+		if err != nil && strings.Contains(err.Error(), "PRIVATE KEY") {
+			t.Errorf("%s: error quotes key material", name)
+		}
 	}
 }

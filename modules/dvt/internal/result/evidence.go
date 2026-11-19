@@ -232,6 +232,12 @@ func (e *Evidence) Assert(id, subject, expected, actual, message string) bool {
 	return out == AssertPass
 }
 
+// Warn records an assertion with outcome warn: the step can pass at most
+// with warnings (DVT-SRS-096, evidence-model.md §4).
+func (e *Evidence) Warn(id, subject, expected, actual, message string) {
+	e.Assertions = append(e.Assertions, Assertion{ID: id, Subject: subject, Expected: expected, Actual: actual, Outcome: AssertWarn, Message: message})
+}
+
 // nothingChecked is the problem DecideStep reports for a step without
 // assertions.
 const nothingChecked = "nothing was checked"

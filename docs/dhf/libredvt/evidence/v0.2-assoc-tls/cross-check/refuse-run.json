@@ -1,0 +1,95 @@
+{
+  "id": "20261119-110528-af60247f",
+  "plan": "DCMTK storescp refuses every association",
+  "plan_sha256": "d796a318338bc6019fc8e4d4fc718642cb88a73a091b7b581e0740f7193db28b",
+  "target": "dcmtk-refuse",
+  "target_desc": "dcmtk-refuse (dcmtk-refuse:11112, called AE STORESCP, calling AE LIBREDVT, class lab)",
+  "started": "2026-11-19T11:05:28.51763354Z",
+  "finished": "2026-11-19T11:05:29.054689776Z",
+  "steps": [
+    {
+      "id": "refused",
+      "type": "associate",
+      "verifies": [
+        "DVT-SRS-092"
+      ],
+      "status": "passed",
+      "messages": [
+        "2 assertion(s) checked; verdict pass",
+        "association rejected; max PDU 0, Implementation Class UID \"\", Version Name \"\""
+      ],
+      "started": "2026-11-19T11:05:28.942374759Z",
+      "duration": 112303269,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-refuse",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-refuse:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "dimse",
+            "operation": "A-ASSOCIATE",
+            "endpoint": "dcmtk-refuse:11112",
+            "started": "2026-11-19T11:05:29.048Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "association": {
+              "result": "rejected",
+              "reject": {
+                "result": 1,
+                "source": 1,
+                "reason": 1
+              },
+              "contexts": [
+                {
+                  "id": 1,
+                  "abstract_syntax": "1.2.840.10008.1.1",
+                  "proposed_transfer_syntaxes": [
+                    "1.2.840.10008.1.2"
+                  ],
+                  "result": "rejected",
+                  "reason": "association rejected"
+                }
+              ],
+              "released": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "assoc.result",
+            "subject": "dcmtk-refuse:11112",
+            "expected": "rejected",
+            "actual": "rejected",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.reject",
+            "subject": "dcmtk-refuse:11112",
+            "expected": "result 1, source 1, reason 1",
+            "actual": "result 1, source 1, reason 1",
+            "outcome": "pass",
+            "message": "PS3.8 Table 9-21 values"
+          }
+        ],
+        "redactions": 0
+      }
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "dev",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "pass"
+}

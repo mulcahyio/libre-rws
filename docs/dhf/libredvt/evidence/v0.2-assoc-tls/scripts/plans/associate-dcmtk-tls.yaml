@@ -1,0 +1,20 @@
+# The same negotiation over TLS (DCMTK storescp +tls, BCP 195 profile),
+# followed by a v0.1 echo step over the same verified TLS settings.
+name: DCMTK storescp association negotiation over TLS
+target: dcmtk-tls
+timeout: 10s
+steps:
+  - id: negotiation
+    type: associate
+    verifies: [DVT-SRS-090, DVT-SRS-091, DVT-SRS-093, DVT-SRS-100, DVT-SRS-101, DVT-SRS-102, DVT-SRS-107]
+    contexts:
+      - {abstract_syntax: "1.2.840.10008.1.1", transfer_syntaxes: ["1.2.840.10008.1.2"], expect: accepted, expect_transfer_syntax: "1.2.840.10008.1.2"}
+      - {abstract_syntax: "1.2.840.10008.5.1.4.1.1.2", transfer_syntaxes: ["1.2.840.10008.1.2.1", "1.2.840.10008.1.2"], expect: accepted, expect_transfer_syntax: "1.2.840.10008.1.2.1"}
+      - {abstract_syntax: "1.2.840.10008.5.1.4.1.1.2", transfer_syntaxes: ["1.2.840.10008.1.2.4.50"], expect: rejected}
+      - {abstract_syntax: "1.2.3.4.5", transfer_syntaxes: ["1.2.840.10008.1.2"], expect: rejected}
+    expect:
+      max_pdu: 16384
+      impl_class_uid: "1.2.276.0.7230010.3.0.3.6.7"
+      impl_version: "OFFIS_DCMTK_367"
+  - id: echo-over-tls
+    type: echo

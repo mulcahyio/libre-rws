@@ -1,0 +1,14 @@
+# storescp --refuse answers every A-ASSOCIATE-RQ with A-ASSOCIATE-RJ
+# rejected-permanent (1), service-user (1), no-reason-given (1).
+name: DCMTK storescp refuses every association
+target: dcmtk-refuse
+timeout: 10s
+steps:
+  - id: refused
+    type: associate
+    verifies: [DVT-SRS-092]
+    contexts:
+      - {abstract_syntax: "1.2.840.10008.1.1", transfer_syntaxes: ["1.2.840.10008.1.2"]}
+    expect:
+      association: rejected
+      reject: {result: 1, source: 1, reason: 1}

@@ -12,11 +12,11 @@ LibreDVT is a quality-system tool, not a medical device. Its results are used
 as verification records, so it is validated as a high-risk tool
 (QMS-SOP-011). Design file: [`docs/dhf/libredvt/`](../../docs/dhf/libredvt/SRS.md).
 
-> **v0.2 in design (not built yet).** Association negotiation and TLS tests,
-> and DICOMweb QIDO-RS, WADO-RS and STOW-RS, for LibreDCM and for audits of
-> other vendors' lab systems. See the
-> [v0.2 plan](../../docs/dhf/libredvt/v0.2-plan.md). Everything below
-> describes v0.1, which is what the image does today.
+> **v0.2 in progress (DRAFT).** Association negotiation and DICOM TLS tests
+> are built (card DVT-0.2/3); DICOMweb QIDO-RS, WADO-RS and STOW-RS follow.
+> See the [v0.2 plan](../../docs/dhf/libredvt/v0.2-plan.md). The v0.2
+> functions are not released for use until the v0.2 tool validation is
+> approved. The sections below describe v0.1 unless they say v0.2.
 
 ## What it does (v0.1)
 
@@ -80,12 +80,51 @@ refused (exit 2).
 
 **v0.2 in progress (DRAFT).** Plans may already contain the v0.2 step types
 `associate`, `tls_reject`, `qido`, `wado` and `stow`; they are checked
-strictly and against the target's protocol, but until their engines are
-built they fail without sending anything. `qido`, `wado` and `stow` run only
-against `lab` targets. A DIMSE target with a `tls` block refuses every step
-rather than connect in clear text. Configured secrets never appear in
-reports, stored runs or process arguments; if one is found in any output it
-is replaced by `[REDACTED]` and the run fails.
+strictly and against the target's protocol. `qido`, `wado` and `stow` are
+not built yet and fail without sending anything; they run only against
+`lab` targets. Configured secrets never appear in reports, stored runs or
+process arguments; if one is found in any output it is replaced by
+`[REDACTED]` and the run fails.
+
+### Association and TLS tests (v0.2, DRAFT)
+
+```yaml
+name: Vendor PACS association and TLS
+target: vendor-pacs-lab          # a dimse target with a tls block
+timeout: 10s
+steps:
+  - id: negotiation
+    type: associate
+    contexts:
+      - {abstract_syntax: "1.2.840.10008.1.1", transfer_syntaxes: ["1.2.840.10008.1.2"], expect: accepted}
+      - {abstract_syntax: "1.2.840.10008.5.1.4.1.1.2", transfer_syntaxes: ["1.2.840.10008.1.2.1", "1.2.840.10008.1.2"],
+         expect: accepted, expect_transfer_syntax: "1.2.840.10008.1.2.1"}
+      - {abstract_syntax: "1.2.840.10008.5.1.4.1.1.2", transfer_syntaxes: ["1.2.840.10008.1.2.4.50"], expect: rejected}
+    async_ops: {invoked: 4, performed: 4}
+    expect: {max_pdu: 16384, impl_class_uid: "1.2.3.4", impl_version: "VENDOR_1"}
+  - {id: plaintext-refused, type: tls_reject, mode: plaintext}
+  - {id: tls11-refused,     type: tls_reject, mode: tls_version, tls_version: "1.1"}
+  - {id: client-cert-required, type: tls_reject, mode: no_client_cert}
+```
+
+| Step | Passes when |
+|---|---|
+| `associate` | every context is accepted or rejected as expected (and with the expected transfer syntax and roles, when given), the named negotiated values match, and the association is released. With `expect: {association: rejected, reject: {result, source, reason}}` it passes only on exactly that A-ASSOCIATE-RJ. An abort, a closed connection, a PDU LibreDVT cannot parse or silence fails the step. A failed release is a warning. The report records max PDU, Implementation Class UID and Version Name, roles and the asynchronous operations reply |
+| `tls_reject` | the target clearly refuses: clear text to the TLS port (`plaintext`), a TLS 1.0 or 1.1 handshake (`tls_version`), or a TLS client without a certificate (`no_client_cert`). A timeout or connection error is not a refusal and fails. Probes send no client certificate, key or token |
+
+With a `tls` block, every step to the target (including v0.1 `echo`,
+`store`, `find`, `move`, `reject`) uses TLS 1.2 or later, checks the
+certificate chain against `ca_file` (or the image's trust store) and the
+host name against the certificate's subjectAltName (or `server_name`).
+There is no setting that turns these checks off, and no fallback to clear
+text. Each TLS step reports the TLS version, cipher suite and the peer
+certificate's subject, issuer, names, validity and SHA-256 fingerprint.
+Servers that offer only legacy cipher suites (no forward secrecy) fail the
+handshake. A `move` to a TLS target needs `LIBRE_DVT_SCP_TLS_CERT` and
+`LIBRE_DVT_SCP_TLS_KEY`; the built-in Storage SCP then requires the
+target's client certificate unless the target sets
+`move_client_cert: optional`. Certificate revocation (CRL/OCSP) is not
+checked.
 
 ## Test plans
 
@@ -126,6 +165,7 @@ file. Unknown fields or step types reject the whole plan before anything runs.
 | `LIBRE_DVT_TLS_CERT`, `LIBRE_DVT_TLS_KEY` | | serve the UI over HTTPS |
 | `LIBRE_DVT_ENGINE_TIMEOUT` | `2m` | per engine call |
 | `LIBRE_DVT_SECRETS_DIR` | `/run/secrets` | web UI runs: certificate, key and token files a target references must lie here |
+| `LIBRE_DVT_SCP_TLS_CERT`, `LIBRE_DVT_SCP_TLS_KEY` | | v0.2: certificate and key of the built-in Storage SCP for a `move` to a TLS target |
 
 ## Development
 

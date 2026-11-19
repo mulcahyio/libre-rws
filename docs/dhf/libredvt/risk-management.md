@@ -109,6 +109,15 @@ tool-validation section):
     LibreDCM TLS smoke plan compared with DCMTK `echoscu`/`storescu` with
     `+tls` on the same LibreDCM.
 
+Status 2026-11-19 (card DVT-0.2/3, DRAFT for approval): activities 6 and 7,
+the association/TLS part of 11 and the DCMTK/LibreDCM part of 12 are done;
+results in `docs/qms/tool-validation/README.md` and
+`docs/dhf/libredvt/evidence/v0.2-assoc-tls/`. One case is proven in a
+different form than listed: the Common-Name case uses a certificate whose
+only name is a DNS name in the CN, because OpenSSL never matches an IP
+address against the CN (an IP-only CN certificate could not catch a CN
+fallback; the mutation check showed it).
+
 ## 5. v0.2 residual risk (DRAFT for approval)
 
 DVT-HAZ-006 and DVT-HAZ-009 are reduced by the positive controls and the

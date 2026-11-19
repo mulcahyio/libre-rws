@@ -1,0 +1,33 @@
+{
+  "id": "20261119-110534-3e9f0955",
+  "plan": "Echo",
+  "plan_sha256": "34db5da97b58c9067b095b1be8cf91e1db9ee5bafff99bf41e47cba6c54b39df",
+  "target": "dcmtk-wrong",
+  "target_desc": "dcmtk-wrong (dcmtk-wrong:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)",
+  "started": "2026-11-19T11:05:34.999079313Z",
+  "finished": "2026-11-19T11:05:35.805402055Z",
+  "steps": [
+    {
+      "id": "echo",
+      "type": "echo",
+      "status": "failed",
+      "messages": [
+        "TLS error: certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)"
+      ],
+      "started": "2026-11-19T11:05:35.426772927Z",
+      "duration": 378596202,
+      "details": "{\"associated\": false, \"error\": \"TLS: certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)\", \"rejected\": false, \"tls_error\": \"certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)\"}\n"
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "dev",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "fail"
+}

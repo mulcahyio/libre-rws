@@ -36,5 +36,5 @@ func Implementation(version string) (classUID, versionName string) {
 // association and writes in every Part 10 file it receives.
 func (c Config) peerArgs(p Peer, cmd string) []string {
 	uid, name := Implementation(c.Version)
-	return append(p.args(cmd), "--impl-uid", uid, "--impl-version", name)
+	return append(append(p.args(cmd), "--impl-uid", uid, "--impl-version", name), p.TLS.args()...)
 }

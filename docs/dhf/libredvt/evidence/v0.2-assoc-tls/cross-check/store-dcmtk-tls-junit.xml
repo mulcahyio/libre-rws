@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="LibreDVT" tests="1" failures="0" time="0.795">
+  <testsuite name="Store over TLS to DCMTK" tests="1" failures="0" timestamp="2026-11-19T11:05:40Z" time="0.795">
+    <properties>
+      <property name="run_id" value="20261119-110540-5cf33c95"></property>
+      <property name="plan_sha256" value="2603dba1b6e9ab09ef417b4cd880e73d4663607ac283beaf0e8ba5539bebd76d"></property>
+      <property name="target" value="dcmtk-tls (dcmtk-tls:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)"></property>
+      <property name="verdict" value="pass"></property>
+      <property name="version.dicom-validator" value="0.9.0"></property>
+      <property name="version.dicom3tools" value="1.00.snapshot.20260927113651"></property>
+      <property name="version.libredvt" value="dev"></property>
+      <property name="version.pydicom" value="3.0.2"></property>
+      <property name="version.pynetdicom" value="3.0.4"></property>
+      <property name="version.python" value="3.12.16"></property>
+      <property name="version.standard-edition" value="2026d"></property>
+      <property name="version.worker" value="0.2.0"></property>
+    </properties>
+    <testcase name="store-over-tls" classname="libredvt.store" time="0.368">
+      <properties>
+        <property name="verifies" value="DVT-SRS-100, DVT-SRS-107"></property>
+      </properties>
+      <system-out>TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=dcmtk-peer&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt03-test-ca&#34;, SAN DNS [dcmtk-tls dcmtk-mtls dcmtk-aes], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102; client certificate offered: true&#xA;1 of 1 files stored with status 0x0000</system-out>
+    </testcase>
+  </testsuite>
+</testsuites>
