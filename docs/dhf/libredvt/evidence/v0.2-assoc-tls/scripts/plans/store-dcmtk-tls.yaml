@@ -1,0 +1,10 @@
+# C-STORE over TLS to DCMTK storescp +tls. Only the uncompressed fixture:
+# storescp without +xa refuses compressed transfer syntaxes.
+name: Store over TLS to DCMTK
+target: dcmtk-tls
+timeout: 20s
+steps:
+  - id: store-over-tls
+    type: store
+    files: [fixtures/ct_explicit_le.dcm]
+    verifies: [DVT-SRS-100, DVT-SRS-107]

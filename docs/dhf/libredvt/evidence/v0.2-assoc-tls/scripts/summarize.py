@@ -36,6 +36,8 @@ EXPECT = {
     "libredcm-tls": ("pass", {"negotiation": "passed", "echo-over-tls": "passed", "plaintext-refused": "passed",
                               "tls10-refused": "passed", "tls11-refused": "passed"}),
     "libredcm-no-client-cert": ("fail", {"no-client-cert-refused": "failed"}),
+    "store-dcmtk-tls": ("pass", {"store-over-tls": "passed"}),
+    "store-libredcm-tls": ("pass", {"store-over-tls": "passed", "find-over-tls": "passed"}),
 }
 
 bad = 0

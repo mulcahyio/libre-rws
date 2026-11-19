@@ -1,0 +1,15 @@
+# C-STORE and C-FIND over TLS to LibreDCM, with the image's synthetic/public
+# fixtures (the same files as the bundled LibreDCM conformance plan).
+# C-MOVE is left out: LibreDCM's move destinations do not use TLS.
+name: LibreDCM store and find over TLS
+target: libredcm
+timeout: 30s
+steps:
+  - id: store-over-tls
+    type: store
+    files: [fixtures/*.dcm]
+    verifies: [DVT-SRS-100, DVT-SRS-107]
+  - id: find-over-tls
+    type: find
+    from_store: true
+    verifies: [DVT-SRS-100, DVT-SRS-107]

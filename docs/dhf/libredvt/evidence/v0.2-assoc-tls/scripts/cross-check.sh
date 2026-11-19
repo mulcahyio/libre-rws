@@ -47,7 +47,7 @@ for f in dcmtk-peer wrong-host libredcm libredvt-client; do echo "$f: $(openssl 
 cd - >/dev/null || exit 1
 
 docker network rm $NET >/dev/null 2>&1; docker network create $NET >/dev/null
-cleanup() { docker rm -f dcmtk-plain dcmtk-refuse dcmtk-tls dcmtk-mtls dcmtk-wrong dcmtk-aes libredcm >/dev/null 2>&1; docker network rm $NET >/dev/null 2>&1; }
+cleanup() { docker rm -f dcmtk-plain dcmtk-refuse dcmtk-tls dcmtk-mtls dcmtk-wrong dcmtk-aes libredcm >/dev/null 2>&1; docker network rm $NET >/dev/null 2>&1; docker volume rm dvt03-plans >/dev/null 2>&1; }
 trap cleanup EXIT
 scp() { # name args...
   local n=$1; shift
@@ -93,10 +93,17 @@ targets:
 EOF
 cp $E/scripts/plans/*.yaml "$OUT/"
 chmod 644 "$OUT"/*.yaml
+# Store plans live next to the image's fixtures: a fresh named volume is
+# filled from the image's /opt/libredvt/plans, then the plans are added.
+docker volume rm dvt03-plans >/dev/null 2>&1
+docker run --rm -u 0 -v dvt03-plans:/opt/libredvt/plans -v "$PWD/$E/scripts/plans":/p:ro --entrypoint cp "$DVT_IMG" \
+  /p/store-dcmtk-tls.yaml /p/store-libredcm-tls.yaml /opt/libredvt/plans/ || echo "store plans not copied"
 
-run() { # label target plan
-  docker run --rm --name dvt-runner --network $NET -v "$PKI":/pki:ro -v "$PWD/$OUT":/out "$DVT_IMG" run -targets /out/targets.yaml -target "$2" \
-    -junit "/out/$1-junit.xml" -html "/out/$1-report.html" -json "/out/$1-run.json" "/out/$3" > "$OUT/$1.log" 2>&1
+run() { # label target plan (a bare name is under /out; an absolute path is used as is)
+  local plan="/out/$3"
+  case "$3" in /*) plan="$3" ;; esac
+  docker run --rm --name dvt-runner --network $NET -v "$PKI":/pki:ro -v "$PWD/$OUT":/out -v dvt03-plans:/plans:ro "$DVT_IMG" run -targets /out/targets.yaml -target "$2" \
+    -junit "/out/$1-junit.xml" -html "/out/$1-report.html" -json "/out/$1-run.json" "$plan" > "$OUT/$1.log" 2>&1
   local rc=$?
   echo "$1 (target $2, plan $3): exit $rc :: $(tail -1 "$OUT/$1.log")"
 }
@@ -112,6 +119,9 @@ run wrong-host dcmtk-wrong echo.yaml
 run aes-profile-old-versions dcmtk-aes tls-old-versions.yaml
 run libredcm-tls libredcm libredcm-tls.yaml
 run libredcm-no-client-cert libredcm tls-no-client-cert.yaml
+run store-dcmtk-tls dcmtk-tls /plans/store-dcmtk-tls.yaml
+run store-libredcm-tls libredcm /plans/store-libredcm-tls.yaml
+echo "files storescp +tls wrote: $(docker exec dcmtk-tls sh -c 'ls /tmp | grep -c ^CT')"
 
 echo "== DCMTK echoscu +tls against the same servers (DCMTK does not check host names)"
 dcm() { # label args...
