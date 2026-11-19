@@ -318,12 +318,47 @@ func TestTLSRejectStep(t *testing.T) {
 			t.Errorf("%s: probe peer %+v", obs, f.peers)
 		}
 	}
-	// Against a DICOMweb target the step fails safe until card DVT-0.2/4.
+	// Against a DICOMweb target the probe is one bare HTTP request
+	// (DVT-SRS-105); HTTP 400 is a refusal, any other status shows the
+	// request was served.
 	tg := webTarget(store.Lab, "")
-	f := &fake{}
-	r := run(t, f, setup(t, "name: x\ntarget: web\nsteps:\n  - {id: p, type: tls_reject, mode: plaintext}\n"), tg)
-	if r.Verdict != result.Fail || len(f.calls) != 0 {
-		t.Fatalf("dicomweb tls_reject: %s %v", r.Verdict, f.calls)
+	httpGet := func(status int) []result.Exchange {
+		return []result.Exchange{{Seq: 1, Protocol: "http", Operation: "GET", Endpoint: "x", Outcome: "completed",
+			HTTP: &result.HTTPInfo{Method: "GET", URL: "x", Status: status}}}
+	}
+	for _, c := range []struct {
+		mode, obs string
+		status    int
+		want      result.Verdict
+	}{
+		{"plaintext", engine.ObsHTTPReply, 400, result.Pass},
+		{"plaintext", engine.ObsHTTPReply, 200, result.Fail},
+		{"plaintext", engine.ObsHTTPReply, 401, result.Fail},
+		{"plaintext", engine.ObsNonHTTPReply, 0, result.Pass},
+		{"plaintext", engine.ObsConnectionClosed, 0, result.Pass},
+		{"plaintext", engine.ObsTimeout, 0, result.Fail},
+		{"no_client_cert", engine.ObsHTTPReply, 204, result.Fail},
+		{"no_client_cert", engine.ObsHandshakeAlert, 0, result.Pass},
+		{"no_client_cert", engine.ObsNonHTTPReply, 0, result.Fail},
+		{"tls_version", engine.ObsHTTPReply, 400, result.Fail},
+		{"tls_version", engine.ObsHandshakeCompleted, 0, result.Fail},
+		{"tls_version", engine.ObsHandshakeAlert, 0, result.Pass},
+	} {
+		f := &fake{probeW: func(_ engine.Web, mode, _ string) engine.ProbeResult {
+			r := engine.ProbeResult{Mode: mode, Observation: c.obs, Detail: "d"}
+			if c.status != 0 {
+				r.Exchanges = httpGet(c.status)
+			}
+			return r
+		}}
+		src := "name: x\ntarget: web\nsteps:\n  - {id: p, type: tls_reject, mode: " + c.mode + "}\n"
+		if c.mode == "tls_version" {
+			src = "name: x\ntarget: web\nsteps:\n  - {id: p, type: tls_reject, mode: tls_version, tls_version: \"1.1\"}\n"
+		}
+		r := run(t, f, setup(t, src), tg)
+		if r.Verdict != c.want || len(f.calls) != 1 || f.calls[0] != "tls-probe-web" {
+			t.Errorf("dicomweb %s %s %d: %s %v", c.mode, c.obs, c.status, r.Verdict, f.calls)
+		}
 	}
 }
 

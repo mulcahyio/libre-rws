@@ -203,6 +203,7 @@ type ProbeFile struct {
 	SOPClassUID       string `json:"sop_class_uid"`
 	SOPInstanceUID    string `json:"sop_instance_uid"`
 	StudyInstanceUID  string `json:"study_instance_uid"`
+	SeriesInstanceUID string `json:"series_instance_uid"`
 	TransferSyntaxUID string `json:"transfer_syntax_uid"`
 }
 

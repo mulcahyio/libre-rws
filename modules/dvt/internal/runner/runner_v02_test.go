@@ -68,17 +68,17 @@ func TestDICOMwebDataStepsLabOnly(t *testing.T) {
 			}
 		}
 	}
-	// The same plan on a lab target passes the guard (and fails safe further
-	// on: the DICOMweb engine is not in this build, so nothing is sent).
+	// The same plan on a lab target passes the guard and reaches the
+	// DICOMweb engine.
 	f := &fake{}
 	r := run(t, f, setup(t, dataPlan), webTarget(store.Lab, ""))
 	for _, s := range r.Steps {
-		if s.Evidence == nil || s.Evidence.Errors[0].Kind == result.ProblemGuard || s.Status != result.StepFailed {
-			t.Fatalf("lab step %s: %+v", s.ID, s.Evidence)
+		if s.Evidence != nil && len(s.Evidence.Errors) > 0 && s.Evidence.Errors[0].Kind == result.ProblemGuard {
+			t.Fatalf("lab step %s refused by the guard: %+v", s.ID, s.Evidence)
 		}
 	}
-	if r.Verdict != result.Fail || len(f.calls) != 0 {
-		t.Fatalf("unimplemented steps must fail without sending: %s %v", r.Verdict, f.calls)
+	if len(f.calls) == 0 || !strings.Contains(strings.Join(f.calls, ","), "stow") {
+		t.Fatalf("lab target: engine calls %v", f.calls)
 	}
 }
 

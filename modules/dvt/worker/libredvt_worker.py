@@ -114,6 +114,7 @@ def probe_one(path):
         "sop_class_uid": str(ds.get("SOPClassUID", "")),
         "sop_instance_uid": str(ds.get("SOPInstanceUID", "")),
         "study_instance_uid": str(ds.get("StudyInstanceUID", "")),
+        "series_instance_uid": str(ds.get("SeriesInstanceUID", "")),
         "transfer_syntax_uid": str(getattr(meta, "TransferSyntaxUID", "")) if meta else "",
     }
 
@@ -443,10 +444,10 @@ def parse_ac(body):
     return ac
 
 
-def _connect(args, xs):
+def _connect(args, xs, protocol="dimse"):
     """TCP connect, then TLS when configured. Returns (sock, None) or
     (None, (observation, kind, message)) with the failure in the exchanges."""
-    x = xs.start("dimse", "TCP-CONNECT")
+    x = xs.start(protocol, "TCP-CONNECT")
     try:
         sock = socket.create_connection((args.host, args.port), timeout=args.timeout)
     except Exception as e:
@@ -685,6 +686,15 @@ def cmd_tls_probe(args):
     local_error. Go decides what each means for the mode."""
     xs = Exchanges(f"{args.host}:{args.port}")
     doc = {"mode": args.mode, "observation": "", "detail": ""}
+    web = None
+    if args.base_url:  # DICOMweb target: the probe is one bare HTTP request
+        import urllib.parse
+
+        u = urllib.parse.urlsplit(args.base_url)
+        args.host = u.hostname or ""
+        args.port = u.port or (443 if u.scheme == "https" else 80)
+        web = (u.netloc, u.path.rstrip("/") + "/studies?limit=1")
+        xs = Exchanges(args.base_url)
 
     def finish(obs, detail):
         doc["observation"], doc["detail"] = obs, detail
@@ -704,7 +714,7 @@ def cmd_tls_probe(args):
         except ConfigError as e:
             finish("local_error", str(e))
             return
-    sock, fail = _connect(args, xs)
+    sock, fail = _connect(args, xs, "http" if web else "dimse")
     if sock is None:
         finish(fail[0], fail[2])
         return
@@ -718,7 +728,10 @@ def cmd_tls_probe(args):
                 # The target completed a handshake with the old version.
                 finish("handshake_completed", f"handshake completed with {sock.version()}")
                 return
-        obs, detail = _probe_association(sock, args, xs)
+        if web:
+            obs, detail = _probe_http(sock, args, xs, web[0], web[1])
+        else:
+            obs, detail = _probe_association(sock, args, xs)
         finish(obs, detail)
     finally:
         try:
@@ -998,6 +1011,7 @@ def cmd_store(args):
     for p in infos:
         r = {"file": p["file"], "sop_instance_uid": p.get("sop_instance_uid", ""),
              "study_instance_uid": p.get("study_instance_uid", ""),
+             "series_instance_uid": p.get("series_instance_uid", ""),
              "transfer_syntax_uid": p.get("transfer_syntax_uid", "")}
         if not p.get("dicom"):
             r.update(status=None, error=p.get("error", "not a DICOM file"))
@@ -1185,6 +1199,770 @@ def cmd_compare(args):
     out({"files": results})
 
 
+# ---------------------------------------------------------------- DICOMweb (DVT-SRS-111..136, -151, -154, -155)
+#
+# A plain HTTP/1.1 client on the standard library (http.client over the one
+# TLS context factory). Every request is one connection, opened after the
+# previous one closed, so a target never sees parallel traffic
+# (DVT-SRS-155). Redirects are never followed (DVT-SRS-151). The worker
+# reports facts; Go decides.
+
+REDACTED = "[REDACTED]"
+TOKEN_CHARS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~+/")
+MIN_TOKEN = 16
+DICOM_JSON = "application/dicom+json"
+ACCEPT_MULTIPART = 'multipart/related; type="application/dicom"'
+UNIQUE_KEY = {"studies": "0020000D", "series": "0020000E", "instances": "00080018"}
+TAG_STUDY, TAG_SERIES, TAG_SOP, TAG_CLASS = "0020000D", "0020000E", "00080018", "00080016"
+
+
+class WebConfigError(Exception):
+    """A DICOMweb setting or keyword is unusable: nothing was sent."""
+
+
+class LimitError(Exception):
+    """A configured size limit was reached (DVT-SRS-154)."""
+
+
+def _read_token(path):
+    """The bearer token from its file (DVT-SRS-111, -153). Errors never quote it."""
+    try:
+        with open(path, "rb") as fh:
+            raw = fh.read(1 << 20)
+    except OSError:
+        raise WebConfigError("auth token file not readable") from None
+    try:
+        tok = raw.decode("ascii").rstrip("\r\n")
+    except UnicodeDecodeError:
+        raise WebConfigError("auth token file is not ASCII") from None
+    body = tok.rstrip("=")
+    if ("\r" in tok or "\n" in tok or len(tok) < MIN_TOKEN or not body
+            or any(c not in TOKEN_CHARS for c in body)):
+        raise WebConfigError(f"auth token must be one line of at least {MIN_TOKEN} RFC 6750 token characters")
+    return tok
+
+
+def _is_loopback(host):
+    if host.lower() == "localhost":
+        return True
+    import ipaddress
+    try:
+        return ipaddress.ip_address(host.strip("[]")).is_loopback
+    except ValueError:
+        return False
+
+
+def media_type(value):
+    """(lower-case media type, {param: value}) of a Content-Type value."""
+    if value is None:
+        return "", {}
+    parts, cur, quoted = [], "", False
+    for ch in value:
+        if ch == '"':
+            quoted = not quoted
+            cur += ch
+        elif ch == ";" and not quoted:
+            parts.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    parts.append(cur)
+    params = {}
+    for p in parts[1:]:
+        if "=" not in p:
+            continue
+        k, v = p.split("=", 1)
+        v = v.strip()
+        if len(v) >= 2 and v[0] == v[-1] == '"':
+            v = v[1:-1]
+        params[k.strip().lower()] = v
+    return parts[0].strip().lower(), params
+
+
+class Web:
+    """One DICOMweb target: base URL, TLS, token, limits; records exchanges."""
+
+    def __init__(self, args):
+        import urllib.parse
+
+        u = urllib.parse.urlsplit(args.base_url)
+        if u.scheme not in ("http", "https") or not u.hostname or u.username or u.query or u.fragment:
+            raise WebConfigError("base URL must be http(s)://host[:port][/path] without user-info, query or fragment")
+        self.args = args
+        self.https = u.scheme == "https"
+        self.host = u.hostname
+        self.port = u.port or (443 if self.https else 80)
+        self.netloc = u.netloc
+        self.origin = (u.scheme, self.host.lower(), self.port)
+        self.base = f"{u.scheme}://{u.netloc}"
+        self.path = u.path.rstrip("/")
+        self.timeout = args.timeout
+        self.xs = Exchanges(args.base_url)
+        self.token = None
+        if args.token_file:
+            if not self.https and not _is_loopback(self.host):
+                # DVT-SRS-112: never a token in clear text off the host.
+                raise WebConfigError("a bearer token over http is only sent to a loopback host")
+            self.token = _read_token(args.token_file)
+        self.ctx = None
+        if self.https:
+            args.host = self.host  # name checked against the certificate unless --server-name
+            try:
+                self.ctx = tls_client_context(args)
+            except ConfigError as e:
+                raise WebConfigError(str(e)) from None
+
+    def url(self, target):
+        return self.base + target
+
+    def same_origin(self, url):
+        import urllib.parse
+
+        u = urllib.parse.urlsplit(url)
+        try:
+            port = u.port or (443 if u.scheme == "https" else 80)
+        except ValueError:
+            return False
+        return (u.scheme, (u.hostname or "").lower(), port) == self.origin
+
+    def request(self, method, target, accept, body=None, content_type=None, max_bytes=None):
+        """One request on its own connection. Returns (status, content type,
+        body, exchange) or None when it failed (the failure is in the
+        exchange)."""
+        import http.client
+
+        a = self.args
+        max_bytes = max_bytes or a.max_response_bytes
+        url = self.url(target)
+        x = self.xs.start("http", method)
+        x["endpoint"] = url
+        headers = [("Host", self.netloc), ("Accept", accept), ("User-Agent", f"LibreDVT-worker/{WORKER_VERSION}"),
+                   ("Connection", "close")]
+        if body is not None:
+            headers += [("Content-Type", content_type), ("Content-Length", str(len(body)))]
+        if self.token and self.same_origin(url):  # own origin only (DVT-SRS-111)
+            headers.append(("Authorization", "Bearer " + self.token))
+        rec = {}
+        for k, v in headers:
+            rec.setdefault(k, []).append(REDACTED if k.lower() == "authorization" else v)
+        info = {"method": method, "url": url, "request_headers": rec, "status": 0}
+        x["http"] = info
+        try:
+            sock = socket.create_connection((self.host, self.port), timeout=self.timeout)
+        except Exception as e:
+            _, kind, msg = classify_error(e)
+            self.xs.done(x, "error", kind, msg)
+            return None
+        try:
+            if self.ctx is not None:
+                try:
+                    ts = self.ctx.wrap_socket(sock, server_hostname=a.server_name or self.host,
+                                              do_handshake_on_connect=False)
+                    ts.settimeout(self.timeout)
+                    ts.do_handshake()
+                except Exception as e:
+                    obs, kind, msg = classify_error(e)
+                    t = {"version": "", "cipher": "", "verified": False, "client_cert_sent": False}
+                    if obs == "cert_verify_failed":
+                        t["verify_error"] = msg
+                    x["tls"] = t
+                    self.xs.done(x, "error", kind, msg)
+                    return None
+                x["tls"] = tls_facts(ts, bool(getattr(a, "client_cert", None)))
+                sock = ts
+            conn = http.client.HTTPConnection(self.host, self.port, timeout=self.timeout)
+            conn.sock = sock
+            conn.putrequest(method, target, skip_host=True, skip_accept_encoding=True)
+            for k, v in headers:
+                conn.putheader(k, v)
+            conn.endheaders()
+            if body is not None:
+                view = memoryview(body)
+                for i in range(0, len(body), 1 << 16):
+                    conn.send(view[i:i + (1 << 16)])
+            resp = conn.getresponse()
+            info["status"] = resp.status
+            rh = {}
+            for k, v in resp.getheaders():
+                rh.setdefault(k, []).append(REDACTED if k.lower() in ("authorization", "set-cookie") else v)
+            info["response_headers"] = rh
+            data = bytearray()
+            while True:
+                chunk = resp.read(1 << 20)
+                if not chunk:
+                    break
+                data += chunk
+                if len(data) > max_bytes:
+                    raise LimitError(f"response body larger than the limit ({max_bytes} bytes)")
+            data = bytes(data)
+        except LimitError as e:
+            self.xs.done(x, "error", "limit", str(e))
+            return None
+        except http.client.IncompleteRead as e:
+            self.xs.done(x, "error", "protocol", f"truncated response body ({len(e.partial)} bytes, more expected)")
+            return None
+        except (http.client.HTTPException, ValueError) as e:
+            self.xs.done(x, "error", "protocol", f"malformed HTTP response: {e.__class__.__name__}: {e}")
+            return None
+        except Exception as e:
+            _, kind, msg = classify_error(e)
+            self.xs.done(x, "error", kind, msg)
+            return None
+        finally:
+            try:
+                sock.close()
+            except Exception:
+                pass
+        ctype = resp.getheader("Content-Type") or ""
+        b = {"content_type": ctype, "size": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+        mt, _ = media_type(ctype)
+        if data and not mt.startswith("multipart/") and a.max_excerpt > 0:
+            b["excerpt"] = data[:a.max_excerpt].decode("utf-8", "replace")
+            if len(data) > a.max_excerpt:
+                b["excerpt_truncated"] = True
+        info["body"] = b
+        self.xs.done(x)
+        return resp.status, ctype, data, x
+
+    def fail(self, x, kind, message):
+        """Turn a completed exchange into a failed one (protocol or limit
+        error found while reading its body)."""
+        x["outcome"] = "error"
+        x["error"] = {"kind": kind, "message": message}
+
+
+def parse_multipart(ctype, body, max_parts, max_part_bytes):
+    """Strict multipart/related parser (RFC 2046 §5.1, RFC 2387). Returns a
+    list of (headers, data). Raises ValueError (protocol) or LimitError."""
+    mt, params = media_type(ctype)
+    if mt != "multipart/related":
+        raise ValueError(f"Content-Type is {mt or 'missing'}, not multipart/related")
+    boundary = params.get("boundary", "")
+    if not boundary or len(boundary) > 70:
+        raise ValueError("no usable boundary parameter in the Content-Type")
+    delim = b"--" + boundary.encode("latin-1")
+    if body.startswith(delim):
+        pos = 0
+    else:
+        i = body.find(b"\r\n" + delim)
+        if i < 0:
+            raise ValueError("the body does not contain the boundary from the Content-Type")
+        pos = i + 2
+    parts = []
+    while True:
+        pos += len(delim)
+        if body[pos:pos + 2] == b"--":
+            return parts  # closing delimiter
+        j = pos
+        while body[j:j + 1] in (b" ", b"\t"):
+            j += 1
+        if body[j:j + 2] != b"\r\n":
+            raise ValueError("a boundary delimiter is not followed by CRLF or '--' (truncated or malformed body)")
+        hstart = j + 2
+        if body[hstart:hstart + 2] == b"\r\n":
+            hraw, dstart = b"", hstart + 2
+        else:
+            hend = body.find(b"\r\n\r\n", hstart)
+            if hend < 0:
+                raise ValueError(f"part {len(parts) + 1}: headers not terminated")
+            hraw, dstart = body[hstart:hend], hend + 4
+        headers = {}
+        for line in hraw.split(b"\r\n") if hraw else []:
+            if b":" not in line:
+                raise ValueError(f"part {len(parts) + 1}: malformed header line")
+            k, v = line.split(b":", 1)
+            headers[k.decode("latin-1").strip().lower()] = v.decode("latin-1").strip()
+        # Next delimiter: CRLF--boundary followed by '--' or LWSP*CRLF. The
+        # boundary text elsewhere in the data does not end the part.
+        k = dstart
+        while True:
+            k = body.find(b"\r\n" + delim, k)
+            if k < 0:
+                raise ValueError(f"part {len(parts) + 1}: no closing boundary delimiter (truncated body)")
+            after = k + 2 + len(delim)
+            rest = body[after:after + 2]
+            m = after
+            while body[m:m + 1] in (b" ", b"\t"):
+                m += 1
+            if rest == b"--" or body[m:m + 2] == b"\r\n" or after == len(body):
+                break
+            k += 1
+        data = body[dstart:k]
+        if len(data) > max_part_bytes:
+            raise LimitError(f"part {len(parts) + 1} is larger than the limit ({max_part_bytes} bytes)")
+        parts.append((headers, data))
+        if len(parts) > max_parts:
+            raise LimitError(f"more than {max_parts} parts (limit)")
+        pos = k + 2
+
+
+def _keyword_tag(key):
+    """8-hex tag for a keyword or tag (pydicom's dictionary), or WebConfigError."""
+    from pydicom.datadict import tag_for_keyword
+
+    if len(key) == 8 and all(c in "0123456789abcdefABCDEF" for c in key):
+        return key.upper()
+    t = tag_for_keyword(key)
+    if t is None:
+        raise WebConfigError(f"{key!r} is not a keyword in the DICOM dictionary; nothing was sent")
+    return f"{t:08X}"
+
+
+def _vr(tag):
+    from pydicom.datadict import dictionary_VR
+
+    try:
+        return dictionary_VR(int(tag, 16))
+    except KeyError:
+        return "UN"
+
+
+def _json_value_strings(el):
+    """String forms of a DICOM JSON element's values (PS3.18 F.2). Sequences
+    and bulk data give no strings."""
+    vals = el.get("Value")
+    if not isinstance(vals, list):
+        return []
+    outv = []
+    for v in vals:
+        if isinstance(v, str):
+            outv.append(v)
+        elif isinstance(v, bool):
+            continue
+        elif isinstance(v, (int, float)):
+            outv.append(json.dumps(v))
+        elif isinstance(v, dict) and "Alphabetic" in v:
+            outv.append(str(v["Alphabetic"]))
+    return outv
+
+
+def check_dicom_json_object(o):
+    """'' when o looks like a DICOM JSON object (PS3.18 F.2), else why not."""
+    if not isinstance(o, dict):
+        return f"an item is a JSON {type(o).__name__}, not an object"
+    for k, v in o.items():
+        if len(k) != 8 or any(c not in "0123456789ABCDEF" for c in k):
+            return f"key {k[:20]!r} is not an 8-hex-digit tag"
+        if not isinstance(v, dict) or not isinstance(v.get("vr"), str) or len(v["vr"]) != 2:
+            return f"attribute {k} has no two-letter vr"
+    return ""
+
+
+def _load_json(data, limit):
+    if len(data) > limit:
+        raise LimitError(f"DICOM JSON document larger than the limit ({limit} bytes)")
+    return json.loads(data.decode("utf-8"))
+
+
+def web_doc(web, extra):
+    doc = {"exchanges": web.xs.doc()}
+    doc.update(extra)
+    return doc
+
+
+def _config_failure(e, extra):
+    out(dict(extra, exchanges=[], config_error=str(e)))
+
+
+# ---- qido
+
+def _qido_path(level, study, series):
+    if level == "studies":
+        return "/studies"
+    if level == "series":
+        return f"/studies/{study}/series" if study else "/series"
+    if study and series:
+        return f"/studies/{study}/series/{series}/instances"
+    return f"/studies/{study}/instances" if study else "/instances"
+
+
+def _exact(value, vr, fuzzy):
+    """Single-value matching without wildcards (DVT-SRS-116)."""
+    if value == "" or any(c in value for c in "*?\\"):
+        return False
+    if vr == "UI" and "," in value:
+        return False  # UID list matching
+    if vr in ("DA", "TM", "DT") and "-" in value:
+        return False  # range matching
+    if vr == "PN" and fuzzy:
+        return False
+    return True
+
+
+def cmd_qido(args):
+    import urllib.parse
+
+    base = {"keywords": {}, "query": [], "pages": [], "page_limit_reached": False}
+    try:
+        web = Web(args)
+        query = []
+        for q in args.query or []:
+            if "=" not in q:
+                raise WebConfigError(f"bad query {q!r}")
+            k, v = q.split("=", 1)
+            tag = _keyword_tag(k)
+            vr = _vr(tag)
+            query.append({"key": k, "tag": tag, "vr": vr, "value": v, "exact": _exact(v, vr, args.fuzzymatching)})
+        keywords = {}
+        for k in (args.keyword or []):
+            keywords[k] = _keyword_tag(k)
+        for k in (args.includefield or []):
+            if k != "all":
+                keywords.setdefault(k, _keyword_tag(k))
+    except WebConfigError as e:
+        _config_failure(e, base)
+        return
+    base["keywords"], base["query"] = keywords, query
+    want = set(UNIQUE_KEY.values()) | {q["tag"] for q in query} | set(keywords.values())
+    path = web.path + _qido_path(args.level, args.study, args.series)
+    # from_store: one search per expected UID on the level's unique key, so
+    # a large archive's default page size cannot hide an object.
+    searches = list(args.uid_filter) if args.uid_filter else [None]
+    pages = []
+    for uid in searches:
+        params = [(q["key"], q["value"]) for q in query]
+        if uid is not None:
+            params.append((UNIQUE_KEY[args.level], uid))
+        for k in args.includefield or []:
+            params.append(("includefield", k))
+        if args.fuzzymatching:
+            params.append(("fuzzymatching", "true"))
+        offset = args.offset if args.limit else None
+        if args.limit and offset is None:
+            offset = 0
+        while True:
+            p = list(params)
+            if args.limit:
+                p += [("limit", str(args.limit)), ("offset", str(offset))]
+            target = path + ("?" + urllib.parse.urlencode(p, quote_via=urllib.parse.quote) if p else "")
+            page = {"search": uid or "", "offset": offset, "status": 0, "content_type": "", "json": "none",
+                    "detail": "", "objects": []}
+            pages.append(page)
+            got = web.request("GET", target, DICOM_JSON)
+            if got is None:
+                page["exchange"] = web.xs.items[-1]["seq"]
+                break
+            status, ctype, data, x = got
+            page.update(exchange=x["seq"], status=status, content_type=ctype)
+            if status == 204 or (status == 200 and not data):
+                page["json"] = "empty"
+            elif data:
+                try:
+                    doc = _load_json(data, args.max_json_bytes)
+                except LimitError as e:
+                    web.fail(x, "limit", str(e))
+                    break
+                except (ValueError, UnicodeDecodeError) as e:
+                    page["json"], page["detail"] = "invalid", f"not JSON: {e.__class__.__name__}"
+                    doc = None
+                if doc is not None:
+                    if not isinstance(doc, list):
+                        page["json"], page["detail"] = "not_array", f"a JSON {type(doc).__name__}, not an array"
+                    else:
+                        bad = next((w for w in (check_dicom_json_object(o) for o in doc) if w), "")
+                        if bad:
+                            page["json"], page["detail"] = "not_dicom_json", bad
+                        else:
+                            page["json"] = "array"
+                            for o in doc:
+                                page["objects"].append({
+                                    "present": sorted(o.keys()),
+                                    "values": {t: _json_value_strings(o[t]) for t in sorted(want) if t in o}})
+            n = len(page["objects"])
+            if not args.limit or status != 200 or page["json"] != "array" or n != args.limit:
+                break
+            if len([pg for pg in pages if pg["search"] == (uid or "")]) >= args.max_pages:
+                base["page_limit_reached"] = True
+                break
+            offset += args.limit
+    base["pages"] = pages
+    out(web_doc(web, base))
+
+
+# ---- wado
+
+def _canonical(value):
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
+def _file_attrs(path, tags):
+    """sop uid and canonical DICOM JSON values of the named tags in a file."""
+    ds, err = _read(path)
+    if ds is None:
+        return {"file": path, "error": err}
+    attrs = {}
+    for t in tags:
+        tag = int(t, 16)
+        if tag not in ds:
+            attrs[t] = "(absent)"
+            continue
+        j = ds[tag].to_json_dict(None, 0)
+        attrs[t] = _canonical(j["Value"]) if "Value" in j else "(empty)"
+    return {"file": path, "sop_instance_uid": str(ds.get("SOPInstanceUID", "")), "attrs": attrs}
+
+
+def _dicom_part(data, path):
+    """Facts of one received part; the bytes are written to path unchanged."""
+    import io
+
+    import pydicom
+
+    try:
+        ds = pydicom.dcmread(io.BytesIO(data), stop_before_pixels=True)
+        ts = str(ds.file_meta.TransferSyntaxUID)
+    except Exception as e:
+        return {"error": f"not a DICOM Part 10 object: {e.__class__.__name__}"}
+    with open(path, "wb") as fh:
+        fh.write(data)
+    return {"transfer_syntax": ts, "sop_instance_uid": str(ds.get("SOPInstanceUID", "")),
+            "sop_class_uid": str(ds.get("SOPClassUID", "")), "study_instance_uid": str(ds.get("StudyInstanceUID", "")),
+            "series_instance_uid": str(ds.get("SeriesInstanceUID", "")), "file": path}
+
+
+def cmd_wado(args):
+    base = {"parts": [], "metadata": [], "originals": [], "keywords": {}}
+    try:
+        web = Web(args)
+        keywords = {k: _keyword_tag(k) for k in (args.attr or [])}
+    except WebConfigError as e:
+        _config_failure(e, base)
+        return
+    base["keywords"] = keywords
+    if args.metadata:
+        base["originals"] = [_file_attrs(f, sorted(set(keywords.values()))) for f in args.expect_file or []]
+    os.makedirs(args.out, exist_ok=True)
+    for res in args.resource:
+        if args.metadata:
+            got = web.request("GET", web.path + res + "/metadata", DICOM_JSON, max_bytes=args.max_json_bytes)
+            if got is None:
+                continue
+            status, ctype, data, x = got
+            if status != 200:
+                continue
+            mt, _ = media_type(ctype)
+            if mt != DICOM_JSON:
+                web.fail(x, "protocol", f"metadata Content-Type is {mt or 'missing'}, not {DICOM_JSON}")
+                continue
+            try:
+                doc = _load_json(data, args.max_json_bytes)
+            except LimitError as e:
+                web.fail(x, "limit", str(e))
+                continue
+            except (ValueError, UnicodeDecodeError) as e:
+                web.fail(x, "protocol", f"metadata is not JSON: {e.__class__.__name__}")
+                continue
+            if not isinstance(doc, list):
+                web.fail(x, "protocol", "metadata is not a JSON array")
+                continue
+            bad = next((w for w in (check_dicom_json_object(o) for o in doc) if w), "")
+            if bad:
+                web.fail(x, "protocol", f"metadata is not DICOM JSON: {bad}")
+                continue
+            for o in doc:
+                rec = {"exchange": x["seq"]}
+                for name, tag in (("study_instance_uid", TAG_STUDY), ("series_instance_uid", TAG_SERIES),
+                                  ("sop_instance_uid", TAG_SOP)):
+                    v = _json_value_strings(o.get(tag, {}))
+                    rec[name] = v[0] if v else ""
+                rec["attrs"] = {}
+                for tag in sorted(set(keywords.values())):
+                    if tag not in o:
+                        rec["attrs"][tag] = "(absent)"
+                    elif "Value" in o[tag]:
+                        rec["attrs"][tag] = _canonical(o[tag]["Value"])
+                    else:
+                        rec["attrs"][tag] = "(empty)"
+                base["metadata"].append(rec)
+            continue
+        accept = ACCEPT_MULTIPART
+        if args.transfer_syntax:
+            accept += f"; transfer-syntax={args.transfer_syntax}"
+        got = web.request("GET", web.path + res, accept)
+        if got is None:
+            continue
+        status, ctype, data, x = got
+        if status != 200:
+            continue
+        try:
+            parts = parse_multipart(ctype, data, args.max_parts, args.max_part_bytes)
+        except LimitError as e:
+            web.fail(x, "limit", str(e))
+            continue
+        except ValueError as e:
+            web.fail(x, "protocol", f"multipart: {e}")
+            continue
+        infos = []
+        for i, (h, pdata) in enumerate(parts, 1):
+            pct = h.get("content-type", "")
+            pmt, pparams = media_type(pct)
+            rec = {"exchange": x["seq"], "index": i, "content_type": pct, "media_type": pmt,
+                   "ts_param": pparams.get("transfer-syntax", ""), "size": len(pdata),
+                   "sha256": hashlib.sha256(pdata).hexdigest()}
+            if pmt != "application/dicom":
+                rec["error"] = f"part Content-Type is {pmt or 'missing'}, not application/dicom"
+            else:
+                rec.update(_dicom_part(pdata, os.path.join(args.out, f"x{x['seq']:03d}-p{i:05d}.dcm")))
+            base["parts"].append(rec)
+            infos.append({"index": i, "content_type": pct, "transfer_syntax": rec.get("transfer_syntax", ""),
+                          "sop_instance_uid": rec.get("sop_instance_uid", ""), "size": len(pdata),
+                          "sha256": rec["sha256"]})
+        x["http"]["parts"] = infos
+    out(web_doc(web, base))
+
+
+# ---- stow
+
+def _reason(item, tag):
+    v = item.get(tag, {}).get("Value") if isinstance(item.get(tag), dict) else None
+    if isinstance(v, list) and v and isinstance(v[0], int) and not isinstance(v[0], bool):
+        return f"0x{v[0]:04X}"
+    if isinstance(v, list) and v:
+        return str(v[0])
+    return ""
+
+
+def _first(item, tag):
+    v = _json_value_strings(item.get(tag, {})) if isinstance(item.get(tag), dict) else []
+    return v[0] if v else ""
+
+
+def _seq_items(o, tag):
+    el = o.get(tag)
+    if not isinstance(el, dict):
+        return []
+    v = el.get("Value")
+    return [i for i in v if isinstance(i, dict)] if isinstance(v, list) else []
+
+
+def parse_stow_response(ctype, data, limit):
+    """Facts of a STOW-RS response body (DVT-SRS-129)."""
+    r = {"json": "", "detail": "", "referenced": [], "failed": [], "retrieve_url": "", "warning_reason": ""}
+    mt, _ = media_type(ctype)
+    if not data:
+        r["json"] = "empty"
+        return r
+    if mt != DICOM_JSON:
+        r["json"], r["detail"] = "other_type", f"Content-Type {mt or 'missing'}"
+        return r
+    doc = _load_json(data, limit) if len(data) <= limit else None
+    if doc is None:
+        raise LimitError(f"DICOM JSON document larger than the limit ({limit} bytes)")
+    if not isinstance(doc, dict):
+        r["json"], r["detail"] = "not_object", f"a JSON {type(doc).__name__}, not an object"
+        return r
+    bad = check_dicom_json_object(doc)
+    if bad:
+        r["json"], r["detail"] = "not_dicom_json", bad
+        return r
+    r["json"] = "object"
+    r["retrieve_url"] = _first(doc, "00081190")
+    r["warning_reason"] = _reason(doc, "00081196")
+    for it in _seq_items(doc, "00081199"):
+        r["referenced"].append({"sop_class_uid": _first(it, "00081150"), "sop_instance_uid": _first(it, "00081155"),
+                                "retrieve_url": _first(it, "00081190"), "warning_reason": _reason(it, "00081196")})
+    for it in _seq_items(doc, "00081198"):
+        r["failed"].append({"sop_class_uid": _first(it, "00081150"), "sop_instance_uid": _first(it, "00081155"),
+                            "failure_reason": _reason(it, "00081197")})
+    return r
+
+
+def cmd_stow(args):
+    import uuid
+
+    files = []
+    for f in args.files:
+        p = probe_one(f)
+        rec = {"file": f}
+        if not p.get("dicom") or not p.get("transfer_syntax_uid") or not p.get("sop_instance_uid"):
+            rec["error"] = p.get("error") or "not a DICOM Part 10 file with file meta and SOP Instance UID"
+        else:
+            try:
+                with open(f, "rb") as fh:
+                    data = fh.read()
+            except OSError as e:
+                rec["error"] = f"cannot read: {e.__class__.__name__}"
+                data = b""
+            rec.update(sop_instance_uid=p["sop_instance_uid"], sop_class_uid=p["sop_class_uid"],
+                       study_instance_uid=p["study_instance_uid"], series_instance_uid=p.get("series_instance_uid", ""),
+                       transfer_syntax=p["transfer_syntax_uid"], size=len(data),
+                       sha256=hashlib.sha256(data).hexdigest())
+        files.append(rec)
+    base = {"files": files, "requests": []}
+    if any("error" in f for f in files):  # DVT-SRS-133: nothing is sent
+        out(dict(base, exchanges=[]))
+        return
+    try:
+        web = Web(args)
+    except WebConfigError as e:
+        _config_failure(e, base)
+        return
+    target = web.path + (f"/studies/{args.study}" if args.study else "/studies")
+    for start in range(0, len(files), args.batch_size):
+        batch = list(range(start, min(start + args.batch_size, len(files))))
+        boundary = "libredvt-" + uuid.uuid4().hex
+        body = bytearray()
+        for i in batch:
+            with open(files[i]["file"], "rb") as fh:
+                body += b"--" + boundary.encode() + b"\r\nContent-Type: application/dicom\r\n\r\n" + fh.read() + b"\r\n"
+        body += b"--" + boundary.encode() + b"--\r\n"
+        ctype = f'multipart/related; type="application/dicom"; boundary={boundary}'
+        req = {"files": batch}
+        base["requests"].append(req)
+        got = web.request("POST", target, DICOM_JSON, body=bytes(body), content_type=ctype,
+                          max_bytes=args.max_json_bytes)
+        if got is None:
+            req["exchange"] = web.xs.items[-1]["seq"]
+            continue
+        status, rctype, data, x = got
+        req.update(exchange=x["seq"], status=status)
+        try:
+            req.update(parse_stow_response(rctype, data, args.max_json_bytes))
+        except LimitError as e:
+            web.fail(x, "limit", str(e))
+        except (ValueError, UnicodeDecodeError) as e:
+            req.update(json="invalid", detail=f"not JSON: {e.__class__.__name__}", referenced=[], failed=[],
+                       retrieve_url="", warning_reason="")
+    out(web_doc(web, base))
+
+
+# ---- tls-probe over HTTP (DVT-SRS-105, -106)
+
+def _probe_http(sock, args, xs, web_host, target):
+    """Send one bare GET (no Authorization) and see whether an HTTP response
+    comes back."""
+    x = xs.start("http", "GET")
+    x["endpoint"] = args.base_url.rstrip("/") + "/studies?limit=1"
+    x["http"] = {"method": "GET", "url": x["endpoint"], "status": 0}
+    sock.settimeout(args.timeout)
+    try:
+        sock.sendall(f"GET {target} HTTP/1.1\r\nHost: {web_host}\r\nAccept: {DICOM_JSON}\r\n"
+                     f"Connection: close\r\n\r\n".encode("latin-1"))
+        buf = b""
+        while b"\r\n" not in buf and len(buf) < 65536:
+            chunk = sock.recv(4096)
+            if not chunk:
+                break
+            buf += chunk
+    except Exception as e:
+        obs, kind, msg = classify_error(e)
+        if obs in ("handshake_alert", "connection_closed", "connection_reset"):
+            xs.done(x, "refused")
+            return obs, msg
+        xs.done(x, "error", kind, msg)
+        return obs, msg
+    if not buf:
+        xs.done(x, "refused")
+        return "connection_closed", "the target closed the connection without answering"
+    line = buf.split(b"\r\n", 1)[0]
+    parts = line.split(b" ")
+    if len(parts) >= 2 and parts[0] in (b"HTTP/1.0", b"HTTP/1.1") and parts[1].isdigit():
+        x["http"]["status"] = int(parts[1])
+        xs.done(x)
+        return "http_reply", f"the target answered with HTTP status {int(parts[1])}"
+    xs.done(x, "refused")
+    return "non_http_reply", f"the target sent {len(buf)} byte(s) that are not an HTTP response"
+
+
 # ---------------------------------------------------------------- main
 
 def main(argv=None):
@@ -1203,11 +1981,11 @@ def main(argv=None):
     i.add_argument("--edition", required=True)
     i.add_argument("files", nargs="+")
 
-    def target(sp, client_cert=True):
-        sp.add_argument("--host", required=True)
-        sp.add_argument("--port", type=int, required=True)
-        sp.add_argument("--called-aet", required=True)
-        sp.add_argument("--calling-aet", required=True)
+    def target(sp, client_cert=True, required=True):
+        sp.add_argument("--host", required=required)
+        sp.add_argument("--port", type=int, required=required)
+        sp.add_argument("--called-aet", required=required)
+        sp.add_argument("--calling-aet", required=required)
         sp.add_argument("--timeout", type=float, default=30)
         sp.add_argument("--impl-uid")
         sp.add_argument("--impl-version")
@@ -1245,16 +2023,66 @@ def main(argv=None):
     a.add_argument("--context", action="append", required=True)
     a.add_argument("--async-ops")
     tp = sub.add_parser("tls-probe")
-    target(tp, client_cert=False)
+    target(tp, client_cert=False, required=False)
+    tp.add_argument("--base-url")  # DICOMweb target: probe with one bare HTTP request
     tp.add_argument("--mode", choices=["plaintext", "tls_version", "no_client_cert"], required=True)
     tp.add_argument("--tls-version", choices=sorted(OLD_TLS))
 
+    def web(sp):
+        # A DICOMweb target: base URL, TLS by its scheme, a token by file path
+        # only (DVT-SRS-153), and the plan's limits (DVT-SRS-154).
+        sp.add_argument("--base-url", required=True)
+        sp.add_argument("--timeout", type=float, default=30)
+        sp.add_argument("--token-file")
+        sp.add_argument("--tls-min", choices=sorted(TLS_MIN), default="1.2")
+        sp.add_argument("--ca-file")
+        sp.add_argument("--server-name")
+        sp.add_argument("--client-cert")
+        sp.add_argument("--client-key")
+        for name, default in (("max-response-bytes", 512 << 20), ("max-parts", 1000), ("max-part-bytes", 256 << 20),
+                              ("max-json-bytes", 32 << 20), ("max-pages", 100), ("max-excerpt", 64 << 10)):
+            sp.add_argument("--" + name, type=int, default=default)
+
+    q = sub.add_parser("qido")
+    web(q)
+    q.add_argument("--level", choices=sorted(UNIQUE_KEY), required=True)
+    q.add_argument("--study")
+    q.add_argument("--series")
+    q.add_argument("--query", action="append")
+    q.add_argument("--includefield", action="append")
+    q.add_argument("--fuzzymatching", action="store_true")
+    q.add_argument("--limit", type=int)
+    q.add_argument("--offset", type=int)
+    q.add_argument("--keyword", action="append")
+    q.add_argument("--uid-filter", action="append")
+    w = sub.add_parser("wado")
+    web(w)
+    w.add_argument("--resource", action="append", required=True)
+    w.add_argument("--transfer-syntax")
+    w.add_argument("--out", required=True)
+    w.add_argument("--metadata", action="store_true")
+    w.add_argument("--attr", action="append")
+    w.add_argument("--expect-file", action="append")
+    st = sub.add_parser("stow")
+    web(st)
+    st.add_argument("--study")
+    st.add_argument("--batch-size", type=int, default=10)
+    st.add_argument("files", nargs="+")
+
     args = p.parse_args(argv)
-    if args.cmd == "tls-probe" and (args.mode == "tls_version") != (args.tls_version is not None):
-        p.error("--tls-version is required with --mode tls_version and not allowed otherwise")
+    if args.cmd == "tls-probe":
+        if (args.mode == "tls_version") != (args.tls_version is not None):
+            p.error("--tls-version is required with --mode tls_version and not allowed otherwise")
+        if not args.base_url and not (args.host and args.port and args.called_aet and args.calling_aet):
+            p.error("tls-probe needs --base-url or --host, --port, --called-aet and --calling-aet")
+    if args.cmd == "qido" and args.limit is not None and not 1 <= args.limit <= 1000:
+        p.error("--limit must be 1-1000")
+    if args.cmd == "stow" and not 1 <= args.batch_size <= 100:
+        p.error("--batch-size must be 1-100")
     {"versions": cmd_versions, "probe": cmd_probe, "iod": cmd_iod, "echo": cmd_echo,
      "reject": cmd_reject, "store": cmd_store, "find": cmd_find, "move": cmd_move,
-     "compare": cmd_compare, "associate": cmd_associate, "tls-probe": cmd_tls_probe}[args.cmd](args)
+     "compare": cmd_compare, "associate": cmd_associate, "tls-probe": cmd_tls_probe,
+     "qido": cmd_qido, "wado": cmd_wado, "stow": cmd_stow}[args.cmd](args)
 
 
 if __name__ == "__main__":
