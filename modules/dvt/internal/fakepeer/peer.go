@@ -514,7 +514,7 @@ func (c cmdSet) us(tag uint32) uint16 {
 func elem(tag uint32, v []byte) []byte {
 	b := make([]byte, 8, 8+len(v))
 	binary.LittleEndian.PutUint16(b, uint16(tag>>16))
-	binary.LittleEndian.PutUint16(b[2:], uint16(tag))
+	binary.LittleEndian.PutUint16(b[2:], uint16(tag))    // #nosec G115 -- element number: the low 16 bits by definition
 	binary.LittleEndian.PutUint32(b[4:], uint32(len(v))) // #nosec G115 -- command values are small
 	return append(b, v...)
 }
