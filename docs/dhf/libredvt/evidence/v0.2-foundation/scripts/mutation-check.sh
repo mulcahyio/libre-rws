@@ -95,7 +95,10 @@ mutate M27-step-redaction-off internal/runner $R/runner/runner.go '		s.Redact(se
 mutate M28-run-redaction-off internal/runner $R/runner/runner.go '	r.Redact(secrets)
 	return r' '	_ = secrets
 	return r'
-mutate M29-no-base64-forms internal/runner $R/redact/redact.go '		base64.StdEncoding.EncodeToString(b),
+mutate M29-no-base64-forms internal/runner $R/redact/redact.go '	b := []byte(token)
+' '	b := []byte(token)
+	_ = b
+' '		base64.StdEncoding.EncodeToString(b),
 ' '' '		base64.RawStdEncoding.EncodeToString(b),
 ' '' '		base64.URLEncoding.EncodeToString(b),
 ' '' '		base64.RawURLEncoding.EncodeToString(b),

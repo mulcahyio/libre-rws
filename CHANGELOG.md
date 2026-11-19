@@ -14,6 +14,39 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **LibreDVT v0.2 foundation (issue #34, card DVT-0.2/2, DRAFT for
+  approval).** First code of v0.2; v0.1 plans, targets and results behave
+  as before.
+  - Targets now have a protocol, `dimse` (default, so v0.1 records load
+    unchanged) or `dicomweb` (base URL, optional bearer token given as a
+    path to a token file), and an optional TLS block (CA, server name,
+    client certificate and key, TLS 1.2 or 1.3). There is no switch that
+    turns certificate checks off. The registry and the new
+    `libredvt run -targets FILE` are parsed strictly: unknown fields,
+    inline secrets and fields of the other protocol are refused. A bearer
+    token over `http://` is only allowed to a loopback host.
+  - Plans accept the v0.2 step types (`associate`, `tls_reject`, `qido`,
+    `wado`, `stow`) and a `limits` block with every rule of
+    `plan-schema.md`; a field of another step type is refused even with an
+    empty value, and a plan whose steps do not fit the target's protocol is
+    refused before any step runs. Until their engines are built (cards 3
+    and 4) these steps fail without sending anything, and a DIMSE target
+    with TLS refuses every step instead of connecting in clear text.
+  - Production guard extended: `stow`, `qido` and `wado` run only against
+    `lab` targets.
+  - Protocol-neutral evidence model and one verdict rule
+    (`result.DecideStep`): a step with no assertion fails as "nothing was
+    checked"; any problem fails; warnings give "pass with warnings".
+  - Secrets: referenced files are checked before any connection (missing,
+    empty, not a regular file, outside `LIBRE_DVT_SECRETS_DIR` for web runs);
+    no process starts with a secret in its arguments or environment; step
+    results, the run and the JSON/HTML/JUnit files are scanned for the
+    configured secrets, and a hit is replaced by `[REDACTED]` and fails the
+    run.
+  - Tested: 9 new test functions per area (schema, plan rules, protocol
+    check, guard, preflight, verdict rule, redaction, argv/env guard,
+    artefact scan); mutation check in
+    `docs/dhf/libredvt/evidence/v0.2-foundation/`.
 - **LibreDVT v0.2 design inputs (issue #34, DRAFT for approval).** Patrick
   approved v0.2 on 2026-11-19 with decisions D1–D5 (association + TLS tests,
   DICOMweb QIDO-RS/WADO-RS/STOW-RS, bearer-token plumbing, TLS 1.2+ with no
