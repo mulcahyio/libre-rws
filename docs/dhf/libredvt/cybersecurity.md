@@ -23,6 +23,74 @@ the controls below apply.
 DICOM TLS to targets is not in v0.1 (planned for v0.2 with the association
 and security tests).
 
+## v0.2 threat model: outbound connections (DRAFT for approval)
+
+Written 2026-11-19 by Hermes/Claude for issue #34. v0.2 adds outbound DICOM
+TLS, outbound HTTP(S) to DICOMweb servers, deliberate refusal probes, and
+new secrets (bearer tokens, client private keys). Targets may belong to
+clients and other vendors (intended use, user T4), so LibreDVT must protect
+the client's credentials and systems as well as its own results.
+
+### Data flow and trust boundaries
+
+```mermaid
+flowchart LR
+  subgraph Host["Auditor workstation or CI (trusted)"]
+    U[Operator browser or CLI]
+    subgraph C["libre/dvt container, uid 10001"]
+      G[Go: web UI, runner, verdicts, redaction]
+      W[Python worker: pynetdicom, ssl, http.client]
+      D[(Data directory: targets, runs, reports)]
+    end
+    S[(Secrets: token files, client keys, CA files)]
+  end
+  subgraph Net["Client or vendor network (untrusted)"]
+    TD[DIMSE target, optional TLS]
+    TW[DICOMweb target, HTTP or HTTPS]
+    O[Other origins: redirect or Retrieve URL hosts]
+  end
+  U -- "HTTPS or HTTP, 127.0.0.1, login + CSRF" --> G
+  G -- "exec, argv without secrets" --> W
+  S -. "read-only mount" .-> W
+  S -. "read for redaction scan" .-> G
+  G --> D
+  W -- "DICOM over TLS 1.2+" --> TD
+  TD -- "C-MOVE to built-in SCP, TLS 1.2+" --> W
+  W -- "HTTPS, bearer token to own origin only" --> TW
+  W -. "never contacted" .-> O
+```
+
+The boundary that matters for v0.2 is between the container and the
+client's network: everything a target sends is untrusted input, and
+nothing secret may cross it except the bearer token to the target's own
+origin over TLS (or loopback HTTP).
+
+### Threats and controls
+
+| Interface / asset | Threat | Control |
+|---|---|---|
+| DICOM TLS to targets | Man in the middle; a target with a wrong or expired certificate reported as secure | TLS 1.2+ only; chain verified against the target's CA or the trust store; host name checked against subjectAltName; no bypass setting exists (DVT-SRS-100…-103); TLS details recorded (DVT-SRS-107) |
+| Refusal probes (`tls_reject`) | The probe itself leaks credentials or data over a weak or plaintext connection | Probes send no token, no client certificate and no DICOM data beyond the association request or HTTP request line (DVT-SRS-106) |
+| DICOMweb requests | Token sent in clear; token sent to a redirect or Retrieve URL host; token sent to the wrong target | Bearer only over HTTPS or loopback HTTP (DVT-SRS-112); token only to the target's own origin (DVT-SRS-111); redirects never followed (DVT-SRS-151); Retrieve URLs to other origins never requested (DVT-SRS-132) |
+| Built-in Storage SCP with TLS | Unsolicited stores; a peer impersonating the target | Runs only during a move step (DVT-SRS-026); TLS 1.2+ with LibreDVT's own certificate; peer certificate verified against the target's CA, required by default (DVT-SRS-108); 127.0.0.1 by default |
+| Bearer tokens, client keys, SCP key | Disclosure in reports, logs, stored runs, process list, error messages | File references only, no inline fields (DVT-SRS-141); never in worker argv or environment (DVT-SRS-153); `Authorization` redacted; every artefact scanned for configured secrets before writing, a hit fails the run (DVT-SRS-152); web-managed references limited to `secrets_dir`; Compose mounts secrets read-only as Docker secrets |
+| Responses from untrusted targets | Memory or disk exhaustion; parser bugs triggered by hostile multipart, JSON or DICOM | Size and count limits on bodies, parts, JSON and pages, fail on reaching them (DVT-SRS-154, -117); strict multipart parser (DVT-SRS-120); worker runs per request as non-root, its crash is an engine error (DVT-SRS-150); received data stays under the run's directory |
+| Target configuration (web UI) | Authenticated user aims LibreDVT at arbitrary hosts (server-side request forgery) or reads arbitrary files through a CA/key path | Targets editable only after login with CSRF (DVT-SRS-061, -062); certificate and secret paths limited to `secrets_dir`; outbound requests only to configured targets, one at a time (DVT-SRS-155) |
+| Client systems | Overload or data written into a production system during an audit | Data steps only against `lab` targets (DVT-SRS-028, -134); one request at a time (DVT-SRS-155); page maximum; audits need the client's written authorisation (user docs) |
+| Audit reports | Report shared with a client exposes another client's data or secrets | Synthetic test data only; secret scan; one target per run; report records target identity and certificate fingerprint for the right client |
+
+### Residual risks and open points
+
+- Python's `ssl` module (OpenSSL in the pinned base image) may refuse to
+  offer TLS 1.0/1.1 at its default security level. Then `tls_reject` with
+  `tls_version` is an engine error (fail), which is safe but blocks that
+  check; card 4 records which versions the image can offer.
+- The redaction scan finds configured secret values only. A secret the
+  operator never configured (e.g. typed into a plan name) cannot be known;
+  the user guide says not to.
+- Certificate revocation (CRL/OCSP) is not checked in v0.2. Recorded as a
+  known limitation in the user documentation.
+
 ## Static analysis (2026-11-10)
 
 gosec v2.30.0 on `modules/dvt`: 26 findings, triaged to 0 open. Fixed: file

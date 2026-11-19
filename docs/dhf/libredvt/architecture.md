@@ -4,7 +4,7 @@
 |---|---|
 | Document | DHF-DVT-ARCH |
 | Status | **DRAFT for approval** (written 2026-11-10 by Hermes/Claude) |
-| Related | `SRS.md`, `risk-management.md`, `cybersecurity.md`; research: vault note *LibreDCMTK Research* |
+| Related | `SRS.md`, `risk-management.md`, `cybersecurity.md`, `plan-schema.md`, `evidence-model.md`; research: vault note *LibreDCMTK Research* |
 
 ## 1. Purpose
 
@@ -132,3 +132,80 @@ LibreDVT is a QMS tool, so these are recorded as tool configuration items
 
 All are compatible with LibreDVT's Apache-2.0 licence. DVTk (LGPL) and
 Wireshark (GPL) are not used in v0.1.
+
+## 7. v0.2 design (DRAFT for approval)
+
+Written 2026-11-19 by Hermes/Claude for issue #34 (decisions D1–D5 in
+`v0.2-plan.md`). Details: `plan-schema.md` (targets, plans, settings) and
+`evidence-model.md` (results). Requirements: `SRS.md` §6–§12.
+
+```mermaid
+flowchart TB
+  subgraph Go["Go (modules/dvt), never decodes DICOM"]
+    CLI["cmd/libredvt: run -targets FILE"]
+    WEB["internal/web: targets with protocol, TLS and secret refs"]
+    PLAN["internal/plan: strict schema, step type vs protocol"]
+    TGT["internal/store: targets (dimse, dicomweb), strict JSON"]
+    RUN["internal/runner: guards (lab only), one request at a time"]
+    ENG["internal/engine: worker client, output schema check"]
+    RES["internal/result: Evidence, assertions, DecideStep"]
+    RED["redaction and secret scan before write"]
+    REP["internal/report: HTML, JUnit, JSON"]
+  end
+  subgraph Py["Python worker (libredvt_worker.py)"]
+    ASSOC["associate, tls_reject"]
+    DIMSE["echo, store, find, move, reject (TLS optional)"]
+    WEBC["qido, wado, stow: http.client + ssl, strict multipart parser"]
+  end
+  CLI --> PLAN
+  WEB --> TGT
+  WEB --> PLAN
+  PLAN --> RUN
+  TGT --> RUN
+  RUN --> ENG
+  ENG --> ASSOC
+  ENG --> DIMSE
+  ENG --> WEBC
+  ENG --> RES
+  RUN --> RES
+  RES --> RED
+  RED --> REP
+```
+
+Design decisions (settled here so later cards do not decide them again):
+
+1. **The worker does all network I/O, Go decides.** New worker commands:
+   `associate`, `tls-probe`, `qido`, `wado`, `stow`. Each prints facts as
+   JSON (`evidence-model.md` §3); Go checks the output's shape, builds the
+   assertions and decides (DVT-SRS-143, -144). This keeps the v0.1 split and
+   keeps DICOM decoding out of Go.
+2. **DICOMweb client from the Python standard library.** `http.client` and
+   `ssl`, with LibreDVT's own strict multipart parser (DVT-SRS-120). No new
+   Python package is planned; DICOM JSON is read with pydicom (already
+   pinned). If a card needs a new package, that is a SOUP change with its
+   own evaluation.
+3. **TLS from Python `ssl`.** One context factory used by every command:
+   `minimum_version` TLS 1.2 (or 1.3), `check_hostname = True`,
+   `verify_mode = CERT_REQUIRED`, CA file or system store. pynetdicom gets
+   that context for DIMSE TLS. Refusal probes build their own narrow context
+   and never carry credentials (DVT-SRS-105, -106).
+4. **Secrets.** Go passes file paths only; the worker reads the files
+   (DVT-SRS-153). Go also reads the configured secrets, only to scan
+   artefacts before writing them (DVT-SRS-152).
+5. **Independent test peers.** A tester must not share the libraries of
+   what it tests, so LibreDVT's own controls avoid the worker's libraries
+   (pynetdicom, Python `ssl`/OpenSSL, `http.client`) on the peer side:
+   DICOMweb and TLS positive controls use test servers written in Go
+   (`net/http`, `crypto/tls`) for the tests only; association controls use
+   DCMTK peers (`storescp` with association profiles, `+tls`) and a Go
+   raw-socket peer that sends scripted PDUs for abort, close, garbage and
+   silence. Cross-check: Orthanc with its DICOMweb plugin, digest-pinned,
+   test container only, never shipped. LibreDCM's libraries stay excluded
+   (DVT-SRS-080, architecture test).
+6. **Compatibility.** Target records without `protocol` are DIMSE; v0.1
+   plans, results and reports are unchanged (DVT-SRS-110, -142, -145).
+
+Test-only configuration items added by v0.2 (recorded in the tool
+validation when first used): Orthanc and its DICOMweb plugin (GPL-3.0 /
+AGPL-3.0, used only as an unmodified test container, not distributed with
+LibreDVT), DCMTK 3.6.7 (BSD, already used for LibreDCM conformance).
