@@ -4,6 +4,8 @@ import (
 	"context"
 	"strconv"
 	"time"
+
+	"github.com/mulcahyio/libre-rws/modules/dvt/internal/result"
 )
 
 // Peer is the DICOM side of a test target as the worker needs it.
@@ -13,6 +15,7 @@ type Peer struct {
 	CalledAET  string
 	CallingAET string
 	Timeout    time.Duration // DIMSE/association timeout (DVT-SRS-029)
+	TLS        *TLS          // nil: plain TCP; otherwise TLS 1.2+ with verification (DVT-SRS-100)
 }
 
 func (p Peer) args(cmd string) []string {
@@ -37,10 +40,12 @@ func (p Peer) processTimeout(ops int) time.Duration {
 
 // EchoResult from the worker.
 type EchoResult struct {
-	Associated bool   `json:"associated"`
-	Rejected   bool   `json:"rejected"`
-	Status     *int   `json:"status"`
-	Error      string `json:"error"`
+	Associated bool            `json:"associated"`
+	Rejected   bool            `json:"rejected"`
+	Status     *int            `json:"status"`
+	Error      string          `json:"error"`
+	TLS        *result.TLSInfo `json:"tls"`       // TLS facts when the target uses TLS (DVT-SRS-107)
+	TLSError   string          `json:"tls_error"` // why no TLS connection was made
 }
 
 // Echo sends C-ECHO.
@@ -52,10 +57,12 @@ func (c Config) Echo(ctx context.Context, p Peer) (EchoResult, string, error) {
 
 // RejectResult from the worker.
 type RejectResult struct {
-	Associated bool   `json:"associated"`
-	Rejected   bool   `json:"rejected"`
-	Aborted    bool   `json:"aborted"`
-	Error      string `json:"error"`
+	Associated bool            `json:"associated"`
+	Rejected   bool            `json:"rejected"`
+	Aborted    bool            `json:"aborted"`
+	Error      string          `json:"error"`
+	TLS        *result.TLSInfo `json:"tls"`       // TLS facts when the target uses TLS (DVT-SRS-107)
+	TLSError   string          `json:"tls_error"` // why no TLS connection was made
 }
 
 // Reject tries an association that the target is expected to reject.
@@ -77,10 +84,12 @@ type StoreFile struct {
 
 // StoreResult from the worker.
 type StoreResult struct {
-	Associated bool        `json:"associated"`
-	Rejected   bool        `json:"rejected"`
-	Error      string      `json:"error"`
-	Files      []StoreFile `json:"files"`
+	Associated bool            `json:"associated"`
+	Rejected   bool            `json:"rejected"`
+	Error      string          `json:"error"`
+	Files      []StoreFile     `json:"files"`
+	TLS        *result.TLSInfo `json:"tls"`       // TLS facts when the target uses TLS (DVT-SRS-107)
+	TLSError   string          `json:"tls_error"` // why no TLS connection was made
 }
 
 // Store sends files with C-STORE, each in its own transfer syntax.
@@ -100,10 +109,12 @@ type FindQuery struct {
 
 // FindResult from the worker.
 type FindResult struct {
-	Associated bool        `json:"associated"`
-	Rejected   bool        `json:"rejected"`
-	Error      string      `json:"error"`
-	Queries    []FindQuery `json:"queries"`
+	Associated bool            `json:"associated"`
+	Rejected   bool            `json:"rejected"`
+	Error      string          `json:"error"`
+	Queries    []FindQuery     `json:"queries"`
+	TLS        *result.TLSInfo `json:"tls"`       // TLS facts when the target uses TLS (DVT-SRS-107)
+	TLSError   string          `json:"tls_error"` // why no TLS connection was made
 }
 
 // Find queries studies by Study Instance UID (Study Root, study level).
@@ -136,24 +147,61 @@ type Received struct {
 
 // MoveResult from the worker.
 type MoveResult struct {
-	Associated bool        `json:"associated"`
-	Rejected   bool        `json:"rejected"`
-	Error      string      `json:"error"`
-	Moves      []MoveStudy `json:"moves"`
-	Received   []Received  `json:"received"`
+	Associated bool            `json:"associated"`
+	Rejected   bool            `json:"rejected"`
+	Error      string          `json:"error"`
+	Moves      []MoveStudy     `json:"moves"`
+	Received   []Received      `json:"received"`
+	TLS        *result.TLSInfo `json:"tls"`       // TLS facts when the target uses TLS (DVT-SRS-107)
+	TLSError   string          `json:"tls_error"` // why no TLS connection was made
+	// SCPConnections lists every TLS connection to the built-in Storage SCP
+	// during a TLS move (DVT-SRS-108); nil for a move without TLS.
+	SCPConnections []SCPConnection `json:"scp_connections"`
 }
 
-// SCP is the built-in Storage SCP (DVT-SRS-026).
+// SCPConnection is one incoming TLS connection to the built-in Storage SCP.
+type SCPConnection struct {
+	Peer    string  `json:"peer"`
+	Started string  `json:"started"`
+	Outcome string  `json:"outcome"` // completed or refused
+	Error   string  `json:"error"`
+	TLS     *SCPTLS `json:"tls"`
+}
+
+// SCPTLS holds the facts of an accepted Storage SCP connection.
+type SCPTLS struct {
+	Version       string `json:"version"`
+	Cipher        string `json:"cipher"`
+	ClientSubject string `json:"client_subject"`
+	ClientIssuer  string `json:"client_issuer"`
+	ClientSHA256  string `json:"client_sha256"`
+}
+
+// SCP is the built-in Storage SCP (DVT-SRS-026). With a TLS target it
+// listens with TLS using TLSCert and TLSKey (DVT-SRS-108).
 type SCP struct {
 	AETitle string
 	Port    int
+	TLSCert string // settings scp_tls_cert (path)
+	TLSKey  string // settings scp_tls_key (path; secret)
 }
 
 // Move retrieves studies with C-MOVE to the built-in Storage SCP, which runs
-// only for the duration of the call and writes to outDir.
+// only for the duration of the call and writes to outDir. With a TLS target
+// the SCP uses TLS as well, never clear text (DVT-SRS-108).
 func (c Config) Move(ctx context.Context, p Peer, scp SCP, outDir string, studies []string, expectedInstances int) (MoveResult, string, error) {
 	var r MoveResult
 	args := append(c.peerArgs(p, "move"), "--dest-aet", scp.AETitle, "--scp-port", strconv.Itoa(scp.Port), "--out", outDir)
+	if p.TLS != nil {
+		mode := "required"
+		if p.TLS.MoveClientCert == "optional" {
+			mode = "optional"
+		}
+		if scp.TLSCert != "" {
+			args = append(args, "--scp-tls-cert", scp.TLSCert, "--scp-tls-key", scp.TLSKey)
+		}
+		args = append(args, "--scp-client-cert", mode)
+	}
 	for _, s := range studies {
 		args = append(args, "--study", s)
 	}

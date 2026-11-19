@@ -50,7 +50,9 @@ type Config struct {
 	TLSKey            string        `yaml:"tls_key" env:"LIBRE_DVT_TLS_KEY"`
 	SCPAETitle        string        `yaml:"scp_ae_title" env:"LIBRE_DVT_SCP_AE"`
 	SCPPort           int           `yaml:"scp_port" env:"LIBRE_DVT_SCP_PORT"`
-	SecretsDir        string        `yaml:"secrets_dir" env:"LIBRE_DVT_SECRETS_DIR"` // web-managed targets may only reference files here
+	SCPTLSCert        string        `yaml:"scp_tls_cert" env:"LIBRE_DVT_SCP_TLS_CERT"` // Storage SCP certificate for TLS moves (DVT-SRS-108)
+	SCPTLSKey         string        `yaml:"scp_tls_key" env:"LIBRE_DVT_SCP_TLS_KEY"`   // its private key (path; secret)
+	SecretsDir        string        `yaml:"secrets_dir" env:"LIBRE_DVT_SECRETS_DIR"`   // web-managed targets may only reference files here
 	Engines           EngineConfig  `yaml:"engines"`
 }
 
@@ -87,6 +89,12 @@ func (c Config) engines() engine.Config {
 	e := c.Engines
 	return engine.Config{DciodvfyBin: e.Dciodvfy, DcentvfyBin: e.Dcentvfy, Python: e.Python, Worker: e.Worker,
 		StandardPath: e.StandardPath, Edition: e.Edition, Timeout: e.Timeout, Version: version}
+}
+
+// scp is the built-in Storage SCP; with a TLS target it listens with TLS
+// using scp_tls_cert and scp_tls_key (DVT-SRS-108).
+func (c Config) scp() engine.SCP {
+	return engine.SCP{AETitle: c.SCPAETitle, Port: c.SCPPort, TLSCert: c.SCPTLSCert, TLSKey: c.SCPTLSKey}
 }
 
 func main() {
@@ -157,7 +165,7 @@ func serve(args []string) int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	eng := cfg.engines()
-	rn := &runner.Runner{Engines: eng, SCP: engine.SCP{AETitle: cfg.SCPAETitle, Port: cfg.SCPPort},
+	rn := &runner.Runner{Engines: eng, SCP: cfg.scp(),
 		WorkDir: filepath.Join(cfg.DataDir, "work"), Version: version, SecretsDir: cfg.SecretsDir}
 	srv, err := web.New(ctx, web.Options{Store: st, Runner: rn, Validator: eng, Password: pw,
 		SessionIdle: cfg.SessionIdle, SecureCookies: cfg.SecureCookies || cfg.TLSCert != "",
@@ -279,7 +287,7 @@ func runCmd(args []string) int {
 		return 2
 	}
 	defer os.RemoveAll(work)
-	rn := &runner.Runner{Engines: cfg.engines(), SCP: engine.SCP{AETitle: cfg.SCPAETitle, Port: cfg.SCPPort}, WorkDir: work, Version: version}
+	rn := &runner.Runner{Engines: cfg.engines(), SCP: cfg.scp(), WorkDir: work, Version: version}
 	r := rn.Run(ctx, store.NewID(), p, tgt, func(partial *result.Run) {
 		s := partial.Steps[len(partial.Steps)-1]
 		fmt.Printf("%-8s %-24s %-9s %s\n", s.Status, s.ID, s.Type, strings.Join(s.Messages, "; "))

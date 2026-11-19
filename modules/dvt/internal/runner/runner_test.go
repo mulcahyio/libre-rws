@@ -24,8 +24,29 @@ type fake struct {
 	find    func(studies []string) engine.FindResult
 	move    func(studies []string) engine.MoveResult
 	compare func(sent []string) []engine.CompareFile
+	assoc   func(p engine.Peer, req engine.AssociateRequest) engine.AssociateResult
+	probe   func(p engine.Peer, mode, version string) engine.ProbeResult
+	peers   []engine.Peer
 	err     error
 	calls   []string
+}
+
+func (f *fake) Associate(_ context.Context, p engine.Peer, req engine.AssociateRequest) (engine.AssociateResult, string, error) {
+	f.calls = append(f.calls, "associate")
+	f.peers = append(f.peers, p)
+	if f.assoc != nil {
+		return f.assoc(p, req), "{}", f.err
+	}
+	return engine.AssociateResult{}, "{}", f.err
+}
+
+func (f *fake) TLSProbe(_ context.Context, p engine.Peer, mode, version string) (engine.ProbeResult, string, error) {
+	f.calls = append(f.calls, "tls-probe")
+	f.peers = append(f.peers, p)
+	if f.probe != nil {
+		return f.probe(p, mode, version), "{}", f.err
+	}
+	return engine.ProbeResult{}, "{}", f.err
 }
 
 func (f *fake) Versions(context.Context) map[string]string { return map[string]string{"fake": "1"} }

@@ -66,6 +66,77 @@ func TestNoLibreDCMDICOMLibraries(t *testing.T) {
 	}
 }
 
+// Verifies: DVT-SRS-103
+func TestNoTLSVerificationBypass(t *testing.T) {
+	root := filepath.Join(repoRoot(t), "modules", "dvt")
+	banned := []*regexp.Regexp{
+		regexp.MustCompile(`InsecureSkipVerify`),
+		regexp.MustCompile(`CERT_NONE`),
+		regexp.MustCompile(`check_hostname\s*=\s*False`),
+		regexp.MustCompile(`hostname_checks_common_name\s*=\s*True`),
+		regexp.MustCompile(`_create_unverified_context`),
+		regexp.MustCompile(`(?i)insecure[_-]?skip`),
+	}
+	n := 0
+	err := filepath.Walk(root, func(p string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, _ := filepath.Rel(root, p)
+		if info.IsDir() {
+			// Test peers and test data may build weak servers on purpose.
+			if rel == filepath.Join("internal", "fakepeer") || rel == filepath.Join("worker", "testdata") {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if strings.HasSuffix(p, "_test.go") || !(strings.HasSuffix(p, ".go") || strings.HasSuffix(p, ".py")) {
+			return nil
+		}
+		b, err := os.ReadFile(p) // #nosec G304 G122 -- walking the repository's own sources in a test
+		if err != nil {
+			return err
+		}
+		n++
+		for _, re := range banned {
+			if loc := re.FindIndex(b); loc != nil {
+				t.Errorf("%s holds %q: no code path may weaken TLS verification (DVT-SRS-103)", rel, b[loc[0]:loc[1]])
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n < 15 {
+		t.Fatalf("only %d source files scanned; walk is broken", n)
+	}
+}
+
+// The test peers in internal/fakepeer build weak TLS servers on purpose;
+// only tests may import them.
+func TestFakePeerOnlyImportedByTests(t *testing.T) {
+	root := filepath.Join(repoRoot(t), "modules", "dvt")
+	err := filepath.Walk(root, func(p string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() || !strings.HasSuffix(p, ".go") || strings.HasSuffix(p, "_test.go") {
+			return err
+		}
+		f, err := parser.ParseFile(token.NewFileSet(), p, nil, parser.ImportsOnly)
+		if err != nil {
+			return err
+		}
+		for _, imp := range f.Imports {
+			if strings.Trim(imp.Path.Value, `"`) == "github.com/mulcahyio/libre-rws/modules/dvt/internal/fakepeer" {
+				t.Errorf("%s imports the test peer package", p)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 // Verifies: DVT-SRS-063
 func TestComposePublishesOnLocalhostByDefault(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join(repoRoot(t), "deploy", "compose", "docker-compose.dvt.yml"))
