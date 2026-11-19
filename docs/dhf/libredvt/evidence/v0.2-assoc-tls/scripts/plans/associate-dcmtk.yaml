@@ -1,0 +1,25 @@
+# Association negotiation against DCMTK storescp (plain TCP).
+# Expected values come from DCMTK 3.6.7 itself, not from LibreDVT output:
+# storescp accepts Verification and the storage SOP classes with the
+# uncompressed transfer syntaxes (it prefers Explicit VR Little Endian),
+# rejects compressed syntaxes unless started with +xa/+x=, accepts no
+# query/retrieve or worklist class, offers max PDU 16384 by default, and
+# identifies itself as 1.2.276.0.7230010.3.0.3.6.7 / OFFIS_DCMTK_367.
+name: DCMTK storescp association negotiation
+target: dcmtk-plain
+timeout: 10s
+steps:
+  - id: negotiation
+    type: associate
+    verifies: [DVT-SRS-090, DVT-SRS-091, DVT-SRS-093, DVT-SRS-095, DVT-SRS-096]
+    contexts:
+      - {abstract_syntax: "1.2.840.10008.1.1", transfer_syntaxes: ["1.2.840.10008.1.2"], expect: accepted, expect_transfer_syntax: "1.2.840.10008.1.2"}
+      - {abstract_syntax: "1.2.840.10008.5.1.4.1.1.2", transfer_syntaxes: ["1.2.840.10008.1.2.1", "1.2.840.10008.1.2"], expect: accepted, expect_transfer_syntax: "1.2.840.10008.1.2.1"}
+      - {abstract_syntax: "1.2.840.10008.5.1.4.1.1.2", transfer_syntaxes: ["1.2.840.10008.1.2.4.50"], expect: rejected}
+      - {abstract_syntax: "1.2.840.10008.5.1.4.31", transfer_syntaxes: ["1.2.840.10008.1.2"], expect: rejected}
+      - {abstract_syntax: "1.2.3.4.5", transfer_syntaxes: ["1.2.840.10008.1.2"], expect: rejected}
+    async_ops: {invoked: 4, performed: 4}
+    expect:
+      max_pdu: 16384
+      impl_class_uid: "1.2.276.0.7230010.3.0.3.6.7"
+      impl_version: "OFFIS_DCMTK_367"

@@ -195,7 +195,7 @@ func TestRealAssociateRejectAbortCloseGarbageSilence(t *testing.T) {
 // pki builds the synthetic PKI and the peer certificates the TLS tests use.
 type testPKI struct {
 	*fakepeer.PKI
-	good, dnsOnly, ipOnly, wrongHost, cnOnly, unknownCA, expired, notYet, interNoChain, interChain, selfSigned, client, otherClient *fakepeer.Leaf
+	good, dnsOnly, ipOnly, wrongHost, cnOnly, cnOnlyDNS, unknownCA, expired, notYet, interNoChain, interChain, selfSigned, client, otherClient *fakepeer.Leaf
 }
 
 func newTestPKI(t *testing.T) *testPKI {
@@ -219,6 +219,7 @@ func newTestPKI(t *testing.T) *testPKI {
 		ipOnly:       issue("ip-only", fakepeer.LeafOpts{Issuer: p.Root, CN: "peer", IPs: lo}),
 		wrongHost:    issue("wrong-host", fakepeer.LeafOpts{Issuer: p.Root, CN: "other", DNS: []string{"other.test"}}),
 		cnOnly:       issue("cn-only", fakepeer.LeafOpts{Issuer: p.Root, CN: "127.0.0.1"}),
+		cnOnlyDNS:    issue("cn-only-dns", fakepeer.LeafOpts{Issuer: p.Root, CN: "peer.test"}),
 		unknownCA:    issue("unknown-ca", fakepeer.LeafOpts{Issuer: p.OtherCA, CN: "peer", IPs: lo}),
 		expired:      issue("expired", fakepeer.LeafOpts{Issuer: p.Root, CN: "peer", IPs: lo, NotBefore: now.Add(-48 * time.Hour), NotAfter: now.Add(-24 * time.Hour)}),
 		notYet:       issue("not-yet", fakepeer.LeafOpts{Issuer: p.Root, CN: "peer", IPs: lo, NotBefore: now.Add(24 * time.Hour), NotAfter: now.Add(48 * time.Hour)}),
@@ -286,15 +287,18 @@ func TestRealTLSVerification(t *testing.T) {
 		tl   store.TLS
 		text string
 	}{
-		"wrong host":         {k.wrongHost, store.TLS{CAFile: k.Root.File}, "certificate verification failed"},
-		"wrong server_name":  {k.good, store.TLS{CAFile: k.Root.File, ServerName: "other.test"}, "certificate verification failed"},
-		"name only in CN":    {k.cnOnly, store.TLS{CAFile: k.Root.File}, "certificate verification failed"},
-		"unknown CA":         {k.unknownCA, store.TLS{CAFile: k.Root.File}, "certificate verification failed"},
-		"expired":            {k.expired, store.TLS{CAFile: k.Root.File}, "expired"},
-		"not yet valid":      {k.notYet, store.TLS{CAFile: k.Root.File}, "not yet valid"},
-		"incomplete chain":   {k.interNoChain, store.TLS{CAFile: k.Root.File}, "certificate verification failed"},
-		"self-signed leaf":   {k.selfSigned, store.TLS{CAFile: k.Root.File}, "certificate verification failed"},
-		"system trust store": {k.good, store.TLS{}, "certificate verification failed"},
+		"wrong host":        {k.wrongHost, store.TLS{CAFile: k.Root.File}, "certificate verification failed"},
+		"wrong server_name": {k.good, store.TLS{CAFile: k.Root.File, ServerName: "other.test"}, "certificate verification failed"},
+		"name only in CN":   {k.cnOnly, store.TLS{CAFile: k.Root.File}, "certificate verification failed"},
+		// OpenSSL never matches an IP against the CN, so a DNS name is needed
+		// to prove the CN fallback is off (DVT-SRS-102).
+		"DNS name only in CN": {k.cnOnlyDNS, store.TLS{CAFile: k.Root.File, ServerName: "peer.test"}, "certificate verification failed"},
+		"unknown CA":          {k.unknownCA, store.TLS{CAFile: k.Root.File}, "certificate verification failed"},
+		"expired":             {k.expired, store.TLS{CAFile: k.Root.File}, "expired"},
+		"not yet valid":       {k.notYet, store.TLS{CAFile: k.Root.File}, "not yet valid"},
+		"incomplete chain":    {k.interNoChain, store.TLS{CAFile: k.Root.File}, "certificate verification failed"},
+		"self-signed leaf":    {k.selfSigned, store.TLS{CAFile: k.Root.File}, "certificate verification failed"},
+		"system trust store":  {k.good, store.TLS{}, "certificate verification failed"},
 	}
 	for name, c := range fail {
 		p := startPeer(t, srv(c.leaf, tls.VersionTLS12, 0), fakepeer.Script{})

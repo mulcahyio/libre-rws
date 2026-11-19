@@ -1,0 +1,10 @@
+# The target must refuse a TLS client that offers no certificate.
+# Run against a server that does not require one, this plan must FAIL.
+name: TLS client certificate required
+target: dcmtk-mtls
+timeout: 10s
+steps:
+  - id: no-client-cert-refused
+    type: tls_reject
+    verifies: [DVT-SRS-105, DVT-SRS-106]
+    mode: no_client_cert
