@@ -152,6 +152,11 @@ type Step struct {
 	Duration   time.Duration `json:"duration"`
 	Validation *Validation   `json:"validation,omitempty"`
 	Details    any           `json:"details,omitempty"` // raw worker output
+	// v0.2 (DVT-SRS-143, -144): protocol-neutral evidence and the verdict
+	// DecideStep derived from it. Empty for v0.1 step types, so stored v0.1
+	// runs load unchanged.
+	Verdict  Verdict   `json:"verdict,omitempty"`
+	Evidence *Evidence `json:"evidence,omitempty"`
 }
 
 // Failf marks the step failed with a message.
@@ -177,7 +182,8 @@ type Run struct {
 }
 
 // Finish applies DVT-SRS-042: the run passes only if it has steps, no
-// run-level error, and every step passed.
+// run-level error, and every step passed. A v0.2 step that passed with
+// warnings makes the run "pass with warnings" (evidence-model.md §4).
 func (r *Run) Finish() {
 	r.Running = false
 	r.Verdict = Pass
@@ -189,6 +195,9 @@ func (r *Run) Finish() {
 		if s.Status != StepPassed {
 			r.Verdict = Fail
 			return
+		}
+		if s.Verdict == PassWithWarnings {
+			r.Verdict = PassWithWarnings
 		}
 	}
 }

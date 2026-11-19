@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -20,7 +19,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mulcahyio/libre-rws/modules/dvt/internal/plan"
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/result"
 )
 
@@ -29,58 +27,6 @@ const (
 	Lab        = "lab"
 	Production = "production"
 )
-
-// Target is a system under test.
-type Target struct {
-	Name       string `json:"name"`
-	Host       string `json:"host"`
-	Port       int    `json:"port"`
-	CalledAET  string `json:"called_aet"`
-	CallingAET string `json:"calling_aet"`
-	Class      string `json:"class"`
-}
-
-var nameRe = regexp.MustCompile(`^[A-Za-z0-9._-]{1,64}$`)
-
-// Normalize fills defaults and checks the target. A missing class means
-// production (DVT-SRS-020), so a target is only "lab" when someone said so.
-func (t *Target) Normalize() error {
-	t.Name = strings.TrimSpace(t.Name)
-	t.Host = strings.TrimSpace(t.Host)
-	t.Class = strings.ToLower(strings.TrimSpace(t.Class))
-	if t.Class == "" {
-		t.Class = Production
-	}
-	var errs []error
-	if !nameRe.MatchString(t.Name) {
-		errs = append(errs, errors.New("name must be 1-64 letters, digits, '.', '_' or '-'"))
-	}
-	if t.Host == "" || len(t.Host) > 253 || strings.ContainsAny(t.Host, " \t/\\@") {
-		errs = append(errs, errors.New("host must be a host name or IP address"))
-	} else if strings.HasPrefix(t.Host, "-") {
-		errs = append(errs, errors.New("host must not start with '-'"))
-	} else if ip := net.ParseIP(t.Host); ip == nil && !regexp.MustCompile(`^[A-Za-z0-9.-]+$`).MatchString(t.Host) {
-		errs = append(errs, errors.New("host must be a host name or IP address"))
-	}
-	if t.Port < 1 || t.Port > 65535 {
-		errs = append(errs, errors.New("port must be 1-65535"))
-	}
-	if !plan.ValidAET(t.CalledAET) {
-		errs = append(errs, errors.New("called AE title must be 1-16 printable characters"))
-	}
-	if !plan.ValidAET(t.CallingAET) {
-		errs = append(errs, errors.New("calling AE title must be 1-16 printable characters"))
-	}
-	if t.Class != Lab && t.Class != Production {
-		errs = append(errs, errors.New("class must be lab or production"))
-	}
-	return errors.Join(errs...)
-}
-
-// Describe returns a one-line description for reports.
-func (t Target) Describe() string {
-	return fmt.Sprintf("%s (%s:%d, called AE %s, calling AE %s, class %s)", t.Name, t.Host, t.Port, t.CalledAET, t.CallingAET, t.Class)
-}
 
 // Store is the data directory.
 type Store struct {
@@ -140,18 +86,18 @@ func (s *Store) Targets() ([]Target, error) {
 }
 
 func (s *Store) targetsLocked() ([]Target, error) {
-	var ts []Target
-	err := readJSON(filepath.Join(s.Dir, "targets.json"), &ts)
+	b, err := os.ReadFile(filepath.Join(s.Dir, "targets.json")) // #nosec G304 -- fixed name in the data dir
 	if errors.Is(err, os.ErrNotExist) {
 		return []Target{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	for i := range ts {
-		if ts[i].Class == "" {
-			ts[i].Class = Production // DVT-SRS-020, also for hand-edited files
-		}
+	// Strict schema; defaults (class production, protocol dimse) applied,
+	// also for hand-edited files (DVT-SRS-020, -110, -140).
+	ts, err := DecodeTargetsJSON(b)
+	if err != nil {
+		return nil, err
 	}
 	sort.Slice(ts, func(i, j int) bool { return ts[i].Name < ts[j].Name })
 	return ts, nil

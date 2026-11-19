@@ -12,6 +12,7 @@ import (
 
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/engine"
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/plan"
+	"github.com/mulcahyio/libre-rws/modules/dvt/internal/redact"
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/result"
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/store"
 )
@@ -36,6 +37,9 @@ type Runner struct {
 	SCP     engine.SCP
 	WorkDir string // scratch space for received instances (removed after each move step)
 	Version string // LibreDVT version, recorded in every run (DVT-SRS-008)
+	// SecretsDir, when set (web UI), is the only directory a target's
+	// certificate, key and token files may lie in (plan-schema.md §1).
+	SecretsDir string
 }
 
 // sent tracks what earlier store steps sent successfully.
@@ -50,23 +54,39 @@ func (rn *Runner) Run(ctx context.Context, id string, p *plan.Plan, t *store.Tar
 	r := &result.Run{ID: id, Plan: p.Name, PlanSHA256: p.SHA256, Target: p.Target, Started: time.Now().UTC(), Running: true}
 	r.Versions = rn.Engines.Versions(ctx)
 	r.Versions["libredvt"] = rn.Version
+	rejected := false // the plan does not fit the target: no step runs (DVT-SRS-142)
 	if t != nil {
 		r.TargetDesc = t.Describe()
+		if err := p.CheckTarget(t.Name, t.Proto(), t.HasTLS()); err != nil {
+			r.Error = "plan rejected for this target: " + err.Error()
+			rejected = true
+		}
 	} else if p.Target != "" {
 		r.Error = fmt.Sprintf("target %q is not registered", p.Target)
 	}
+	// Secrets of the target, filled as steps load them; every process start
+	// is checked against them (DVT-SRS-153) and every step result is
+	// scanned for them before anyone sees it (DVT-SRS-152).
+	secrets := &redact.Set{}
+	if t != nil {
+		// Known from the start, so every step is scanned; a file that cannot
+		// be read fails the network steps in preflight (DVT-SRS-141).
+		_ = t.LoadSecrets(rn.SecretsDir, secrets)
+	}
+	ctx = engine.WithSecrets(ctx, secrets)
 	st := &sent{instances: map[string][]string{}}
 	for _, ps := range p.Steps {
 		s := result.Step{ID: ps.ID, Type: ps.Type, Verifies: ps.Verifies, Status: result.StepNotRun, Started: time.Now().UTC()}
 		switch {
 		case ctx.Err() != nil:
 			s.Messages = append(s.Messages, "not run: run cancelled")
-		case r.Error != "" && ps.Type != plan.Validate:
+		case r.Error != "" && (rejected || ps.Type != plan.Validate):
 			s.Messages = append(s.Messages, "not run: "+r.Error)
 		default:
-			rn.step(ctx, p, ps, t, st, &s)
+			rn.step(ctx, p, ps, t, st, &s, secrets)
 		}
 		s.Duration = time.Since(s.Started)
+		s.Redact(secrets)
 		r.Steps = append(r.Steps, s)
 		if progress != nil {
 			progress(r)
@@ -74,7 +94,19 @@ func (rn *Runner) Run(ctx context.Context, id string, p *plan.Plan, t *store.Tar
 	}
 	r.Finished = time.Now().UTC()
 	r.Finish()
+	r.Redact(secrets)
 	return r
+}
+
+// SecretsFor loads the secret values a target references, for scanning
+// artefacts written after the run (DVT-SRS-152). Files that cannot be read
+// are skipped here; the run itself already failed on them.
+func SecretsFor(t *store.Target, secretsDir string) *redact.Set {
+	s := &redact.Set{}
+	if t != nil {
+		_ = t.LoadSecrets(secretsDir, s)
+	}
+	return s
 }
 
 func (rn *Runner) peer(p *plan.Plan, t *store.Target) engine.Peer {
@@ -90,11 +122,67 @@ func statusText(st *int) string {
 
 func isSuccess(st *int) bool { return st != nil && *st == 0 }
 
-func (rn *Runner) step(ctx context.Context, p *plan.Plan, ps plan.Step, t *store.Target, st *sent, s *result.Step) {
+// v02 reports whether a step type uses the v0.2 evidence model.
+func v02(typ string) bool {
+	switch typ {
+	case plan.Associate, plan.TLSReject, plan.Qido, plan.Wado, plan.Stow:
+		return true
+	}
+	return false
+}
+
+// refuse fails a step before any connection: v0.1 step types with a
+// message, v0.2 step types with evidence holding one problem and no
+// exchange (evidence-model.md §4).
+func refuse(s *result.Step, typ string, t *store.Target, kind, msg string) {
+	if !v02(typ) {
+		s.Failf(msg)
+		return
+	}
+	info := result.TargetInfo{}
+	if t != nil {
+		info = t.Info()
+	}
+	ev := result.NewEvidence(info)
+	ev.Problemf(kind, "%s", msg)
+	s.ApplyEvidence(ev)
+}
+
+// preflight runs the checks every network step passes before it may
+// connect: production guard, secret and certificate files, and features
+// this build does not have. It returns false when the step was refused.
+func (rn *Runner) preflight(ps plan.Step, t *store.Target, s *result.Step, secrets *redact.Set) bool {
+	if t == nil {
+		refuse(s, ps.Type, t, result.ProblemConfig, "no target")
+		return false
+	}
+	// Production guard (DVT-SRS-028, DVT-SRS-134).
+	if plan.LabOnly(ps.Type) && t.Class != store.Lab {
+		refuse(s, ps.Type, t, result.ProblemGuard, fmt.Sprintf("refused: %s steps only run against targets of class lab; %s is %s", ps.Type, t.Name, t.Class))
+		return false
+	}
+	// Secret and certificate files (DVT-SRS-141).
+	if err := t.LoadSecrets(rn.SecretsDir, secrets); err != nil {
+		refuse(s, ps.Type, t, result.ProblemConfig, "configuration error, nothing was sent: "+err.Error())
+		return false
+	}
+	// Fail safe until the TLS and DICOMweb engines exist: never connect
+	// in clear text to a target configured for TLS, never pass a step that
+	// was not performed (DVT-SRS-150).
+	if v02(ps.Type) {
+		refuse(s, ps.Type, t, result.ProblemEngine, fmt.Sprintf("engine error: the %s step is not available in this build; nothing was sent", ps.Type))
+		return false
+	}
+	if t.Proto() == store.DIMSE && t.TLS != nil {
+		refuse(s, ps.Type, t, result.ProblemEngine, "engine error: DIMSE over TLS is not available in this build; nothing was sent")
+		return false
+	}
+	return true
+}
+
+func (rn *Runner) step(ctx context.Context, p *plan.Plan, ps plan.Step, t *store.Target, st *sent, s *result.Step, secrets *redact.Set) {
 	s.Status = result.StepPassed // each branch must fail it explicitly
-	// Production guard (DVT-SRS-028).
-	if (ps.Type == plan.Store || ps.Type == plan.Move) && t.Class != store.Lab {
-		s.Failf(fmt.Sprintf("refused: %s steps only run against targets of class lab; %s is %s", ps.Type, t.Name, t.Class))
+	if plan.StepProtocol(ps.Type) != plan.ProtocolNone && !rn.preflight(ps, t, s, secrets) {
 		return
 	}
 	switch ps.Type {
@@ -230,6 +318,9 @@ func (rn *Runner) step(ctx context.Context, p *plan.Plan, ps plan.Step, t *store
 
 	case plan.Move:
 		rn.move(ctx, p, ps, t, st, s)
+
+	default: // unreachable: plan.Parse rejects unknown types; fail safe anyway
+		s.Failf("engine error: step type " + ps.Type + " is not supported")
 	}
 }
 
