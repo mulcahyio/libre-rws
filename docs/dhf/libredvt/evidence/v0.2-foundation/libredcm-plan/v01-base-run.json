@@ -1,0 +1,99 @@
+{
+  "id": "20261119-084553-96876339",
+  "plan": "LibreDCM conformance",
+  "plan_sha256": "006e60ed9d54d03c91ab3ff588dd05f6ee1da481587aed4ae41706a7654ae9b4",
+  "target": "cli",
+  "target_desc": "cli (dvt02-gw:11112, called AE LIBREDCM, calling AE LIBREDVT, class lab)",
+  "started": "2026-11-19T08:45:53.239049966Z",
+  "finished": "2026-11-19T08:45:56.777373188Z",
+  "steps": [
+    {
+      "id": "echo",
+      "type": "echo",
+      "verifies": [
+        "DCM-SRS-001"
+      ],
+      "status": "passed",
+      "messages": [
+        "C-ECHO status 0x0000 (Success)"
+      ],
+      "started": "2026-11-19T08:45:53.660873107Z",
+      "duration": 274882223,
+      "details": "{\"associated\": true, \"status\": 0}\n"
+    },
+    {
+      "id": "reject-wrong-called-ae",
+      "type": "reject",
+      "verifies": [
+        "DCM-SRS-014"
+      ],
+      "status": "passed",
+      "messages": [
+        "association with calling AE \"LIBREDVT\", called AE \"NOT-LIBREDCM\" rejected as expected"
+      ],
+      "started": "2026-11-19T08:45:53.935777807Z",
+      "duration": 264023471,
+      "details": "{\"aborted\": false, \"associated\": false, \"error\": \"\", \"rejected\": true}\n"
+    },
+    {
+      "id": "store-native-and-compressed",
+      "type": "store",
+      "verifies": [
+        "DCM-SRS-002",
+        "DCM-SRS-003"
+      ],
+      "status": "passed",
+      "messages": [
+        "6 of 6 files stored with status 0x0000"
+      ],
+      "started": "2026-11-19T08:45:54.199820146Z",
+      "duration": 314531133,
+      "details": "{\"associated\": true, \"files\": [{\"file\": \"/opt/libredvt/plans/fixtures/ct_explicit_le.dcm\", \"sop_instance_uid\": \"1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322\", \"status\": 0, \"study_instance_uid\": \"1.3.6.1.4.1.5962.1.2.1.20040119072730.12322\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.1\"}, {\"file\": \"/opt/libredvt/plans/fixtures/ct_j2k.dcm\", \"sop_instance_uid\": \"1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246\", \"status\": 0, \"study_instance_uid\": \"1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.4.91\"}, {\"file\": \"/opt/libredvt/plans/fixtures/mr_jpeg_ls.dcm\", \"sop_instance_uid\": \"1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265\", \"status\": 0, \"study_instance_uid\": \"1.3.6.1.4.1.5962.1.2.4.20040826185059.5457\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.4.80\"}, {\"file\": \"/opt/libredvt/plans/fixtures/mr_rle.dcm\", \"sop_instance_uid\": \"1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457\", \"status\": 0, \"study_instance_uid\": \"1.3.6.1.4.1.5962.1.2.4.20040826185059.5457\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.5\"}, {\"file\": \"/opt/libredvt/plans/fixtures/sc_jpeg_baseline.dcm\", \"sop_instance_uid\": \"1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194\", \"status\": 0, \"study_instance_uid\": \"1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.4.50\"}, {\"file\": \"/opt/libredvt/plans/fixtures/sc_jpeg_lossless.dcm\", \"sop_instance_uid\": \"1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116\", \"status\": 0, \"study_instance_uid\": \"1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.4.70\"}]}\n"
+    },
+    {
+      "id": "find-stored-studies",
+      "type": "find",
+      "verifies": [
+        "DCM-SRS-006"
+      ],
+      "status": "passed",
+      "messages": [
+        "1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es))",
+        "1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es))",
+        "1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es))",
+        "1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))"
+      ],
+      "started": "2026-11-19T08:45:54.514365868Z",
+      "duration": 439976993,
+      "details": "{\"associated\": true, \"queries\": [{\"final_status\": 0, \"matches\": [\"1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996\"], \"pending\": 1, \"study\": \"1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996\"}, {\"final_status\": 0, \"matches\": [\"1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114\"], \"pending\": 1, \"study\": \"1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114\"}, {\"final_status\": 0, \"matches\": [\"1.3.6.1.4.1.5962.1.2.1.20040119072730.12322\"], \"pending\": 1, \"study\": \"1.3.6.1.4.1.5962.1.2.1.20040119072730.12322\"}, {\"final_status\": 0, \"matches\": [\"1.3.6.1.4.1.5962.1.2.4.20040826185059.5457\"], \"pending\": 1, \"study\": \"1.3.6.1.4.1.5962.1.2.4.20040826185059.5457\"}]}\n"
+    },
+    {
+      "id": "move-and-compare-pixels",
+      "type": "move",
+      "verifies": [
+        "DCM-SRS-003",
+        "DCM-SRS-010"
+      ],
+      "status": "passed",
+      "messages": [
+        "6 of 6 expected instances received",
+        "note: fixtures/ct_explicit_le.dcm re-encoded from 1.2.840.10008.1.2.1 to 1.2.840.10008.1.2 (uncompressed; pixel data identical)",
+        "pixel data identical for 6 of 6 sent files"
+      ],
+      "started": "2026-11-19T08:45:54.954358067Z",
+      "duration": 1822999408,
+      "details": "{\"associated\": true, \"moves\": [{\"NumberOfCompletedSuboperations\": 1, \"NumberOfFailedSuboperations\": 0, \"NumberOfWarningSuboperations\": 0, \"final_status\": 0, \"study\": \"1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996\"}, {\"NumberOfCompletedSuboperations\": 2, \"NumberOfFailedSuboperations\": 0, \"NumberOfWarningSuboperations\": 0, \"final_status\": 0, \"study\": \"1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114\"}, {\"NumberOfCompletedSuboperations\": 1, \"NumberOfFailedSuboperations\": 0, \"NumberOfWarningSuboperations\": 0, \"final_status\": 0, \"study\": \"1.3.6.1.4.1.5962.1.2.1.20040119072730.12322\"}, {\"NumberOfCompletedSuboperations\": 2, \"NumberOfFailedSuboperations\": 0, \"NumberOfWarningSuboperations\": 0, \"final_status\": 0, \"study\": \"1.3.6.1.4.1.5962.1.2.4.20040826185059.5457\"}], \"received\": [{\"calling_aet\": \"LIBREDCM\", \"file\": \"/tmp/libredvt-3845567826/move-1751393242/350958e5af5b764abb3d6c6db4e7a72c.dcm\", \"sop_instance_uid\": \"1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.4.91\"}, {\"calling_aet\": \"LIBREDCM\", \"file\": \"/tmp/libredvt-3845567826/move-1751393242/47c96d705d1db60dff65b3aa6bb8e51e.dcm\", \"sop_instance_uid\": \"1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.4.50\"}, {\"calling_aet\": \"LIBREDCM\", \"file\": \"/tmp/libredvt-3845567826/move-1751393242/28933753200ec7b4585a5a488501fc6c.dcm\", \"sop_instance_uid\": \"1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.4.70\"}, {\"calling_aet\": \"LIBREDCM\", \"file\": \"/tmp/libredvt-3845567826/move-1751393242/0c2c7bdafb39176a34709965be7922d4.dcm\", \"sop_instance_uid\": \"1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2\"}, {\"calling_aet\": \"LIBREDCM\", \"file\": \"/tmp/libredvt-3845567826/move-1751393242/09630c74a50eff40ff51687f9293ed48.dcm\", \"sop_instance_uid\": \"1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.4.80\"}, {\"calling_aet\": \"LIBREDCM\", \"file\": \"/tmp/libredvt-3845567826/move-1751393242/9b559dc8cb350823532e86030dc98768.dcm\", \"sop_instance_uid\": \"1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.5\"}]}\n"
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "dev",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.1.1"
+  },
+  "verdict": "pass"
+}

@@ -91,6 +91,30 @@ origin over TLS (or loopback HTTP).
 - Certificate revocation (CRL/OCSP) is not checked in v0.2. Recorded as a
   known limitation in the user documentation.
 
+### Implemented controls (card DVT-0.2/2, 2026-11-19, DRAFT for approval)
+
+- Strict target schema in the registry and in target files: unknown
+  fields, inline secret fields (`token`, `password`, `private_key`) and
+  switches such as `insecure_skip_verify`, `verify` or `check_hostname`
+  are rejected (DVT-SRS-140, -141, -103). A registry with one bad record
+  is not loaded at all.
+- Bearer tokens over `http://` only to `localhost`, 127.0.0.0/8 or ::1
+  (DVT-SRS-112), checked when the target is loaded.
+- Referenced files are checked at the start of each network step:
+  absolute path, regular, non-empty, at most 1 MiB, and under
+  `secrets_dir` for web UI runs. Errors name the field, never the content
+  (DVT-SRS-141).
+- Tokens must be one line of at least 16 RFC 6750 token characters, so
+  they cannot inject a header and the scan finds them in every artefact.
+- Every process LibreDVT starts (worker and dicom3tools) is refused when a
+  configured secret, or its base64 or URL-encoded form, appears in its
+  argument vector or environment (DVT-SRS-153).
+- Step results, the finished run and the JSON/HTML/JUnit bytes are each
+  scanned for the configured secrets; a hit is replaced by `[REDACTED]`
+  and fails the run (DVT-SRS-152, `evidence-model.md` §7).
+- Until the TLS engine exists, a DIMSE target with a `tls` block refuses
+  every step instead of connecting in clear text.
+
 ## Static analysis (2026-11-10)
 
 gosec v2.30.0 on `modules/dvt`: 26 findings, triaged to 0 open. Fixed: file

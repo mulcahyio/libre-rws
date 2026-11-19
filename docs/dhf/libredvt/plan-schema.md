@@ -250,3 +250,45 @@ targets or plans:
 | `secrets_dir` | `LIBRE_DVT_SECRETS_DIR` | `/run/secrets` | directory web-managed targets may reference |
 
 Empty environment values count as unset.
+
+## 5. Implementation notes (card DVT-0.2/2, 2026-11-19)
+
+Written by Hermes/Claude while implementing this schema. They settle
+details the tables above leave open. **DRAFT for approval.**
+
+1. **v0.1 step types keep v0.1 rules.** A v0.1 field with an empty or
+   false value on another v0.1 step type is still accepted, as in v0.1.
+   A v0.2 field on a v0.1 step type is rejected by its key. For v0.2 step
+   types every key outside the table in §3.2 is rejected, whatever its
+   value (`fuzzymatching: false` on a `wado` step fails).
+2. **Rejected association.** With `expect.association: rejected`, the
+   contexts carry no `expect` (nothing is negotiated) and `expect.reject`
+   is required. `expect_transfer_syntax` must be one of the context's
+   proposed transfer syntaxes.
+3. **QIDO resources.** `level: studies` allows neither `study` nor
+   `series`; `level: series` allows `study` only; `level: instances` allows
+   both, and `series` needs `study`. Query values are at most 1024
+   printable characters.
+4. **Keywords.** Go checks keyword and tag syntax only. Whether a keyword
+   exists in the DICOM dictionary is checked by the worker before any
+   request (card DVT-0.2/4); Go has no DICOM dictionary (DVT-SRS-080).
+5. **WADO.** `files` (the instances expected back) is required unless
+   `from_store`. `metadata` excludes `compare_pixels`, `transfer_syntax` and
+   `validate`.
+6. **Target files.** The `calling_aet` default `LIBREDVT` applies to target
+   files. Registry records from the web form always carry a calling AE
+   title, as in v0.1.
+7. **Bearer token file.** One line (a trailing newline is removed), at
+   least 16 characters from the RFC 6750 token set
+   (`A-Z a-z 0-9 - . _ ~ + /`, trailing `=`). Shorter or other values are
+   refused. Reason: the artefact scan must find the token reliably, and
+   these characters are never changed by JSON, HTML or XML escaping, so the
+   scan finds it in every artefact (DVT-SRS-152). Spaces and line breaks
+   are also refused so a token cannot inject an HTTP header.
+8. **Referenced files** (CA, client certificate, key, token) must be
+   regular, non-empty files of at most 1 MiB. The web UI's runs also
+   require them under `secrets_dir`; the command line does not.
+9. **Until the engines exist** (cards DVT-0.2/3 and /4), the new step
+   types are parsed and checked but fail as an engine error without
+   sending anything, and a v0.1 DIMSE step against a target with a `tls`
+   block fails the same way, so LibreDVT never falls back to clear text.

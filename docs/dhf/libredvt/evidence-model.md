@@ -159,3 +159,26 @@ evidence keeps the size and SHA-256 of the full body. Multipart parts are
 never stored in the evidence; only their facts (§3.2). Received DICOM files
 are kept in the run's directory only while the step needs them for
 comparison or validation, as in v0.1 moves.
+
+## 7. Implementation notes (card DVT-0.2/2, 2026-11-19)
+
+**DRAFT for approval.** Written by Hermes/Claude with the code.
+
+- Go types: `internal/result/evidence.go`. `Step.Evidence` (JSON
+  `evidence`) and `Step.Verdict` (JSON `verdict`, the `DecideStep` result)
+  are new optional fields; a v0.1 step serialises exactly as before.
+- `Step.ApplyEvidence` is the only way a v0.2 step gets its status. It
+  checks the evidence against the closed value sets of §3 (`Evidence.Check`),
+  adds the problem "nothing was checked" when there is no assertion, sets
+  the verdict from `DecideStep` and copies problems and failed assertions
+  into the v0.1 `messages`, so every existing report shows the reason.
+- A step refused before connecting (guard, configuration, feature not in
+  this build) has evidence with one `Problem` and no exchange.
+- Redaction has three layers, each failing the run on a hit:
+  1. every step result is scanned before it is added to the run, so
+     progress snapshots the web UI stores mid-run are clean;
+  2. the finished run is scanned (run-level fields such as the plan name);
+  3. `report.Render` scans the JSON, HTML and JUnit bytes before the CLI
+     or the web UI writes them.
+  The configured secrets are read from the target's files at the start of
+  the run, so every step is covered, including `validate` steps.

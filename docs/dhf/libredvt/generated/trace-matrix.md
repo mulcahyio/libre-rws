@@ -57,9 +57,9 @@ Requirements: 92 (35 active). Active with verification: 35. Active without verif
 | DVT-SRS-106 | Draft | **NOT VERIFIED** |
 | DVT-SRS-107 | Draft | **NOT VERIFIED** |
 | DVT-SRS-108 | Draft | **NOT VERIFIED** |
-| DVT-SRS-110 | Draft | **NOT VERIFIED** |
+| DVT-SRS-110 | Draft | `modules/dvt/internal/store/target_test.go:TestV01TargetRecordLoadsAsDIMSE`<br>`modules/dvt/internal/store/target_test.go:TestDICOMwebBaseURLRules` |
 | DVT-SRS-111 | Draft | **NOT VERIFIED** |
-| DVT-SRS-112 | Draft | **NOT VERIFIED** |
+| DVT-SRS-112 | Draft | `modules/dvt/internal/store/target_test.go:TestBearerOverHTTPOnlyToLoopback` |
 | DVT-SRS-113 | Draft | **NOT VERIFIED** |
 | DVT-SRS-114 | Draft | **NOT VERIFIED** |
 | DVT-SRS-115 | Draft | **NOT VERIFIED** |
@@ -81,20 +81,20 @@ Requirements: 92 (35 active). Active with verification: 35. Active without verif
 | DVT-SRS-131 | Draft | **NOT VERIFIED** |
 | DVT-SRS-132 | Draft | **NOT VERIFIED** |
 | DVT-SRS-133 | Draft | **NOT VERIFIED** |
-| DVT-SRS-134 | Draft | **NOT VERIFIED** |
+| DVT-SRS-134 | Draft | `modules/dvt/internal/runner/runner_v02_test.go:TestDICOMwebDataStepsLabOnly`<br>`modules/dvt/internal/runner/runner_v02_test.go:TestStepProtocolTableMatchesRunner` |
 | DVT-SRS-135 | Draft | **NOT VERIFIED** |
 | DVT-SRS-136 | Draft | **NOT VERIFIED** |
-| DVT-SRS-140 | Draft | **NOT VERIFIED** |
-| DVT-SRS-141 | Draft | **NOT VERIFIED** |
-| DVT-SRS-142 | Draft | **NOT VERIFIED** |
-| DVT-SRS-143 | Draft | **NOT VERIFIED** |
-| DVT-SRS-144 | Draft | **NOT VERIFIED** |
+| DVT-SRS-140 | Draft | `modules/dvt/cmd/libredvt/main_v02_test.go:TestRunWithTargetFileKeepsSecretsOutOfArtefacts`<br>`modules/dvt/internal/plan/plan_v02_test.go:TestV02PlanRulesRejectBeforeRunning`<br>`modules/dvt/internal/store/target_test.go:TestTargetSchemaIsStrict`<br>`modules/dvt/internal/store/target_test.go:TestTargetFileYAMLSameSchema` |
+| DVT-SRS-141 | Draft | `modules/dvt/internal/runner/runner_v02_test.go:TestSecretFileProblemsFailBeforeConnecting`<br>`modules/dvt/internal/store/target_test.go:TestTargetSchemaIsStrict`<br>`modules/dvt/internal/store/target_test.go:TestTargetFileYAMLSameSchema`<br>`modules/dvt/internal/store/target_test.go:TestLoadSecretsChecksEveryReferencedFile` |
+| DVT-SRS-142 | Draft | `modules/dvt/cmd/libredvt/main_v02_test.go:TestRunWithTargetFileKeepsSecretsOutOfArtefacts`<br>`modules/dvt/internal/plan/plan_v02_test.go:TestParseV02StepTypes`<br>`modules/dvt/internal/plan/plan_v02_test.go:TestV02PlanRulesRejectBeforeRunning`<br>`modules/dvt/internal/plan/plan_v02_test.go:TestCheckTargetMatchesStepTypeToProtocol`<br>`modules/dvt/internal/plan/plan_v02_test.go:TestBundledV01PlanParsesUnchanged`<br>`modules/dvt/internal/runner/runner_v02_test.go:TestPlanMustFitTargetProtocol`<br>`modules/dvt/internal/runner/runner_v02_test.go:TestStepProtocolTableMatchesRunner` |
+| DVT-SRS-143 | Draft | `modules/dvt/internal/result/evidence_test.go:TestEvidenceCheckClosedValueSets`<br>`modules/dvt/internal/result/evidence_test.go:TestEvidenceFieldNamesMatchTheModel`<br>`modules/dvt/internal/result/evidence_test.go:TestV01StepsKeepTheirJSON` |
+| DVT-SRS-144 | Draft | `modules/dvt/internal/result/evidence_test.go:TestDecideStepVerdictRule`<br>`modules/dvt/internal/result/evidence_test.go:TestApplyEvidenceSetsStatusFromVerdictOnly` |
 | DVT-SRS-145 | Draft | **NOT VERIFIED** |
 | DVT-SRS-146 | Draft | **NOT VERIFIED** |
-| DVT-SRS-150 | Draft | **NOT VERIFIED** |
+| DVT-SRS-150 | Draft | `modules/dvt/internal/runner/runner_v02_test.go:TestSecretFileProblemsFailBeforeConnecting` |
 | DVT-SRS-151 | Draft | **NOT VERIFIED** |
-| DVT-SRS-152 | Draft | **NOT VERIFIED** |
-| DVT-SRS-153 | Draft | **NOT VERIFIED** |
-| DVT-SRS-154 | Draft | **NOT VERIFIED** |
+| DVT-SRS-152 | Draft | `modules/dvt/cmd/libredvt/main_v02_test.go:TestRunWithTargetFileKeepsSecretsOutOfArtefacts`<br>`modules/dvt/internal/redact/redact_test.go:TestTokenAndEncodingsAreRedacted`<br>`modules/dvt/internal/redact/redact_test.go:TestPEMKeyIsRedacted`<br>`modules/dvt/internal/redact/redact_test.go:TestShortFormsAndNilSet`<br>`modules/dvt/internal/report/render_test.go:TestRenderScansEveryArtefactBeforeWriting`<br>`modules/dvt/internal/runner/runner_v02_test.go:TestSecretInjectedIntoOutputIsRedactedAndFailsTheRun` |
+| DVT-SRS-153 | Draft | `modules/dvt/internal/engine/secrets_test.go:TestWorkerNeverGetsSecretsOnArgvOrEnv` |
+| DVT-SRS-154 | Draft | `modules/dvt/internal/plan/plan_v02_test.go:TestParseV02StepTypes`<br>`modules/dvt/internal/plan/plan_v02_test.go:TestV02PlanRulesRejectBeforeRunning` |
 | DVT-SRS-155 | Draft | **NOT VERIFIED** |
 | DVT-SRS-156 | Draft | **NOT VERIFIED** |

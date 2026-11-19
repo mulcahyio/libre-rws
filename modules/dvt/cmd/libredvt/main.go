@@ -26,6 +26,7 @@ import (
 
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/engine"
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/plan"
+	"github.com/mulcahyio/libre-rws/modules/dvt/internal/redact"
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/report"
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/result"
 	"github.com/mulcahyio/libre-rws/modules/dvt/internal/runner"
@@ -49,6 +50,7 @@ type Config struct {
 	TLSKey            string        `yaml:"tls_key" env:"LIBRE_DVT_TLS_KEY"`
 	SCPAETitle        string        `yaml:"scp_ae_title" env:"LIBRE_DVT_SCP_AE"`
 	SCPPort           int           `yaml:"scp_port" env:"LIBRE_DVT_SCP_PORT"`
+	SecretsDir        string        `yaml:"secrets_dir" env:"LIBRE_DVT_SECRETS_DIR"` // web-managed targets may only reference files here
 	Engines           EngineConfig  `yaml:"engines"`
 }
 
@@ -71,6 +73,7 @@ func defaults() Config {
 		SessionIdle: 30 * time.Minute,
 		SCPAETitle:  "LIBREDVT",
 		SCPPort:     11115,
+		SecretsDir:  "/run/secrets",
 		Engines: EngineConfig{
 			Dciodvfy: "dciodvfy", Dcentvfy: "dcentvfy", Python: "python3",
 			Worker:       "/opt/libredvt/worker/libredvt_worker.py",
@@ -111,7 +114,7 @@ func main() {
 func usage() {
 	fmt.Fprintln(os.Stderr, `usage:
   libredvt serve [-config FILE]
-  libredvt run [-config FILE] [-target NAME | -host H -port N -called-aet AE [-calling-aet AE] -lab] [-junit F] [-html F] [-json F] PLAN
+  libredvt run [-config FILE] [-targets FILE] [-target NAME | -host H -port N -called-aet AE [-calling-aet AE] -lab] [-junit F] [-html F] [-json F] PLAN
   libredvt validate [-config FILE] [-json F] [-html F] FILE|DIR...
   libredvt version`)
 }
@@ -155,7 +158,7 @@ func serve(args []string) int {
 	defer stop()
 	eng := cfg.engines()
 	rn := &runner.Runner{Engines: eng, SCP: engine.SCP{AETitle: cfg.SCPAETitle, Port: cfg.SCPPort},
-		WorkDir: filepath.Join(cfg.DataDir, "work"), Version: version}
+		WorkDir: filepath.Join(cfg.DataDir, "work"), Version: version, SecretsDir: cfg.SecretsDir}
 	srv, err := web.New(ctx, web.Options{Store: st, Runner: rn, Validator: eng, Password: pw,
 		SessionIdle: cfg.SessionIdle, SecureCookies: cfg.SecureCookies || cfg.TLSCert != "",
 		PlansDir: cfg.PlansDir, Version: version, Log: log})
@@ -188,6 +191,7 @@ func serve(args []string) int {
 func runCmd(args []string) int {
 	fs := flag.NewFlagSet("run", flag.ContinueOnError)
 	targetName := fs.String("target", "", "target name from the data directory's registry (default: the plan's target)")
+	targetsFile := fs.String("targets", "", "YAML target file to look the target up in instead of the registry")
 	host := fs.String("host", "", "ad-hoc target host (instead of the registry)")
 	port := fs.Int("port", 11112, "ad-hoc target port")
 	called := fs.String("called-aet", "", "ad-hoc target called AE title")
@@ -230,6 +234,25 @@ func runCmd(args []string) int {
 		}
 		tgt = &t
 		p.Target = t.Name
+	} else if *targetsFile != "" {
+		if *targetName != "" {
+			p.Target = *targetName
+		}
+		data, err := os.ReadFile(*targetsFile) // #nosec G304 -- target file given by the operator on the command line
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 2
+		}
+		ts, err := store.ParseTargetsFile(data)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "targets rejected:", err)
+			return 2
+		}
+		for i := range ts {
+			if ts[i].Name == p.Target {
+				tgt = &ts[i]
+			}
+		}
 	} else if p.Target != "" || *targetName != "" {
 		if *targetName != "" {
 			p.Target = *targetName
@@ -265,7 +288,7 @@ func runCmd(args []string) int {
 		fmt.Println("run error:", r.Error)
 	}
 	fmt.Printf("verdict: %s (%s)\n", r.Verdict, p.Name)
-	if err := writeOutputs(r, *junit, *htmlOut, *jsonOut); err != nil {
+	if err := writeOutputs(r, runner.SecretsFor(tgt, ""), *junit, *htmlOut, *jsonOut); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
@@ -275,33 +298,27 @@ func runCmd(args []string) int {
 	return 1
 }
 
-func writeOutputs(r *result.Run, junit, htmlOut, jsonOut string) error {
-	if junit != "" {
-		b, err := report.JUnit(r)
-		if err != nil {
-			return err
+// writeOutputs writes the requested artefacts, each scanned for the
+// target's secrets first (DVT-SRS-152). A secret found at this point fails
+// the command.
+func writeOutputs(r *result.Run, secrets *redact.Set, junit, htmlOut, jsonOut string) error {
+	a, hits, err := report.Render(r, secrets)
+	if err != nil {
+		return err
+	}
+	for _, o := range []struct {
+		path string
+		b    []byte
+	}{{junit, a.JUnit}, {htmlOut, a.HTML}, {jsonOut, a.JSON}} {
+		if o.path == "" {
+			continue
 		}
-		if err := os.WriteFile(junit, b, 0o644); err != nil { // #nosec G306 G703 -- output path given by the operator; CI artifact, no patient data
+		if err := os.WriteFile(o.path, o.b, 0o644); err != nil { // #nosec G306 G703 -- output path given by the operator; CI artifact, no patient data
 			return err
 		}
 	}
-	if htmlOut != "" {
-		b, err := report.HTML(r)
-		if err != nil {
-			return err
-		}
-		if err := os.WriteFile(htmlOut, b, 0o644); err != nil { // #nosec G306 G703 -- output path given by the operator; CI artifact, no patient data
-			return err
-		}
-	}
-	if jsonOut != "" {
-		b, err := jsonMarshal(r)
-		if err != nil {
-			return err
-		}
-		if err := os.WriteFile(jsonOut, b, 0o644); err != nil { // #nosec G306 G703 -- output path given by the operator; CI artifact, no patient data
-			return err
-		}
+	if hits > 0 {
+		return fmt.Errorf("%s", result.SecretFound(hits))
 	}
 	return nil
 }

@@ -1,0 +1,105 @@
+commit 2f98e57, 2026-11-19T08:44:29Z
+base image libre/dvt:v02-base sha256:e67e964c8e5f6085aec67cb95f8cf3df951ed254f9173c80008ffec9f79ad2a7, LibreDCM libre/dcm:v02-foundation sha256:1ba9e60d67b72b23026432fcbfd68d4872252f0ddbc819b56b69fdc4572a6f76
+== 1. engine positive controls (Dockerfile.dvt --target test)
+exit 0; 'ok' lines: 9; FAIL lines: 0
+--- PASS: TestNoLibreDCMDICOMLibraries (0.00s)
+--- PASS: TestComposePublishesOnLocalhostByDefault (0.00s)
+--- PASS: TestImageIsPinnedNonRootAndOffline (0.00s)
+--- PASS: TestRunCommandExitStatusAndOutputs (0.01s)
+--- PASS: TestValidateCommandDirectories (0.01s)
+--- PASS: TestRunWithTargetFileKeepsSecretsOutOfArtefacts (0.01s)
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/cmd/libredvt	0.033s
+--- PASS: TestParseDciodvfyRealOutput (0.00s)
+--- PASS: TestParseDcentvfyRealOutput (0.00s)
+--- PASS: TestDicom3toolsUntrustworthyOutputIsEngineError (0.00s)
+--- PASS: TestValidateNonDICOMNotPassedToIODValidators (0.01s)
+--- PASS: TestValidateEngineFailuresNeverPass (20.19s)
+--- PASS: TestVersionsReported (0.00s)
+--- PASS: TestPeerTimeoutPassedAndBounded (18.51s)
+--- PASS: TestWorkerSendsLibreDVTIdentification (2.26s)
+--- PASS: TestImplementationIdentification (0.00s)
+--- PASS: TestEnginePositiveControlsPerFile (8.50s)
+--- PASS: TestEnginePositiveControlConsistency (1.67s)
+--- PASS: TestEngineVersionsAndBuiltInStandard (0.41s)
+--- PASS: TestWorkerNeverGetsSecretsOnArgvOrEnv (0.01s)
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	51.572s
+--- PASS: TestParseGoodPlan (0.00s)
+--- PASS: TestParseRejectsMistakesBeforeRunning (0.00s)
+--- PASS: TestResolveFilesEveryPatternMustMatch (0.00s)
+--- PASS: TestValidAET (0.00s)
+--- PASS: TestParseV02StepTypes (0.00s)
+--- PASS: TestV02PlanRulesRejectBeforeRunning (0.00s)
+--- PASS: TestCheckTargetMatchesStepTypeToProtocol (0.00s)
+--- PASS: TestBundledV01PlanParsesUnchanged (0.00s)
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/plan	0.009s
+--- PASS: TestTokenAndEncodingsAreRedacted (0.00s)
+--- PASS: TestPEMKeyIsRedacted (0.00s)
+--- PASS: TestShortFormsAndNilSet (0.00s)
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/redact	0.007s
+--- PASS: TestRenderScansEveryArtefactBeforeWriting (0.00s)
+--- PASS: TestJUnit (0.00s)
+--- PASS: TestHTMLReportSelfContained (0.00s)
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/report	0.006s
+--- PASS: TestDecideStepVerdictRule (0.00s)
+--- PASS: TestApplyEvidenceSetsStatusFromVerdictOnly (0.00s)
+--- PASS: TestEvidenceCheckClosedValueSets (0.00s)
+--- PASS: TestEvidenceFieldNamesMatchTheModel (0.00s)
+--- PASS: TestV01StepsKeepTheirJSON (0.00s)
+--- PASS: TestDecideVerdictRules (0.00s)
+--- PASS: TestValidationFinish (0.00s)
+--- PASS: TestRunFinish (0.00s)
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/result	0.005s
+--- PASS: TestNetworkPositiveControls (19.96s)
+--- PASS: TestNetworkTargetDownAndProductionGuard (2.82s)
+--- PASS: TestHappyPathPasses (0.00s)
+--- PASS: TestProductionGuard (0.00s)
+--- PASS: TestEchoAndRejectFailures (0.00s)
+--- PASS: TestStoreMoveCompareFailures (0.00s)
+--- PASS: TestUnknownTargetMeansStepsNotRun (0.00s)
+--- PASS: TestNativeReencodingIsNotedNotFailed (0.00s)
+--- PASS: TestDICOMwebDataStepsLabOnly (0.00s)
+--- PASS: TestPlanMustFitTargetProtocol (0.00s)
+--- PASS: TestSecretFileProblemsFailBeforeConnecting (0.00s)
+--- PASS: TestSecretInjectedIntoOutputIsRedactedAndFailsTheRun (0.00s)
+--- PASS: TestStepProtocolTableMatchesRunner (0.00s)
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	22.795s
+--- PASS: TestTargetsDefaultToProduction (0.00s)
+--- PASS: TestTargetValidation (0.00s)
+--- PASS: TestResultsNewestFirstAndDelete (0.00s)
+--- PASS: TestSafeName (0.00s)
+--- PASS: TestSaveUploadZip (0.00s)
+--- PASS: TestV01TargetRecordLoadsAsDIMSE (0.00s)
+--- PASS: TestDICOMwebBaseURLRules (0.00s)
+--- PASS: TestBearerOverHTTPOnlyToLoopback (0.00s)
+--- PASS: TestTargetSchemaIsStrict (0.00s)
+--- PASS: TestTargetFileYAMLSameSchema (0.00s)
+--- PASS: TestLoadSecretsChecksEveryReferencedFile (0.00s)
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/store	0.008s
+--- PASS: TestRefusesToStartWithoutPassword (0.00s)
+--- PASS: TestEverythingButLoginAndHealthNeedsSession (0.00s)
+--- PASS: TestSessionExpiresAfterIdle (0.00s)
+--- PASS: TestCSRFAndLoginRateLimit (0.00s)
+--- PASS: TestUploadValidateAndDelete (0.00s)
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/web	0.010s
+== 2. image build and offline validation
+sha256:be68b39e0b8fcbe86c9f8d8ac4cd43292508360e99a6501d1a0e064216c2ca04
+image sha256:be68b39e0b8fcbe86c9f8d8ac4cd43292508360e99a6501d1a0e064216c2ca04
+pass with warnings /opt/libredvt/plans/fixtures/ct_explicit_le.dcm
+    warning dciodvfy        PatientWeight(0010,1030)[1] Value is zero
+    warning dciodvfy        Laterality(0020,0060) is only permitted to be empty when actually unknown; should be absent (not empty) if an unpaired body part, and have a value if a paired body part
+    warning dicom-validator (FFFC,FFFC) Module General: (FFFC,FFFC) (Data Set Trailing Padding) is unexpected
+verdict: pass with warnings (1 files, 0 errors, 3 warnings, 0 engine errors)
+validate exit 0
+== 3. bundled LibreDCM plan
+v01-base: exit 0 :: verdict: pass (LibreDCM conformance)
+v02-adhoc: exit 0 :: verdict: pass (LibreDCM conformance)
+v02-targets: exit 0 :: verdict: pass (LibreDCM conformance)
+docs/dhf/libredvt/evidence/v0.2-foundation/libredcm-plan/v01-base-run.json: verdict pass, 5 steps
+  passed  echo                         echo     C-ECHO status 0x0000 (Success)
+  passed  reject-wrong-called-ae       reject   association with calling AE "LIBREDVT", called AE "NOT-LIBREDCM" rejected as expected
+  passed  store-native-and-compressed  store    6 of 6 files stored with status 0x0000
+  passed  find-stored-studies          find     1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es)); 1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))
+  passed  move-and-compare-pixels      move     6 of 6 expected instances received; note: fixtures/ct_explicit_le.dcm re-encoded from 1.2.840.10008.1.2.1 to 1.2.840.10008.1.2 (uncompressed; pixel data identical); pixel data identical for 6 of 6 sent files
+docs/dhf/libredvt/evidence/v0.2-foundation/libredcm-plan/v02-adhoc-run.json: verdict pass, target_desc 'cli (dvt02-gw:11112, called AE LIBREDCM, calling AE LIBREDVT, class lab)': SAME as base
+docs/dhf/libredvt/evidence/v0.2-foundation/libredcm-plan/v02-targets-run.json: verdict pass, target_desc 'libredcm-lab (dvt02-gw:11112, called AE LIBREDCM, calling AE LIBREDVT, class lab)': SAME as base
+compare exit 0

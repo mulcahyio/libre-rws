@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="LibreDVT" tests="5" failures="0" time="3.528">
+  <testsuite name="LibreDCM conformance" tests="5" failures="0" timestamp="2026-11-19T08:46:02Z" time="3.528">
+    <properties>
+      <property name="run_id" value="20261119-084602-9ea08597"></property>
+      <property name="plan_sha256" value="006e60ed9d54d03c91ab3ff588dd05f6ee1da481587aed4ae41706a7654ae9b4"></property>
+      <property name="target" value="cli (dvt02-gw:11112, called AE LIBREDCM, calling AE LIBREDVT, class lab)"></property>
+      <property name="verdict" value="pass"></property>
+      <property name="version.dicom-validator" value="0.9.0"></property>
+      <property name="version.dicom3tools" value="1.00.snapshot.20260927113651"></property>
+      <property name="version.libredvt" value="0.2.0-dev"></property>
+      <property name="version.pydicom" value="3.0.2"></property>
+      <property name="version.pynetdicom" value="3.0.4"></property>
+      <property name="version.python" value="3.12.16"></property>
+      <property name="version.standard-edition" value="2026d"></property>
+      <property name="version.worker" value="0.1.1"></property>
+    </properties>
+    <testcase name="echo" classname="libredvt.echo" time="0.283">
+      <properties>
+        <property name="verifies" value="DCM-SRS-001"></property>
+      </properties>
+      <system-out>C-ECHO status 0x0000 (Success)</system-out>
+    </testcase>
+    <testcase name="reject-wrong-called-ae" classname="libredvt.reject" time="0.265">
+      <properties>
+        <property name="verifies" value="DCM-SRS-014"></property>
+      </properties>
+      <system-out>association with calling AE &#34;LIBREDVT&#34;, called AE &#34;NOT-LIBREDCM&#34; rejected as expected</system-out>
+    </testcase>
+    <testcase name="store-native-and-compressed" classname="libredvt.store" time="0.306">
+      <properties>
+        <property name="verifies" value="DCM-SRS-002, DCM-SRS-003"></property>
+      </properties>
+      <system-out>6 of 6 files stored with status 0x0000</system-out>
+    </testcase>
+    <testcase name="find-stored-studies" classname="libredvt.find" time="0.441">
+      <properties>
+        <property name="verifies" value="DCM-SRS-006"></property>
+      </properties>
+      <system-out>1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es))&#xA;1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es))&#xA;1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es))&#xA;1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))</system-out>
+    </testcase>
+    <testcase name="move-and-compare-pixels" classname="libredvt.move" time="1.815">
+      <properties>
+        <property name="verifies" value="DCM-SRS-003, DCM-SRS-010"></property>
+      </properties>
+      <system-out>6 of 6 expected instances received&#xA;note: fixtures/ct_explicit_le.dcm re-encoded from 1.2.840.10008.1.2.1 to 1.2.840.10008.1.2 (uncompressed; pixel data identical)&#xA;pixel data identical for 6 of 6 sent files</system-out>
+    </testcase>
+  </testsuite>
+</testsuites>

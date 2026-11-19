@@ -53,6 +53,9 @@ func run(ctx context.Context, timeout time.Duration, name string, args ...string
 	if timeout <= 0 {
 		timeout = 2 * time.Minute
 	}
+	if err := checkNoSecrets(ctx, name, args); err != nil {
+		return Output{ExitCode: -1}, err
+	}
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, name, args...) // #nosec G204 -- engine path from admin config; args are validated file paths and plan values, no shell

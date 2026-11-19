@@ -70,6 +70,23 @@ docker run --rm -v "$PWD/files":/files:ro libre/dvt:dev validate /files
 run, and 2 when the plan is invalid. `validate` exits 0 only when no file
 failed.
 
+`run -targets FILE` looks the plan's target up in a YAML target file instead
+of the data directory's registry. The file uses the v0.2 target schema
+(`docs/dhf/libredvt/plan-schema.md` §2): `dimse` or `dicomweb` targets, an
+optional `tls` block, and a bearer token only as `auth.token_file`, a path
+to a file holding it. Unknown fields, inline secrets (`token`, `password`,
+`private_key`) and switches that would turn off certificate checks are
+refused (exit 2).
+
+**v0.2 in progress (DRAFT).** Plans may already contain the v0.2 step types
+`associate`, `tls_reject`, `qido`, `wado` and `stow`; they are checked
+strictly and against the target's protocol, but until their engines are
+built they fail without sending anything. `qido`, `wado` and `stow` run only
+against `lab` targets. A DIMSE target with a `tls` block refuses every step
+rather than connect in clear text. Configured secrets never appear in
+reports, stored runs or process arguments; if one is found in any output it
+is replaced by `[REDACTED]` and the run fails.
+
 ## Test plans
 
 ```yaml
@@ -108,6 +125,7 @@ file. Unknown fields or step types reject the whole plan before anything runs.
 | `LIBRE_DVT_SESSION_IDLE` | `30m` | session inactivity timeout |
 | `LIBRE_DVT_TLS_CERT`, `LIBRE_DVT_TLS_KEY` | | serve the UI over HTTPS |
 | `LIBRE_DVT_ENGINE_TIMEOUT` | `2m` | per engine call |
+| `LIBRE_DVT_SECRETS_DIR` | `/run/secrets` | web UI runs: certificate, key and token files a target references must lie here |
 
 ## Development
 
