@@ -362,7 +362,14 @@ func (rn *Runner) wado(ctx context.Context, p *plan.Plan, ps plan.Step, t *store
 	if ps.Metadata {
 		rn.metadata(ctx, p, ps, t, ev, exp)
 	} else {
-		rn.retrieve(ctx, p, t, ev, s, exp, retrieveOpts{ts: ps.TransferSyntax, pixels: ps.ComparePixels, validate: ps.ValidateObjects, prefix: "wado"})
+		// Pixel comparison needs the stored transfer syntax: without a
+		// requested syntax PS3.18 lets the server answer Explicit VR Little
+		// Endian (a transcode), so LibreDVT asks for "*" (any syntax).
+		ts := ps.TransferSyntax
+		if ts == "" && ps.ComparePixels {
+			ts = "*"
+		}
+		rn.retrieve(ctx, p, t, ev, s, exp, retrieveOpts{ts: ts, pixels: ps.ComparePixels, validate: ps.ValidateObjects, prefix: "wado"})
 	}
 	s.ApplyEvidence(ev)
 	addWebTLSNote(s, ev.Exchanges)
@@ -653,7 +660,7 @@ func (rn *Runner) stow(ctx context.Context, p *plan.Plan, ps plan.Step, t *store
 			exp.resources = append(exp.resources, fmt.Sprintf("/studies/%s/series/%s/instances/%s", f.StudyInstanceUID, f.SeriesInstanceUID, f.SOPInstanceUID))
 		}
 		vs := &result.Step{ID: s.ID}
-		rn.retrieve(ctx, p, t, ev, vs, exp, retrieveOpts{pixels: true, prefix: "stow.verify"})
+		rn.retrieve(ctx, p, t, ev, vs, exp, retrieveOpts{ts: "*", pixels: true, prefix: "stow.verify"})
 	}
 	s.ApplyEvidence(ev)
 	s.Messages = append(s.Messages, fmt.Sprintf("%d of %d files stored and referenced by the target", len(stored), len(files)))

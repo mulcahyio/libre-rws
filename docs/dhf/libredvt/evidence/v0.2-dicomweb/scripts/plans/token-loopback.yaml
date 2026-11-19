@@ -1,0 +1,11 @@
+# Bearer token over clear text to a loopback Orthanc (expected: pass). Orthanc
+# has authentication off and ignores the header; the run shows the token is
+# sent (DVT-SRS-111, loopback rule DVT-SRS-112) and never reaches an artefact
+# (DVT-SRS-152): summarize.py greps every artefact for it.
+name: DICOMweb with bearer token over loopback http
+target: orthanc-loopback
+timeout: 60s
+steps:
+  - {id: stow, type: stow, files: [/opt/libredvt/plans/fixtures/ct_explicit_le.dcm, /opt/libredvt/plans/fixtures/sc_jpeg_lossless.dcm], verifies: [DVT-SRS-111, DVT-SRS-128]}
+  - {id: qido, type: qido, level: instances, from_store: true, verifies: [DVT-SRS-135]}
+  - {id: wado, type: wado, from_store: true, compare_pixels: true, verifies: [DVT-SRS-123]}
