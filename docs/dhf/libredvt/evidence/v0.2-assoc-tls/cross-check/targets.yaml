@@ -1,0 +1,24 @@
+targets:
+  - {name: dcmtk-plain, class: lab, protocol: dimse, host: dcmtk-plain, port: 11112, called_aet: STORESCP}
+  - {name: dcmtk-refuse, class: lab, protocol: dimse, host: dcmtk-refuse, port: 11112, called_aet: STORESCP}
+  - name: dcmtk-tls
+    class: lab
+    host: dcmtk-tls
+    port: 11112
+    called_aet: STORESCP
+    tls: {ca_file: /pki/ca.crt, client_cert_file: /pki/libredvt-client.crt, client_key_file: /pki/libredvt-client.key}
+  - name: dcmtk-mtls
+    class: lab
+    host: dcmtk-mtls
+    port: 11112
+    called_aet: STORESCP
+    tls: {ca_file: /pki/ca.crt, client_cert_file: /pki/libredvt-client.crt, client_key_file: /pki/libredvt-client.key}
+  - name: dcmtk-mtls-stranger
+    class: lab
+    host: dcmtk-mtls
+    port: 11112
+    called_aet: STORESCP
+    tls: {ca_file: /pki/ca.crt, client_cert_file: /pki/stranger.crt, client_key_file: /pki/stranger.key}
+  - {name: dcmtk-wrong, class: lab, host: dcmtk-wrong, port: 11112, called_aet: STORESCP, tls: {ca_file: /pki/ca.crt}}
+  - {name: dcmtk-aes, class: lab, host: dcmtk-aes, port: 11112, called_aet: STORESCP, tls: {ca_file: /pki/ca.crt}}
+  - {name: libredcm, class: lab, host: libredcm, port: 11112, called_aet: LIBREDCM, tls: {ca_file: /pki/ca.crt}}

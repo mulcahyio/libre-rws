@@ -1,0 +1,2 @@
+passed   negotiation              associate 12 assertion(s) checked; verdict pass; association accepted; max PDU 16384, Implementation Class UID "1.2.276.0.7230010.3.0.3.6.7", Version Name "OFFIS_DCMTK_367"
+verdict: pass (DCMTK storescp association negotiation)

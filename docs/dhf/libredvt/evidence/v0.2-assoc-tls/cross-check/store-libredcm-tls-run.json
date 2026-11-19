@@ -1,0 +1,57 @@
+{
+  "id": "20261119-110541-af519098",
+  "plan": "LibreDCM store and find over TLS",
+  "plan_sha256": "53ffb4db1e41d27a3e2437a458f25c40dc09e76e250da5792b06d2c132204ea4",
+  "target": "libredcm",
+  "target_desc": "libredcm (libredcm:11112, called AE LIBREDCM, calling AE LIBREDVT, TLS 1.2+, class lab)",
+  "started": "2026-11-19T11:05:41.171267951Z",
+  "finished": "2026-11-19T11:05:42.455754883Z",
+  "steps": [
+    {
+      "id": "store-over-tls",
+      "type": "store",
+      "verifies": [
+        "DVT-SRS-100",
+        "DVT-SRS-107"
+      ],
+      "status": "passed",
+      "messages": [
+        "TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject \"O=LibreDVT cross-check,CN=libredcm\", issuer \"O=LibreDVT cross-check,CN=dvt03-test-ca\", SAN DNS [libredcm], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 52364d94af55994990946c9f4fa4ccb2e384d00ec414e46cbc9be0e39ae93206; client certificate offered: false",
+        "6 of 6 files stored with status 0x0000"
+      ],
+      "started": "2026-11-19T11:05:41.601766902Z",
+      "duration": 361637629,
+      "details": "{\"associated\": true, \"files\": [{\"file\": \"/plans/fixtures/ct_explicit_le.dcm\", \"sop_instance_uid\": \"1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322\", \"status\": 0, \"study_instance_uid\": \"1.3.6.1.4.1.5962.1.2.1.20040119072730.12322\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.1\"}, {\"file\": \"/plans/fixtures/ct_j2k.dcm\", \"sop_instance_uid\": \"1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246\", \"status\": 0, \"study_instance_uid\": \"1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.4.91\"}, {\"file\": \"/plans/fixtures/mr_jpeg_ls.dcm\", \"sop_instance_uid\": \"1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265\", \"status\": 0, \"study_instance_uid\": \"1.3.6.1.4.1.5962.1.2.4.20040826185059.5457\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.4.80\"}, {\"file\": \"/plans/fixtures/mr_rle.dcm\", \"sop_instance_uid\": \"1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457\", \"status\": 0, \"study_instance_uid\": \"1.3.6.1.4.1.5962.1.2.4.20040826185059.5457\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.5\"}, {\"file\": \"/plans/fixtures/sc_jpeg_baseline.dcm\", \"sop_instance_uid\": \"1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194\", \"status\": 0, \"study_instance_uid\": \"1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.4.50\"}, {\"file\": \"/plans/fixtures/sc_jpeg_lossless.dcm\", \"sop_instance_uid\": \"1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116\", \"status\": 0, \"study_instance_uid\": \"1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114\", \"transfer_syntax_uid\": \"1.2.840.10008.1.2.4.70\"}], \"tls\": {\"cipher\": \"TLS_AES_128_GCM_SHA256\", \"client_cert_sent\": false, \"peer\": {\"issuer\": \"O=LibreDVT cross-check,CN=dvt03-test-ca\", \"not_after\": \"2026-11-20T11:05:19.000Z\", \"not_before\": \"2026-11-19T11:05:19.000Z\", \"san_dns\": [\"libredcm\"], \"san_ip\": [], \"sha256\": \"52364d94af55994990946c9f4fa4ccb2e384d00ec414e46cbc9be0e39ae93206\", \"subject\": \"O=LibreDVT cross-check,CN=libredcm\"}, \"verified\": true, \"version\": \"TLSv1.3\"}}\n"
+    },
+    {
+      "id": "find-over-tls",
+      "type": "find",
+      "verifies": [
+        "DVT-SRS-100",
+        "DVT-SRS-107"
+      ],
+      "status": "passed",
+      "messages": [
+        "TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject \"O=LibreDVT cross-check,CN=libredcm\", issuer \"O=LibreDVT cross-check,CN=dvt03-test-ca\", SAN DNS [libredcm], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 52364d94af55994990946c9f4fa4ccb2e384d00ec414e46cbc9be0e39ae93206; client certificate offered: false",
+        "1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es))",
+        "1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es))",
+        "1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es))",
+        "1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))"
+      ],
+      "started": "2026-11-19T11:05:41.963416262Z",
+      "duration": 492321358,
+      "details": "{\"associated\": true, \"queries\": [{\"final_status\": 0, \"matches\": [\"1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996\"], \"pending\": 1, \"study\": \"1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996\"}, {\"final_status\": 0, \"matches\": [\"1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114\"], \"pending\": 1, \"study\": \"1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114\"}, {\"final_status\": 0, \"matches\": [\"1.3.6.1.4.1.5962.1.2.1.20040119072730.12322\"], \"pending\": 1, \"study\": \"1.3.6.1.4.1.5962.1.2.1.20040119072730.12322\"}, {\"final_status\": 0, \"matches\": [\"1.3.6.1.4.1.5962.1.2.4.20040826185059.5457\"], \"pending\": 1, \"study\": \"1.3.6.1.4.1.5962.1.2.4.20040826185059.5457\"}], \"tls\": {\"cipher\": \"TLS_AES_128_GCM_SHA256\", \"client_cert_sent\": false, \"peer\": {\"issuer\": \"O=LibreDVT cross-check,CN=dvt03-test-ca\", \"not_after\": \"2026-11-20T11:05:19.000Z\", \"not_before\": \"2026-11-19T11:05:19.000Z\", \"san_dns\": [\"libredcm\"], \"san_ip\": [], \"sha256\": \"52364d94af55994990946c9f4fa4ccb2e384d00ec414e46cbc9be0e39ae93206\", \"subject\": \"O=LibreDVT cross-check,CN=libredcm\"}, \"verified\": true, \"version\": \"TLSv1.3\"}}\n"
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "dev",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "pass"
+}

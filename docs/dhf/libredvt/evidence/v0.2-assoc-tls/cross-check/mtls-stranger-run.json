@@ -1,0 +1,34 @@
+{
+  "id": "20261119-110533-2a6d08c0",
+  "plan": "Echo",
+  "plan_sha256": "34db5da97b58c9067b095b1be8cf91e1db9ee5bafff99bf41e47cba6c54b39df",
+  "target": "dcmtk-mtls-stranger",
+  "target_desc": "dcmtk-mtls-stranger (dcmtk-mtls:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)",
+  "started": "2026-11-19T11:05:33.958825399Z",
+  "finished": "2026-11-19T11:05:34.662118244Z",
+  "steps": [
+    {
+      "id": "echo",
+      "type": "echo",
+      "status": "failed",
+      "messages": [
+        "TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject \"O=LibreDVT cross-check,CN=dcmtk-peer\", issuer \"O=LibreDVT cross-check,CN=dvt03-test-ca\", SAN DNS [dcmtk-tls dcmtk-mtls dcmtk-aes], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102; client certificate offered: true",
+        "association not established: association aborted"
+      ],
+      "started": "2026-11-19T11:05:34.3840585Z",
+      "duration": 277834426,
+      "details": "{\"associated\": false, \"error\": \"association aborted\", \"rejected\": false, \"tls\": {\"cipher\": \"TLS_AES_256_GCM_SHA384\", \"client_cert_sent\": true, \"peer\": {\"issuer\": \"O=LibreDVT cross-check,CN=dvt03-test-ca\", \"not_after\": \"2026-11-20T11:05:19.000Z\", \"not_before\": \"2026-11-19T11:05:19.000Z\", \"san_dns\": [\"dcmtk-tls\", \"dcmtk-mtls\", \"dcmtk-aes\"], \"san_ip\": [], \"sha256\": \"6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102\", \"subject\": \"O=LibreDVT cross-check,CN=dcmtk-peer\"}, \"verified\": true, \"version\": \"TLSv1.3\"}}\n"
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "dev",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "fail"
+}

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="LibreDVT" tests="2" failures="0" time="1.284">
+  <testsuite name="LibreDCM store and find over TLS" tests="2" failures="0" timestamp="2026-11-19T11:05:41Z" time="1.284">
+    <properties>
+      <property name="run_id" value="20261119-110541-af519098"></property>
+      <property name="plan_sha256" value="53ffb4db1e41d27a3e2437a458f25c40dc09e76e250da5792b06d2c132204ea4"></property>
+      <property name="target" value="libredcm (libredcm:11112, called AE LIBREDCM, calling AE LIBREDVT, TLS 1.2+, class lab)"></property>
+      <property name="verdict" value="pass"></property>
+      <property name="version.dicom-validator" value="0.9.0"></property>
+      <property name="version.dicom3tools" value="1.00.snapshot.20260927113651"></property>
+      <property name="version.libredvt" value="dev"></property>
+      <property name="version.pydicom" value="3.0.2"></property>
+      <property name="version.pynetdicom" value="3.0.4"></property>
+      <property name="version.python" value="3.12.16"></property>
+      <property name="version.standard-edition" value="2026d"></property>
+      <property name="version.worker" value="0.2.0"></property>
+    </properties>
+    <testcase name="store-over-tls" classname="libredvt.store" time="0.362">
+      <properties>
+        <property name="verifies" value="DVT-SRS-100, DVT-SRS-107"></property>
+      </properties>
+      <system-out>TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=libredcm&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt03-test-ca&#34;, SAN DNS [libredcm], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 52364d94af55994990946c9f4fa4ccb2e384d00ec414e46cbc9be0e39ae93206; client certificate offered: false&#xA;6 of 6 files stored with status 0x0000</system-out>
+    </testcase>
+    <testcase name="find-over-tls" classname="libredvt.find" time="0.492">
+      <properties>
+        <property name="verifies" value="DVT-SRS-100, DVT-SRS-107"></property>
+      </properties>
+      <system-out>TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=libredcm&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt03-test-ca&#34;, SAN DNS [libredcm], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 52364d94af55994990946c9f4fa4ccb2e384d00ec414e46cbc9be0e39ae93206; client certificate offered: false&#xA;1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es))&#xA;1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es))&#xA;1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es))&#xA;1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))</system-out>
+    </testcase>
+  </testsuite>
+</testsuites>

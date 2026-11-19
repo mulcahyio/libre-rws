@@ -1,0 +1,125 @@
+D: $dcmtk: storescp v3.6.7 2022-04-22 $
+D: 
+D: DcmDataDictionary: Loading file: /usr/share/libdcmtk17/dicom.dic
+D: DcmDataDictionary: Loading file: /usr/share/libdcmtk17/private.dic
+D: Association Received: dvt-runner
+D: setting network send timeout to 60 seconds
+D: setting network receive timeout to 60 seconds
+D: PDU Type: Associate Request, PDU Length: 451 + 6 bytes PDU header
+D:   01  00  00  00  01  c3  00  01  00  00  53  54  4f  52  45  53
+D:   43  50  20  20  20  20  20  20  20  20  4c  49  42  52  45  44
+D:   56  54  20  20  20  20  20  20  20  20  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  10  00  00  15  31  2e
+D:   32  2e  38  34  30  2e  31  30  30  30  38  2e  33  2e  31  2e
+D:   31  2e  31  20  00  00  2e  01  00  00  00  30  00  00  11  31
+D:   2e  32  2e  38  34  30  2e  31  30  30  30  38  2e  31  2e  31
+D:   40  00  00  11  31  2e  32  2e  38  34  30  2e  31  30  30  30
+D:   38  2e  31  2e  32  20  00  00  4d  03  00  00  00  30  00  00
+D:   19  31  2e  32  2e  38  34  30  2e  31  30  30  30  38  2e  35
+D:   2e  31  2e  34  2e  31  2e  31  2e  32  40  00  00  13  31  2e
+D:   32  2e  38  34  30  2e  31  30  30  30  38  2e  31  2e  32  2e
+D:   31  40  00  00  11  31  2e  32  2e  38  34  30  2e  31  30  30
+D:   30  38  2e  31  2e  32  20  00  00  3b  05  00  00  00  30  00
+D:   00  19  31  2e  32  2e  38  34  30  2e  31  30  30  30  38  2e
+D:   35  2e  31  2e  34  2e  31  2e  31  2e  32  40  00  00  16  31
+D:   2e  32  2e  38  34  30  2e  31  30  30  30  38  2e  31  2e  32
+D:   2e  34  2e  35  30  20  00  00  33  07  00  00  00  30  00  00
+D:   16  31  2e  32  2e  38  34  30  2e  31  30  30  30  38  2e  35
+D:   2e  31  2e  34  2e  33  31  40  00  00  11  31  2e  32  2e  38
+D:   34  30  2e  31  30  30  30  38  2e  31  2e  32  20  00  00  26
+D:   09  00  00  00  30  00  00  09  31  2e  32  2e  33  2e  34  2e
+D:   35  40  00  00  11  31  2e  32  2e  38  34  30  2e  31  30  30
+D:   30  38  2e  31  2e  32  50  00  00  3f  51  00  00  04  00  00
+D:   40  00  52  00  00  1b  31  2e  33  2e  36  2e  31  2e  34  2e
+D:   31  2e  36  37  36  38  36  2e  31  2e  33  2e  31  2e  30  2e
+D:   30  53  00  00  04  00  04  00  04  55  00  00  0c  4c  49  42
+D:   52  45  44  56  54  5f  30  5f  30
+D: Parsing an A-ASSOCIATE PDU
+I: Association Received
+D: Parameters:
+D: ====================== BEGIN A-ASSOCIATE-RQ =====================
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.3.1.0.0
+D: Their Implementation Version Name: LIBREDVT_0_0
+D: Application Context Name:    1.2.840.10008.3.1.1.1
+D: Calling Application Name:    LIBREDVT
+D: Called Application Name:     STORESCP
+D: Responding Application Name: 
+D: Our Max PDU Receive Size:    16384
+D: Their Max PDU Receive Size:  16384
+D: Presentation Contexts:
+D:   Context ID:        1 (Proposed)
+D:     Abstract Syntax: =VerificationSOPClass
+D:     Proposed SCP/SCU Role: Default
+D:     Proposed Transfer Syntax(es):
+D:       =LittleEndianImplicit
+D:   Context ID:        3 (Proposed)
+D:     Abstract Syntax: =CTImageStorage
+D:     Proposed SCP/SCU Role: Default
+D:     Proposed Transfer Syntax(es):
+D:       =LittleEndianExplicit
+D:       =LittleEndianImplicit
+D:   Context ID:        5 (Proposed)
+D:     Abstract Syntax: =CTImageStorage
+D:     Proposed SCP/SCU Role: Default
+D:     Proposed Transfer Syntax(es):
+D:       =JPEGBaseline
+D:   Context ID:        7 (Proposed)
+D:     Abstract Syntax: =FINDModalityWorklistInformationModel
+D:     Proposed SCP/SCU Role: Default
+D:     Proposed Transfer Syntax(es):
+D:       =LittleEndianImplicit
+D:   Context ID:        9 (Proposed)
+D:     Abstract Syntax: 1.2.3.4.5
+D:     Proposed SCP/SCU Role: Default
+D:     Proposed Transfer Syntax(es):
+D:       =LittleEndianImplicit
+D: Requested Extended Negotiation: none
+D: Accepted Extended Negotiation:  none
+D: Requested User Identity Negotiation: none
+D: User Identity Negotiation Response:  none
+D: ======================= END A-ASSOCIATE-RQ ======================
+D: Constructing Associate AC PDU
+I: Association Acknowledged (Max Send PDV: 16372)
+D: ====================== BEGIN A-ASSOCIATE-AC =====================
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.3.1.0.0
+D: Their Implementation Version Name: LIBREDVT_0_0
+D: Application Context Name:    1.2.840.10008.3.1.1.1
+D: Calling Application Name:    LIBREDVT
+D: Called Application Name:     STORESCP
+D: Responding Application Name: STORESCP
+D: Our Max PDU Receive Size:    16384
+D: Their Max PDU Receive Size:  16384
+D: Presentation Contexts:
+D:   Context ID:        1 (Accepted)
+D:     Abstract Syntax: =VerificationSOPClass
+D:     Proposed SCP/SCU Role: Default
+D:     Accepted SCP/SCU Role: Default
+D:     Accepted Transfer Syntax: =LittleEndianImplicit
+D:   Context ID:        3 (Accepted)
+D:     Abstract Syntax: =CTImageStorage
+D:     Proposed SCP/SCU Role: Default
+D:     Accepted SCP/SCU Role: Default
+D:     Accepted Transfer Syntax: =LittleEndianExplicit
+D:   Context ID:        5 (Transfer Syntaxes Not Supported)
+D:     Abstract Syntax: =CTImageStorage
+D:     Proposed SCP/SCU Role: Default
+D:     Accepted SCP/SCU Role: Default
+D:   Context ID:        7 (Abstract Syntax Not Supported)
+D:     Abstract Syntax: =FINDModalityWorklistInformationModel
+D:     Proposed SCP/SCU Role: Default
+D:     Accepted SCP/SCU Role: Default
+D:   Context ID:        9 (Abstract Syntax Not Supported)
+D:     Abstract Syntax: 1.2.3.4.5
+D:     Proposed SCP/SCU Role: Default
+D:     Accepted SCP/SCU Role: Default
+D: Requested Extended Negotiation: none
+D: Accepted Extended Negotiation:  none
+D: Requested User Identity Negotiation: none
+D: User Identity Negotiation Response:  none
+D: ======================= END A-ASSOCIATE-AC ======================
+I: Association Release

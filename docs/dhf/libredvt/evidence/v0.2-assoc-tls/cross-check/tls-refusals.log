@@ -1,0 +1,4 @@
+passed   plaintext-refused        tls_reject 1 assertion(s) checked; verdict pass
+passed   tls10-refused            tls_reject 1 assertion(s) checked; verdict pass
+passed   tls11-refused            tls_reject 1 assertion(s) checked; verdict pass
+verdict: pass (TLS refusals)

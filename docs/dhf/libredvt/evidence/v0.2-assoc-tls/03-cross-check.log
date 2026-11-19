@@ -1,0 +1,80 @@
+commit 03fac78, 2026-11-19T11:05:19Z
+image libre/dvt:v02-assoc-tls sha256:9d202558ba9b26b72efa236e0eb6834db91c8168f69ca17c96692d933ad1482c
+image libre/dcm:v02-foundation sha256:1ba9e60d67b72b23026432fcbfd68d4872252f0ddbc819b56b69fdc4572a6f76
+image rws-e2e-dcmtk sha256:a43f0e598a80880690838e1c6537342e7301aca6f181766cfa2d94a76bbe6487
+== synthetic PKI (openssl 3.6.5)
+dcmtk-peer: subject=O=LibreDVT cross-check, CN=dcmtk-peer X509v3 Subject Alternative Name:      DNS:dcmtk-tls, DNS:dcmtk-mtls, DNS:dcmtk-aes 
+wrong-host: subject=O=LibreDVT cross-check, CN=other X509v3 Subject Alternative Name:      DNS:other.test 
+libredcm: subject=O=LibreDVT cross-check, CN=libredcm X509v3 Subject Alternative Name:      DNS:libredcm 
+libredvt-client: subject=O=LibreDVT cross-check, CN=libredvt-client X509v3 Subject Alternative Name:      DNS:libredvt-client 
+LibreDCM health: healthy
+== LibreDVT against DCMTK and LibreDCM
+plain-negotiation (target dcmtk-plain, plan associate-dcmtk.yaml): exit 0 :: verdict: pass (DCMTK storescp association negotiation)
+refuse (target dcmtk-refuse, plan associate-refused.yaml): exit 0 :: verdict: pass (DCMTK storescp refuses every association)
+tls-negotiation (target dcmtk-tls, plan associate-dcmtk-tls.yaml): exit 0 :: verdict: pass (DCMTK storescp association negotiation over TLS)
+tls-refusals (target dcmtk-tls, plan tls-refusals.yaml): exit 0 :: verdict: pass (TLS refusals)
+tls-no-client-cert-not-required (target dcmtk-tls, plan tls-no-client-cert.yaml): exit 1 :: verdict: fail (TLS client certificate required)
+mtls (target dcmtk-mtls, plan tls-mtls.yaml): exit 0 :: verdict: pass (Mutual TLS)
+mtls-stranger (target dcmtk-mtls-stranger, plan echo.yaml): exit 1 :: verdict: fail (Echo)
+wrong-host (target dcmtk-wrong, plan echo.yaml): exit 1 :: verdict: fail (Echo)
+aes-profile-old-versions (target dcmtk-aes, plan tls-old-versions.yaml): exit 1 :: verdict: fail (Old TLS versions refused)
+libredcm-tls (target libredcm, plan libredcm-tls.yaml): exit 0 :: verdict: pass (LibreDCM TLS smoke)
+libredcm-no-client-cert (target libredcm, plan tls-no-client-cert.yaml): exit 1 :: verdict: fail (TLS client certificate required)
+store-dcmtk-tls (target dcmtk-tls, plan /plans/store-dcmtk-tls.yaml): exit 0 :: verdict: pass (Store over TLS to DCMTK)
+store-libredcm-tls (target libredcm, plan /plans/store-libredcm-tls.yaml): exit 0 :: verdict: pass (LibreDCM store and find over TLS)
+files storescp +tls wrote: 1
+== DCMTK echoscu +tls against the same servers (DCMTK does not check host names)
+echoscu tls: exit 0
+echoscu mtls: exit 0
+echoscu mtls-no-cert: exit 1
+echoscu libredcm: exit 0
+echoscu libredcm-plain: exit 1
+echoscu aes-profile: exit 0
+== server logs
+DCMTK "Association Received" lines per server (aes mtls plain refuse tls wrong): 7 8 2 2 13 1
+== TLS versions and suites each DCMTK server recorded (its own log, independent of LibreDVT's worker)
+dcmtk-tls: 5 Ciphersuite : TLS_AES_256_GCM_SHA384, encryption: 256 bits;5 Protocol : TLSv1.3;2 Receiving Association failed: 000b:0902 TLS error: unsupported protocol;1 Receiving Association failed: 000b:090b TLS error: wrong version number
+dcmtk-mtls: 2 Ciphersuite : TLS_AES_256_GCM_SHA384, encryption: 256 bits;2 Protocol : TLSv1.3;1 Receiving Association failed: 000b:0886 TLS error: certificate verify failed;2 Receiving Association failed: 000b:08c7 TLS error: peer did not return a certificate;1 Receiving Association failed: 000b:090b TLS error: wrong version number
+dcmtk-wrong: 1 Receiving Association failed: 000b:0c12 TLS error: sslv3 alert bad certificate
+dcmtk-aes: 3 Ciphersuite : AES128-SHA, encryption: 128 bits;1 Protocol : TLSv1;1 Protocol : TLSv1.1;1 Protocol : TLSv1.2;1 Receiving Association failed: 000b:08c1 TLS error: no shared cipher
+OK       plain-negotiation: verdict pass (expected pass)
+    negotiation: passed :: 12 assertion(s) checked; verdict pass | association accepted; max PDU 16384, Implementation Class UID "1.2.276.0.7230010.3.0.3.6.7", Version Name "OFFIS_DCMTK_367"
+OK       refuse: verdict pass (expected pass)
+    refused: passed :: 2 assertion(s) checked; verdict pass | association rejected; max PDU 0, Implementation Class UID "", Version Name ""
+OK       tls-negotiation: verdict pass (expected pass)
+    negotiation: passed :: 11 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=dcmtk-peer", issuer "O=LibreDVT cross-check,CN=dvt03-test-ca", SAN DNS [dcmtk-tls dcmtk-mtls dcmtk-aes], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102; client cert
+    echo-over-tls: passed :: TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=dcmtk-peer", issuer "O=LibreDVT cross-check,CN=dvt03-test-ca", SAN DNS [dcmtk-tls dcmtk-mtls dcmtk-aes], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102; client certificate offered: true | C-ECHO status 0x
+OK       tls-refusals: verdict pass (expected pass)
+    plaintext-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls10-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls11-refused: passed :: 1 assertion(s) checked; verdict pass
+OK       tls-no-client-cert-not-required: verdict fail (expected fail)
+    no-client-cert-refused: failed :: fail tls_reject.refused no_client_cert: expected refused, got accepted dicom_reply: the target answered the A-ASSOCIATE-RQ with A-ASSOCIATE-AC
+OK       mtls: verdict pass (expected pass)
+    associate-with-client-cert: passed :: 3 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=dcmtk-peer", issuer "O=LibreDVT cross-check,CN=dvt03-test-ca", SAN DNS [dcmtk-tls dcmtk-mtls dcmtk-aes], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102; client certi
+    no-client-cert-refused: passed :: 1 assertion(s) checked; verdict pass
+    plaintext-refused: passed :: 1 assertion(s) checked; verdict pass
+OK       mtls-stranger: verdict fail (expected fail)
+    echo: failed :: TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=dcmtk-peer", issuer "O=LibreDVT cross-check,CN=dvt03-test-ca", SAN DNS [dcmtk-tls dcmtk-mtls dcmtk-aes], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102; client certificate offered: true | association not 
+OK       wrong-host: verdict fail (expected fail)
+    echo: failed :: TLS error: certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)
+OK       aes-profile-old-versions: verdict fail (expected fail)
+    echo-tls12: failed :: TLS error: the target sent a TLS alert: SSLV3_ALERT_HANDSHAKE_FAILURE
+    tls10-refused: failed :: fail tls_reject.refused TLS 1.0 only: expected refused, got accepted handshake_completed: handshake completed with TLSv1
+    tls11-refused: failed :: fail tls_reject.refused TLS 1.1 only: expected refused, got accepted handshake_completed: handshake completed with TLSv1.1
+OK       libredcm-tls: verdict pass (expected pass)
+    negotiation: passed :: 8 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT cross-check,CN=libredcm", issuer "O=LibreDVT cross-check,CN=dvt03-test-ca", SAN DNS [libredcm], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 52364d94af55994990946c9f4fa4ccb2e384d00ec414e46cbc9be0e39ae93206; client certificate offered: false | 
+    echo-over-tls: passed :: TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT cross-check,CN=libredcm", issuer "O=LibreDVT cross-check,CN=dvt03-test-ca", SAN DNS [libredcm], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 52364d94af55994990946c9f4fa4ccb2e384d00ec414e46cbc9be0e39ae93206; client certificate offered: false | C-ECHO status 0x0000 (Success)
+    plaintext-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls10-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls11-refused: passed :: 1 assertion(s) checked; verdict pass
+OK       libredcm-no-client-cert: verdict fail (expected fail)
+    no-client-cert-refused: failed :: fail tls_reject.refused no_client_cert: expected refused, got accepted dicom_reply: the target answered the A-ASSOCIATE-RQ with A-ASSOCIATE-AC
+OK       store-dcmtk-tls: verdict pass (expected pass)
+    store-over-tls: passed :: TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=dcmtk-peer", issuer "O=LibreDVT cross-check,CN=dvt03-test-ca", SAN DNS [dcmtk-tls dcmtk-mtls dcmtk-aes], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102; client certificate offered: true | 1 of 1 files sto
+OK       store-libredcm-tls: verdict pass (expected pass)
+    store-over-tls: passed :: TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT cross-check,CN=libredcm", issuer "O=LibreDVT cross-check,CN=dvt03-test-ca", SAN DNS [libredcm], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 52364d94af55994990946c9f4fa4ccb2e384d00ec414e46cbc9be0e39ae93206; client certificate offered: false | 6 of 6 files stored with status 0x0000
+    find-over-tls: passed :: TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT cross-check,CN=libredcm", issuer "O=LibreDVT cross-check,CN=dvt03-test-ca", SAN DNS [libredcm], SAN IP [], valid 2026-11-19T11:05:19.000Z to 2026-11-20T11:05:19.000Z, SHA-256 52364d94af55994990946c9f4fa4ccb2e384d00ec414e46cbc9be0e39ae93206; client certificate offered: false | 1.2.276.0.7230010.3.1.2.296485376.1.152
+secret check: 77 artefacts, 176 needles, 0 leaks
+== 13 of 13 runs as expected
+summary exit 0

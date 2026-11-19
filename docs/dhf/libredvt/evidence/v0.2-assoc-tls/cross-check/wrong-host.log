@@ -1,0 +1,2 @@
+failed   echo                     echo      TLS error: certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)
+verdict: fail (Echo)

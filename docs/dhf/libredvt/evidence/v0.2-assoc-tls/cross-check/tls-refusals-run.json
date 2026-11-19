@@ -1,0 +1,181 @@
+{
+  "id": "20261119-110530-e6cd8096",
+  "plan": "TLS refusals",
+  "plan_sha256": "f22bce00a14e1799a6552f1fe3817279f8b7604d2dfde2d87bed825996b94b0f",
+  "target": "dcmtk-tls",
+  "target_desc": "dcmtk-tls (dcmtk-tls:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)",
+  "started": "2026-11-19T11:05:30.727899908Z",
+  "finished": "2026-11-19T11:05:31.493039457Z",
+  "steps": [
+    {
+      "id": "plaintext-refused",
+      "type": "tls_reject",
+      "verifies": [
+        "DVT-SRS-105"
+      ],
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-19T11:05:31.155998298Z",
+      "duration": 110139264,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-tls",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-tls:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "dimse",
+            "operation": "A-ASSOCIATE",
+            "endpoint": "dcmtk-tls:11112",
+            "started": "2026-11-19T11:05:31.26Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "association": {
+              "result": "no_response",
+              "released": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "plaintext",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "connection_reset: the connection was reset (ConnectionResetError)"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "tls10-refused",
+      "type": "tls_reject",
+      "verifies": [
+        "DVT-SRS-105"
+      ],
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-19T11:05:31.266247038Z",
+      "duration": 113832592,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-tls",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-tls:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "dcmtk-tls:11112",
+            "started": "2026-11-19T11:05:31.374Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "error": {
+              "kind": "tls",
+              "message": "the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+            },
+            "tls": {
+              "version": "",
+              "cipher": "",
+              "verified": false,
+              "client_cert_sent": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "TLS 1.0 only",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "handshake_alert: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "tls11-refused",
+      "type": "tls_reject",
+      "verifies": [
+        "DVT-SRS-105"
+      ],
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-19T11:05:31.380125902Z",
+      "duration": 112870187,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-tls",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-tls:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "dcmtk-tls:11112",
+            "started": "2026-11-19T11:05:31.487Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "error": {
+              "kind": "tls",
+              "message": "the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+            },
+            "tls": {
+              "version": "",
+              "cipher": "",
+              "verified": false,
+              "client_cert_sent": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "TLS 1.1 only",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "handshake_alert: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+          }
+        ],
+        "redactions": 0
+      }
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "dev",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "pass"
+}

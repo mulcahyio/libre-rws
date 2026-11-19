@@ -1,0 +1,159 @@
+{
+  "id": "20261119-110536-6655e7b2",
+  "plan": "Old TLS versions refused",
+  "plan_sha256": "86437425df8223be0619a830b2b61ea2c96eaf9f7dcd7cad1c59b0a294819746",
+  "target": "dcmtk-aes",
+  "target_desc": "dcmtk-aes (dcmtk-aes:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)",
+  "started": "2026-11-19T11:05:36.145013505Z",
+  "finished": "2026-11-19T11:05:37.180377154Z",
+  "steps": [
+    {
+      "id": "echo-tls12",
+      "type": "echo",
+      "status": "failed",
+      "messages": [
+        "TLS error: the target sent a TLS alert: SSLV3_ALERT_HANDSHAKE_FAILURE"
+      ],
+      "started": "2026-11-19T11:05:36.571992906Z",
+      "duration": 370364707,
+      "details": "{\"associated\": false, \"error\": \"TLS: the target sent a TLS alert: SSLV3_ALERT_HANDSHAKE_FAILURE\", \"rejected\": false, \"tls_error\": \"the target sent a TLS alert: SSLV3_ALERT_HANDSHAKE_FAILURE\"}\n"
+    },
+    {
+      "id": "tls10-refused",
+      "type": "tls_reject",
+      "verifies": [
+        "DVT-SRS-105"
+      ],
+      "status": "failed",
+      "messages": [
+        "fail tls_reject.refused TLS 1.0 only: expected refused, got accepted handshake_completed: handshake completed with TLSv1"
+      ],
+      "started": "2026-11-19T11:05:36.942378175Z",
+      "duration": 117941266,
+      "verdict": "fail",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-aes",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-aes:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "dcmtk-aes:11112",
+            "started": "2026-11-19T11:05:37.048Z",
+            "duration_ms": 6,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1",
+              "cipher": "AES128-SHA",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT cross-check,CN=dcmtk-peer",
+                "issuer": "O=LibreDVT cross-check,CN=dvt03-test-ca",
+                "san_dns": [
+                  "dcmtk-tls",
+                  "dcmtk-mtls",
+                  "dcmtk-aes"
+                ],
+                "not_before": "2026-11-19T11:05:19.000Z",
+                "not_after": "2026-11-20T11:05:19.000Z",
+                "sha256": "6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102"
+              },
+              "client_cert_sent": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "TLS 1.0 only",
+            "expected": "refused",
+            "actual": "accepted",
+            "outcome": "fail",
+            "message": "handshake_completed: handshake completed with TLSv1"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "tls11-refused",
+      "type": "tls_reject",
+      "verifies": [
+        "DVT-SRS-105"
+      ],
+      "status": "failed",
+      "messages": [
+        "fail tls_reject.refused TLS 1.1 only: expected refused, got accepted handshake_completed: handshake completed with TLSv1.1"
+      ],
+      "started": "2026-11-19T11:05:37.060332222Z",
+      "duration": 120036077,
+      "verdict": "fail",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-aes",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-aes:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "dcmtk-aes:11112",
+            "started": "2026-11-19T11:05:37.168Z",
+            "duration_ms": 6,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.1",
+              "cipher": "AES128-SHA",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT cross-check,CN=dcmtk-peer",
+                "issuer": "O=LibreDVT cross-check,CN=dvt03-test-ca",
+                "san_dns": [
+                  "dcmtk-tls",
+                  "dcmtk-mtls",
+                  "dcmtk-aes"
+                ],
+                "not_before": "2026-11-19T11:05:19.000Z",
+                "not_after": "2026-11-20T11:05:19.000Z",
+                "sha256": "6d82649a3f8bcb746cd5f7c92d987bfe1a5dbab66b5ffc0cda06262af2d5f102"
+              },
+              "client_cert_sent": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "TLS 1.1 only",
+            "expected": "refused",
+            "actual": "accepted",
+            "outcome": "fail",
+            "message": "handshake_completed: handshake completed with TLSv1.1"
+          }
+        ],
+        "redactions": 0
+      }
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "dev",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "fail"
+}

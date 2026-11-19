@@ -1,0 +1,8 @@
+D: $dcmtk: storescp v3.6.7 2022-04-22 $
+D: 
+D: DcmDataDictionary: Loading file: /usr/share/libdcmtk17/dicom.dic
+D: DcmDataDictionary: Loading file: /usr/share/libdcmtk17/private.dic
+D: Association Received: dvt-runner
+D: setting network send timeout to 60 seconds
+D: setting network receive timeout to 60 seconds
+E: Receiving Association failed: 000b:0c12 TLS error: sslv3 alert bad certificate

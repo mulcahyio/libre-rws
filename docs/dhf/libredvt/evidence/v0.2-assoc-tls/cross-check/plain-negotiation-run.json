@@ -1,0 +1,215 @@
+{
+  "id": "20261119-110527-72aaaa26",
+  "plan": "DCMTK storescp association negotiation",
+  "plan_sha256": "2e5ece634e58bc9d8f252f4e8262c1c8fd8d1f061e6f07f2efcd47676b4acb32",
+  "target": "dcmtk-plain",
+  "target_desc": "dcmtk-plain (dcmtk-plain:11112, called AE STORESCP, calling AE LIBREDVT, class lab)",
+  "started": "2026-11-19T11:05:27.632997164Z",
+  "finished": "2026-11-19T11:05:28.172688128Z",
+  "steps": [
+    {
+      "id": "negotiation",
+      "type": "associate",
+      "verifies": [
+        "DVT-SRS-090",
+        "DVT-SRS-091",
+        "DVT-SRS-093",
+        "DVT-SRS-095",
+        "DVT-SRS-096"
+      ],
+      "status": "passed",
+      "messages": [
+        "12 assertion(s) checked; verdict pass",
+        "association accepted; max PDU 16384, Implementation Class UID \"1.2.276.0.7230010.3.0.3.6.7\", Version Name \"OFFIS_DCMTK_367\""
+      ],
+      "started": "2026-11-19T11:05:28.060155507Z",
+      "duration": 112519082,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-plain",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-plain:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "dimse",
+            "operation": "A-ASSOCIATE",
+            "endpoint": "dcmtk-plain:11112",
+            "started": "2026-11-19T11:05:28.166Z",
+            "duration_ms": 0,
+            "outcome": "completed",
+            "association": {
+              "result": "accepted",
+              "max_pdu": 16384,
+              "impl_class_uid": "1.2.276.0.7230010.3.0.3.6.7",
+              "impl_version": "OFFIS_DCMTK_367",
+              "contexts": [
+                {
+                  "id": 1,
+                  "abstract_syntax": "1.2.840.10008.1.1",
+                  "proposed_transfer_syntaxes": [
+                    "1.2.840.10008.1.2"
+                  ],
+                  "result": "accepted",
+                  "accepted_transfer_syntax": "1.2.840.10008.1.2"
+                },
+                {
+                  "id": 3,
+                  "abstract_syntax": "1.2.840.10008.5.1.4.1.1.2",
+                  "proposed_transfer_syntaxes": [
+                    "1.2.840.10008.1.2.1",
+                    "1.2.840.10008.1.2"
+                  ],
+                  "result": "accepted",
+                  "accepted_transfer_syntax": "1.2.840.10008.1.2.1"
+                },
+                {
+                  "id": 5,
+                  "abstract_syntax": "1.2.840.10008.5.1.4.1.1.2",
+                  "proposed_transfer_syntaxes": [
+                    "1.2.840.10008.1.2.4.50"
+                  ],
+                  "result": "rejected",
+                  "reason": "transfer-syntaxes-not-supported (4)"
+                },
+                {
+                  "id": 7,
+                  "abstract_syntax": "1.2.840.10008.5.1.4.31",
+                  "proposed_transfer_syntaxes": [
+                    "1.2.840.10008.1.2"
+                  ],
+                  "result": "rejected",
+                  "reason": "abstract-syntax-not-supported (3)"
+                },
+                {
+                  "id": 9,
+                  "abstract_syntax": "1.2.3.4.5",
+                  "proposed_transfer_syntaxes": [
+                    "1.2.840.10008.1.2"
+                  ],
+                  "result": "rejected",
+                  "reason": "abstract-syntax-not-supported (3)"
+                }
+              ],
+              "released": true
+            }
+          },
+          {
+            "seq": 2,
+            "protocol": "dimse",
+            "operation": "A-RELEASE",
+            "endpoint": "dcmtk-plain:11112",
+            "started": "2026-11-19T11:05:28.167Z",
+            "duration_ms": 0,
+            "outcome": "completed"
+          }
+        ],
+        "assertions": [
+          {
+            "id": "assoc.result",
+            "subject": "dcmtk-plain:11112",
+            "expected": "accepted",
+            "actual": "accepted",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.context.result",
+            "subject": "context 1 (1.2.840.10008.1.1)",
+            "expected": "accepted",
+            "actual": "accepted",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.context.transfer_syntax",
+            "subject": "context 1 (1.2.840.10008.1.1)",
+            "expected": "1.2.840.10008.1.2",
+            "actual": "1.2.840.10008.1.2",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.context.result",
+            "subject": "context 3 (1.2.840.10008.5.1.4.1.1.2)",
+            "expected": "accepted",
+            "actual": "accepted",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.context.transfer_syntax",
+            "subject": "context 3 (1.2.840.10008.5.1.4.1.1.2)",
+            "expected": "1.2.840.10008.1.2.1",
+            "actual": "1.2.840.10008.1.2.1",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.context.result",
+            "subject": "context 5 (1.2.840.10008.5.1.4.1.1.2)",
+            "expected": "rejected",
+            "actual": "rejected",
+            "outcome": "pass",
+            "message": "transfer-syntaxes-not-supported (4)"
+          },
+          {
+            "id": "assoc.context.result",
+            "subject": "context 7 (1.2.840.10008.5.1.4.31)",
+            "expected": "rejected",
+            "actual": "rejected",
+            "outcome": "pass",
+            "message": "abstract-syntax-not-supported (3)"
+          },
+          {
+            "id": "assoc.context.result",
+            "subject": "context 9 (1.2.3.4.5)",
+            "expected": "rejected",
+            "actual": "rejected",
+            "outcome": "pass",
+            "message": "abstract-syntax-not-supported (3)"
+          },
+          {
+            "id": "assoc.max_pdu",
+            "subject": "dcmtk-plain:11112",
+            "expected": "16384",
+            "actual": "16384",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.impl_class_uid",
+            "subject": "dcmtk-plain:11112",
+            "expected": "1.2.276.0.7230010.3.0.3.6.7",
+            "actual": "1.2.276.0.7230010.3.0.3.6.7",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.impl_version",
+            "subject": "dcmtk-plain:11112",
+            "expected": "OFFIS_DCMTK_367",
+            "actual": "OFFIS_DCMTK_367",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.release",
+            "subject": "dcmtk-plain:11112",
+            "expected": "released",
+            "actual": "released",
+            "outcome": "pass"
+          }
+        ],
+        "redactions": 0
+      }
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "dev",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "pass"
+}
