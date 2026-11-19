@@ -185,8 +185,11 @@ func checkQidoPages(ev *result.Evidence, ps plan.Step, res engine.QidoResult, ex
 	key := uniqueKey[ps.Level]
 	found := map[string]bool{}
 	var objects []engine.QidoObject
+	firstOf := map[string]bool{} // searches whose first page was seen
 	for _, pg := range res.Pages {
 		subj := res.Exchanges[pg.Exchange-1].Endpoint
+		first := !firstOf[pg.Search]
+		firstOf[pg.Search] = true
 		if res.Exchanges[pg.Exchange-1].Outcome != result.ExchangeCompleted {
 			continue // already a problem
 		}
@@ -198,6 +201,10 @@ func checkQidoPages(ev *result.Evidence, ps plan.Step, res engine.QidoResult, ex
 			if pg.Status == 200 && pg.JSON != "empty" {
 				ev.Assert("qido.content_type", subj, mediaDICOMJSON, mt, "")
 			}
+			continue
+		case !first && pg.Status == 204:
+			// DVT-SRS-117: a later page with no match ends the results.
+			ev.AssertIf("qido.status", subj, "200, or 204 after the first page", "204", true, "end of the paged results")
 			continue
 		default:
 			ev.Assert("qido.status", subj, "200", statusStr(pg.Status), "PS3.18: 200 with matches; 204 means no match")

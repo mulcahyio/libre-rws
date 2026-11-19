@@ -1395,6 +1395,8 @@ class Web:
                 if len(data) > max_bytes:
                     raise LimitError(f"response body larger than the limit ({max_bytes} bytes)")
             data = bytes(data)
+            if resp.length:  # Content-Length promised more than arrived
+                raise http.client.IncompleteRead(data, resp.length)
         except LimitError as e:
             self.xs.done(x, "error", "limit", str(e))
             return None
@@ -1640,7 +1642,9 @@ def cmd_qido(args):
             pages.append(page)
             got = web.request("GET", target, DICOM_JSON)
             if got is None:
-                page["exchange"] = web.xs.items[-1]["seq"]
+                last = web.xs.items[-1]
+                page["exchange"] = last["seq"]
+                page["status"] = last.get("http", {}).get("status", 0)
                 break
             status, ctype, data, x = got
             page.update(exchange=x["seq"], status=status, content_type=ctype)
@@ -1911,7 +1915,9 @@ def cmd_stow(args):
         got = web.request("POST", target, DICOM_JSON, body=bytes(body), content_type=ctype,
                           max_bytes=args.max_json_bytes)
         if got is None:
-            req["exchange"] = web.xs.items[-1]["seq"]
+            last = web.xs.items[-1]
+            req["exchange"] = last["seq"]
+            req["status"] = last.get("http", {}).get("status", 0)
             continue
         status, rctype, data, x = got
         req.update(exchange=x["seq"], status=status)
