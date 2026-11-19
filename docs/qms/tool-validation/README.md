@@ -232,6 +232,20 @@ command output from 2026-11-10 unless stated.
   A-ASSOCIATE-RQ read off the wire and a received file's (0002,0012)/(0002,0013)
   carry LibreDVT's values). Mutation check: see the PR. Fit for use, pending
   review.
+- **Change 2026-11-19 (issue #34, card DVT-0.2/2, DRAFT for approval):**
+  v0.2 foundation: `dimse`/`dicomweb` targets with TLS and secret file
+  references, strict target and plan schema, production guard extended to
+  `stow`/`qido`/`wado`, protocol-neutral evidence and verdict rule,
+  redaction and the worker argv/environment guard. The new step types fail
+  safe (nothing sent) until cards DVT-0.2/3 and /4 add their engines.
+  Re-validation (real output, evidence in
+  `docs/dhf/libredvt/evidence/v0.2-foundation/`): real-engine test stage
+  exit 0 with the v0.1 positive controls unchanged; mutation check 33 of 33
+  mutants killed; the bundled LibreDCM plan gives identical step results
+  (5 of 5 passed, same messages) with the v0.1 image, this build with an
+  ad-hoc target, and this build with a v0.2 target file. Fit for v0.1 use
+  unchanged; the v0.2 functions are not yet released for use (validated
+  in card DVT-0.2/6).
 
 ## Libre WT system test (card WT-0.2/9, 2026-11-17)
 

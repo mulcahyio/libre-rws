@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LibreDVT report: LibreDCM conformance</title><style>/* LibreDVT stylesheet. Colours are the LibreRWS Brand Book v1.4 tokens. */
+:root {
+  --libre-teal: #0A7570; --libre-teal-soft: #D5ECEA; --on-libre-teal: #FFFFFF;
+  --ink: #0F1B24; --ink-muted: #4A5B64; --line: #C9D3D6; --line-strong: #7D8E96;
+  --surface-100: #F4F7F7; --surface-200: #FFFFFF; --surface-300: #E7EDEE;
+  --ok: #1F7A4D; --warn: #8A5A00; --error: #B3261E; --focus: #0A7570;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --libre-teal: #3FC6BA; --libre-teal-soft: #103532; --on-libre-teal: #06201E;
+    --ink: #E6EDEF; --ink-muted: #9AACB4; --line: #2B3A42; --line-strong: #5E727C;
+    --surface-100: #0B1216; --surface-200: #121B21; --surface-300: #1A252C;
+    --ok: #5DD39A; --warn: #E8C14A; --error: #FF8A80; --focus: #3FC6BA;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--surface-100); }
+a { color: var(--libre-teal); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+header.top { display: flex; align-items: center; gap: 1.5rem; padding: .6rem 1.5rem; background: var(--surface-200); border-bottom: 1px solid var(--line); }
+header.top .brand { font-weight: 700; letter-spacing: .02em; color: var(--ink); text-decoration: none; }
+header.top .brand span { color: var(--libre-teal); }
+header.top nav { display: flex; gap: 1rem; flex: 1; }
+header.top nav a { text-decoration: none; color: var(--ink-muted); }
+header.top nav a.active, header.top nav a:hover { color: var(--libre-teal); }
+main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+h1 { font-size: 1.5rem; margin: 0 0 1rem; }
+h2 { font-size: 1.15rem; margin: 1.5rem 0 .6rem; }
+.card { background: var(--surface-200); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+.notice { border-left: 4px solid var(--warn); background: var(--surface-200); padding: .6rem 1rem; margin-bottom: 1rem; border-radius: 4px; }
+.flash { border-left: 4px solid var(--error); }
+table { width: 100%; border-collapse: collapse; background: var(--surface-200); }
+th, td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; }
+td.mono, .mono { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: .85rem; word-break: break-all; }
+.badge { display: inline-block; padding: .05rem .55rem; border-radius: 999px; font-size: .8rem; font-weight: 600; border: 1px solid currentColor; white-space: nowrap; }
+.pass { color: var(--ok); } .warn { color: var(--warn); } .fail { color: var(--error); }
+.sev-error { color: var(--error); font-weight: 600; } .sev-warning { color: var(--warn); }
+.verdict { font-size: 1.1rem; }
+form.inline { display: inline; }
+label { display: block; font-weight: 600; margin: .6rem 0 .2rem; }
+input[type=text], input[type=password], input[type=number], select, textarea { width: 100%; max-width: 420px; padding: .4rem .5rem; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--surface-100); color: var(--ink); font: inherit; }
+button, .button { display: inline-block; padding: .45rem 1rem; border: 0; border-radius: 4px; background: var(--libre-teal); color: var(--on-libre-teal); font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
+button.secondary { background: transparent; color: var(--error); border: 1px solid var(--error); padding: .2rem .6rem; font-size: .85rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+.muted { color: var(--ink-muted); }
+details > summary { cursor: pointer; color: var(--ink-muted); }
+pre { white-space: pre-wrap; word-break: break-all; background: var(--surface-300); padding: .6rem; border-radius: 4px; font-size: .8rem; max-height: 30rem; overflow: auto; }
+dl.meta { display: grid; grid-template-columns: max-content 1fr; gap: .2rem 1rem; margin: 0; }
+dl.meta dt { color: var(--ink-muted); }
+dl.meta dd { margin: 0; }
+footer { text-align: center; color: var(--ink-muted); font-size: .8rem; padding: 2rem 0; }
+</style></head>
+<body><main>
+<h1>LibreDVT test report: LibreDCM conformance</h1>
+
+<div class="card">
+  <p class="verdict">Verdict: <span class="badge pass">pass</span></p>
+  
+  <dl class="meta">
+    <dt>Plan</dt><dd>LibreDCM conformance</dd>
+    <dt>Plan SHA-256</dt><dd class="mono">006e60ed9d54d03c91ab3ff588dd05f6ee1da481587aed4ae41706a7654ae9b4</dd>
+    <dt>Target</dt><dd>cli (dvt02-gw:11112, called AE LIBREDCM, calling AE LIBREDVT, class lab)</dd>
+    <dt>Run</dt><dd class="mono">20261119-084602-9ea08597</dd>
+    <dt>Started</dt><dd>2026-11-19 08:46:02 UTC</dd>
+    <dt>Finished</dt><dd>2026-11-19 08:46:06 UTC</dd>
+  </dl>
+</div>
+<table>
+  <tr><th>Step</th><th>Type</th><th>Verifies</th><th>Result</th><th>Details</th><th>Time</th></tr>
+  
+  <tr><td class="mono">echo</td><td>echo</td><td class="mono">DCM-SRS-001</td>
+    <td><span class="badge pass">passed</span></td>
+    <td><div>C-ECHO status 0x0000 (Success)</div></td><td>283ms</td></tr>
+  
+  <tr><td class="mono">reject-wrong-called-ae</td><td>reject</td><td class="mono">DCM-SRS-014</td>
+    <td><span class="badge pass">passed</span></td>
+    <td><div>association with calling AE &#34;LIBREDVT&#34;, called AE &#34;NOT-LIBREDCM&#34; rejected as expected</div></td><td>265ms</td></tr>
+  
+  <tr><td class="mono">store-native-and-compressed</td><td>store</td><td class="mono">DCM-SRS-002, DCM-SRS-003</td>
+    <td><span class="badge pass">passed</span></td>
+    <td><div>6 of 6 files stored with status 0x0000</div></td><td>306ms</td></tr>
+  
+  <tr><td class="mono">find-stored-studies</td><td>find</td><td class="mono">DCM-SRS-006</td>
+    <td><span class="badge pass">passed</span></td>
+    <td><div>1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es))</div><div>1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es))</div><div>1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es))</div><div>1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))</div></td><td>441ms</td></tr>
+  
+  <tr><td class="mono">move-and-compare-pixels</td><td>move</td><td class="mono">DCM-SRS-003, DCM-SRS-010</td>
+    <td><span class="badge pass">passed</span></td>
+    <td><div>6 of 6 expected instances received</div><div>note: fixtures/ct_explicit_le.dcm re-encoded from 1.2.840.10008.1.2.1 to 1.2.840.10008.1.2 (uncompressed; pixel data identical)</div><div>pixel data identical for 6 of 6 sent files</div></td><td>1.815s</td></tr>
+  
+</table>
+
+<div class="card"><h2>Versions</h2><dl class="meta"><dt>dicom-validator</dt><dd class="mono">0.9.0</dd><dt>dicom3tools</dt><dd class="mono">1.00.snapshot.20260927113651</dd><dt>libredvt</dt><dd class="mono">0.2.0-dev</dd><dt>pydicom</dt><dd class="mono">3.0.2</dd><dt>pynetdicom</dt><dd class="mono">3.0.4</dd><dt>python</dt><dd class="mono">3.12.16</dd><dt>standard-edition</dt><dd class="mono">2026d</dd><dt>worker</dt><dd class="mono">0.1.1</dd></dl></div>
+
+<footer>Generated by LibreDVT. Test data only: this report must not contain patient data.</footer>
+</main></body></html>

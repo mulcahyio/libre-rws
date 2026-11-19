@@ -43,9 +43,11 @@ LibreDCM's behaviour unless stated.
     results, the run and the JSON/HTML/JUnit files are scanned for the
     configured secrets, and a hit is replaced by `[REDACTED]` and fails the
     run.
-  - Tested: 9 new test functions per area (schema, plan rules, protocol
-    check, guard, preflight, verdict rule, redaction, argv/env guard,
-    artefact scan); mutation check in
+  - Tested: new unit tests for the target schema, plan rules, protocol
+    check, guard, secret preflight, verdict rule, redaction, argv/env
+    guard and artefact scan; mutation check 33 of 33 killed; real-engine
+    test stage green; the bundled LibreDCM plan gives identical results
+    with the v0.1 image and this build. Evidence in
     `docs/dhf/libredvt/evidence/v0.2-foundation/`.
 - **LibreDVT v0.2 design inputs (issue #34, DRAFT for approval).** Patrick
   approved v0.2 on 2026-11-19 with decisions D1–D5 (association + TLS tests,
