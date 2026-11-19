@@ -1,0 +1,95 @@
+{
+  "id": "20261119-115117-1de34a35",
+  "plan": "DICOMweb search",
+  "plan_sha256": "5d55ca04a096fec45b78e31917741388675ab5bd54add118c4abdcf21b190e48",
+  "target": "orthanc-wrong-host",
+  "target_desc": "orthanc-wrong-host (dicomweb https://orthanc-alias:8042/dicom-web, auth none, class lab)",
+  "started": "2026-11-19T11:51:17.73977217Z",
+  "finished": "2026-11-19T11:51:18.417693751Z",
+  "steps": [
+    {
+      "id": "search",
+      "type": "qido",
+      "verifies": [
+        "DVT-SRS-102"
+      ],
+      "status": "failed",
+      "messages": [
+        "tls error: GET https://orthanc-alias:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT: certificate verification failed: Hostname mismatch, certificate is not valid for 'orthanc-alias'. (code 62)",
+        "1 search request(s), 0 object(s) returned at level studies"
+      ],
+      "started": "2026-11-19T11:51:18.169054258Z",
+      "duration": 248623012,
+      "verdict": "fail",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "orthanc-wrong-host",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "https://orthanc-alias:8042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-alias:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT",
+            "started": "2026-11-19T11:51:18.397Z",
+            "duration_ms": 6,
+            "outcome": "error",
+            "error": {
+              "kind": "tls",
+              "message": "certificate verification failed: Hostname mismatch, certificate is not valid for 'orthanc-alias'. (code 62)"
+            },
+            "tls": {
+              "version": "",
+              "cipher": "",
+              "verified": false,
+              "verify_error": "certificate verification failed: Hostname mismatch, certificate is not valid for 'orthanc-alias'. (code 62)",
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-alias:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-alias:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 0
+            }
+          }
+        ],
+        "assertions": [],
+        "errors": [
+          {
+            "kind": "tls",
+            "message": "GET https://orthanc-alias:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT: certificate verification failed: Hostname mismatch, certificate is not valid for 'orthanc-alias'. (code 62)"
+          }
+        ],
+        "redactions": 0
+      }
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "0.2.0-dev",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "fail"
+}

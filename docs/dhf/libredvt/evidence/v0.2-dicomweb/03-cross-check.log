@@ -1,0 +1,45 @@
+commit 408814a, 2026-11-19T11:51:07Z
+image libre/dvt:v02-dicomweb sha256:d2da689a4d4a4f6658d74625e5675c94b52ecc64c0fee9b67c3c28c6eaf3ca38
+image orthancteam/orthanc:26.11.1@sha256:25738bcd515926ac8d33cacf09729a410a32c0a65d6cb8e61bd86fce81a4cd30 sha256:25738bcd515926ac8d33cacf09729a410a32c0a65d6cb8e61bd86fce81a4cd30
+== synthetic PKI (openssl 3.6.5)
+orthanc: subject=O=LibreDVT cross-check, CN=orthanc X509v3 Subject Alternative Name:      DNS:orthanc-https, DNS:orthanc-mtls 
+orthanc-https: 1 start line(s)
+orthanc-mtls: 1 start line(s)
+orthanc-plain: 1 start line(s)
+== LibreDVT against Orthanc
+orthanc-audit (target orthanc-https, plan orthanc-audit.yaml): exit 0 :: verdict: pass (Orthanc DICOMweb audit (cross-check))
+orthanc-no-client-cert (target orthanc-https, plan no-client-cert.yaml): exit 1 :: verdict: fail (DICOMweb client certificate required)
+orthanc-mtls (target orthanc-mtls, plan mtls.yaml): exit 0 :: verdict: pass (DICOMweb mutual TLS)
+orthanc-wrong-host (target orthanc-wrong-host, plan search.yaml): exit 1 :: verdict: fail (DICOMweb search)
+orthanc-token-loopback (target orthanc-loopback, plan token-loopback.yaml): exit 0 :: verdict: pass (DICOMweb with bearer token over loopback http)
+== Orthanc REST API: stored files against the fixtures (outside DICOMweb)
+orthanc-bytes: exit 0 :: stored 6 instance(s); 6 of 6 fixtures byte-identical; missing []
+Orthanc 1.13.1, DICOMweb plugin 1.24
+== Orthanc logs
+OK       orthanc-audit: verdict pass (expected pass)
+    plaintext-refused: passed (pass) :: 1 assertion(s) checked; verdict pass
+    tls11-refused: passed (pass) :: 1 assertion(s) checked; verdict pass
+    stow: passed (pass) :: 33 assertion(s) checked; verdict pass | 6 of 6 files stored and referenced by the target | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=orthanc", issuer "O=LibreDVT cross-check,CN=dvt04-test-ca", SAN DNS [orthanc-https orthanc-mtls], SAN IP [], v
+    qido-studies: passed (pass) :: 18 assertion(s) checked; verdict pass | 4 search request(s), 4 object(s) returned at level studies | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=orthanc", issuer "O=LibreDVT cross-check,CN=dvt04-test-ca", SAN DNS [orthanc-https orthanc-mtls], SA
+    qido-series: passed (pass) :: 18 assertion(s) checked; verdict pass | 4 search request(s), 4 object(s) returned at level series | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=orthanc", issuer "O=LibreDVT cross-check,CN=dvt04-test-ca", SAN DNS [orthanc-https orthanc-mtls], SAN
+    qido-instances: passed (pass) :: 26 assertion(s) checked; verdict pass | 6 search request(s), 6 object(s) returned at level instances | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=orthanc", issuer "O=LibreDVT cross-check,CN=dvt04-test-ca", SAN DNS [orthanc-https orthanc-mtls], 
+    qido-patient: passed (pass) :: 6 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=orthanc", issuer "O=LibreDVT cross-check,CN=dvt04-test-ca", SAN DNS [orthanc-https orthanc-mtls], SAN
+    qido-paged: passed (pass) :: 17 assertion(s) checked; verdict pass | 3 search request(s), 4 object(s) returned at level studies | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=orthanc", issuer "O=LibreDVT cross-check,CN=dvt04-test-ca", SAN DNS [orthanc-https orthanc-mtls], SA
+    qido-none: passed (pass) :: 2 assertion(s) checked; verdict pass | 1 search request(s), 0 object(s) returned at level studies | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=orthanc", issuer "O=LibreDVT cross-check,CN=dvt04-test-ca", SAN DNS [orthanc-https orthanc-mtls], SAN
+    wado-store: passed (pass) :: 21 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=orthanc", issuer "O=LibreDVT cross-check,CN=dvt04-test-ca", SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:0
+    wado-explicit: passed (pass) :: 6 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=orthanc", issuer "O=LibreDVT cross-check,CN=dvt04-test-ca", SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:08
+    wado-meta: passed (pass) :: 10 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=orthanc", issuer "O=LibreDVT cross-check,CN=dvt04-test-ca", SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:0
+OK       orthanc-mtls: verdict pass (expected pass)
+    no-client-cert-refused: passed (pass) :: 1 assertion(s) checked; verdict pass
+    search-with-client-cert: passed (pass) :: 2 assertion(s) checked; verdict pass | 1 search request(s), 0 object(s) returned at level studies | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT cross-check,CN=orthanc", issuer "O=LibreDVT cross-check,CN=dvt04-test-ca", SAN DNS [orthanc-https orthanc-mtls], SAN
+OK       orthanc-token-loopback: verdict pass (expected pass)
+    stow: passed (pass) :: 3 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+    qido: passed (pass) :: 9 assertion(s) checked; verdict pass | 2 search request(s), 2 object(s) returned at level instances
+    wado: passed (pass) :: 9 assertion(s) checked; verdict pass
+OK       orthanc-no-client-cert: verdict fail (expected fail)
+    no-client-cert-refused: failed (fail) :: fail tls_reject.refused no_client_cert: expected refused, got accepted http_reply: the target answered with HTTP status 200
+OK       orthanc-wrong-host: verdict fail (expected fail)
+    search: failed (fail) :: tls error: GET https://orthanc-alias:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT: certificate verification failed: Hostname mismatch, certificate is not valid for 'orthanc-alias'. (code 62) | 1 search request(s), 0 object(s) returned at level studies
+secret check: 30 artefacts, 79 needles (token forms and key lines), 0 leaks
+== 5 of 5 runs as expected
+summary exit 0

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="LibreDVT" tests="2" failures="0" time="0.826">
+  <testsuite name="DICOMweb mutual TLS" tests="2" failures="0" timestamp="2026-11-19T11:51:16Z" time="0.826">
+    <properties>
+      <property name="run_id" value="20261119-115116-e67b6a52"></property>
+      <property name="plan_sha256" value="59f4e2268ed98656124060e189c4c7028269490fb81c9bf17d37a63dc5be69d0"></property>
+      <property name="target" value="orthanc-mtls (dicomweb https://orthanc-mtls:8042/dicom-web, auth none, class lab)"></property>
+      <property name="verdict" value="pass"></property>
+      <property name="version.dicom-validator" value="0.9.0"></property>
+      <property name="version.dicom3tools" value="1.00.snapshot.20260927113651"></property>
+      <property name="version.libredvt" value="0.2.0-dev"></property>
+      <property name="version.pydicom" value="3.0.2"></property>
+      <property name="version.pynetdicom" value="3.0.4"></property>
+      <property name="version.python" value="3.12.16"></property>
+      <property name="version.standard-edition" value="2026d"></property>
+      <property name="version.worker" value="0.2.0"></property>
+    </properties>
+    <testcase name="no-client-cert-refused" classname="libredvt.tls_reject" time="0.134">
+      <properties>
+        <property name="verifies" value="DVT-SRS-105"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass</system-out>
+    </testcase>
+    <testcase name="search-with-client-cert" classname="libredvt.qido" time="0.257">
+      <properties>
+        <property name="verifies" value="DVT-SRS-104"></property>
+      </properties>
+      <system-out>2 assertion(s) checked; verdict pass&#xA;1 search request(s), 0 object(s) returned at level studies&#xA;TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=orthanc&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt04-test-ca&#34;, SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:08.000Z, SHA-256 db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43; client certificate offered: true</system-out>
+    </testcase>
+  </testsuite>
+</testsuites>

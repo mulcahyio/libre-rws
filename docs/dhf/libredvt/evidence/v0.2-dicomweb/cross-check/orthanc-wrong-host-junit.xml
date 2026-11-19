@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="LibreDVT" tests="1" failures="1" time="0.678">
+  <testsuite name="DICOMweb search" tests="1" failures="1" timestamp="2026-11-19T11:51:17Z" time="0.678">
+    <properties>
+      <property name="run_id" value="20261119-115117-1de34a35"></property>
+      <property name="plan_sha256" value="5d55ca04a096fec45b78e31917741388675ab5bd54add118c4abdcf21b190e48"></property>
+      <property name="target" value="orthanc-wrong-host (dicomweb https://orthanc-alias:8042/dicom-web, auth none, class lab)"></property>
+      <property name="verdict" value="fail"></property>
+      <property name="version.dicom-validator" value="0.9.0"></property>
+      <property name="version.dicom3tools" value="1.00.snapshot.20260927113651"></property>
+      <property name="version.libredvt" value="0.2.0-dev"></property>
+      <property name="version.pydicom" value="3.0.2"></property>
+      <property name="version.pynetdicom" value="3.0.4"></property>
+      <property name="version.python" value="3.12.16"></property>
+      <property name="version.standard-edition" value="2026d"></property>
+      <property name="version.worker" value="0.2.0"></property>
+    </properties>
+    <testcase name="search" classname="libredvt.qido" time="0.249">
+      <properties>
+        <property name="verifies" value="DVT-SRS-102"></property>
+      </properties>
+      <failure message="tls error: GET https://orthanc-alias:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT: certificate verification failed: Hostname mismatch, certificate is not valid for &#39;orthanc-alias&#39;. (code 62)" type="failed">tls error: GET https://orthanc-alias:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT: certificate verification failed: Hostname mismatch, certificate is not valid for &#39;orthanc-alias&#39;. (code 62)&#xA;1 search request(s), 0 object(s) returned at level studies</failure>
+      <system-out>tls error: GET https://orthanc-alias:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT: certificate verification failed: Hostname mismatch, certificate is not valid for &#39;orthanc-alias&#39;. (code 62)&#xA;1 search request(s), 0 object(s) returned at level studies</system-out>
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -211,13 +211,15 @@ func TestStowPositiveControls(t *testing.T) {
 		"200 also lists failed": {200, func(q *engine.StowRequestRecord) {
 			q.Failed = []engine.StowFailed{{SOPInstanceUID: q.Referenced[0].SOPInstanceUID, FailureReason: "0xC000"}}
 		}, stowPlan, result.Fail, "stow.instance.failed"},
-		"warning not allowed": {202, warn, stowPlan, result.Fail, "stow.instance.warning"},
-		"warning allowed":     {202, warn, "name: s\ntarget: web\nsteps:\n  - {id: s, type: stow, files: [\"fx/*.dcm\"], allow_warnings: true}\n", result.PassWithWarnings, ""},
-		"top-level warning":   {202, func(q *engine.StowRequestRecord) { q.WarningReason = "0xB007" }, stowPlan, result.Fail, "Warning Reason 0xB007"},
-		"empty body 200":      {200, func(q *engine.StowRequestRecord) { q.JSON, q.Referenced = "empty", nil }, stowPlan, result.Fail, "not a DICOM JSON object"},
-		"XML body":            {200, func(q *engine.StowRequestRecord) { q.JSON, q.Referenced = "other_type", nil }, stowPlan, result.Fail, "not a DICOM JSON object"},
-		"JSON array":          {200, func(q *engine.StowRequestRecord) { q.JSON, q.Referenced = "not_object", nil }, stowPlan, result.Fail, "not a DICOM JSON object"},
-		"malformed JSON":      {200, func(q *engine.StowRequestRecord) { q.JSON, q.Referenced = "invalid", nil }, stowPlan, result.Fail, "not a DICOM JSON object"},
+		"warning not allowed":  {202, warn, stowPlan, result.Fail, "stow.instance.warning"},
+		"200 with a warning":   {200, warn, stowPlan, result.Fail, "stow.instance.warning"},
+		"other type with refs": {200, func(q *engine.StowRequestRecord) { q.JSON = "other_type" }, stowPlan, result.Fail, "not a DICOM JSON object"},
+		"warning allowed":      {202, warn, "name: s\ntarget: web\nsteps:\n  - {id: s, type: stow, files: [\"fx/*.dcm\"], allow_warnings: true}\n", result.PassWithWarnings, ""},
+		"top-level warning":    {202, func(q *engine.StowRequestRecord) { q.WarningReason = "0xB007" }, stowPlan, result.Fail, "Warning Reason 0xB007"},
+		"empty body 200":       {200, func(q *engine.StowRequestRecord) { q.JSON, q.Referenced = "empty", nil }, stowPlan, result.Fail, "not a DICOM JSON object"},
+		"XML body":             {200, func(q *engine.StowRequestRecord) { q.JSON, q.Referenced = "other_type", nil }, stowPlan, result.Fail, "not a DICOM JSON object"},
+		"JSON array":           {200, func(q *engine.StowRequestRecord) { q.JSON, q.Referenced = "not_object", nil }, stowPlan, result.Fail, "not a DICOM JSON object"},
+		"malformed JSON":       {200, func(q *engine.StowRequestRecord) { q.JSON, q.Referenced = "invalid", nil }, stowPlan, result.Fail, "not a DICOM JSON object"},
 		"failed reported as success": {200, func(q *engine.StowRequestRecord) {
 			q.Failed = []engine.StowFailed{{SOPInstanceUID: q.Referenced[1].SOPInstanceUID, FailureReason: "0xA700"}}
 		}, stowPlan, result.Fail, "stow.instance.failed"},

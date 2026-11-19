@@ -1,0 +1,21 @@
+targets:
+  - name: orthanc-https
+    class: lab
+    protocol: dicomweb
+    base_url: https://orthanc-https:8042/dicom-web
+    tls: {ca_file: /pki/ca.crt}
+  - name: orthanc-mtls
+    class: lab
+    protocol: dicomweb
+    base_url: https://orthanc-mtls:8042/dicom-web
+    tls: {ca_file: /pki/ca.crt, client_cert_file: /pki/libredvt-client.crt, client_key_file: /pki/libredvt-client.key}
+  - name: orthanc-wrong-host
+    class: lab
+    protocol: dicomweb
+    base_url: https://orthanc-alias:8042/dicom-web
+    tls: {ca_file: /pki/ca.crt}
+  - name: orthanc-loopback
+    class: lab
+    protocol: dicomweb
+    base_url: http://127.0.0.1:18042/dicom-web
+    auth: {type: bearer, token_file: /pki/token}

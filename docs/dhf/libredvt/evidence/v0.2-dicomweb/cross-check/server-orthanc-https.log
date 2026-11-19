@@ -1,0 +1,60 @@
+Generating random hostid in /etc/hostid: 7370336f
+Startup command: exec "Orthanc /tmp/orthanc.json"
+W1119 11:51:08.747149             MAIN main.cpp:2545] Orthanc version: 1.13.1
+W1119 11:51:08.747204             MAIN main.cpp:2550] This binary includes the following patch to a third-party library: civetweb-1.16.patch
+W1119 11:51:08.747747             MAIN OrthancConfiguration.cpp:79] Reading the configuration file: /tmp/orthanc.json
+W1119 11:51:08.747818             MAIN OrthancConfiguration.cpp:791] The paths in the Orthanc configuration will be interpreted relative to folder: /tmp
+W1119 11:51:08.758904             MAIN main.cpp:1037] Loading plugin(s) from: "/run/orthanc/plugins"
+W1119 11:51:08.758923             MAIN PluginsManager.cpp:259] Inexistent path to plugins: /run/orthanc/plugins
+W1119 11:51:08.758925             MAIN main.cpp:1037] Loading plugin(s) from: "/usr/share/orthanc/plugins"
+W1119 11:51:08.759571             MAIN PluginsManager.cpp:287] Registering plugin 'dicom-web' (version 1.24)
+W1119 11:51:08.759594             MAIN dicom-web:/Plugin.cpp:619] Performance warning in DICOMweb: The plugin was compiled against Orthanc SDK <= 1.5.6. STOW and WADO chunked transfers will be entirely stored in RAM.
+W1119 11:51:08.759670             MAIN dicom-web:/Plugin.cpp:641] URI to the DICOMweb REST API: /dicom-web/
+W1119 11:51:08.759815             MAIN dicom-web:/Plugin.cpp:754] DICOMweb public root: /dicom-web/
+W1119 11:51:08.759819             MAIN dicom-web:/Plugin.cpp:756] The DICOMweb plugin will use 1 threads to load DICOM files for WADO-RS queries
+W1119 11:51:08.759821             MAIN dicom-web:/Plugin.cpp:770] URI to the WADO-URI API: /wado
+W1119 11:51:08.765295             MAIN PluginsManager.cpp:287] Registering plugin 'gdcm' (version 1.8)
+W1119 11:51:08.765380             MAIN PluginsManager.cpp:159] Gdcm.RestrictTransferSyntaxes configuration is set and not empty, Orthanc will use GDCM to transcode SOME transfer syntaxes:
+W1119 11:51:08.765384             MAIN PluginsManager.cpp:159] Orthanc will use GDCM to decode transfer syntax: 1.2.840.10008.1.2.4.90
+W1119 11:51:08.765386             MAIN PluginsManager.cpp:159] Orthanc will use GDCM to decode transfer syntax: 1.2.840.10008.1.2.4.91
+W1119 11:51:08.765388             MAIN PluginsManager.cpp:159] Orthanc will use GDCM to decode transfer syntax: 1.2.840.10008.1.2.4.92
+W1119 11:51:08.765389             MAIN PluginsManager.cpp:159] Orthanc will use GDCM to decode transfer syntax: 1.2.840.10008.1.2.4.93
+W1119 11:51:08.765391             MAIN PluginsManager.cpp:159] Throttling GDCM to 4 concurrent thread(s)
+W1119 11:51:08.765397             MAIN PluginsManager.cpp:159] Version of GDCM: 3.0.24
+W1119 11:51:08.769060             MAIN PluginsManager.cpp:287] Registering plugin 'orthanc-explorer-2' (version 1.15.1)
+W1119 11:51:08.769271             MAIN PluginsManager.cpp:159] Root URI to the Orthanc-Explorer 2 application: /ui/
+W1119 11:51:08.769351             MAIN OrthancInitialization.cpp:442] SQLite index directory: /var/lib/orthanc/db
+W1119 11:51:08.769612             MAIN OrthancInitialization.cpp:529] Storage directory: /var/lib/orthanc/db
+W1119 11:51:08.781326             MAIN HttpClient.cpp:1210] HTTPS will use the CA certificates from this file: "/etc/ssl/certs/ca-certificates.crt"
+W1119 11:51:08.781632             MAIN LuaContext.cpp:95] Lua says: Lua toolbox installed
+W1119 11:51:08.781715             MAIN LuaContext.cpp:95] Lua says: Lua toolbox installed
+W1119 11:51:08.781981             MAIN ServerContext.cpp:526] Performance option "MaximumStorageCacheSize" is not defined in your configuration, setting it to 128MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.781997             MAIN ServerContext.cpp:757] Performance option "StorageLoaderThreadsCount" is not defined in your configuration, setting it to 4, based on the "ConcurrentJobs" option clamped to the range [4,50]
+W1119 11:51:08.782002             MAIN ServerContext.cpp:526] Performance option "StorageMemoryCapacity" is not defined in your configuration, setting it to 512MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.782004             MAIN ServerContext.cpp:526] Performance option "DicomParserMemoryCapacity" is not defined in your configuration, setting it to 256MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.782007             MAIN ServerContext.cpp:526] Performance option "DicomParserCacheSize" is not defined in your configuration, setting it to 256MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.782009             MAIN ServerContext.cpp:526] Performance option "TranscoderMemoryCapacity" is not defined in your configuration, setting it to 256MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.782011             MAIN ServerContext.cpp:526] Performance option "TranscoderCacheSize" is not defined in your configuration, setting it to 256MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.782013             MAIN ServerContext.cpp:526] Performance option "SequentialDicomReaderWindowCapacity" is not defined in your configuration, setting it to 128MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.782015             MAIN ServerContext.cpp:783] Performance option "SequentialDicomReaderThreadsCount" is not defined in your configuration, setting it to the same value as "StorageLoaderThreadsCount": 4
+W1119 11:51:08.782018             MAIN ServerContext.cpp:806] Performance option "SequentialDicomReaderWindowSize" is not defined in your configuration, setting it to 4
+W1119 11:51:08.782257             MAIN ServerContext.cpp:1003] Patient level is enabled
+W1119 11:51:08.782261             MAIN ServerContext.cpp:994] Disk compression is disabled
+W1119 11:51:08.782265             MAIN ServerIndex.cpp:402] No limit on the number of stored patients
+W1119 11:51:08.782267             MAIN ServerIndex.cpp:422] No limit on the size of the storage area
+W1119 11:51:08.782459             MAIN JobsEngine.cpp:280] The jobs engine has started with 2 threads
+W1119 11:51:08.782625             MAIN main.cpp:1531] DICOM server listening with AET ORTHANC on port: 4242
+W1119 11:51:08.782637             MAIN HttpServer.cpp:2283] HTTP compression is disabled
+W1119 11:51:08.782641             MAIN main.cpp:1207] Limiting the maximum body size in HTTP requests to 8192MB
+W1119 11:51:08.782644             MAIN main.cpp:1219] Limiting on the maximum file size uncompressed from ZIP/gzip archives to 4096MB
+W1119 11:51:08.782649             MAIN main.cpp:1239] ====> Remote access is enabled while user authentication is explicitly disabled, your setup is POSSIBLY INSECURE <====
+W1119 11:51:08.782657             MAIN main.cpp:1367] Remote LUA script execution is disabled
+W1119 11:51:08.782660             MAIN main.cpp:1379] REST API cannot write to the file system because the "RestApiWriteToFileSystemEnabled" configuration is set to false.  The URI /instances/../export is disabled.  This is the most secure configuration.
+W1119 11:51:08.785173             MAIN HttpServer.cpp:2028] HTTP server listening on port: 8042s (HTTPS encryption is enabled, remote access is allowed)
+W1119 11:51:08.785183             MAIN main.cpp:1049] Orthanc has started
+W1119 11:51:12.872470          HTTP-16 ResourceFinder.cpp:932] W001: Accessing DICOM tags from storage when accessing instance d862aa03-fa741e42-f9004a12-d0fc83d1-c5cfa584: 0008,1190;0020,1206;0020,1208;0020,1209;0028,0010;0028,0011;0028,0100
+W1119 11:51:12.877733          HTTP-17 ResourceFinder.cpp:932] W001: Accessing DICOM tags from storage when accessing instance d0e1865b-4287cf7d-81d2cb8e-0550cab2-c1f5fbfe: 0008,1190;0020,1206;0020,1208;0020,1209;0028,0010;0028,0011;0028,0100
+W1119 11:51:12.882303          HTTP-18 ResourceFinder.cpp:932] W001: Accessing DICOM tags from storage when accessing instance 48b1410e-1b75309f-c742fb01-e384a456-da49736f: 0008,1190;0020,1206;0020,1208;0020,1209;0028,0010;0028,0011;0028,0100
+W1119 11:51:12.887089          HTTP-19 ResourceFinder.cpp:932] W001: Accessing DICOM tags from storage when accessing instance 4d643d19-44ea2d8b-ff8e220c-fd15b58b-3902075a: 0008,1190;0020,1206;0020,1208;0020,1209;0028,0010;0028,0011;0028,0100
+W1119 11:51:12.890995          HTTP-20 ResourceFinder.cpp:932] W001: Accessing DICOM tags from storage when accessing instance f689ddd2-662f8fe1-8b18180d-ec2a2cee-937917af: 0008,1190;0020,1206;0020,1208;0020,1209;0028,0010;0028,0011;0028,0100
+W1119 11:51:12.896293          HTTP-21 ResourceFinder.cpp:932] W001: Accessing DICOM tags from storage when accessing instance 2f859814-2cf8fe4f-c7963e7d-d32c018d-66fc8cfa: 0008,1190;0020,1206;0020,1208;0020,1209;0028,0010;0028,0011;0028,0100

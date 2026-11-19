@@ -1,0 +1,52 @@
+# Cross-check plan against Orthanc + DICOMweb plugin over HTTPS (expected: pass).
+# Expected values come from the fixtures (public pydicom samples baked into the
+# LibreDVT image, build_assets.py) and from the Orthanc Book: QIDO-RS limit/offset,
+# STOW-RS response with Referenced SOP Sequence and Retrieve URL (DicomWeb.Ssl true
+# gives https Retrieve URLs), WADO-RS transfer-syntax "*" = the stored syntax,
+# SslMinimumProtocolVersion 4 = TLS 1.2 or later.
+name: Orthanc DICOMweb audit (cross-check)
+target: orthanc-https
+timeout: 60s
+steps:
+  - {id: plaintext-refused, type: tls_reject, mode: plaintext, verifies: [DVT-SRS-105]}
+  - {id: tls11-refused, type: tls_reject, mode: tls_version, tls_version: "1.1", verifies: [DVT-SRS-105]}
+  - id: stow
+    type: stow
+    verifies: [DVT-SRS-128, DVT-SRS-129, DVT-SRS-130, DVT-SRS-132, DVT-SRS-136]
+    files: [/opt/libredvt/plans/fixtures/*.dcm]
+    batch_size: 4
+    verify_retrieve: true
+  - {id: qido-studies, type: qido, level: studies, from_store: true, require_attributes: [StudyInstanceUID, PatientID, StudyDate], verifies: [DVT-SRS-113, DVT-SRS-115, DVT-SRS-135]}
+  - {id: qido-series, type: qido, level: series, from_store: true, require_attributes: [SeriesInstanceUID, Modality], verifies: [DVT-SRS-113, DVT-SRS-115]}
+  - {id: qido-instances, type: qido, level: instances, from_store: true, require_attributes: [SOPClassUID], verifies: [DVT-SRS-113, DVT-SRS-115]}
+  - {id: qido-patient, type: qido, level: studies, query: {PatientID: 1CT1}, expect_uids: [1.3.6.1.4.1.5962.1.2.1.20040119072730.12322], verifies: [DVT-SRS-114, DVT-SRS-116]}
+  - id: qido-paged
+    type: qido
+    verifies: [DVT-SRS-117]
+    level: studies
+    limit: 2
+    expect_uids:
+      - 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322
+      - 1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996
+      - 1.3.6.1.4.1.5962.1.2.4.20040826185059.5457
+      - 1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114
+  - {id: qido-none, type: qido, level: studies, query: {PatientID: NOBODY-LIBREDVT}, expect_none: true, verifies: [DVT-SRS-114]}
+  - {id: wado-store, type: wado, from_store: true, compare_pixels: true, verifies: [DVT-SRS-119, DVT-SRS-120, DVT-SRS-121, DVT-SRS-123, DVT-SRS-126]}
+  - id: wado-explicit
+    type: wado
+    verifies: [DVT-SRS-122, DVT-SRS-123]
+    level: instance
+    study: 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322
+    series: 1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322
+    instance: 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322
+    files: [/opt/libredvt/plans/fixtures/ct_explicit_le.dcm]
+    transfer_syntax: 1.2.840.10008.1.2.1
+    compare_pixels: true
+  - id: wado-meta
+    type: wado
+    verifies: [DVT-SRS-124]
+    level: study
+    study: 1.3.6.1.4.1.5962.1.2.4.20040826185059.5457
+    files: [/opt/libredvt/plans/fixtures/mr_rle.dcm, /opt/libredvt/plans/fixtures/mr_jpeg_ls.dcm]
+    metadata: true
+    compare_attributes: [PatientID, Modality, StudyInstanceUID]

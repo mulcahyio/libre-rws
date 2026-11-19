@@ -1,0 +1,2 @@
+failed   no-client-cert-refused   tls_reject fail tls_reject.refused no_client_cert: expected refused, got accepted http_reply: the target answered with HTTP status 200
+verdict: fail (DICOMweb client certificate required)

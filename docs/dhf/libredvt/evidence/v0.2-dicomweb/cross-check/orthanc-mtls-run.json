@@ -1,0 +1,210 @@
+{
+  "id": "20261119-115116-e67b6a52",
+  "plan": "DICOMweb mutual TLS",
+  "plan_sha256": "59f4e2268ed98656124060e189c4c7028269490fb81c9bf17d37a63dc5be69d0",
+  "target": "orthanc-mtls",
+  "target_desc": "orthanc-mtls (dicomweb https://orthanc-mtls:8042/dicom-web, auth none, class lab)",
+  "started": "2026-11-19T11:51:16.576533359Z",
+  "finished": "2026-11-19T11:51:17.402186804Z",
+  "steps": [
+    {
+      "id": "no-client-cert-refused",
+      "type": "tls_reject",
+      "verifies": [
+        "DVT-SRS-105"
+      ],
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-19T11:51:17.010564765Z",
+      "duration": 134467867,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "orthanc-mtls",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "https://orthanc-mtls:8042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "https://orthanc-mtls:8042/dicom-web",
+            "started": "2026-11-19T11:51:17.131Z",
+            "duration_ms": 7,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT cross-check,CN=orthanc",
+                "issuer": "O=LibreDVT cross-check,CN=dvt04-test-ca",
+                "san_dns": [
+                  "orthanc-https",
+                  "orthanc-mtls"
+                ],
+                "not_before": "2026-11-19T11:51:08.000Z",
+                "not_after": "2026-11-20T11:51:08.000Z",
+                "sha256": "db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43"
+              },
+              "client_cert_sent": false
+            }
+          },
+          {
+            "seq": 2,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-mtls:8042/dicom-web/studies?limit=1",
+            "started": "2026-11-19T11:51:17.139Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-mtls:8042/dicom-web/studies?limit=1",
+              "status": 0
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "no_client_cert",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "connection_closed: the target closed the connection"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "search-with-client-cert",
+      "type": "qido",
+      "verifies": [
+        "DVT-SRS-104"
+      ],
+      "status": "passed",
+      "messages": [
+        "2 assertion(s) checked; verdict pass",
+        "1 search request(s), 0 object(s) returned at level studies",
+        "TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject \"O=LibreDVT cross-check,CN=orthanc\", issuer \"O=LibreDVT cross-check,CN=dvt04-test-ca\", SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:08.000Z, SHA-256 db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43; client certificate offered: true"
+      ],
+      "started": "2026-11-19T11:51:17.145259469Z",
+      "duration": 256869007,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "orthanc-mtls",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "https://orthanc-mtls:8042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-mtls:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT",
+            "started": "2026-11-19T11:51:17.376Z",
+            "duration_ms": 11,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT cross-check,CN=orthanc",
+                "issuer": "O=LibreDVT cross-check,CN=dvt04-test-ca",
+                "san_dns": [
+                  "orthanc-https",
+                  "orthanc-mtls"
+                ],
+                "not_before": "2026-11-19T11:51:08.000Z",
+                "not_after": "2026-11-20T11:51:08.000Z",
+                "sha256": "db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43"
+              },
+              "client_cert_sent": true
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-mtls:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-mtls:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "2"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 2,
+                "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+                "excerpt": "[]"
+              }
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "qido.none",
+            "subject": "https://orthanc-mtls:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT",
+            "expected": "204, or 200 with an empty JSON array",
+            "actual": "200, array, 0 object(s)",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-mtls:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          }
+        ],
+        "redactions": 0
+      }
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "0.2.0-dev",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "pass"
+}
