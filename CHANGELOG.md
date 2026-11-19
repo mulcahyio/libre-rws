@@ -14,6 +14,24 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **LibreDVT v0.2 design inputs (issue #34, DRAFT for approval).** Patrick
+  approved v0.2 on 2026-11-19 with decisions D1–D5 (association + TLS tests,
+  DICOMweb QIDO-RS/WADO-RS/STOW-RS, bearer-token plumbing, TLS 1.2+ with no
+  insecure bypass, any vendor's lab systems, no workflow protocols). Design
+  documents only, no code change:
+  - `docs/dhf/libredvt/SRS.md` §6–§12: 57 new `Draft` requirements,
+    DVT-SRS-090…-156, each with acceptance criteria.
+  - Intended use extended to Mulcahy.io client interoperability audits of
+    other vendors' lab systems (user T4, needs UN-07…UN-11).
+  - Tool risk analysis: new hazards DVT-HAZ-006…-010 (false pass on TLS or
+    host name, secret leakage, store to production through new paths,
+    misparsed multipart/STOW responses, load on third-party systems) and
+    assurance activities 6–12.
+  - Threat model for the new outbound connections in `cybersecurity.md`;
+    new `plan-schema.md` (strict targets, plans, settings; secrets by
+    reference only) and `evidence-model.md` (protocol-neutral evidence,
+    verdict rule, redaction); `architecture.md` §7 with the settled design
+    decisions; `v0.2-plan.md` with the decisions and the card plan.
 - **LibreDCM DICOM Conformance Statement (issue #32, DRAFT for approval).**
   `docs/dhf/libredcm/dicom-conformance-statement.md` follows the DICOM PS3.2
   (2026d) Annex N template: SOP classes, transfer syntaxes, association

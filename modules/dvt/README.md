@@ -12,6 +12,12 @@ LibreDVT is a quality-system tool, not a medical device. Its results are used
 as verification records, so it is validated as a high-risk tool
 (QMS-SOP-011). Design file: [`docs/dhf/libredvt/`](../../docs/dhf/libredvt/SRS.md).
 
+> **v0.2 in design (not built yet).** Association negotiation and TLS tests,
+> and DICOMweb QIDO-RS, WADO-RS and STOW-RS, for LibreDCM and for audits of
+> other vendors' lab systems. See the
+> [v0.2 plan](../../docs/dhf/libredvt/v0.2-plan.md). Everything below
+> describes v0.1, which is what the image does today.
+
 ## What it does (v0.1)
 
 | Area | What |
