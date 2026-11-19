@@ -149,7 +149,7 @@ flowchart TB
     RUN["internal/runner: guards (lab only), one request at a time"]
     ENG["internal/engine: worker client, output schema check"]
     RES["internal/result: Evidence, assertions, DecideStep"]
-    RED["redaction and secret scan before write"]
+    RED["internal/redact, result.Redact, report.Render: secret scan before write"]
     REP["internal/report: HTML, JUnit, JSON"]
   end
   subgraph Py["Python worker (libredvt_worker.py)"]
