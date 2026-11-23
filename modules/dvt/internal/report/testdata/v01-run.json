@@ -1,0 +1,74 @@
+{
+  "id": "20261110-120000-abcdef01",
+  "plan": "LibreDCM conformance",
+  "plan_sha256": "abababababababababababababababababababababababababababababababab",
+  "target": "lab",
+  "target_desc": "lab (h:104)",
+  "started": "2026-11-10T12:00:00Z",
+  "finished": "2026-11-10T12:00:03Z",
+  "steps": [
+    {
+      "id": "echo",
+      "type": "echo",
+      "verifies": [
+        "DCM-SRS-001"
+      ],
+      "status": "passed",
+      "messages": [
+        "ok"
+      ],
+      "started": "0001-01-01T00:00:00Z",
+      "duration": 0
+    },
+    {
+      "id": "move",
+      "type": "move",
+      "verifies": [
+        "DCM-SRS-010"
+      ],
+      "status": "failed",
+      "messages": [
+        "1 expected instance(s) not received: [\u003cscript\u003e]"
+      ],
+      "started": "0001-01-01T00:00:00Z",
+      "duration": 0
+    },
+    {
+      "id": "validate",
+      "type": "validate",
+      "status": "failed",
+      "started": "0001-01-01T00:00:00Z",
+      "duration": 0,
+      "validation": {
+        "id": "v",
+        "label": "",
+        "created": "0001-01-01T00:00:00Z",
+        "finished": "0001-01-01T00:00:00Z",
+        "files": [
+          {
+            "file": "",
+            "name": "a.dcm",
+            "findings": [
+              {
+                "engine": "dciodvfy",
+                "severity": "error",
+                "path": "Modality(0008,0060)",
+                "message": "Missing"
+              }
+            ],
+            "verdict": "fail"
+          }
+        ],
+        "set_findings": null,
+        "versions": null,
+        "verdict": "fail"
+      }
+    }
+  ],
+  "versions": {
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "0.1.0",
+    "standard-edition": "2026d"
+  },
+  "verdict": "fail"
+}

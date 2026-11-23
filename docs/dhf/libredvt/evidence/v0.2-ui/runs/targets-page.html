@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Targets · LibreDVT</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<header class="top">
+  <a class="brand" href="/">Libre<span>DVT</span></a>
+  <nav>
+    <a href="/" >Results</a>
+    <a href="/validate" >Validate objects</a>
+    <a href="/plans" >Test plans</a>
+    <a href="/targets" class="active">Targets</a>
+  </nav>
+  <form class="inline" method="post" action="/logout"><input type="hidden" name="csrf" value="ed1800e17aebf447b0cdf2797012b99a81bc4d2a79f88c243f2e3abfffb73d4b"><button class="secondary" type="submit">Log out</button></form>
+</header>
+<main>
+<div class="notice"><b>Test data only.</b> Do not upload real patient data. LibreDVT is a test tool; files and reports are stored on this server until you delete them.</div>
+
+
+<h1>Targets</h1>
+<p class="muted">Systems under test. Store and move steps (DIMSE) and all QIDO-RS, WADO-RS and STOW-RS steps (DICOMweb) only run against targets of class <b>lab</b>; anything else, including a target without a class, is treated as <b>production</b> and protected.</p>
+
+<div class="scroll"><table><tr><th>Name</th><th>Protocol</th><th>Endpoint</th><th>Security</th><th>Class</th><th>Referenced files</th><th></th></tr>
+<tr><td class="mono nowrap">dicomweb-lab</td><td>dicomweb</td>
+<td class="mono">https://orthanc-https:8042/dicom-web</td>
+<td><span class="badge pass">TLS 1.2+</span>
+<div class="hint">CA <span class="mono">/pki/ca.crt</span></div>
+
+
+
+<div class="hint">auth bearer, token file <span class="mono">/pki/token</span></div></td>
+<td><span class="badge pass">lab</span></td>
+<td><span class="badge pass">ok</span></td>
+<td><form class="inline" method="post" action="/targets/dicomweb-lab/delete"><input type="hidden" name="csrf" value="ed1800e17aebf447b0cdf2797012b99a81bc4d2a79f88c243f2e3abfffb73d4b"><button class="secondary" type="submit">Delete</button></form></td></tr><tr><td class="mono nowrap">libredcm-tls-lab</td><td>dimse</td>
+<td class="mono">libredcm:11112<br>called LIBREDCM, calling LIBREDVT</td>
+<td><span class="badge pass">TLS 1.2+</span>
+<div class="hint">CA <span class="mono">/pki/ca.crt</span></div>
+
+
+<div class="hint">move: client certificate required</div>
+</td>
+<td><span class="badge pass">lab</span></td>
+<td><span class="badge pass">ok</span></td>
+<td><form class="inline" method="post" action="/targets/libredcm-tls-lab/delete"><input type="hidden" name="csrf" value="ed1800e17aebf447b0cdf2797012b99a81bc4d2a79f88c243f2e3abfffb73d4b"><button class="secondary" type="submit">Delete</button></form></td></tr><tr><td class="mono nowrap">pacs-production</td><td>dimse</td>
+<td class="mono">pacs.hospital.example:104<br>called PACS, calling LIBREDVT</td>
+<td><span class="badge warn">no TLS</span>
+
+</td>
+<td><span class="badge warn">production</span></td>
+<td><span class="muted">none</span></td>
+<td><form class="inline" method="post" action="/targets/pacs-production/delete"><input type="hidden" name="csrf" value="ed1800e17aebf447b0cdf2797012b99a81bc4d2a79f88c243f2e3abfffb73d4b"><button class="secondary" type="submit">Delete</button></form></td></tr>
+</table></div>
+<div class="notice spaced"><b>Secrets by reference.</b> Bearer tokens, private keys and CA certificates are never typed into this page. Put them in files under <span class="mono">/pki</span> (setting <span class="mono">secrets_dir</span>) and enter the file paths. LibreDVT shows the paths, never the contents, and keeps the values out of every report. There is no setting that turns certificate or host-name checks off.</div>
+<h2>Add or replace a DIMSE target</h2>
+<div class="card">
+<form method="post" action="/targets">
+  <input type="hidden" name="csrf" value="ed1800e17aebf447b0cdf2797012b99a81bc4d2a79f88c243f2e3abfffb73d4b">
+  <input type="hidden" name="protocol" value="dimse">
+  <div class="grid">
+  <div><label for="name">Name</label><input id="name" name="name" type="text" required pattern="[A-Za-z0-9._\-]{1,64}" placeholder="libredcm-lab"></div>
+  <div><label for="host">Host</label><input id="host" name="host" type="text" required placeholder="libredcm"></div>
+  <div><label for="port">Port</label><input id="port" name="port" type="number" min="1" max="65535" required value="11112"></div>
+  <div><label for="called_aet">Called AE title (target)</label><input id="called_aet" name="called_aet" type="text" maxlength="16" required placeholder="LIBREDCM"></div>
+  <div><label for="calling_aet">Calling AE title (LibreDVT)</label><input id="calling_aet" name="calling_aet" type="text" maxlength="16" required value="LIBREDVT"></div>
+  <div><label for="class">Class</label><select id="class" name="class"><option value="production">production (protected)</option><option value="lab">lab (test system)</option></select></div>
+  </div>
+  <fieldset><legend>DICOM TLS (optional)</legend>
+  <label class="check"><input id="tls" name="tls" type="checkbox" value="on"> Use TLS for every association</label>
+  <p class="hint">Any field below also turns TLS on. TLS 1.2 or later, certificate chain and host name always checked.</p>
+  <div class="grid">
+  <div><label for="tls_min_version">Minimum TLS version</label><select id="tls_min_version" name="tls_min_version"><option value="">1.2 (default)</option><option value="1.3">1.3</option></select></div>
+  <div><label for="tls_ca_file">CA certificates file (PEM)</label><input id="tls_ca_file" name="tls_ca_file" type="text" placeholder="/pki/client-lab-ca.pem"></div>
+  <div><label for="tls_server_name">Server name (if not the host)</label><input id="tls_server_name" name="tls_server_name" type="text" placeholder="pacs.lab.example"></div>
+  <div><label for="tls_client_cert_file">Client certificate file (PEM)</label><input id="tls_client_cert_file" name="tls_client_cert_file" type="text" placeholder="/pki/libredvt-client.pem"></div>
+  <div><label for="tls_client_key_file">Client private key file (PEM)</label><input id="tls_client_key_file" name="tls_client_key_file" type="text" placeholder="/pki/libredvt-client.key"></div>
+  <div><label for="tls_move_client_cert">Target's certificate on C-MOVE</label><select id="tls_move_client_cert" name="tls_move_client_cert"><option value="">required (default)</option><option value="optional">optional</option></select></div>
+  </div>
+  </fieldset>
+  <p><button type="submit">Save DIMSE target</button></p>
+</form>
+</div>
+<h2>Add or replace a DICOMweb target</h2>
+<div class="card">
+<form method="post" action="/targets">
+  <input type="hidden" name="csrf" value="ed1800e17aebf447b0cdf2797012b99a81bc4d2a79f88c243f2e3abfffb73d4b">
+  <input type="hidden" name="protocol" value="dicomweb">
+  <div class="grid">
+  <div><label for="w_name">Name</label><input id="w_name" name="name" type="text" required pattern="[A-Za-z0-9._\-]{1,64}" placeholder="vendor-web-lab"></div>
+  <div><label for="w_base_url">Base URL</label><input id="w_base_url" name="base_url" type="text" required placeholder="https://pacs.lab.example/dicom-web"></div>
+  <div><label for="w_class">Class</label><select id="w_class" name="class"><option value="production">production (protected)</option><option value="lab">lab (test system)</option></select></div>
+  <div><label for="w_auth_type">Authentication</label><select id="w_auth_type" name="auth_type"><option value="none">none</option><option value="bearer">bearer token from a file</option></select></div>
+  <div><label for="w_token_file">Token file (with bearer)</label><input id="w_token_file" name="token_file" type="text" placeholder="/pki/vendor-web-token"></div>
+  </div>
+  <p class="hint">A bearer token is sent only to the base URL's own origin, and over http only to a loopback address. An https base URL always uses TLS 1.2 or later with certificate and host-name checks.</p>
+  <fieldset><legend>TLS settings for an https base URL (optional)</legend>
+  <div class="grid">
+  <div><label for="w_tls_min_version">Minimum TLS version</label><select id="w_tls_min_version" name="tls_min_version"><option value="">1.2 (default)</option><option value="1.3">1.3</option></select></div>
+  <div><label for="w_tls_ca_file">CA certificates file (PEM)</label><input id="w_tls_ca_file" name="tls_ca_file" type="text" placeholder="/pki/client-lab-ca.pem"></div>
+  <div><label for="w_tls_server_name">Server name (if not the host)</label><input id="w_tls_server_name" name="tls_server_name" type="text"></div>
+  <div><label for="w_tls_client_cert_file">Client certificate file (PEM)</label><input id="w_tls_client_cert_file" name="tls_client_cert_file" type="text"></div>
+  <div><label for="w_tls_client_key_file">Client private key file (PEM)</label><input id="w_tls_client_key_file" name="tls_client_key_file" type="text"></div>
+  </div>
+  </fieldset>
+  <p><button type="submit">Save DICOMweb target</button></p>
+</form>
+</div>
+
+</main>
+<footer>LibreDVT 0.2.0-dev · DICOM Validation &amp; Test · Libre Systems</footer>
+</body></html>

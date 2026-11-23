@@ -293,6 +293,36 @@ approval):
 5. **`tls_reject` on DICOMweb targets** reuses the probe with one bare HTTP
    request (`--base-url`); see `cybersecurity.md` for the HTTP 400 rule.
 
+Implementation notes, card DVT-0.2/5 (2026-11-22, Hermes/Claude, DRAFT for
+approval):
+
+1. **One runner for CLI and web.** `Config.runner` in `cmd/libredvt` builds
+   the plan runner for both `libredvt serve` and `libredvt run`; only the
+   secrets directory differs (web: `secrets_dir`; CLI: none). Parity tests
+   run one plan and one target through both paths and compare verdicts,
+   assertions, problems, exchanges and instances (DVT-SRS-146).
+2. **Target forms on the target-file schema.** `web.TargetFromForm` maps
+   the two forms (DIMSE, DICOMweb) to `store.Target` and calls the same
+   `Normalize` as a target file; fields of the other protocol are copied so
+   they are rejected as in a file. Unknown form fields are refused, so an
+   inline secret cannot be posted. Saving also checks that every referenced
+   file lies under `secrets_dir` (`Target.CheckRefsUnder`, no file read);
+   the page shows the run-time file check (`LoadSecrets`, values dropped).
+3. **Reports.** `report.EndpointIdentity` collects TLS versions, ciphers,
+   distinct peer certificates (with validity at the start of the run) and
+   Implementation Class UID/Version Name pairs from the evidence. The HTML
+   template renders it and each step's evidence; JUnit gets the same facts
+   as properties and every assertion in `system-out`. `result.Run` gained
+   `target_info` (omitted when empty), so v0.1 runs round-trip unchanged
+   (golden files from the v0.1 code in `report/testdata`).
+4. **Template set per server.** `report.Template()` parses a fresh template
+   set: html/template cannot clone a set that has already rendered, which
+   failed the web UI when a report had been written earlier in the same
+   process (found by the parity test).
+5. **Bundled example plans** in `modules/dvt/plans/`: `libredcm-smoke-tls`,
+   `generic-dicom-tls-audit` (no lab-only step), `generic-dicomweb-audit`
+   (keeps no response-body excerpts).
+
 Test-only configuration items added by v0.2 (recorded in the tool
 validation when first used): Orthanc and its DICOMweb plugin (GPL-3.0 /
 AGPL-3.0, used only as an unmodified test container, not distributed with

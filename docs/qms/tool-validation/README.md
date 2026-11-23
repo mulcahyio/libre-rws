@@ -357,6 +357,41 @@ command output from 2026-11-10 unless stated.
     base64url) in the JSON, HTML or JUnit artefacts.
   - Fit for v0.1 use unchanged; the v0.2 functions are not yet released
     for use (validated in card DVT-0.2/6).
+- **Change 2026-11-22 (issue #34, card DVT-0.2/5, DRAFT for approval):**
+  web UI target forms for DIMSE-TLS and DICOMweb targets (secrets by file
+  reference under `secrets_dir`), report sections for the v0.2 evidence
+  (HTML, JUnit, JSON; endpoint identity with TLS version, certificate
+  subject/issuer/validity/fingerprint and Implementation Class UID;
+  per-instance results), CLI/web parity, three bundled example plans. No
+  new dependency. Re-validation (real output, evidence in
+  `docs/dhf/libredvt/evidence/v0.2-ui/`):
+  - Report tests against two real stored runs (the LibreDCM TLS run of card
+    DVT-0.2/3 and the Orthanc DICOMweb run of card DVT-0.2/4): every
+    evidence field of every step is found in that step's section of the
+    HTML report and as a JUnit property (more than 1000 HTML and 400 JUnit
+    fields for the DICOMweb run). A run, HTML report and JUnit file written
+    by the v0.1 code load and render unchanged.
+  - CLI/web parity: the same plan and target through `libredvt run
+    -targets` and through the web UI (target form, plan upload) give equal
+    verdicts, assertions, problems, exchanges and instances: with the real
+    worker against the Go DIMSE TLS peer (3 steps, 11 assertions) and the
+    Go DICOMweb TLS server with a bearer token (4 steps, 14 assertions),
+    and with fake engines; a deliberately different target is detected.
+  - The three bundled plans run through the web UI against LibreDCM in TLS
+    mode and Orthanc 1.13.1 + DICOMweb 1.24 over HTTPS: all pass; the
+    synthetic token is in none of the downloaded artefacts and pages and in
+    no file of the data directory.
+  - Mutation check: 21 of 21 mutants killed (report, web/store, CLI/runner,
+    bundled plans). The first run killed 19 of 21: one weak control (the
+    Implementation Class UID check also matched the UID in an assertion
+    row; the tests now check labelled fields) and one mutant that did not
+    compile.
+  - Real-engine test stage: exit 0, 121 top-level tests passed, 0 failed.
+  - Screenshots of the new and changed pages in light and dark mode
+    (`scripts/e2e/dvt-screenshots.mjs`), checked by eye; no page wider than
+    1280 px.
+  - Fit for v0.1 use unchanged; the v0.2 functions are not yet released
+    for use (validated in card DVT-0.2/6).
 
 ## Libre WT system test (card WT-0.2/9, 2026-11-17)
 
@@ -399,6 +434,17 @@ command output from 2026-11-10 unless stated.
   installer scripts are not covered; it runs locally, not in CI (D59).
 - **Re-validate:** when the test changes, or when the pages it parses
   change their form field names.
+
+## `scripts/e2e/dvt-screenshots.mjs`
+
+- **Intended use:** screenshots of the LibreDVT pages added or changed in
+  v0.2 (targets, test plans, run pages with TLS, association and DICOMweb
+  evidence) in light and dark, and a check that no page is wider than its
+  1280 px window. Documentation only; not a verification record.
+- **Risk: low.** Same DevTools-protocol approach as
+  `wt-screenshots.mjs`, no packages.
+- **Use (2026-11-22, card DVT-0.2/5):** 22 screenshots, 0 failed, 0 wider
+  than 1280 px; checked by eye (evidence `v0.2-ui/screenshots/`).
 
 ## `scripts/e2e/wt-screenshots.mjs`
 

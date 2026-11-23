@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="LibreDVT" tests="3" failures="2" time="3.000">
+  <testsuite name="LibreDCM conformance" tests="3" failures="2" timestamp="2026-11-10T12:00:00Z" time="3.000">
+    <properties>
+      <property name="run_id" value="20261110-120000-abcdef01"></property>
+      <property name="plan_sha256" value="abababababababababababababababababababababababababababababababab"></property>
+      <property name="target" value="lab (h:104)"></property>
+      <property name="verdict" value="fail"></property>
+      <property name="version.dicom3tools" value="1.00.snapshot.20260927113651"></property>
+      <property name="version.libredvt" value="0.1.0"></property>
+      <property name="version.standard-edition" value="2026d"></property>
+    </properties>
+    <testcase name="echo" classname="libredvt.echo" time="0.000">
+      <properties>
+        <property name="verifies" value="DCM-SRS-001"></property>
+      </properties>
+      <system-out>ok</system-out>
+    </testcase>
+    <testcase name="move" classname="libredvt.move" time="0.000">
+      <properties>
+        <property name="verifies" value="DCM-SRS-010"></property>
+      </properties>
+      <failure message="1 expected instance(s) not received: [&lt;script&gt;]" type="failed">1 expected instance(s) not received: [&lt;script&gt;]</failure>
+      <system-out>1 expected instance(s) not received: [&lt;script&gt;]</system-out>
+    </testcase>
+    <testcase name="validate" classname="libredvt.validate" time="0.000">
+      <properties></properties>
+      <failure message="failed" type="failed"></failure>
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -97,6 +97,14 @@ func (c Config) scp() engine.SCP {
 	return engine.SCP{AETitle: c.SCPAETitle, Port: c.SCPPort, TLSCert: c.SCPTLSCert, TLSKey: c.SCPTLSKey}
 }
 
+// runner builds the plan runner. The web UI and `libredvt run` both use it,
+// so a plan runs through the same code from either (DVT-SRS-041,
+// DVT-SRS-146). Only the web UI confines referenced files to secrets_dir
+// (plan-schema.md §1); the command line passes "".
+func (c Config) runner(workDir, secretsDir string) *runner.Runner {
+	return &runner.Runner{Engines: c.engines(), SCP: c.scp(), WorkDir: workDir, Version: version, SecretsDir: secretsDir}
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		usage()
@@ -165,8 +173,7 @@ func serve(args []string) int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	eng := cfg.engines()
-	rn := &runner.Runner{Engines: eng, SCP: cfg.scp(),
-		WorkDir: filepath.Join(cfg.DataDir, "work"), Version: version, SecretsDir: cfg.SecretsDir}
+	rn := cfg.runner(filepath.Join(cfg.DataDir, "work"), cfg.SecretsDir)
 	srv, err := web.New(ctx, web.Options{Store: st, Runner: rn, Validator: eng, Password: pw,
 		SessionIdle: cfg.SessionIdle, SecureCookies: cfg.SecureCookies || cfg.TLSCert != "",
 		PlansDir: cfg.PlansDir, Version: version, Log: log})
@@ -287,7 +294,10 @@ func runCmd(args []string) int {
 		return 2
 	}
 	defer os.RemoveAll(work)
-	rn := &runner.Runner{Engines: cfg.engines(), SCP: cfg.scp(), WorkDir: work, Version: version}
+	rn := cfg.runner(work, "")
+	if tgt != nil {
+		fmt.Println("target:", tgt.Describe())
+	}
 	r := rn.Run(ctx, store.NewID(), p, tgt, func(partial *result.Run) {
 		s := partial.Steps[len(partial.Steps)-1]
 		fmt.Printf("%-8s %-24s %-9s %s\n", s.Status, s.ID, s.Type, strings.Join(s.Messages, "; "))
@@ -295,6 +305,7 @@ func runCmd(args []string) int {
 	if r.Error != "" {
 		fmt.Println("run error:", r.Error)
 	}
+	printIdentity(r)
 	fmt.Printf("verdict: %s (%s)\n", r.Verdict, p.Name)
 	if err := writeOutputs(r, runner.SecretsFor(tgt, ""), *junit, *htmlOut, *jsonOut); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -304,6 +315,28 @@ func runCmd(args []string) int {
 		return 0
 	}
 	return 1
+}
+
+// printIdentity prints what the run learned about the endpoint, as the
+// reports' "Endpoint identity" section does (DVT-SRS-145).
+func printIdentity(r *result.Run) {
+	id := report.EndpointIdentity(r)
+	if id == nil {
+		return
+	}
+	if len(id.TLSVersions) > 0 {
+		fmt.Printf("identity: TLS %s, cipher %s\n", strings.Join(id.TLSVersions, ", "), strings.Join(id.Ciphers, ", "))
+	}
+	for _, c := range id.Certs {
+		v := "verified"
+		if !c.Verified {
+			v = "not verified: " + c.VerifyError
+		}
+		fmt.Printf("identity: certificate %q issued by %q, valid until %s (%s), SHA-256 %s, %s\n", c.Subject, c.Issuer, c.NotAfter, c.AtRun, c.SHA256, v)
+	}
+	for _, m := range id.Impl {
+		fmt.Printf("identity: Implementation Class UID %s, Version Name %s\n", m.UID, m.Version)
+	}
 }
 
 // writeOutputs writes the requested artefacts, each scanned for the

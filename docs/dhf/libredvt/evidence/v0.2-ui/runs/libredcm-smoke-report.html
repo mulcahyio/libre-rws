@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LibreDVT report: LibreDCM smoke (DIMSE &#43; TLS)</title><style>/* LibreDVT stylesheet. Colours are the LibreRWS Brand Book v1.4 tokens. */
+:root {
+  --libre-teal: #0A7570; --libre-teal-soft: #D5ECEA; --on-libre-teal: #FFFFFF;
+  --ink: #0F1B24; --ink-muted: #4A5B64; --line: #C9D3D6; --line-strong: #7D8E96;
+  --surface-100: #F4F7F7; --surface-200: #FFFFFF; --surface-300: #E7EDEE;
+  --ok: #1F7A4D; --warn: #8A5A00; --error: #B3261E; --focus: #0A7570;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --libre-teal: #3FC6BA; --libre-teal-soft: #103532; --on-libre-teal: #06201E;
+    --ink: #E6EDEF; --ink-muted: #9AACB4; --line: #2B3A42; --line-strong: #5E727C;
+    --surface-100: #0B1216; --surface-200: #121B21; --surface-300: #1A252C;
+    --ok: #5DD39A; --warn: #E8C14A; --error: #FF8A80; --focus: #3FC6BA;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--surface-100); }
+a { color: var(--libre-teal); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+header.top { display: flex; align-items: center; gap: 1.5rem; padding: .6rem 1.5rem; background: var(--surface-200); border-bottom: 1px solid var(--line); }
+header.top .brand { font-weight: 700; letter-spacing: .02em; color: var(--ink); text-decoration: none; }
+header.top .brand span { color: var(--libre-teal); }
+header.top nav { display: flex; gap: 1rem; flex: 1; }
+header.top nav a { text-decoration: none; color: var(--ink-muted); }
+header.top nav a.active, header.top nav a:hover { color: var(--libre-teal); }
+main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+h1 { font-size: 1.5rem; margin: 0 0 1rem; }
+h2 { font-size: 1.15rem; margin: 1.5rem 0 .6rem; }
+.card { background: var(--surface-200); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+.notice { border-left: 4px solid var(--warn); background: var(--surface-200); padding: .6rem 1rem; margin-bottom: 1rem; border-radius: 4px; }
+.flash { border-left: 4px solid var(--error); }
+table { width: 100%; border-collapse: collapse; background: var(--surface-200); }
+th, td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; }
+td.mono, .mono { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: .85rem; word-break: break-all; }
+.badge { display: inline-block; padding: .05rem .55rem; border-radius: 999px; font-size: .8rem; font-weight: 600; border: 1px solid currentColor; white-space: nowrap; }
+.pass { color: var(--ok); } .warn { color: var(--warn); } .fail { color: var(--error); }
+.sev-error { color: var(--error); font-weight: 600; } .sev-warning { color: var(--warn); }
+.verdict { font-size: 1.1rem; }
+form.inline { display: inline; }
+label { display: block; font-weight: 600; margin: .6rem 0 .2rem; }
+input[type=text], input[type=password], input[type=number], select, textarea { width: 100%; max-width: 420px; padding: .4rem .5rem; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--surface-100); color: var(--ink); font: inherit; }
+button, .button { display: inline-block; padding: .45rem 1rem; border: 0; border-radius: 4px; background: var(--libre-teal); color: var(--on-libre-teal); font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
+button.secondary { background: transparent; color: var(--error); border: 1px solid var(--error); padding: .2rem .6rem; font-size: .85rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+.muted { color: var(--ink-muted); }
+details > summary { cursor: pointer; color: var(--ink-muted); }
+pre { white-space: pre-wrap; word-break: break-all; background: var(--surface-300); padding: .6rem; border-radius: 4px; font-size: .8rem; max-height: 30rem; overflow: auto; }
+dl.meta { display: grid; grid-template-columns: max-content 1fr; gap: .2rem 1rem; margin: 0; }
+dl.meta dt { color: var(--ink-muted); }
+dl.meta dd { margin: 0; }
+footer { text-align: center; color: var(--ink-muted); font-size: .8rem; padding: 2rem 0; }
+/* v0.2: evidence sections, protocol target forms */
+h3 { font-size: 1rem; margin: 1.2rem 0 .4rem; }
+.scroll { overflow-x: auto; }
+.wrap { word-break: break-all; }
+.evidence table { font-size: .9rem; }
+.evidence details { margin: .5rem 0; }
+fieldset { border: 1px solid var(--line); border-radius: 6px; margin: .8rem 0; padding: .4rem 1rem .8rem; }
+legend { font-weight: 600; color: var(--ink-muted); padding: 0 .3rem; }
+label.check { display: flex; gap: .5rem; align-items: center; font-weight: 600; }
+.hint { color: var(--ink-muted); font-size: .85rem; margin: .2rem 0 0; }
+td.nowrap, .nowrap { white-space: nowrap; word-break: normal; }
+.spaced { margin-top: 1rem; }
+</style></head>
+<body><main>
+<h1>LibreDVT test report: LibreDCM smoke (DIMSE &#43; TLS)</h1>
+
+<div class="card">
+  <p class="verdict">Verdict: <span class="badge pass">pass</span></p>
+  
+  <dl class="meta">
+    <dt>Plan</dt><dd>LibreDCM smoke (DIMSE &#43; TLS)</dd>
+    <dt>Plan SHA-256</dt><dd class="mono">7bd60fcdaca5afa5000653f2020005739ee083f53b546ba77d3b325c1de7b283</dd>
+    <dt>Target</dt><dd>libredcm-tls-lab (libredcm:11112, called AE LIBREDCM, calling AE LIBREDVT, TLS 1.2&#43;, class lab)</dd>
+    <dt>Protocol</dt><dd>dimse</dd>
+    <dt>Endpoint</dt><dd class="mono">libredcm:11112</dd>
+    <dt>Class</dt><dd>lab</dd>
+    <dt>Run</dt><dd class="mono">20261123-041000-a149e3c4</dd>
+    <dt>Started</dt><dd>2026-11-23 04:10:00 UTC</dd>
+    <dt>Finished</dt><dd>2026-11-23 04:10:01 UTC</dd>
+  </dl>
+</div>
+<table>
+  <tr><th>Step</th><th>Type</th><th>Verifies</th><th>Result</th><th>Details</th><th>Time</th></tr>
+  
+  <tr><td class="mono">negotiate</td><td>associate</td><td class="mono">DCM-SRS-001, DCM-SRS-002, DCM-SRS-043</td>
+    <td><span class="badge pass">passed</span></td>
+    <td><div>7 assertion(s) checked; verdict pass</div><div>TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject &#34;O=LibreDVT UI demo,CN=libredcm&#34;, issuer &#34;O=LibreDVT UI demo,CN=dvt05-demo-ca&#34;, SAN DNS [libredcm], SAN IP [], valid 2026-11-23T04:09:52.000Z to 2026-11-25T04:09:52.000Z, SHA-256 07567127866655f92aa02f7ada1ac8aae9dd74c8a04c60b2fc8e2fc3fb040fa3; client certificate offered: false</div><div>association accepted; max PDU 131072, Implementation Class UID &#34;1.3.6.1.4.1.67686.1.1.1.0.0&#34;, Version Name &#34;LIBREDCM_0_0&#34;</div></td><td>159ms</td></tr>
+  
+  <tr><td class="mono">echo-over-tls</td><td>echo</td><td class="mono">DCM-SRS-001, DCM-SRS-043</td>
+    <td><span class="badge pass">passed</span></td>
+    <td><div>TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject &#34;O=LibreDVT UI demo,CN=libredcm&#34;, issuer &#34;O=LibreDVT UI demo,CN=dvt05-demo-ca&#34;, SAN DNS [libredcm], SAN IP [], valid 2026-11-23T04:09:52.000Z to 2026-11-25T04:09:52.000Z, SHA-256 07567127866655f92aa02f7ada1ac8aae9dd74c8a04c60b2fc8e2fc3fb040fa3; client certificate offered: false</div><div>C-ECHO status 0x0000 (Success)</div></td><td>321ms</td></tr>
+  
+  <tr><td class="mono">store-over-tls</td><td>store</td><td class="mono">DCM-SRS-002, DCM-SRS-043</td>
+    <td><span class="badge pass">passed</span></td>
+    <td><div>TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject &#34;O=LibreDVT UI demo,CN=libredcm&#34;, issuer &#34;O=LibreDVT UI demo,CN=dvt05-demo-ca&#34;, SAN DNS [libredcm], SAN IP [], valid 2026-11-23T04:09:52.000Z to 2026-11-25T04:09:52.000Z, SHA-256 07567127866655f92aa02f7ada1ac8aae9dd74c8a04c60b2fc8e2fc3fb040fa3; client certificate offered: false</div><div>1 of 1 files stored with status 0x0000</div></td><td>336ms</td></tr>
+  
+  <tr><td class="mono">plaintext-refused</td><td>tls_reject</td><td class="mono">DCM-SRS-043</td>
+    <td><span class="badge pass">passed</span></td>
+    <td><div>1 assertion(s) checked; verdict pass</div></td><td>117ms</td></tr>
+  
+  <tr><td class="mono">tls11-refused</td><td>tls_reject</td><td class="mono">DCM-SRS-043</td>
+    <td><span class="badge pass">passed</span></td>
+    <td><div>1 assertion(s) checked; verdict pass</div></td><td>116ms</td></tr>
+  
+</table>
+<div class="card" id="endpoint-identity">
+  <h2>Endpoint identity</h2>
+  <p class="muted">What the system under test presented during this run. Values are taken from the exchanges below.</p>
+  <dl class="meta">
+    <dt>TLS versions</dt><dd>TLSv1.3</dd>
+    <dt>Cipher suites</dt><dd class="mono">TLS_AES_128_GCM_SHA256</dd>
+    <dt>Implementation Class UID</dt><dd class="mono">1.3.6.1.4.1.67686.1.1.1.0.0</dd>
+    <dt>Implementation Version Name</dt><dd class="mono">LIBREDCM_0_0</dd>
+  </dl>
+  
+  <h3>Server certificate</h3>
+  <dl class="meta">
+    <dt>Subject</dt><dd class="mono">O=LibreDVT UI demo,CN=libredcm</dd>
+    <dt>Issuer</dt><dd class="mono">O=LibreDVT UI demo,CN=dvt05-demo-ca</dd>
+    <dt>SAN DNS</dt><dd class="mono">libredcm</dd>
+    
+    <dt>Valid from</dt><dd class="mono">2026-11-23T04:09:52.000Z</dd>
+    <dt>Valid until</dt><dd class="mono">2026-11-25T04:09:52.000Z</dd>
+    <dt>SHA-256</dt><dd class="mono wrap">07567127866655f92aa02f7ada1ac8aae9dd74c8a04c60b2fc8e2fc3fb040fa3</dd>
+  </dl>
+  <dl class="meta">
+    <dt>Verification</dt><dd><span class="pass">verified</span></dd>
+    <dt>At run time</dt><dd>valid at the start of the run, 1 day(s) left</dd>
+  </dl>
+  
+</div>
+
+
+<div class="card evidence" id="evidence-negotiate">
+  <h2>Step <span class="mono">negotiate</span>: associate <span class="badge pass">pass</span></h2>
+  <dl class="meta">
+    <dt>Target</dt><dd>libredcm-tls-lab · dimse · <span class="mono">libredcm:11112</span> · class lab</dd>
+    <dt>Assertions</dt><dd>7 passed, 0 warned, 0 failed</dd>
+    <dt>Exchanges</dt><dd>3</dd>
+    
+  </dl>
+  
+  
+  <h3>Exchanges</h3>
+  <div class="scroll"><table>
+    <tr><th>#</th><th>Protocol</th><th>Operation</th><th>Endpoint</th><th>Outcome</th><th>Result</th><th>Time</th></tr>
+    <tr><td>1</td><td>tls</td><td class="mono">TLS-HANDSHAKE</td><td class="mono wrap">libredcm:11112</td>
+    <td><span class="badge muted">completed</span></td><td>TLSv1.3</td><td class="nowrap">7 ms</td></tr><tr><td>2</td><td>dimse</td><td class="mono">A-ASSOCIATE</td><td class="mono wrap">libredcm:11112</td>
+    <td><span class="badge muted">completed</span></td><td>association accepted</td><td class="nowrap">36 ms</td></tr><tr><td>3</td><td>dimse</td><td class="mono">A-RELEASE</td><td class="mono wrap">libredcm:11112</td>
+    <td><span class="badge muted">completed</span></td><td></td><td class="nowrap">0 ms</td></tr>
+  </table></div>
+  
+  
+  <h3>TLS, exchange 1 (TLS-HANDSHAKE)</h3>
+  <dl class="meta">
+    <dt>Version</dt><dd>TLSv1.3</dd>
+    <dt>Cipher suite</dt><dd class="mono">TLS_AES_128_GCM_SHA256</dd>
+    <dt>Certificate verification</dt><dd><span class="pass">verified</span></dd>
+    <dt>Client certificate sent</dt><dd>no</dd>
+  </dl>
+  <dl class="meta">
+    <dt>Subject</dt><dd class="mono">O=LibreDVT UI demo,CN=libredcm</dd>
+    <dt>Issuer</dt><dd class="mono">O=LibreDVT UI demo,CN=dvt05-demo-ca</dd>
+    <dt>SAN DNS</dt><dd class="mono">libredcm</dd>
+    
+    <dt>Valid from</dt><dd class="mono">2026-11-23T04:09:52.000Z</dd>
+    <dt>Valid until</dt><dd class="mono">2026-11-25T04:09:52.000Z</dd>
+    <dt>SHA-256</dt><dd class="mono wrap">07567127866655f92aa02f7ada1ac8aae9dd74c8a04c60b2fc8e2fc3fb040fa3</dd>
+  </dl>
+  
+  
+  
+  
+  
+  
+  <h3>Association, exchange 2</h3>
+  <dl class="meta">
+    <dt>Result</dt><dd>accepted</dd>
+    
+    
+    <dt>Implementation Class UID</dt><dd class="mono">1.3.6.1.4.1.67686.1.1.1.0.0</dd>
+    <dt>Implementation Version Name</dt><dd class="mono">LIBREDCM_0_0</dd>
+    <dt>Max PDU length</dt><dd>131072</dd>
+    
+    <dt>Released</dt><dd>yes</dd>
+  </dl>
+  <div class="scroll"><table>
+    <tr><th>ID</th><th>Abstract syntax</th><th>Proposed transfer syntaxes</th><th>Result</th><th>Accepted transfer syntax</th><th>Roles</th></tr>
+    <tr><td>1</td><td class="mono">1.2.840.10008.1.1</td><td class="mono">1.2.840.10008.1.2.1</td>
+    <td><span class="badge pass">accepted</span></td><td class="mono">1.2.840.10008.1.2.1</td><td></td></tr><tr><td>3</td><td class="mono">1.2.840.10008.5.1.4.1.1.2</td><td class="mono">1.2.840.10008.1.2.1</td>
+    <td><span class="badge pass">accepted</span></td><td class="mono">1.2.840.10008.1.2.1</td><td></td></tr><tr><td>5</td><td class="mono">1.2.840.10008.5.1.4.31</td><td class="mono">1.2.840.10008.1.2.1</td>
+    <td><span class="badge muted">rejected</span> abstract-syntax-not-supported (3)</td><td class="mono"></td><td></td></tr>
+  </table></div>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <h3>Assertions</h3>
+  <div class="scroll"><table>
+    <tr><th>Outcome</th><th>Check</th><th>Subject</th><th>Expected</th><th>Actual</th><th>Note</th></tr>
+    <tr><td><span class="badge pass">pass</span></td><td class="mono">assoc.result</td><td class="mono wrap">libredcm:11112</td><td class="wrap">accepted</td><td class="wrap">accepted</td><td></td></tr><tr><td><span class="badge pass">pass</span></td><td class="mono">assoc.context.result</td><td class="mono wrap">context 1 (1.2.840.10008.1.1)</td><td class="wrap">accepted</td><td class="wrap">accepted</td><td></td></tr><tr><td><span class="badge pass">pass</span></td><td class="mono">assoc.context.transfer_syntax</td><td class="mono wrap">context 1 (1.2.840.10008.1.1)</td><td class="wrap">1.2.840.10008.1.2.1</td><td class="wrap">1.2.840.10008.1.2.1</td><td></td></tr><tr><td><span class="badge pass">pass</span></td><td class="mono">assoc.context.result</td><td class="mono wrap">context 3 (1.2.840.10008.5.1.4.1.1.2)</td><td class="wrap">accepted</td><td class="wrap">accepted</td><td></td></tr><tr><td><span class="badge pass">pass</span></td><td class="mono">assoc.context.transfer_syntax</td><td class="mono wrap">context 3 (1.2.840.10008.5.1.4.1.1.2)</td><td class="wrap">1.2.840.10008.1.2.1</td><td class="wrap">1.2.840.10008.1.2.1</td><td></td></tr><tr><td><span class="badge pass">pass</span></td><td class="mono">assoc.context.result</td><td class="mono wrap">context 5 (1.2.840.10008.5.1.4.31)</td><td class="wrap">rejected</td><td class="wrap">rejected</td><td>abstract-syntax-not-supported (3)</td></tr><tr><td><span class="badge pass">pass</span></td><td class="mono">assoc.release</td><td class="mono wrap">libredcm:11112</td><td class="wrap">released</td><td class="wrap">released</td><td></td></tr>
+  </table></div>
+  
+</div>
+
+<div class="card evidence" id="evidence-plaintext-refused">
+  <h2>Step <span class="mono">plaintext-refused</span>: tls_reject <span class="badge pass">pass</span></h2>
+  <dl class="meta">
+    <dt>Target</dt><dd>libredcm-tls-lab · dimse · <span class="mono">libredcm:11112</span> · class lab</dd>
+    <dt>Assertions</dt><dd>1 passed, 0 warned, 0 failed</dd>
+    <dt>Exchanges</dt><dd>1</dd>
+    
+  </dl>
+  
+  
+  <h3>Exchanges</h3>
+  <div class="scroll"><table>
+    <tr><th>#</th><th>Protocol</th><th>Operation</th><th>Endpoint</th><th>Outcome</th><th>Result</th><th>Time</th></tr>
+    <tr><td>1</td><td>dimse</td><td class="mono">A-ASSOCIATE</td><td class="mono wrap">libredcm:11112</td>
+    <td><span class="badge muted">refused</span></td><td>association no_response</td><td class="nowrap">0 ms</td></tr>
+  </table></div>
+  
+  
+  
+  <h3>Association, exchange 1</h3>
+  <dl class="meta">
+    <dt>Result</dt><dd>no_response</dd>
+    
+    
+    
+    
+    
+    
+    <dt>Released</dt><dd>no</dd>
+  </dl>
+  
+  
+  
+  
+  
+  
+  
+  <h3>Assertions</h3>
+  <div class="scroll"><table>
+    <tr><th>Outcome</th><th>Check</th><th>Subject</th><th>Expected</th><th>Actual</th><th>Note</th></tr>
+    <tr><td><span class="badge pass">pass</span></td><td class="mono">tls_reject.refused</td><td class="mono wrap">plaintext</td><td class="wrap">refused</td><td class="wrap">refused</td><td>connection_closed: the target closed the connection without answering</td></tr>
+  </table></div>
+  
+</div>
+
+<div class="card evidence" id="evidence-tls11-refused">
+  <h2>Step <span class="mono">tls11-refused</span>: tls_reject <span class="badge pass">pass</span></h2>
+  <dl class="meta">
+    <dt>Target</dt><dd>libredcm-tls-lab · dimse · <span class="mono">libredcm:11112</span> · class lab</dd>
+    <dt>Assertions</dt><dd>1 passed, 0 warned, 0 failed</dd>
+    <dt>Exchanges</dt><dd>1</dd>
+    
+  </dl>
+  
+  
+  <h3>Exchanges</h3>
+  <div class="scroll"><table>
+    <tr><th>#</th><th>Protocol</th><th>Operation</th><th>Endpoint</th><th>Outcome</th><th>Result</th><th>Time</th></tr>
+    <tr><td>1</td><td>tls</td><td class="mono">TLS-HANDSHAKE</td><td class="mono wrap">libredcm:11112</td>
+    <td><span class="badge muted">refused</span></td><td>tls error: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION</td><td class="nowrap">0 ms</td></tr>
+  </table></div>
+  
+  
+  <h3>TLS, exchange 1 (TLS-HANDSHAKE)</h3>
+  <dl class="meta">
+    <dt>Version</dt><dd>none negotiated</dd>
+    
+    <dt>Certificate verification</dt><dd><span class="sev-error">not verified</span></dd>
+    <dt>Client certificate sent</dt><dd>no</dd>
+  </dl>
+  
+  
+  
+  
+  
+  
+  
+  
+  <h3>Assertions</h3>
+  <div class="scroll"><table>
+    <tr><th>Outcome</th><th>Check</th><th>Subject</th><th>Expected</th><th>Actual</th><th>Note</th></tr>
+    <tr><td><span class="badge pass">pass</span></td><td class="mono">tls_reject.refused</td><td class="mono wrap">TLS 1.1 only</td><td class="wrap">refused</td><td class="wrap">refused</td><td>handshake_alert: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION</td></tr>
+  </table></div>
+  
+</div>
+
+<div class="card"><h2>Versions</h2><dl class="meta"><dt>dicom-validator</dt><dd class="mono">0.9.0</dd><dt>dicom3tools</dt><dd class="mono">1.00.snapshot.20260927113651</dd><dt>libredvt</dt><dd class="mono">0.2.0-dev</dd><dt>pydicom</dt><dd class="mono">3.0.2</dd><dt>pynetdicom</dt><dd class="mono">3.0.4</dd><dt>python</dt><dd class="mono">3.12.16</dd><dt>standard-edition</dt><dd class="mono">2026d</dd><dt>worker</dt><dd class="mono">0.2.0</dd></dl></div>
+
+<footer>Generated by LibreDVT. Test data only: this report must not contain patient data.</footer>
+</main></body></html>

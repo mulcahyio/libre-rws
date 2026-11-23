@@ -1,0 +1,49 @@
+# Generic DICOM TLS audit (DVT-SRS-156) for a DIMSE system from any vendor.
+#
+# It checks what a DICOM TLS endpoint must do (DICOM PS3.15 Annex B, BCP 195
+# profile): accept a verified TLS 1.2+ connection, answer C-ECHO over it,
+# and refuse plaintext, TLS 1.0 and TLS 1.1. The report records the
+# negotiated TLS version and cipher, the server certificate (subject,
+# issuer, subjectAltName, validity, SHA-256) and the Implementation Class
+# UID and Version Name the system announces.
+#
+# It sends no images and changes nothing on the target, so it also runs
+# against a target of class production. Run it only against systems you
+# have written permission to test.
+#
+# Target: register the system as "dicom-tls-lab" (or choose another target
+# when you run the plan), protocol dimse, with a tls block (ca_file = the
+# CA that issued the system's certificate; client_cert_file and
+# client_key_file when it requires mutual TLS).
+#
+# If the system must require client certificates (IHE ATNA mutual TLS), add:
+#   - id: no-client-cert-refused
+#     type: tls_reject
+#     mode: no_client_cert
+name: Generic DICOM TLS audit
+target: dicom-tls-lab
+timeout: 30s
+steps:
+  - id: negotiate-verification
+    type: associate
+    contexts:
+      - abstract_syntax: "1.2.840.10008.1.1"                          # Verification
+        transfer_syntaxes: ["1.2.840.10008.1.2.1", "1.2.840.10008.1.2"] # Explicit, Implicit VR Little Endian
+        expect: accepted
+
+  - id: echo-over-tls
+    type: echo
+
+  - id: plaintext-refused
+    type: tls_reject
+    mode: plaintext
+
+  - id: tls10-refused
+    type: tls_reject
+    mode: tls_version
+    tls_version: "1.0"
+
+  - id: tls11-refused
+    type: tls_reject
+    mode: tls_version
+    tls_version: "1.1"

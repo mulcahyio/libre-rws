@@ -373,6 +373,50 @@ func checkAll(ts []Target) error {
 
 // --- secret and certificate files (DVT-SRS-141) ---
 
+// refs lists the files the target references, by field name.
+func (t Target) refs() [][2]string {
+	var out [][2]string
+	if t.Auth != nil && t.Auth.TokenFile != "" {
+		out = append(out, [2]string{"auth.token_file", t.Auth.TokenFile})
+	}
+	if t.TLS != nil {
+		for _, r := range [][2]string{{"tls.ca_file", t.TLS.CAFile}, {"tls.client_cert_file", t.TLS.ClientCertFile}, {"tls.client_key_file", t.TLS.ClientKeyFile}} {
+			if r[1] != "" {
+				out = append(out, r)
+			}
+		}
+	}
+	return out
+}
+
+// References reports whether the target references any file.
+func (t Target) References() bool { return len(t.refs()) > 0 }
+
+// CheckRefsUnder rejects a target whose referenced files lie outside dir,
+// so the web UI refuses such a target when it is saved, not only when it
+// runs (plan-schema.md §1). An empty dir allows any absolute path (command
+// line). It does not read the files.
+func (t Target) CheckRefsUnder(dir string) error {
+	if dir == "" {
+		return nil
+	}
+	var errs []error
+	for _, r := range t.refs() {
+		if !under(r[1], dir) {
+			errs = append(errs, fmt.Errorf("%s must lie under the secrets directory %s", r[0], dir))
+		}
+	}
+	return errors.Join(errs...)
+}
+
+func under(path, dir string) bool {
+	if !filepath.IsAbs(path) {
+		return false
+	}
+	rel, err := filepath.Rel(filepath.Clean(dir), filepath.Clean(path))
+	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}
+
 // tokenRe is the RFC 6750 b64token syntax. It also guarantees that JSON,
 // HTML and XML escaping never changes a token, so the artefact scan finds
 // it in every format (DVT-SRS-152).

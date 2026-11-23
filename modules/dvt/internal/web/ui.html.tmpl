@@ -40,7 +40,7 @@
 <h1>Results</h1>
 <div class="grid">
   <div class="card"><h2>Validate objects</h2><p class="muted">Check DICOM files against the standard with dciodvfy, dicom-validator and dcentvfy.</p><a class="button" href="/validate">Validate files</a></div>
-  <div class="card"><h2>Run a test plan</h2><p class="muted">Test DICOM services (C-ECHO, C-STORE, C-FIND, C-MOVE, association rejection) on a registered target.</p><a class="button" href="/plans">Test plans</a></div>
+  <div class="card"><h2>Run a test plan</h2><p class="muted">Test DICOM services (C-ECHO, C-STORE, C-FIND, C-MOVE, association negotiation and rejection, DICOM TLS) and DICOMweb services (QIDO-RS, WADO-RS, STOW-RS) on a registered target.</p><a class="button" href="/plans">Test plans</a></div>
 </div>
 <h2>Recent test runs</h2>
 {{template "runs-table" (dict2 "Runs" .Data.Runs "CSRF" $csrf)}}
@@ -84,19 +84,29 @@
 <form method="post" action="/validations/{{$v.ID}}/delete">{{template "csrf" .CSRF}}<button class="secondary" type="submit">Delete this validation and its files</button></form>
 {{template "foot" .}}{{end}}
 
-{{define "targets"}}{{template "head" .}}{{$csrf := .CSRF}}
+{{define "targets"}}{{template "head" .}}{{$csrf := .CSRF}}{{$sd := .Data.SecretsDir}}
 <h1>Targets</h1>
-<p class="muted">Systems under test. Store and move steps only run against targets of class <b>lab</b>; anything else, including a target without a class, is treated as <b>production</b> and protected.</p>
-{{if .Data}}
-<table><tr><th>Name</th><th>Host</th><th>Port</th><th>Called AE</th><th>Calling AE</th><th>Class</th><th></th></tr>
-{{range .Data}}<tr><td class="mono">{{.Name}}</td><td class="mono">{{.Host}}</td><td>{{.Port}}</td><td class="mono">{{.CalledAET}}</td><td class="mono">{{.CallingAET}}</td>
+<p class="muted">Systems under test. Store and move steps (DIMSE) and all QIDO-RS, WADO-RS and STOW-RS steps (DICOMweb) only run against targets of class <b>lab</b>; anything else, including a target without a class, is treated as <b>production</b> and protected.</p>
+{{if .Data.Targets}}
+<div class="scroll"><table><tr><th>Name</th><th>Protocol</th><th>Endpoint</th><th>Security</th><th>Class</th><th>Referenced files</th><th></th></tr>
+{{range .Data.Targets}}<tr><td class="mono nowrap">{{.Name}}</td><td>{{.Proto}}</td>
+<td class="mono">{{.Endpoint}}{{if eq .Proto "dimse"}}<br>called {{.CalledAET}}, calling {{.CallingAET}}{{end}}</td>
+<td>{{if .HasTLS}}<span class="badge pass">TLS{{with .TLS}} {{.MinVersion}}+{{end}}</span>{{else}}<span class="badge warn">no TLS</span>{{end}}
+{{with .TLS}}{{if .CAFile}}<div class="hint">CA <span class="mono">{{.CAFile}}</span></div>{{else}}<div class="hint">CA: image trust store</div>{{end}}
+{{if .ServerName}}<div class="hint">server name <span class="mono">{{.ServerName}}</span></div>{{end}}
+{{if .ClientCertFile}}<div class="hint">client certificate <span class="mono">{{.ClientCertFile}}</span>, key <span class="mono">{{.ClientKeyFile}}</span></div>{{end}}
+{{if .MoveClientCert}}<div class="hint">move: client certificate {{.MoveClientCert}}</div>{{end}}{{end}}
+{{with .Auth}}<div class="hint">auth {{.Type}}{{if .TokenFile}}, token file <span class="mono">{{.TokenFile}}</span>{{end}}</div>{{end}}</td>
 <td><span class="badge {{if eq .Class "lab"}}pass{{else}}warn{{end}}">{{.Class}}</span></td>
+<td>{{if eq .Files "ok"}}<span class="badge pass">ok</span>{{else if .Files}}<span class="sev-error">{{.Files}}</span>{{else}}<span class="muted">none</span>{{end}}</td>
 <td><form class="inline" method="post" action="/targets/{{.Name}}/delete">{{template "csrf" $csrf}}<button class="secondary" type="submit">Delete</button></form></td></tr>{{end}}
-</table>{{else}}<p class="muted">No targets yet.</p>{{end}}
-<h2>Add or replace a target</h2>
+</table></div>{{else}}<p class="muted">No targets yet.</p>{{end}}
+<div class="notice spaced"><b>Secrets by reference.</b> Bearer tokens, private keys and CA certificates are never typed into this page. Put them in files {{if $sd}}under <span class="mono">{{$sd}}</span> (setting <span class="mono">secrets_dir</span>){{else}}on the LibreDVT host{{end}} and enter the file paths. LibreDVT shows the paths, never the contents, and keeps the values out of every report. There is no setting that turns certificate or host-name checks off.</div>
+<h2>Add or replace a DIMSE target</h2>
 <div class="card">
 <form method="post" action="/targets">
   {{template "csrf" .CSRF}}
+  <input type="hidden" name="protocol" value="dimse">
   <div class="grid">
   <div><label for="name">Name</label><input id="name" name="name" type="text" required pattern="[A-Za-z0-9._\-]{1,64}" placeholder="libredcm-lab"></div>
   <div><label for="host">Host</label><input id="host" name="host" type="text" required placeholder="libredcm"></div>
@@ -105,10 +115,49 @@
   <div><label for="calling_aet">Calling AE title (LibreDVT)</label><input id="calling_aet" name="calling_aet" type="text" maxlength="16" required value="LIBREDVT"></div>
   <div><label for="class">Class</label><select id="class" name="class"><option value="production">production (protected)</option><option value="lab">lab (test system)</option></select></div>
   </div>
-  <p><button type="submit">Save target</button></p>
+  <fieldset><legend>DICOM TLS (optional)</legend>
+  <label class="check"><input id="tls" name="tls" type="checkbox" value="on"> Use TLS for every association</label>
+  <p class="hint">Any field below also turns TLS on. TLS 1.2 or later, certificate chain and host name always checked.</p>
+  <div class="grid">
+  <div><label for="tls_min_version">Minimum TLS version</label><select id="tls_min_version" name="tls_min_version"><option value="">1.2 (default)</option><option value="1.3">1.3</option></select></div>
+  <div><label for="tls_ca_file">CA certificates file (PEM)</label><input id="tls_ca_file" name="tls_ca_file" type="text" placeholder="{{if $sd}}{{$sd}}/{{end}}client-lab-ca.pem"></div>
+  <div><label for="tls_server_name">Server name (if not the host)</label><input id="tls_server_name" name="tls_server_name" type="text" placeholder="pacs.lab.example"></div>
+  <div><label for="tls_client_cert_file">Client certificate file (PEM)</label><input id="tls_client_cert_file" name="tls_client_cert_file" type="text" placeholder="{{if $sd}}{{$sd}}/{{end}}libredvt-client.pem"></div>
+  <div><label for="tls_client_key_file">Client private key file (PEM)</label><input id="tls_client_key_file" name="tls_client_key_file" type="text" placeholder="{{if $sd}}{{$sd}}/{{end}}libredvt-client.key"></div>
+  <div><label for="tls_move_client_cert">Target's certificate on C-MOVE</label><select id="tls_move_client_cert" name="tls_move_client_cert"><option value="">required (default)</option><option value="optional">optional</option></select></div>
+  </div>
+  </fieldset>
+  <p><button type="submit">Save DIMSE target</button></p>
+</form>
+</div>
+<h2>Add or replace a DICOMweb target</h2>
+<div class="card">
+<form method="post" action="/targets">
+  {{template "csrf" .CSRF}}
+  <input type="hidden" name="protocol" value="dicomweb">
+  <div class="grid">
+  <div><label for="w_name">Name</label><input id="w_name" name="name" type="text" required pattern="[A-Za-z0-9._\-]{1,64}" placeholder="vendor-web-lab"></div>
+  <div><label for="w_base_url">Base URL</label><input id="w_base_url" name="base_url" type="text" required placeholder="https://pacs.lab.example/dicom-web"></div>
+  <div><label for="w_class">Class</label><select id="w_class" name="class"><option value="production">production (protected)</option><option value="lab">lab (test system)</option></select></div>
+  <div><label for="w_auth_type">Authentication</label><select id="w_auth_type" name="auth_type"><option value="none">none</option><option value="bearer">bearer token from a file</option></select></div>
+  <div><label for="w_token_file">Token file (with bearer)</label><input id="w_token_file" name="token_file" type="text" placeholder="{{if $sd}}{{$sd}}/{{end}}vendor-web-token"></div>
+  </div>
+  <p class="hint">A bearer token is sent only to the base URL's own origin, and over http only to a loopback address. An https base URL always uses TLS 1.2 or later with certificate and host-name checks.</p>
+  <fieldset><legend>TLS settings for an https base URL (optional)</legend>
+  <div class="grid">
+  <div><label for="w_tls_min_version">Minimum TLS version</label><select id="w_tls_min_version" name="tls_min_version"><option value="">1.2 (default)</option><option value="1.3">1.3</option></select></div>
+  <div><label for="w_tls_ca_file">CA certificates file (PEM)</label><input id="w_tls_ca_file" name="tls_ca_file" type="text" placeholder="{{if $sd}}{{$sd}}/{{end}}client-lab-ca.pem"></div>
+  <div><label for="w_tls_server_name">Server name (if not the host)</label><input id="w_tls_server_name" name="tls_server_name" type="text"></div>
+  <div><label for="w_tls_client_cert_file">Client certificate file (PEM)</label><input id="w_tls_client_cert_file" name="tls_client_cert_file" type="text"></div>
+  <div><label for="w_tls_client_key_file">Client private key file (PEM)</label><input id="w_tls_client_key_file" name="tls_client_key_file" type="text"></div>
+  </div>
+  </fieldset>
+  <p><button type="submit">Save DICOMweb target</button></p>
 </form>
 </div>
 {{template "foot" .}}{{end}}
+
+{{define "target-option"}}<option value="{{.Name}}">{{.Name}} ({{.Proto}}{{if .HasTLS}}, TLS{{end}}, {{.Class}})</option>{{end}}
 
 {{define "plans"}}{{template "head" .}}{{$csrf := .CSRF}}{{$targets := .Data.Targets}}
 <h1>Test plans</h1>
@@ -121,7 +170,7 @@
   <label for="bundled">Plan</label>
   <select id="bundled" name="bundled">{{range .Data.Bundled}}<option value="{{.File}}" {{if .Err}}disabled{{end}}>{{if .Name}}{{.Name}}{{else}}{{.File}}{{end}} ({{.Steps}} steps){{if .Err}} – invalid{{end}}</option>{{end}}</select>
   <label for="target1">Target</label>
-  <select id="target1" name="target"><option value="">as named in the plan</option>{{range $targets}}<option value="{{.Name}}">{{.Name}} ({{.Class}})</option>{{end}}</select>
+  <select id="target1" name="target"><option value="">as named in the plan</option>{{range $targets}}{{template "target-option" .}}{{end}}</select>
   <p><button type="submit">Run</button></p>
 </form>
 {{else}}<p class="muted">No bundled plans.</p>{{end}}
@@ -135,11 +184,18 @@
   <label for="fixtures">Files the plan refers to (optional; files or zip)</label>
   <input id="fixtures" name="fixtures" type="file" multiple>
   <label for="target2">Target</label>
-  <select id="target2" name="target"><option value="">as named in the plan</option>{{range $targets}}<option value="{{.Name}}">{{.Name}} ({{.Class}})</option>{{end}}</select>
+  <select id="target2" name="target"><option value="">as named in the plan</option>{{range $targets}}{{template "target-option" .}}{{end}}</select>
   <p><button type="submit">Run</button></p>
 </form>
 </div>
 </div>
+{{if .Data.Bundled}}
+<h2>Bundled plans in detail</h2>
+<div class="scroll"><table><tr><th>Plan</th><th>File</th><th>Default target</th><th>Steps</th><th>Step types</th></tr>
+{{range .Data.Bundled}}<tr><td>{{.Name}}</td><td class="mono">{{.File}}</td><td class="mono">{{.Target}}</td><td>{{.Steps}}</td><td class="mono">{{if .Err}}<span class="sev-error">{{.Err}}</span>{{else}}{{.Types}}{{end}}</td></tr>{{end}}
+</table></div>
+<p class="muted">A plan only runs against a target of the matching protocol. Store steps need a <b>lab</b> target. Run audits only against systems you are allowed to test.</p>
+{{end}}
 <h2>Test runs</h2>
 {{template "runs-table" (dict2 "Runs" .Data.Runs "CSRF" $csrf)}}
 {{template "foot" .}}{{end}}

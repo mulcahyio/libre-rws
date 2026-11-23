@@ -130,6 +130,20 @@ with warnings only under `allow_warnings`, DVT-SRS-130), and the oversized
 body is shown for the response, the DICOM JSON document and the part size
 and count limits separately.
 
+Status 2026-11-22 (card DVT-0.2/5, DRAFT for approval): reports show the
+new evidence (DVT-SRS-145, mitigation of DVT-HAZ-004 and -005: a reader sees
+what was checked, against which endpoint, with which certificate), the web
+UI and the command line run plans through the same runner (DVT-SRS-146,
+shown by parity tests with the real worker), and web target forms keep
+secrets as file references under `secrets_dir` (DVT-HAZ-007). The three
+bundled example plans (DVT-SRS-156) passed through the web UI against
+LibreDCM in TLS mode and against Orthanc with its DICOMweb plugin; the
+formal cross-check with DCMTK is part of card DVT-0.2/6. New residual point
+(DVT-HAZ-003, -010): HTML reports now show response-body excerpts, which can
+hold data returned by a client's system; the generic DICOMweb audit keeps
+none, and the README says how to switch them off (open decision in issue
+#34).
+
 ## 5. v0.2 residual risk (DRAFT for approval)
 
 DVT-HAZ-006 and DVT-HAZ-009 are reduced by the positive controls and the
