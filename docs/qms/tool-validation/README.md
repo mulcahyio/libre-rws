@@ -381,10 +381,12 @@ command output from 2026-11-10 unless stated.
     mode and Orthanc 1.13.1 + DICOMweb 1.24 over HTTPS: all pass; the
     synthetic token is in none of the downloaded artefacts and pages and in
     no file of the data directory.
-  - Mutation check: see the evidence README for the count. The first run
-    killed 19 of 21: one weak control (the Implementation Class UID check
-    also matched the UID in an assertion row; the tests now check labelled
-    fields) and one mutant that did not compile.
+  - Mutation check: 21 of 21 mutants killed (report, web/store, CLI/runner,
+    bundled plans). The first run killed 19 of 21: one weak control (the
+    Implementation Class UID check also matched the UID in an assertion
+    row; the tests now check labelled fields) and one mutant that did not
+    compile.
+  - Real-engine test stage: exit 0, 121 top-level tests passed, 0 failed.
   - Screenshots of the new and changed pages in light and dark mode
     (`scripts/e2e/dvt-screenshots.mjs`), checked by eye; no page wider than
     1280 px.

@@ -1,0 +1,152 @@
+commit 9cee795, 2026-11-23T04:14:27Z, go version go1.26.11 linux/amd64
+
+== rws-go fmt ./... (files changed)
+none
+-> exit 0
+
+== rws-go vet ./...
+-> exit 0
+
+== rws-go vet -tags official ./modules/...
+-> exit 0
+
+== rws-go vet -tags engines ./modules/dvt/...
+-> exit 0
+
+== rws-go test -race -count=1 ./...
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/cmd/libredcm	1.971s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/blob	1.032s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/control	5.248s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm	1.194s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/events	1.341s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway	4.054s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/index	2.532s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/licensing	1.024s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/cmd/libredvt	1.212s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	51.877s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/fakepeer	1.574s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/plan	1.061s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/redact	1.018s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/report	1.110s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/result	1.020s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	1.145s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/store	1.042s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/web	1.087s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/cmd/librewt	3.255s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/accounts	1.552s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/dcmclient	1.289s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/fleet	1.539s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/web	15.294s
+ok  	github.com/mulcahyio/libre-rws/platform/config	1.018s
+ok  	github.com/mulcahyio/libre-rws/platform/dicomuid	2.161s
+ok  	github.com/mulcahyio/libre-rws/platform/runtime	1.082s
+-> exit 0
+
+== rws-go test -count=1 -tags official ./modules/...
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/cmd/libredcm	0.651s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/blob	0.014s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/control	1.792s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm	0.039s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/events	0.274s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway	1.367s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/index	0.500s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/licensing	0.012s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/cmd/libredvt	0.084s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	50.897s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/fakepeer	0.542s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/plan	0.012s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/redact	0.011s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/report	0.026s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/result	0.006s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.051s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/store	0.019s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/web	0.037s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/cmd/librewt	1.295s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/accounts	0.431s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/dcmclient	0.272s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/fleet	0.408s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/web	9.898s
+-> exit 0
+
+== third_party tests (gonetdicom, librekey)
+ok  	github.com/godicom-dev/gonetdicom	1.007s
+ok  	github.com/godicom-dev/gonetdicom/ae	1.227s
+ok  	github.com/godicom-dev/gonetdicom/dicomweb	1.535s
+ok  	github.com/godicom-dev/gonetdicom/dimse	1.018s
+ok  	github.com/godicom-dev/gonetdicom/pdu	1.028s
+ok  	github.com/godicom-dev/gonetdicom/status	1.013s
+-> exit 0
+ok  	github.com/mulcahyio/librekey/client	1.020s
+ok  	github.com/mulcahyio/librekey/fingerprint	1.009s
+ok  	github.com/mulcahyio/librekey/license	1.024s
+-> exit 0
+
+== gosec v2.30.0 -exclude-dir=third_party ./...
+-> exit 0
+
+== govulncheck v1.9.0 ./...
+Your code is affected by 0 vulnerabilities.
+This scan also found 0 vulnerabilities in packages you import and 4
+vulnerabilities in modules you require, but your code doesn't appear to call
+these vulnerabilities.
+Use '-show verbose' for more details.
+-> exit 0
+
+== trace.py --write --check
+wrote docs/dhf/libredcm/generated/trace-matrix.md
+Requirements: 75 (71 active). Active with verification: 71. Active without verification: 0. Tags pointing at unknown IDs: 0. Tags pointing at retired IDs: 0.
+-> exit 0
+
+== needs.py
+User needs: 19. Requirements: 75 (74 not retired). Not traced to a need: 0. Unknown or retired citations: 0.
+-> exit 0
+
+== trace.py --module libredvt --prefix DVT --write --check
+wrote docs/dhf/libredvt/generated/trace-matrix.md
+Requirements: 92 (35 active). Active with verification: 35. Active without verification: 0. Tags pointing at unknown IDs: 0. Tags pointing at retired IDs: 0.
+-> exit 0
+
+== needs.py --module libredvt --prefix DVT
+User needs: 11. Requirements: 92 (92 not retired). Not traced to a need: 0. Unknown or retired citations: 0.
+-> exit 0
+
+== trace.py --module librewt --prefix WT --check
+Requirements: 37 (37 active). Active with verification: 37. Active without verification: 0. Tags pointing at unknown IDs: 0. Tags pointing at retired IDs: 0.
+-> exit 0
+
+== needs.py --module librewt --prefix WT
+User needs: 14. Requirements: 37 (37 not retired). Not traced to a need: 0. Unknown or retired citations: 0.
+-> exit 0
+
+== mdlinks.py
+checked 76 files, 0 broken links
+-> exit 0
+
+== dcs.py
+dcs: dimse 7, storage 170, transfer syntaxes 14, settings 21, patient keys 5, study keys 14, series keys 16, image keys 18; 0 problems
+-> exit 0
+
+== test_qms_tools.py
+Ran 26 tests in 0.679s
+
+OK
+-> exit 0
+
+== bash -n on changed shell scripts
+docs/dhf/libredvt/evidence/v0.2-ui/scripts/ui-demo.sh: 0
+docs/dhf/libredvt/evidence/v0.2-ui/scripts/ui-setup.sh: 0
+
+== node --check scripts/e2e/dvt-screenshots.mjs
+-> exit 0
+
+== python3 -m py_compile mutation.py
+-> exit 0
+
+== gitleaks over feat/libredvt-0.2-dicomweb..HEAD
+
+[90m4:16AM[0m [32mINF[0m [1m7 commits scanned.[0m
+[90m4:16AM[0m [32mINF[0m [1mscanned ~368723 bytes (368.72 KB) in 163ms[0m
+[90m4:16AM[0m [32mINF[0m [1mno leaks found[0m
+-> exit 0
+
+GATE: 0 failing step(s)

@@ -78,8 +78,8 @@ async function shot(name, scheme, selector = "", maxH = 2400) {
     y = await js(`(() => { const e = document.querySelector(${q(selector)}); if (!e) throw new Error("no element " + ${q(selector)}); return Math.max(0, e.getBoundingClientRect().top + window.scrollY - 8); })()`);
   }
   const h = Math.min(Math.ceil(m.cssContentSize.height) - y, maxH);
-  const r = await cdp("Page.captureScreenshot", { format: "png", captureBeyondViewport: true, clip: { x: 0, y, width: 1280, height: h, scale: 1 } });
-  const file = join(OUT, `${name}-${scheme}.png`);
+  const r = await cdp("Page.captureScreenshot", { format: "webp", quality: 82, captureBeyondViewport: true, clip: { x: 0, y, width: 1280, height: h, scale: 1 } });
+  const file = join(OUT, `${name}-${scheme}.webp`);
   writeFileSync(file, Buffer.from(r.data, "base64"));
   const wide = await js("document.documentElement.scrollWidth");
   if (wide > 1280) { overflow++; console.log(`OVERFLOW ${name}-${scheme}: page is ${wide}px wide`); }

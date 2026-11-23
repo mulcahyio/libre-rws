@@ -1,0 +1,31 @@
+baseline ./modules/dvt/cmd/libredvt/: ok
+baseline ./modules/dvt/internal/plan/: ok
+baseline ./modules/dvt/internal/report/: ok
+baseline ./modules/dvt/internal/web/: ok
+U1: killed  (per-exchange TLS certificate facts dropped from the HTML report) by --- FAIL: TestReportsShowRealDIMSEAndTLSEvidence (0.00s), --- FAIL: TestReportsShowRealDICOMwebEvidence (0.01s)
+U2: killed  (per-instance remote result and reason dropped) by --- FAIL: TestReportsShowRealDICOMwebEvidence (0.01s), --- FAIL: TestReportsShowFailuresTargetAndIdentity (0.00s)
+U3: killed  (assertion table shows the expected value as the actual value) by --- FAIL: TestReportsShowFailuresTargetAndIdentity (0.00s)
+U4: SURVIVED (Implementation Class UID dropped from the association section)
+U5: killed  (JUnit loses the evidence properties) by --- FAIL: TestReportsShowRealDIMSEAndTLSEvidence (0.00s), --- FAIL: TestReportsShowRealDICOMwebEvidence (0.01s), --- FAIL: TestReportsShowFailuresTargetAndIdentity (0.00s)
+U6: killed  (JUnit system-out loses the assertions) by --- FAIL: TestReportsShowRealDIMSEAndTLSEvidence (0.00s), --- FAIL: TestReportsShowRealDICOMwebEvidence (0.01s)
+U7: killed  (certificate verification inverted in the endpoint identity) by --- FAIL: TestReportsShowFailuresTargetAndIdentity (0.00s), --- FAIL: TestEndpointIdentity (0.00s)
+U8: killed  (certificate counted valid at its NotAfter instant) by --- FAIL: TestEndpointIdentity (0.00s)
+U9: killed  (v0.1 runs get an (empty) identity card: v0.1 report changes) by --- FAIL: TestStoredV01RunLoadsAndRendersUnchanged (0.00s), --- FAIL: TestEndpointIdentity (0.00s)
+U10: killed  (target rows rendered for every run, v0.1 included (template error or changed v0.1 report)) by --- FAIL: TestStoredV01RunLoadsAndRendersUnchanged (0.00s), --- FAIL: TestReportsShowFailuresTargetAndIdentity (0.00s)
+W1: killed  (unknown form fields (inline token, verification switch) accepted) by --- FAIL: TestTargetFormsUseTheTargetFileSchema (0.00s), --- FAIL: TestTargetsPageKeepsSecretsByReference (0.01s)
+W2: killed  (TLS fields without the check box silently mean clear text) by --- FAIL: TestTargetFormsUseTheTargetFileSchema (0.00s)
+W3: killed  (referenced file outside secrets_dir accepted when saved) by --- FAIL: TestTargetsPageKeepsSecretsByReference (0.00s)
+W4: DOES NOT COMPILE (secrets_dir containment check always true)
+# github.com/mulcahyio/libre-rws/modules/dvt/internal/store
+modules/dvt/internal/store/target.go:416:2: declared and not used: rel
+
+W5: killed  (targets page reports every referenced file as ok) by --- FAIL: TestTargetsPageKeepsSecretsByReference (0.00s)
+W6: killed  (a repeated form field is accepted (first value silently wins)) by --- FAIL: TestTargetFormsUseTheTargetFileSchema (0.00s)
+C1: killed  (runs lose the target's protocol, endpoint and class) by --- FAIL: TestCLIAndWebGiveTheSameResult (0.02s)
+C2: killed  (CLI runner configured differently from the web runner (parity broken)) by --- FAIL: TestCLIAndWebGiveTheSameResult (0.02s)
+P1: killed  (DICOMweb audit keeps response-body excerpts) by --- FAIL: TestBundledExamplePlans (0.00s)
+P2: killed  (LibreDCM smoke no longer checks TLS 1.1 refusal) by --- FAIL: TestBundledExamplePlans (0.00s)
+P3: killed  (DICOM TLS audit writes to the target (lab-only step)) by --- FAIL: TestBundledExamplePlans (0.00s)
+
+19 of 21 mutants killed, 1 survived, 1 invalid; module tree clean
+exit 1

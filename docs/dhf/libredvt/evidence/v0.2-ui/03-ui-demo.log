@@ -1,0 +1,46 @@
+commit 9cee795, 2026-11-23T04:09:51Z
+== bash scripts/ui-demo.sh up
+down
+libredcm: healthy
+orthanc: 1 start line(s)
+libredvt healthz: ok
+image libre/dvt:v02-ui sha256:d4ef240cee72ef24d7caf12be1e598ab5c3102439db667480e7c584d39cd7850
+image libre/dcm:v02-foundation sha256:1ba9e60d67b72b23026432fcbfd68d4872252f0ddbc819b56b69fdc4572a6f76
+image orthancteam/orthanc:26.11.1@sha256:25738bcd515926ac8d33cacf09729a410a32c0a65d6cb8e61bd86fce81a4cd30 sha256:25738bcd515926ac8d33cacf09729a410a32c0a65d6cb8e61bd86fce81a4cd30
+== bash scripts/ui-setup.sh runs/
+login 303
+libredcm-tls-lab 303
+dicomweb-lab 303
+pacs-production 303
+run libredcm-smoke: 20261123-041000-a149e3c4
+  verdict pass | negotiate=pass; echo-over-tls=passed; store-over-tls=passed; plaintext-refused=pass; tls11-refused=pass
+run dicom-tls-audit: 20261123-041002-64ba1190
+  verdict pass | negotiate-verification=pass; echo-over-tls=passed; plaintext-refused=pass; tls10-refused=pass; tls11-refused=pass
+run dicomweb-audit: 20261123-041004-8ce96c32
+  verdict pass | plaintext-refused=pass; tls11-refused=pass; stow-samples=pass; qido-studies=pass; qido-series=pass; qido-instances=pass; qido-no-match=pass; wado-and-compare-pixels=pass
+token hits in downloaded artefacts and pages: 0 of 13 files
+token hits in the LibreDVT data directory: 0 files
+== node scripts/e2e/dvt-screenshots.mjs
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/home-light.webp	Results · LibreDVT	900px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/targets-light.webp	Targets · LibreDVT	1976px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/targets-forms-light.webp	Targets · LibreDVT	1286.546875px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/target-refused-light.webp	Targets · LibreDVT	2034px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/plans-light.webp	Test plans · LibreDVT	1158px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/run-smoke-light.webp	Run 20261123-041000-a149e3c4 · LibreDVT	2400px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/run-smoke-identity-light.webp	Run 20261123-041000-a149e3c4 · LibreDVT	2400px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/run-smoke-negotiate-light.webp	Run 20261123-041000-a149e3c4 · LibreDVT	2400px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/run-dicom-tls-audit-light.webp	Run 20261123-041002-64ba1190 · LibreDVT	2400px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/run-dicomweb-light.webp	Run 20261123-041004-8ce96c32 · LibreDVT	2400px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/run-dicomweb-stow-light.webp	Run 20261123-041004-8ce96c32 · LibreDVT	2400px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/home-dark.webp	Results · LibreDVT	900px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/targets-dark.webp	Targets · LibreDVT	1976px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/targets-forms-dark.webp	Targets · LibreDVT	1286.546875px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/target-refused-dark.webp	Targets · LibreDVT	2034px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/plans-dark.webp	Test plans · LibreDVT	1158px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/run-smoke-dark.webp	Run 20261123-041000-a149e3c4 · LibreDVT	2400px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/run-smoke-identity-dark.webp	Run 20261123-041000-a149e3c4 · LibreDVT	2400px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/run-smoke-negotiate-dark.webp	Run 20261123-041000-a149e3c4 · LibreDVT	2400px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/run-dicom-tls-audit-dark.webp	Run 20261123-041002-64ba1190 · LibreDVT	2400px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/run-dicomweb-dark.webp	Run 20261123-041004-8ce96c32 · LibreDVT	2400px
+docs/dhf/libredvt/evidence/v0.2-ui/screenshots/run-dicomweb-stow-dark.webp	Run 20261123-041004-8ce96c32 · LibreDVT	2400px
+done, 0 failed, 0 wider than 1280 px
