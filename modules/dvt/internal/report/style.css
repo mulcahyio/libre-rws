@@ -50,3 +50,13 @@ dl.meta { display: grid; grid-template-columns: max-content 1fr; gap: .2rem 1rem
 dl.meta dt { color: var(--ink-muted); }
 dl.meta dd { margin: 0; }
 footer { text-align: center; color: var(--ink-muted); font-size: .8rem; padding: 2rem 0; }
+/* v0.2: evidence sections, protocol target forms */
+h3 { font-size: 1rem; margin: 1.2rem 0 .4rem; }
+.scroll { overflow-x: auto; }
+.wrap { word-break: break-all; }
+.evidence table { font-size: .9rem; }
+.evidence details { margin: .5rem 0; }
+fieldset { border: 1px solid var(--line); border-radius: 6px; margin: .8rem 0; padding: .4rem 1rem .8rem; }
+legend { font-weight: 600; color: var(--ink-muted); padding: 0 .3rem; }
+label.check { display: flex; gap: .5rem; align-items: center; font-weight: 600; }
+.hint { color: var(--ink-muted); font-size: .85rem; margin: .2rem 0 0; }

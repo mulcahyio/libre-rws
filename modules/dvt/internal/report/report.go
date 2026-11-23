@@ -63,6 +63,7 @@ func JUnit(r *result.Run) ([]byte, error) {
 	s.Properties = append(s.Properties,
 		junitProperty{"run_id", r.ID}, junitProperty{"plan_sha256", r.PlanSHA256},
 		junitProperty{"target", r.TargetDesc}, junitProperty{"verdict", string(r.Verdict)})
+	s.Properties = append(s.Properties, junitIdentity(r)...)
 	for _, k := range sortedKeys(r.Versions) {
 		s.Properties = append(s.Properties, junitProperty{"version." + k, r.Versions[k]})
 	}
@@ -70,10 +71,18 @@ func JUnit(r *result.Run) ([]byte, error) {
 		s.Properties = append(s.Properties, junitProperty{"error", r.Error})
 	}
 	for _, st := range r.Steps {
-		c := junitCase{Name: st.ID, Classname: "libredvt." + st.Type, Time: secs(st.Duration), SystemOut: strings.Join(st.Messages, "\n")}
+		out := st.Messages
+		if st.Evidence != nil { // every assertion, also the passed ones (DVT-SRS-145)
+			out = append(append([]string{}, out...), "assertions:")
+			for _, a := range st.Evidence.Assertions {
+				out = append(out, "  "+AssertionLine(a))
+			}
+		}
+		c := junitCase{Name: st.ID, Classname: "libredvt." + st.Type, Time: secs(st.Duration), SystemOut: strings.Join(out, "\n")}
 		if len(st.Verifies) > 0 {
 			c.Properties = []junitProperty{{"verifies", strings.Join(st.Verifies, ", ")}}
 		}
+		c.Properties = append(c.Properties, junitEvidence(st)...)
 		if st.Status != result.StepPassed {
 			msg := string(st.Status)
 			if len(st.Messages) > 0 {
@@ -154,6 +163,15 @@ var Funcs = template.FuncMap{
 		e, w, ee := v.Counts()
 		return fmt.Sprintf("%d errors, %d warnings, %d engine errors", e, w, ee)
 	},
+	// v0.2 evidence (DVT-SRS-145)
+	"identity":    EndpointIdentity,
+	"xresult":     ExchangeResult,
+	"acounts":     AssertionCounts,
+	"headers":     headerLines,
+	"pixels":      pixels,
+	"roles":       roles,
+	"yesno":       yesno,
+	"assertClass": assertClass,
 }
 
 // cssSafe marks the embedded stylesheet as trusted CSS for the template.

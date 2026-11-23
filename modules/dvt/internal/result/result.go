@@ -167,11 +167,14 @@ func (s *Step) Failf(msg string) {
 
 // Run is the result of a test plan run.
 type Run struct {
-	ID         string            `json:"id"`
-	Plan       string            `json:"plan"`
-	PlanSHA256 string            `json:"plan_sha256"`
-	Target     string            `json:"target"`
-	TargetDesc string            `json:"target_desc"`
+	ID         string `json:"id"`
+	Plan       string `json:"plan"`
+	PlanSHA256 string `json:"plan_sha256"`
+	Target     string `json:"target"`
+	TargetDesc string `json:"target_desc"`
+	// TargetInfo is the target's protocol, endpoint and class for reports
+	// (DVT-SRS-145). Runs stored by v0.1 have none and render as before.
+	TargetInfo *TargetInfo       `json:"target_info,omitempty"`
 	Started    time.Time         `json:"started"`
 	Finished   time.Time         `json:"finished"`
 	Running    bool              `json:"running,omitempty"`

@@ -42,6 +42,11 @@
     <dt>Plan</dt><dd>{{$r.Plan}}</dd>
     <dt>Plan SHA-256</dt><dd class="mono">{{$r.PlanSHA256}}</dd>
     <dt>Target</dt><dd>{{if $r.TargetDesc}}{{$r.TargetDesc}}{{else}}{{$r.Target}}{{end}}</dd>
+    {{- with $r.TargetInfo}}
+    <dt>Protocol</dt><dd>{{.Protocol}}</dd>
+    <dt>Endpoint</dt><dd class="mono">{{.Endpoint}}</dd>
+    <dt>Class</dt><dd>{{.Class}}</dd>
+    {{- end}}
     <dt>Run</dt><dd class="mono">{{$r.ID}}</dd>
     <dt>Started</dt><dd>{{ts $r.Started}}</dd>
     <dt>Finished</dt><dd>{{if $r.Running}}running…{{else}}{{ts $r.Finished}}{{end}}</dd>
@@ -55,11 +60,127 @@
     <td>{{range .Messages}}<div>{{.}}</div>{{end}}</td><td>{{dur .Duration}}</td></tr>
   {{end}}
 </table>
+{{- with identity $r}}{{template "identity" .}}{{end}}
 {{range $r.Steps}}{{if .Validation}}
 <h2>Step {{.ID}}: object validation</h2>
 {{template "validation-body" .Validation}}
 {{end}}{{end}}
+{{- range $r.Steps}}{{if .Evidence}}{{template "evidence" .}}{{end}}{{end}}
 <div class="card"><h2>Versions</h2>{{template "versions-dl" $r.Versions}}</div>
+{{end}}
+
+{{define "identity"}}
+<div class="card" id="endpoint-identity">
+  <h2>Endpoint identity</h2>
+  <p class="muted">What the system under test presented during this run. Values are taken from the exchanges below.</p>
+  <dl class="meta">
+    {{if .TLSVersions}}<dt>TLS versions</dt><dd>{{join .TLSVersions ", "}}</dd>
+    <dt>Cipher suites</dt><dd class="mono">{{join .Ciphers ", "}}</dd>{{end}}
+    {{range .Impl}}<dt>Implementation Class UID</dt><dd class="mono">{{.UID}}</dd>
+    <dt>Implementation Version Name</dt><dd class="mono">{{.Version}}</dd>{{end}}
+  </dl>
+  {{range $i, $c := .Certs}}
+  <h3>Server certificate</h3>
+  {{template "cert-dl" $c.PeerCert}}
+  <dl class="meta">
+    <dt>Verification</dt><dd>{{if $c.Verified}}<span class="pass">verified</span>{{else}}<span class="sev-error">not verified: {{$c.VerifyError}}</span>{{end}}</dd>
+    <dt>At run time</dt><dd>{{$c.AtRun}}</dd>
+  </dl>
+  {{end}}
+</div>
+{{end}}
+
+{{define "cert-dl"}}<dl class="meta">
+    <dt>Subject</dt><dd class="mono">{{.Subject}}</dd>
+    <dt>Issuer</dt><dd class="mono">{{.Issuer}}</dd>
+    {{if .SANDNS}}<dt>SAN DNS</dt><dd class="mono">{{join .SANDNS ", "}}</dd>{{end}}
+    {{if .SANIP}}<dt>SAN IP</dt><dd class="mono">{{join .SANIP ", "}}</dd>{{end}}
+    <dt>Valid from</dt><dd class="mono">{{.NotBefore}}</dd>
+    <dt>Valid until</dt><dd class="mono">{{.NotAfter}}</dd>
+    <dt>SHA-256</dt><dd class="mono wrap">{{.SHA256}}</dd>
+  </dl>{{end}}
+
+{{define "evidence"}}{{$e := .Evidence}}
+<div class="card evidence" id="evidence-{{.ID}}">
+  <h2>Step <span class="mono">{{.ID}}</span>: {{.Type}} <span class="badge {{verdictClass .Verdict}}">{{.Verdict}}</span></h2>
+  <dl class="meta">
+    <dt>Target</dt><dd>{{$e.Target.Name}} · {{$e.Target.Protocol}} · <span class="mono">{{$e.Target.Endpoint}}</span> · class {{$e.Target.Class}}</dd>
+    <dt>Assertions</dt><dd>{{acounts $e}}</dd>
+    <dt>Exchanges</dt><dd>{{len $e.Exchanges}}</dd>
+    {{if $e.Redactions}}<dt>Redactions</dt><dd class="sev-error">{{$e.Redactions}} secret value(s) replaced</dd>{{end}}
+  </dl>
+  {{if $e.Errors}}<p class="sev-error">Problems (each one fails the step):</p>
+  <ul>{{range $e.Errors}}<li><b>{{.Kind}}</b>: {{.Message}}</li>{{end}}</ul>{{end}}
+  {{if $e.Exchanges}}
+  <h3>Exchanges</h3>
+  <div class="scroll"><table>
+    <tr><th>#</th><th>Protocol</th><th>Operation</th><th>Endpoint</th><th>Outcome</th><th>Result</th><th>Time</th></tr>
+    {{range $e.Exchanges}}<tr><td>{{.Seq}}</td><td>{{.Protocol}}</td><td class="mono">{{.Operation}}</td><td class="mono wrap">{{.Endpoint}}</td>
+    <td><span class="badge {{if eq .Outcome "error"}}fail{{else}}muted{{end}}">{{.Outcome}}</span></td><td>{{xresult .}}</td><td>{{.DurationMS}} ms</td></tr>{{end}}
+  </table></div>
+  {{range $e.Exchanges}}{{$x := .}}
+  {{with .TLS}}
+  <h3>TLS, exchange {{$x.Seq}} ({{$x.Operation}})</h3>
+  <dl class="meta">
+    <dt>Version</dt><dd>{{if .Version}}{{.Version}}{{else}}none negotiated{{end}}</dd>
+    {{if .Cipher}}<dt>Cipher suite</dt><dd class="mono">{{.Cipher}}</dd>{{end}}
+    <dt>Certificate verification</dt><dd>{{if .Verified}}<span class="pass">verified</span>{{else}}<span class="sev-error">not verified{{if .VerifyError}}: {{.VerifyError}}{{end}}</span>{{end}}</dd>
+    <dt>Client certificate sent</dt><dd>{{yesno .ClientCertSent}}</dd>
+  </dl>
+  {{with .Peer}}{{template "cert-dl" .}}{{end}}
+  {{end}}
+  {{with .Association}}
+  <h3>Association, exchange {{$x.Seq}}</h3>
+  <dl class="meta">
+    <dt>Result</dt><dd>{{.Result}}</dd>
+    {{with .Reject}}<dt>A-ASSOCIATE-RJ</dt><dd>result {{.Result}}, source {{.Source}}, reason {{.Reason}}</dd>{{end}}
+    {{with .Abort}}<dt>A-ABORT</dt><dd>source {{.Source}}, reason {{.Reason}}</dd>{{end}}
+    {{if .ImplClassUID}}<dt>Implementation Class UID</dt><dd class="mono">{{.ImplClassUID}}</dd>{{end}}
+    {{if .ImplVersion}}<dt>Implementation Version Name</dt><dd class="mono">{{.ImplVersion}}</dd>{{end}}
+    {{if .MaxPDU}}<dt>Max PDU length</dt><dd>{{.MaxPDU}}</dd>{{end}}
+    {{with .AsyncOps}}<dt>Asynchronous operations</dt><dd>invoked {{.Invoked}}, performed {{.Performed}}</dd>{{end}}
+    <dt>Released</dt><dd>{{yesno .Released}}</dd>
+  </dl>
+  {{if .Contexts}}<div class="scroll"><table>
+    <tr><th>ID</th><th>Abstract syntax</th><th>Proposed transfer syntaxes</th><th>Result</th><th>Accepted transfer syntax</th><th>Roles</th></tr>
+    {{range .Contexts}}<tr><td>{{.ID}}</td><td class="mono">{{.AbstractSyntax}}</td><td class="mono">{{join .ProposedTransferSyntaxes ", "}}</td>
+    <td><span class="badge {{if eq .Result "accepted"}}pass{{else}}muted{{end}}">{{.Result}}</span>{{if .Reason}} {{.Reason}}{{end}}</td><td class="mono">{{.AcceptedTransferSyntax}}</td><td>{{roles .Roles}}</td></tr>{{end}}
+  </table></div>{{end}}
+  {{end}}
+  {{with .HTTP}}
+  <details><summary>HTTP, exchange {{$x.Seq}}: {{.Method}} <span class="mono">{{.URL}}</span> → {{if .Status}}{{.Status}}{{else}}no response{{end}}</summary>
+  {{if .RequestHeaders}}<p><b>Request headers</b></p><pre>{{range headers .RequestHeaders}}{{.}}
+{{end}}</pre>{{end}}
+  {{if .ResponseHeaders}}<p><b>Response headers</b></p><pre>{{range headers .ResponseHeaders}}{{.}}
+{{end}}</pre>{{end}}
+  {{with .Body}}<p><b>Body</b> {{.ContentType}}, {{.Size}} bytes, SHA-256 <span class="mono wrap">{{.SHA256}}</span></p>
+  {{if .Excerpt}}<pre>{{.Excerpt}}{{if .ExcerptTruncated}}
+[excerpt truncated]{{end}}</pre>{{end}}{{end}}
+  {{if .Parts}}<div class="scroll"><table>
+    <tr><th>Part</th><th>Content type</th><th>Transfer syntax</th><th>SOP Instance UID</th><th>Size</th><th>SHA-256</th></tr>
+    {{range .Parts}}<tr><td>{{.Index}}</td><td class="mono">{{.ContentType}}</td><td class="mono">{{.TransferSyntax}}</td><td class="mono">{{.SOPInstanceUID}}</td><td>{{.Size}}</td><td class="mono wrap">{{.SHA256}}</td></tr>{{end}}
+  </table></div>{{end}}
+  </details>
+  {{end}}
+  {{end}}
+  {{end}}
+  {{if $e.Instances}}
+  <h3>Instances</h3>
+  <div class="scroll"><table>
+    <tr><th>SOP Instance UID</th><th>SOP Class</th><th>Transfer syntax</th><th>File</th><th>Remote result</th><th>Pixel data</th><th>Retrieve URL</th></tr>
+    {{range $e.Instances}}<tr><td class="mono wrap">{{.SOPInstanceUID}}</td><td class="mono">{{.SOPClassUID}}</td><td class="mono">{{.TransferSyntax}}</td><td class="mono">{{.File}}</td>
+    <td>{{if .RemoteResult}}<span class="badge {{if eq .RemoteResult "success"}}pass{{else if eq .RemoteResult "warning"}}warn{{else}}fail{{end}}">{{.RemoteResult}}</span>{{end}}{{if .Reason}} {{.Reason}}{{end}}</td>
+    <td>{{pixels .PixelSHA256Sent .PixelSHA256Received}}</td><td class="mono wrap">{{.RetrieveURL}}</td></tr>{{end}}
+  </table></div>
+  {{end}}
+  {{if $e.Assertions}}
+  <h3>Assertions</h3>
+  <div class="scroll"><table>
+    <tr><th>Outcome</th><th>Check</th><th>Subject</th><th>Expected</th><th>Actual</th><th>Note</th></tr>
+    {{range $e.Assertions}}<tr><td><span class="badge {{assertClass .Outcome}}">{{.Outcome}}</span></td><td class="mono">{{.ID}}</td><td class="mono wrap">{{.Subject}}</td><td class="wrap">{{.Expected}}</td><td class="wrap">{{.Actual}}</td><td>{{.Message}}</td></tr>{{end}}
+  </table></div>
+  {{end}}
+</div>
 {{end}}
 
 {{define "run-page"}}<!doctype html>

@@ -81,6 +81,8 @@ func (rn *Runner) Run(ctx context.Context, id string, p *plan.Plan, t *store.Tar
 	rejected := false // the plan does not fit the target: no step runs (DVT-SRS-142)
 	if t != nil {
 		r.TargetDesc = t.Describe()
+		info := t.Info()
+		r.TargetInfo = &info
 		if err := p.CheckTarget(t.Name, t.Proto(), t.HasTLS()); err != nil {
 			r.Error = "plan rejected for this target: " + err.Error()
 			rejected = true
