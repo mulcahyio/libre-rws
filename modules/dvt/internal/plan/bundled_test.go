@@ -118,4 +118,9 @@ func TestBundledExamplePlans(t *testing.T) {
 	if err := dw.CheckTarget("dicomweb-lab", ProtocolDICOMweb, true); err != nil || dw.CheckTarget("x", ProtocolDIMSE, true) == nil || dw.CheckTarget("x", ProtocolDICOMweb, false) == nil {
 		t.Errorf("DICOMweb audit target check: %v", err)
 	}
+	// A client's system may hold real data: the audit keeps no body
+	// excerpts in its evidence.
+	if dw.Limits.MaxBodyExcerptBytes != 0 {
+		t.Errorf("DICOMweb audit keeps %d bytes of body excerpts, want 0", dw.Limits.MaxBodyExcerptBytes)
+	}
 }

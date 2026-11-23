@@ -13,8 +13,9 @@ as verification records, so it is validated as a high-risk tool
 (QMS-SOP-011). Design file: [`docs/dhf/libredvt/`](../../docs/dhf/libredvt/SRS.md).
 
 > **v0.2 in progress (DRAFT).** Association negotiation and DICOM TLS tests
-> (card DVT-0.2/3) and DICOMweb QIDO-RS, WADO-RS and STOW-RS tests (card
-> DVT-0.2/4) are built.
+> (card DVT-0.2/3), DICOMweb QIDO-RS, WADO-RS and STOW-RS tests (card
+> DVT-0.2/4) and the web UI, command line, reports and example plans for
+> them (card DVT-0.2/5) are built.
 > See the [v0.2 plan](../../docs/dhf/libredvt/v0.2-plan.md). The v0.2
 > functions are not released for use until the v0.2 tool validation is
 > approved. The sections below describe v0.1 unless they say v0.2.
@@ -168,6 +169,58 @@ file, sent only to the base URL's own origin (over `http://` only to a
 loopback host) and recorded as `[REDACTED]` everywhere. Retrieve URLs from
 STOW responses are recorded but never requested. `tls_reject` works on
 DICOMweb targets too.
+
+### Web UI, reports and example plans (v0.2, DRAFT)
+
+**Targets page.** Two forms: *DIMSE target* (host, port, AE titles, class,
+and an optional DICOM TLS block) and *DICOMweb target* (base URL, class,
+authentication none or bearer, optional TLS settings for an `https` URL).
+The forms use the same schema as a target file: what `run -targets`
+refuses, the web UI refuses too, including any extra field such as an
+inline `token`. Secrets are entered as **file paths** only (CA file, client
+certificate and key, token file). They must lie under `LIBRE_DVT_SECRETS_DIR`
+(default `/run/secrets`; mount your files there). The table shows each
+target's protocol, endpoint, TLS settings and authentication by path, and
+checks the referenced files (`ok`, or the problem by field name). It never
+shows a file's contents. Any TLS field turns TLS on, so a forgotten check box
+never means clear text.
+
+**Reports.** HTML, JUnit and JSON show, for v0.2 steps:
+
+- the target's protocol, endpoint and class;
+- an *Endpoint identity* section: TLS versions and cipher suites seen, the
+  server certificate (subject, issuer, subjectAltName, validity, SHA-256,
+  verified or not, days left at the start of the run) and the
+  Implementation Class UID and Version Name the system announced;
+- per step: every exchange (protocol, operation, endpoint, outcome, HTTP
+  status or association result, time), TLS details, association results
+  with each presentation context, HTTP request and response headers (the
+  `Authorization` value is always `[REDACTED]`), body size, hash and a short
+  excerpt, multipart parts, per-instance results (remote result and reason,
+  pixel comparison, Retrieve URL) and every assertion with expected value,
+  actual value and outcome.
+
+JUnit carries the same facts as properties (`target.*`, `identity.*`,
+`exchange.N.*`, `instance.N`) and every assertion in `system-out`.
+`libredvt run` prints the target and the endpoint identity. Runs stored by
+v0.1 load and render as before.
+
+Response excerpts can contain data the target returns. On a client system
+that holds real data, set `limits: {max_body_excerpt_bytes: 0}` in the plan
+(the bundled *Generic DICOMweb audit* does).
+
+**Bundled example plans** (in `/opt/libredvt/plans`, listed under
+*Test plans* with their step types):
+
+| Plan | Target it expects | What it checks |
+|---|---|---|
+| *LibreDCM smoke (DIMSE + TLS)* (`libredcm-smoke-tls.yaml`) | `libredcm-tls-lab`: dimse, class lab, `tls` with LibreDCM's CA | Verification and CT Image Storage accepted with Explicit VR Little Endian, Modality Worklist rejected; C-ECHO and C-STORE over TLS; plaintext and TLS 1.1 refused |
+| *Generic DICOM TLS audit* (`generic-dicom-tls-audit.yaml`) | `dicom-tls-lab`: dimse with `tls` | verified TLS 1.2+ association, C-ECHO, plaintext, TLS 1.0 and TLS 1.1 refused. Sends no images, so it also runs against a production-class target |
+| *Generic DICOMweb audit* (`generic-dicomweb-audit.yaml`) | `dicomweb-lab`: dicomweb, class lab, `https` base URL | plaintext and TLS 1.1 refused; STOW-RS of the six sample images with read-back; QIDO-RS at study, series and instance level and a no-match search; WADO-RS with byte-for-byte pixel comparison |
+
+Choose another target when you run a plan if yours has another name. Run
+audits only against systems you have written permission to test; plans that
+store images need a `lab` target.
 
 ## Test plans
 

@@ -198,6 +198,30 @@ origin over TLS (or loopback HTTP).
   count as refusing clear text; such a server is not known, and any other
   status fails the probe.
 
+### Implemented controls (card DVT-0.2/5, 2026-11-22, DRAFT for approval)
+
+- Web target forms: secrets are file paths only. The forms have no field
+  for a secret value, and any field the server does not know (`token`,
+  `password`, `private_key`, a verification switch) refuses the whole form
+  (DVT-SRS-141, -103). Error messages name the field and never echo a value.
+- A referenced file (CA, client certificate, client key, token) outside
+  `secrets_dir` is refused when the target is saved, not only when it runs,
+  so a web user cannot point LibreDVT at an arbitrary host file. The target
+  table shows paths and the result of the run-time file check (`ok` or the
+  problem by field name); file contents are read only to check them and
+  never reach a page, log line or the registry (test: the token and the key
+  body appear in no page and no file of the data directory).
+- Login, sessions, CSRF tokens on every form (the new forms included), the
+  security headers and the content security policy are unchanged. Pages
+  stay server-rendered without JavaScript.
+- Reports now show HTTP headers and body excerpts from the evidence. The
+  `Authorization` value is `[REDACTED]` before it reaches the evidence, and
+  every artefact is still scanned for configured secrets before it is
+  written (DVT-SRS-152). Body excerpts can contain data returned by a
+  third-party target; the bundled *Generic DICOMweb audit* sets
+  `max_body_excerpt_bytes: 0`, and the README tells users to do the same on
+  systems that may hold real data (open decision in issue #34).
+
 ## Static analysis (2026-11-10)
 
 gosec v2.30.0 on `modules/dvt`: 26 findings, triaged to 0 open. Fixed: file

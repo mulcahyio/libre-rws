@@ -17,6 +17,12 @@
 name: Generic DICOMweb audit
 target: dicomweb-lab
 timeout: 60s
+# Keep no response-body excerpts in the evidence: a client's lab system may
+# hold real data, and the report must not carry it. Size and SHA-256 of
+# every body are still recorded. Raise this (up to 1048576) when you need
+# the excerpts to diagnose a failure on a synthetic-data system.
+limits:
+  max_body_excerpt_bytes: 0
 steps:
   - id: plaintext-refused
     type: tls_reject
