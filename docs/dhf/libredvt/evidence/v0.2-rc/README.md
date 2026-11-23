@@ -23,7 +23,7 @@ intended-use documents): `libre/dvt:0.2.0-rc.1`
 | `04-trace-evidence.md` | `scripts/trace-evidence.py 02-engine-tests.log`: per v0.2 requirement the tagged tests and whether each passed in that log: **58 of 58 rows verified by passing tests** |
 | `04a-trace-evidence-negative-controls.log` | the same script on two broken logs (one PASS line removed; three tests marked FAIL): rows flagged, exit 1 |
 | `mutation/` | `scripts/mutation-all.sh`: every v0.2 mutation check re-run on `015f3b3` in a git worktree, plus the card 6 mutants |
-| `05-local-gate.log` | the full local gate on `136a554`: fmt, vet (plain, official, engines), race tests (58 packages ok), official tests, third-party tests, gosec 0 issues, govulncheck 0 affecting, trace/needs for all modules, mdlinks, dcs, QMS tool tests, gitleaks, `go.mod`/worker requirements unchanged. One step failed in the gate script itself (the SBOM comparison sorted `None` versions); re-run correctly at the end of the log: same 48 modules as the committed SBOM, SOUP unchanged. 0 failing steps after that correction |
+| `05-local-gate.log` | the full local gate on `136a554`: fmt, vet (plain, official, engines), race tests (26 packages ok), official tests (23 ok), third-party tests (9 ok), gosec 0 issues, govulncheck 0 affecting, trace/needs for all modules, mdlinks, dcs, QMS tool tests, gitleaks, `go.mod`/worker requirements unchanged. One step failed in the gate script itself (the SBOM comparison sorted `None` versions); re-run correctly at the end of the log: same 48 modules as the committed SBOM, SOUP unchanged. 0 failing steps after that correction |
 | `scripts/` | the scripts above |
 
 ## Results
