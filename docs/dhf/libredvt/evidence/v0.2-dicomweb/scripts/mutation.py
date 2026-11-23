@@ -129,7 +129,7 @@ PY = [
     ], "TestRealDICOMwebHappyPath"),
     ("P9 STOW sends changed bytes", [
         ('b"\\r\\nContent-Type: application/dicom\\r\\n\\r\\n" + fh.read() + b"\\r\\n"',
-         'b"\\r\\nContent-Type: application/dicom\\r\\n\\r\\n" + fh.read()[:-1] + b"\\x00\\r\\n"'),
+         'b"\\r\\nContent-Type: application/dicom\\r\\n\\r\\n" + (lambda d: d[:-1] + bytes([d[-1] ^ 1]))(fh.read()) + b"\\r\\n"'),
     ], "TestRealDICOMwebHappyPath"),
     ("P10 refusal probe sends an Authorization header", [
         ('f"Connection: close\\r\\n\\r\\n".encode("latin-1"))', 'f"Connection: close\\r\\nAuthorization: Bearer probe\\r\\n\\r\\n".encode("latin-1"))'),
@@ -165,8 +165,10 @@ def py_test(worker, run):
 
 
 def tail(out, n=6):
+    """The failing-test lines (why the mutant was killed) and the last lines."""
     lines = [l for l in out.splitlines() if l.strip()]
-    return "\n      ".join(lines[-n:])
+    why = [l for l in lines if "--- FAIL" in l or ", want " in l or "panic:" in l][:8]
+    return "\n      ".join(why + ["..."] + lines[-n:] if why else lines[-n:])
 
 
 results = []

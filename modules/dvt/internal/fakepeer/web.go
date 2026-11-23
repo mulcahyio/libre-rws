@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"crypto/tls"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -471,9 +472,6 @@ func (w *Web) wado(rw http.ResponseWriter, r *http.Request, seg []string) {
 		ins = append(append(ins, ins...), ins...)
 	}
 	boundary := "fakeweb-boundary-7f3a"
-	if w.fault(FWadoBoundaryData) {
-		boundary = ins[0].Class // the SOP Class UID text occurs in each file's meta information
-	}
 	var b bytes.Buffer
 	for i, in := range ins {
 		ts := in.TS
@@ -497,6 +495,8 @@ func (w *Web) wado(rw http.ResponseWriter, r *http.Request, seg []string) {
 		case w.fault(FWadoAlterPixel):
 			data = append([]byte(nil), data...)
 			data[len(data)*3/4] ^= 0xff // inside the pixel data of every fixture
+		case w.fault(FWadoBoundaryData):
+			data = withBoundaryText(data, in.TS, boundary)
 		}
 		fmt.Fprintf(&b, "--%s\r\nContent-Type: %s\r\n\r\n", boundary, ct)
 		b.Write(data)
@@ -690,4 +690,31 @@ func (w *Web) stow(rw http.ResponseWriter, r *http.Request, body []byte) {
 	rw.Header().Set("Content-Type", "application/dicom+json")
 	rw.WriteHeader(status)
 	_, _ = rw.Write(b)
+}
+
+// withBoundaryText appends a Data Set Trailing Padding element (FFFC,FFFC)
+// whose value holds the multipart boundary in forms that are not
+// delimiters: after CRLF but followed by other text, after CRLF and
+// spaces but followed by text, and without a preceding CRLF. A strict
+// parser keeps the part whole; one that splits on the bare boundary text
+// or accepts any CRLF--boundary cuts the part. Pixel data and UIDs are
+// unchanged. Files in big-endian or deflated syntaxes are returned as
+// they are.
+func withBoundaryText(data []byte, ts, boundary string) []byte {
+	val := []byte("\r\n--" + boundary + "X not a delimiter\r\n--" + boundary + "  x\r\nab--" + boundary + "--\r\nend")
+	if len(val)%2 == 1 {
+		val = append(val, 0)
+	}
+	out := append([]byte(nil), data...)
+	out = append(out, 0xfc, 0xff, 0xfc, 0xff)
+	switch ts {
+	case "1.2.840.10008.1.2.2", "1.2.840.10008.1.2.1.99":
+		return data
+	case "1.2.840.10008.1.2": // implicit VR little endian
+		out = binary.LittleEndian.AppendUint32(out, uint32(len(val))) // #nosec G115 -- short constant text
+	default: // explicit VR little endian (native and encapsulated)
+		out = append(out, 'O', 'B', 0, 0)
+		out = binary.LittleEndian.AppendUint32(out, uint32(len(val))) // #nosec G115 -- short constant text
+	}
+	return append(out, val...)
 }
