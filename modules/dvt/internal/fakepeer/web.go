@@ -122,6 +122,13 @@ type Web struct {
 	conns     atomic.Int32
 }
 
+// concurrencyHold is how long each request counts as in progress before
+// the server writes any byte of its response. A client that sends its
+// next request only after reading the previous response can never
+// overlap (the count drops before the response exists); a client with
+// parallel requests overlaps within this window.
+const concurrencyHold = 10 * time.Millisecond
+
 // StartWeb starts the server on 127.0.0.1 (TLS when cfg is not nil).
 func StartWeb(cfg *tls.Config, s WebScript) (*Web, error) {
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
@@ -164,19 +171,26 @@ func (w *Web) garbage(ln net.Listener) {
 }
 
 func (w *Web) connState(_ net.Conn, st http.ConnState) {
-	switch st {
-	case http.StateNew:
+	if st == http.StateNew {
 		w.conns.Add(1)
-		n := w.active.Add(1)
-		for {
-			m := w.maxActive.Load()
-			if n <= m || w.maxActive.CompareAndSwap(m, n) {
-				break
-			}
-		}
-	case http.StateClosed, http.StateHijacked:
-		w.active.Add(-1)
 	}
+}
+
+// track counts one request as in progress for concurrencyHold, before
+// any response byte is written. Connection open/close callbacks are not
+// used for this: the client can see the server's close and connect again
+// before the server's StateClosed callback runs, which would report a
+// strictly sequential client as parallel.
+func (w *Web) track() {
+	n := w.active.Add(1)
+	for {
+		m := w.maxActive.Load()
+		if n <= m || w.maxActive.CompareAndSwap(m, n) {
+			break
+		}
+	}
+	time.Sleep(concurrencyHold)
+	w.active.Add(-1)
 }
 
 // Close stops the server.
@@ -192,7 +206,8 @@ func (w *Web) Requests() []WebRequest {
 	return append([]WebRequest(nil), w.reqs...)
 }
 
-// MaxConcurrent is the largest number of open connections at one time.
+// MaxConcurrent is the largest number of requests in progress at one
+// time (see track).
 func (w *Web) MaxConcurrent() int { return int(w.maxActive.Load()) }
 
 // Connections is the number of connections accepted.
@@ -218,6 +233,7 @@ func (w *Web) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	w.mu.Lock()
 	w.reqs = append(w.reqs, rec)
 	w.mu.Unlock()
+	w.track()
 	if w.s.Delay > 0 {
 		time.Sleep(w.s.Delay)
 	}

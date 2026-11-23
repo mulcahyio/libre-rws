@@ -171,9 +171,9 @@ func TestRealDICOMwebHappyPath(t *testing.T) {
 			t.Fatalf("part %d differs from %s", i, fixtureTable[i].file)
 		}
 	}
-	// DVT-SRS-155: one connection at a time.
+	// DVT-SRS-155: one request at a time.
 	if w.MaxConcurrent() != 1 {
-		t.Fatalf("max concurrent connections %d, want 1", w.MaxConcurrent())
+		t.Fatalf("max requests in progress %d, want 1", w.MaxConcurrent())
 	}
 	// DVT-SRS-118: exchange evidence with redacted Authorization.
 	ev := stepOf(r, "qido-studies").Evidence
