@@ -1,0 +1,58 @@
+# LibreDCM smoke test over DICOM TLS (DVT-SRS-156). LibreDCM has no
+# DICOMweb, so this plan covers DIMSE and TLS: association negotiation,
+# C-ECHO and C-STORE over TLS, and refusal of plaintext and TLS 1.1.
+#
+# Target: register LibreDCM as "libredcm-tls-lab", protocol dimse, class
+# "lab" (the store step is refused otherwise), with a tls block whose
+# ca_file holds the CA that issued LibreDCM's certificate. Start LibreDCM
+# with a certificate (LIBRE_DCM_TLS_CERT / LIBRE_DCM_TLS_KEY), so its DICOM
+# port accepts only TLS 1.2 or later (DCM-SRS-043).
+#
+# Expected values come from LibreDCM's DICOM Conformance Statement
+# (docs/dhf/libredcm/dicom-conformance-statement.md): Verification and the
+# storage SOP classes are accepted with Explicit VR Little Endian; Modality
+# Worklist is not supported (section 5.2.1, N/A). The Implementation Class
+# UID depends on the LibreDCM version and is recorded, not asserted; see
+# docs/qms/uid-registry.md for the expected value of a given release.
+#
+# The fixture is a public pydicom sample baked into the LibreDVT image
+# (synthetic/public test data, no patient data).
+name: LibreDCM smoke (DIMSE + TLS)
+target: libredcm-tls-lab
+timeout: 30s
+steps:
+  - id: negotiate
+    type: associate
+    verifies: [DCM-SRS-001, DCM-SRS-002, DCM-SRS-043]
+    contexts:
+      - abstract_syntax: "1.2.840.10008.1.1"             # Verification
+        transfer_syntaxes: ["1.2.840.10008.1.2.1"]       # Explicit VR Little Endian
+        expect: accepted
+        expect_transfer_syntax: "1.2.840.10008.1.2.1"
+      - abstract_syntax: "1.2.840.10008.5.1.4.1.1.2"     # CT Image Storage
+        transfer_syntaxes: ["1.2.840.10008.1.2.1"]
+        expect: accepted
+        expect_transfer_syntax: "1.2.840.10008.1.2.1"
+      - abstract_syntax: "1.2.840.10008.5.1.4.31"        # Modality Worklist FIND: not supported
+        transfer_syntaxes: ["1.2.840.10008.1.2.1"]
+        expect: rejected
+
+  - id: echo-over-tls
+    type: echo
+    verifies: [DCM-SRS-001, DCM-SRS-043]
+
+  - id: store-over-tls
+    type: store
+    files: [fixtures/ct_explicit_le.dcm]
+    verifies: [DCM-SRS-002, DCM-SRS-043]
+
+  - id: plaintext-refused
+    type: tls_reject
+    mode: plaintext
+    verifies: [DCM-SRS-043]
+
+  - id: tls11-refused
+    type: tls_reject
+    mode: tls_version
+    tls_version: "1.1"
+    verifies: [DCM-SRS-043]

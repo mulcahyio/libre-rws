@@ -1,0 +1,63 @@
+# Generic DICOMweb audit (DVT-SRS-156) for a DICOMweb system from any
+# vendor: TLS policy, STOW-RS store, QIDO-RS search and WADO-RS retrieve
+# with byte-for-byte pixel comparison (DICOM PS3.18).
+#
+# Target: register the system as "dicomweb-lab" (or choose another target
+# when you run the plan), protocol dicomweb, class "lab", with an https
+# base URL (for example https://pacs.lab.example/dicom-web) and a tls block
+# whose ca_file holds the CA that issued its certificate. For a bearer
+# token, set auth type bearer and token_file; the token is read from the
+# file and never appears in a report.
+#
+# STOW-RS writes the six public sample images baked into the LibreDVT
+# image (no patient data) into the target. QIDO-RS, WADO-RS and STOW-RS
+# steps therefore run only against a target of class lab (DVT-SRS-134).
+# Run it only against test systems you have written permission to use, and
+# delete the stored studies afterwards if the client asks.
+name: Generic DICOMweb audit
+target: dicomweb-lab
+timeout: 60s
+steps:
+  - id: plaintext-refused
+    type: tls_reject
+    mode: plaintext
+
+  - id: tls11-refused
+    type: tls_reject
+    mode: tls_version
+    tls_version: "1.1"
+
+  - id: stow-samples
+    type: stow
+    files: [fixtures/*.dcm]
+    batch_size: 4
+    verify_retrieve: true
+
+  - id: qido-studies
+    type: qido
+    level: studies
+    from_store: true
+    require_attributes: [StudyInstanceUID, PatientID, StudyDate]
+
+  - id: qido-series
+    type: qido
+    level: series
+    from_store: true
+    require_attributes: [SeriesInstanceUID, Modality]
+
+  - id: qido-instances
+    type: qido
+    level: instances
+    from_store: true
+    require_attributes: [SOPClassUID, SOPInstanceUID]
+
+  - id: qido-no-match
+    type: qido
+    level: studies
+    query: {PatientID: NOBODY-LIBREDVT}
+    expect_none: true
+
+  - id: wado-and-compare-pixels
+    type: wado
+    from_store: true
+    compare_pixels: true

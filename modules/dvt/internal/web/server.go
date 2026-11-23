@@ -9,6 +9,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -287,6 +288,21 @@ func (s *Server) deleteResult(w http.ResponseWriter, r *http.Request) {
 
 // --- targets ---
 
+// targetRow is a registered target with the state of the files it
+// references. Only paths are shown; secret values are never read into a
+// page (DVT-SRS-141, DVT-SRS-152).
+type targetRow struct {
+	store.Target
+	Files string // "" when the target references no file, "ok", or the problem
+}
+
+func (s *Server) secretsDir() string {
+	if s.o.Runner == nil {
+		return ""
+	}
+	return s.o.Runner.SecretsDir
+}
+
 func (s *Server) targetsPage(w http.ResponseWriter, r *http.Request) {
 	s.renderTargets(w, r, http.StatusOK, "")
 }
@@ -296,18 +312,95 @@ func (s *Server) renderTargets(w http.ResponseWriter, r *http.Request, status in
 	if err != nil {
 		flash = err.Error()
 	}
-	s.render(w, r, status, "targets", page{Title: "Targets", Nav: "targets", Data: ts, Flash: flash})
+	rows := make([]targetRow, 0, len(ts))
+	for _, t := range ts {
+		row := targetRow{Target: t}
+		if t.References() {
+			// The same check a run does before connecting; the values are
+			// read only to check them and dropped with the set.
+			if err := t.LoadSecrets(s.secretsDir(), &redact.Set{}); err != nil {
+				row.Files = err.Error()
+			} else {
+				row.Files = "ok"
+			}
+		}
+		rows = append(rows, row)
+	}
+	s.render(w, r, status, "targets", page{Title: "Targets", Nav: "targets", Flash: flash,
+		Data: map[string]any{"Targets": rows, "SecretsDir": s.secretsDir()}})
+}
+
+// targetFields are the form fields of the target forms. Any other field is
+// refused, so an inline secret (token, password, private key) or a switch
+// that would weaken TLS verification cannot be posted (DVT-SRS-103,
+// DVT-SRS-141), as in target files.
+var targetFields = map[string]bool{
+	"csrf": true, "protocol": true, "name": true, "class": true,
+	"host": true, "port": true, "called_aet": true, "calling_aet": true,
+	"base_url": true, "auth_type": true, "token_file": true,
+	"tls": true, "tls_min_version": true, "tls_ca_file": true, "tls_server_name": true,
+	"tls_client_cert_file": true, "tls_client_key_file": true, "tls_move_client_cert": true,
+}
+
+// TargetFromForm builds a target from the web form with the same schema
+// as target files (DVT-SRS-140, DVT-SRS-146). Fields of the other protocol
+// are copied, so Normalize rejects them as it does in a file.
+func TargetFromForm(f url.Values) (store.Target, error) {
+	for k := range f {
+		if !targetFields[k] {
+			return store.Target{}, fmt.Errorf("unknown field %q", k)
+		}
+	}
+	for k, v := range f {
+		if len(v) > 1 {
+			return store.Target{}, fmt.Errorf("field %q given more than once", k)
+		}
+	}
+	g := func(k string) string { return strings.TrimSpace(f.Get(k)) }
+	t := store.Target{Name: g("name"), Class: g("class"), Protocol: g("protocol"), Host: g("host"),
+		CalledAET: g("called_aet"), CallingAET: g("calling_aet"), BaseURL: g("base_url")}
+	if p := g("port"); p != "" {
+		n, err := strconv.Atoi(p)
+		if err != nil {
+			return store.Target{}, errors.New("port must be 1-65535")
+		}
+		t.Port = n
+	}
+	if g("auth_type") != "" || g("token_file") != "" {
+		t.Auth = &store.Auth{Type: g("auth_type"), TokenFile: g("token_file")}
+	}
+	tl := store.TLS{MinVersion: g("tls_min_version"), CAFile: g("tls_ca_file"), ServerName: g("tls_server_name"),
+		ClientCertFile: g("tls_client_cert_file"), ClientKeyFile: g("tls_client_key_file"), MoveClientCert: g("tls_move_client_cert")}
+	switch g("tls") {
+	case "", "on":
+	default:
+		return store.Target{}, errors.New("tls must be on or absent")
+	}
+	// Any TLS setting turns TLS on, so a forgotten checkbox never means
+	// clear text.
+	if g("tls") == "on" || tl != (store.TLS{}) {
+		t.TLS = &tl
+	}
+	return t, t.Normalize()
 }
 
 func (s *Server) targetsPost(w http.ResponseWriter, r *http.Request) {
-	port, _ := strconv.Atoi(r.FormValue("port"))
-	t := store.Target{Name: r.FormValue("name"), Host: r.FormValue("host"), Port: port,
-		CalledAET: r.FormValue("called_aet"), CallingAET: r.FormValue("calling_aet"), Class: r.FormValue("class")}
-	if err := s.o.Store.PutTarget(t); err != nil {
+	if err := r.ParseForm(); err != nil {
 		s.renderTargets(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
-	s.o.Log.Info("target saved", "name", t.Name, "class", t.Class)
+	t, err := TargetFromForm(r.PostForm)
+	if err == nil {
+		err = t.CheckRefsUnder(s.secretsDir())
+	}
+	if err == nil {
+		err = s.o.Store.PutTarget(t)
+	}
+	if err != nil {
+		s.renderTargets(w, r, http.StatusBadRequest, "Target not saved: "+err.Error())
+		return
+	}
+	s.o.Log.Info("target saved", "name", t.Name, "protocol", t.Proto(), "class", t.Class, "tls", t.HasTLS())
 	http.Redirect(w, r, "/targets", http.StatusSeeOther)
 }
 
@@ -324,6 +417,7 @@ func (s *Server) targetDelete(w http.ResponseWriter, r *http.Request) {
 type bundled struct {
 	File, Name, Target string
 	Steps              int
+	Types              string // step types in order of first use, e.g. "associate, echo, tls_reject"
 	Err                string
 }
 
@@ -342,6 +436,15 @@ func (s *Server) bundledPlans() []bundled {
 			p, err = plan.Parse(data, s.o.PlansDir)
 			if p != nil {
 				b.Name, b.Target, b.Steps = p.Name, p.Target, len(p.Steps)
+				var types []string
+				seen := map[string]bool{}
+				for _, st := range p.Steps {
+					if !seen[st.Type] {
+						seen[st.Type] = true
+						types = append(types, st.Type)
+					}
+				}
+				b.Types = strings.Join(types, ", ")
 			}
 		}
 		if err != nil {
