@@ -193,6 +193,11 @@ func ValidationHTML(v *result.Validation) ([]byte, error) {
 	return b.Bytes(), err
 }
 
-// Template returns the parsed report templates (the web UI embeds the
-// "run-body" and "validation-body" blocks).
-func Template() *template.Template { return tmpl }
+// Template returns a fresh copy of the report templates for the web UI,
+// which adds its pages to it. A fresh parse is needed: html/template
+// refuses to clone a template set that has already rendered a report, which
+// happens when a report was written before the web UI starts in the same
+// process (found by the CLI/web parity test).
+func Template() *template.Template {
+	return template.Must(template.New("report").Funcs(Funcs).Parse(reportTmpl))
+}

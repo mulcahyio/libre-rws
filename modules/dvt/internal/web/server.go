@@ -67,10 +67,7 @@ func New(ctx context.Context, o Options) (*Server, error) {
 	if o.Log == nil {
 		o.Log = slog.Default()
 	}
-	t, err := report.Template().Clone()
-	if err != nil {
-		return nil, err
-	}
+	t := report.Template()
 	if _, err := t.Parse(uiTmpl); err != nil {
 		return nil, err
 	}
