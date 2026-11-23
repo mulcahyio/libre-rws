@@ -10,7 +10,7 @@ are recorded in issue #34 (Patrick Mulcahy, Telegram, 2026-11-19).
 
 | # | Card | Branch | Into | What |
 |---|---|---|---|---|
-| PR_RC | DVT-0.2/6 | `feat/libredvt-0.2-rc` | `feat/libredvt-0.2-ui` | Tool validation, verification and release candidate 0.2.0-rc.1: all v0.2 requirements `Active`, printable report, DCMTK cross-check of the DICOM TLS audit, system run, sample audit, user guide for client audits |
+| 40 | DVT-0.2/6 | `feat/libredvt-0.2-rc` | `feat/libredvt-0.2-ui` | Tool validation, verification and release candidate 0.2.0-rc.1: all v0.2 requirements `Active`, printable report, DCMTK cross-check of the DICOM TLS audit, system run, sample audit, user guide for client audits |
 | 39 | DVT-0.2/5 | `feat/libredvt-0.2-ui` | `feat/libredvt-0.2-dicomweb` | Web UI, CLI and reports for DIMSE-TLS and DICOMweb; bundled example plans |
 | 38 | DVT-0.2/4 | `feat/libredvt-0.2-dicomweb` | `feat/libredvt-0.2-assoc-tls` | DICOMweb QIDO-RS, WADO-RS, STOW-RS |
 | 37 | DVT-0.2/3 | `feat/libredvt-0.2-assoc-tls` | `feat/libredvt-0.2-foundation` | Association negotiation and DICOM TLS tests |
@@ -33,7 +33,7 @@ request first would leave the ones above it on branches that no longer
 lead anywhere. After each merge, wait for CI on the parent's new head
 (`gh run list --branch <parent>`, `gh run watch <id> --exit-status`).
 
-1. `gh pr merge PR_RC --merge` (into `feat/libredvt-0.2-ui`)
+1. `gh pr merge 40 --merge` (into `feat/libredvt-0.2-ui`)
 2. `gh pr merge 39 --merge` (into `feat/libredvt-0.2-dicomweb`)
 3. `gh pr merge 38 --merge` (into `feat/libredvt-0.2-assoc-tls`)
 4. `gh pr merge 37 --merge` (into `feat/libredvt-0.2-foundation`)
