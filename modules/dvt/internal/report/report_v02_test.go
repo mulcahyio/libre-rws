@@ -135,24 +135,38 @@ func checkEvidenceInHTML(t *testing.T, r *result.Run, h string) (fields int) {
 			need(sec, s.ID, "exchange endpoint", x.Endpoint)
 			need(sec, s.ID, "exchange result", ExchangeResult(x))
 			if tl := x.TLS; tl != nil {
-				need(sec, s.ID, "TLS version", tl.Version)
-				need(sec, s.ID, "cipher", tl.Cipher)
+				dd := func(what, label, v string, mono bool) {
+					t.Helper()
+					if v == "" {
+						return
+					}
+					cls := ""
+					if mono {
+						cls = ` class="mono"`
+					}
+					needRaw(sec, s.ID, what, "<dt>"+label+"</dt><dd"+cls+">"+esc(v)+"</dd>")
+				}
+				dd("TLS version", "Version", tl.Version, false)
+				dd("cipher", "Cipher suite", tl.Cipher, true)
 				need(sec, s.ID, "verify error", tl.VerifyError)
 				if c := tl.Peer; c != nil {
-					need(sec, s.ID, "subject", c.Subject)
-					need(sec, s.ID, "issuer", c.Issuer)
-					need(sec, s.ID, "not before", c.NotBefore)
-					need(sec, s.ID, "not after", c.NotAfter)
-					need(sec, s.ID, "fingerprint", c.SHA256)
-					for _, n := range append(append([]string{}, c.SANDNS...), c.SANIP...) {
-						need(sec, s.ID, "SAN", n)
-					}
+					dd("subject", "Subject", c.Subject, true)
+					dd("issuer", "Issuer", c.Issuer, true)
+					dd("not before", "Valid from", c.NotBefore, true)
+					dd("not after", "Valid until", c.NotAfter, true)
+					needRaw(sec, s.ID, "fingerprint", `<dt>SHA-256</dt><dd class="mono wrap">`+esc(c.SHA256)+"</dd>")
+					dd("SAN DNS", "SAN DNS", strings.Join(c.SANDNS, ", "), true)
+					dd("SAN IP", "SAN IP", strings.Join(c.SANIP, ", "), true)
 				}
 			}
 			if a := x.Association; a != nil {
 				need(sec, s.ID, "association result", a.Result)
-				need(sec, s.ID, "implementation class UID", a.ImplClassUID)
-				need(sec, s.ID, "implementation version", a.ImplVersion)
+				if a.ImplClassUID != "" {
+					needRaw(sec, s.ID, "implementation class UID", `<dt>Implementation Class UID</dt><dd class="mono">`+esc(a.ImplClassUID)+"</dd>")
+				}
+				if a.ImplVersion != "" {
+					needRaw(sec, s.ID, "implementation version", `<dt>Implementation Version Name</dt><dd class="mono">`+esc(a.ImplVersion)+"</dd>")
+				}
 				if a.Reject != nil {
 					need(sec, s.ID, "reject", fmt.Sprintf("result %d, source %d, reason %d", a.Reject.Result, a.Reject.Source, a.Reject.Reason))
 				}
