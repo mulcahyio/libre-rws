@@ -1,0 +1,267 @@
+D: $dcmtk: storescp v3.6.7 2022-04-22 $
+D: 
+D: DcmDataDictionary: Loading file: /usr/share/libdcmtk17/dicom.dic
+D: DcmDataDictionary: Loading file: /usr/share/libdcmtk17/private.dic
+D: Association Received: dvt-runner
+D: setting network send timeout to 60 seconds
+D: setting network receive timeout to 60 seconds
+D: ================== BEGIN TLS CONNECTION DETAILS =================
+D: Transport connection: TLS over TCP/IP
+D:   Protocol    : TLSv1.3
+D:   Ciphersuite : TLS_AES_256_GCM_SHA384, encryption: 256 bits
+D: Peer did not provide a certificate or certificate verification is disabled.
+D: =================== END TLS CONNECTION DETAILS ==================
+D: PDU Type: Associate Request, PDU Length: 225 + 6 bytes PDU header
+D:   01  00  00  00  00  e1  00  01  00  00  53  54  4f  52  45  53
+D:   43  50  20  20  20  20  20  20  20  20  4c  49  42  52  45  44
+D:   56  54  20  20  20  20  20  20  20  20  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  10  00  00  15  31  2e
+D:   32  2e  38  34  30  2e  31  30  30  30  38  2e  33  2e  31  2e
+D:   31  2e  31  20  00  00  45  01  00  00  00  30  00  00  11  31
+D:   2e  32  2e  38  34  30  2e  31  30  30  30  38  2e  31  2e  31
+D:   40  00  00  13  31  2e  32  2e  38  34  30  2e  31  30  30  30
+D:   38  2e  31  2e  32  2e  31  40  00  00  11  31  2e  32  2e  38
+D:   34  30  2e  31  30  30  30  38  2e  31  2e  32  50  00  00  37
+D:   51  00  00  04  00  00  40  00  52  00  00  1b  31  2e  33  2e
+D:   36  2e  31  2e  34  2e  31  2e  36  37  36  38  36  2e  31  2e
+D:   33  2e  31  2e  30  2e  32  55  00  00  0c  4c  49  42  52  45
+D:   44  56  54  5f  30  5f  32
+D: Parsing an A-ASSOCIATE PDU
+I: Association Received
+D: Parameters:
+D: ====================== BEGIN A-ASSOCIATE-RQ =====================
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.3.1.0.2
+D: Their Implementation Version Name: LIBREDVT_0_2
+D: Application Context Name:    1.2.840.10008.3.1.1.1
+D: Calling Application Name:    LIBREDVT
+D: Called Application Name:     STORESCP
+D: Responding Application Name: 
+D: Our Max PDU Receive Size:    16384
+D: Their Max PDU Receive Size:  16384
+D: Presentation Contexts:
+D:   Context ID:        1 (Proposed)
+D:     Abstract Syntax: =VerificationSOPClass
+D:     Proposed SCP/SCU Role: Default
+D:     Proposed Transfer Syntax(es):
+D:       =LittleEndianExplicit
+D:       =LittleEndianImplicit
+D: Requested Extended Negotiation: none
+D: Accepted Extended Negotiation:  none
+D: Requested User Identity Negotiation: none
+D: User Identity Negotiation Response:  none
+D: ======================= END A-ASSOCIATE-RQ ======================
+D: Constructing Associate AC PDU
+I: Association Acknowledged (Max Send PDV: 16372)
+D: ====================== BEGIN A-ASSOCIATE-AC =====================
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.3.1.0.2
+D: Their Implementation Version Name: LIBREDVT_0_2
+D: Application Context Name:    1.2.840.10008.3.1.1.1
+D: Calling Application Name:    LIBREDVT
+D: Called Application Name:     STORESCP
+D: Responding Application Name: STORESCP
+D: Our Max PDU Receive Size:    16384
+D: Their Max PDU Receive Size:  16384
+D: Presentation Contexts:
+D:   Context ID:        1 (Accepted)
+D:     Abstract Syntax: =VerificationSOPClass
+D:     Proposed SCP/SCU Role: Default
+D:     Accepted SCP/SCU Role: Default
+D:     Accepted Transfer Syntax: =LittleEndianExplicit
+D: Requested Extended Negotiation: none
+D: Accepted Extended Negotiation:  none
+D: Requested User Identity Negotiation: none
+D: User Identity Negotiation Response:  none
+D: ======================= END A-ASSOCIATE-AC ======================
+I: Association Release
+D: Association Received: dvt-runner
+D: setting network send timeout to 60 seconds
+D: setting network receive timeout to 60 seconds
+D: ================== BEGIN TLS CONNECTION DETAILS =================
+D: Transport connection: TLS over TCP/IP
+D:   Protocol    : TLSv1.3
+D:   Ciphersuite : TLS_AES_256_GCM_SHA384, encryption: 256 bits
+D: Peer did not provide a certificate or certificate verification is disabled.
+D: =================== END TLS CONNECTION DETAILS ==================
+D: PDU Type: Associate Request, PDU Length: 274 + 6 bytes PDU header
+D:   01  00  00  00  01  12  00  01  00  00  53  54  4f  52  45  53
+D:   43  50  20  20  20  20  20  20  20  20  4c  49  42  52  45  44
+D:   56  54  20  20  20  20  20  20  20  20  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  10  00  00  15  31  2e
+D:   32  2e  38  34  30  2e  31  30  30  30  38  2e  33  2e  31  2e
+D:   31  2e  31  20  00  00  76  01  00  00  00  30  00  00  11  31
+D:   2e  32  2e  38  34  30  2e  31  30  30  30  38  2e  31  2e  31
+D:   40  00  00  11  31  2e  32  2e  38  34  30  2e  31  30  30  30
+D:   38  2e  31  2e  32  40  00  00  13  31  2e  32  2e  38  34  30
+D:   2e  31  30  30  30  38  2e  31  2e  32  2e  31  40  00  00  16
+D:   31  2e  32  2e  38  34  30  2e  31  30  30  30  38  2e  31  2e
+D:   32  2e  31  2e  39  39  40  00  00  13  31  2e  32  2e  38  34
+D:   30  2e  31  30  30  30  38  2e  31  2e  32  2e  32  50  00  00
+D:   37  51  00  00  04  00  00  3f  fe  52  00  00  1b  31  2e  33
+D:   2e  36  2e  31  2e  34  2e  31  2e  36  37  36  38  36  2e  31
+D:   2e  33  2e  31  2e  30  2e  32  55  00  00  0c  4c  49  42  52
+D:   45  44  56  54  5f  30  5f  32
+D: Parsing an A-ASSOCIATE PDU
+I: Association Received
+D: Parameters:
+D: ====================== BEGIN A-ASSOCIATE-RQ =====================
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.3.1.0.2
+D: Their Implementation Version Name: LIBREDVT_0_2
+D: Application Context Name:    1.2.840.10008.3.1.1.1
+D: Calling Application Name:    LIBREDVT
+D: Called Application Name:     STORESCP
+D: Responding Application Name: 
+D: Our Max PDU Receive Size:    16384
+D: Their Max PDU Receive Size:  16382
+D: Presentation Contexts:
+D:   Context ID:        1 (Proposed)
+D:     Abstract Syntax: =VerificationSOPClass
+D:     Proposed SCP/SCU Role: Default
+D:     Proposed Transfer Syntax(es):
+D:       =LittleEndianImplicit
+D:       =LittleEndianExplicit
+D:       =DeflatedLittleEndianExplicit
+D:       =BigEndianExplicit
+D: Requested Extended Negotiation: none
+D: Accepted Extended Negotiation:  none
+D: Requested User Identity Negotiation: none
+D: User Identity Negotiation Response:  none
+D: ======================= END A-ASSOCIATE-RQ ======================
+D: Constructing Associate AC PDU
+I: Association Acknowledged (Max Send PDV: 16370)
+D: ====================== BEGIN A-ASSOCIATE-AC =====================
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.3.6.1.4.1.67686.1.3.1.0.2
+D: Their Implementation Version Name: LIBREDVT_0_2
+D: Application Context Name:    1.2.840.10008.3.1.1.1
+D: Calling Application Name:    LIBREDVT
+D: Called Application Name:     STORESCP
+D: Responding Application Name: STORESCP
+D: Our Max PDU Receive Size:    16384
+D: Their Max PDU Receive Size:  16382
+D: Presentation Contexts:
+D:   Context ID:        1 (Accepted)
+D:     Abstract Syntax: =VerificationSOPClass
+D:     Proposed SCP/SCU Role: Default
+D:     Accepted SCP/SCU Role: Default
+D:     Accepted Transfer Syntax: =LittleEndianExplicit
+D: Requested Extended Negotiation: none
+D: Accepted Extended Negotiation:  none
+D: Requested User Identity Negotiation: none
+D: User Identity Negotiation Response:  none
+D: ======================= END A-ASSOCIATE-AC ======================
+D: DcmDataset::read() TransferSyntax="Little Endian Implicit"
+I: Received Echo Request
+D: ===================== INCOMING DIMSE MESSAGE ====================
+D: Message Type                  : C-ECHO RQ
+D: Presentation Context ID       : 1
+D: Message ID                    : 1
+D: Data Set                      : none
+D: ======================= END DIMSE MESSAGE =======================
+I: Association Release
+D: Association Received: dvt-runner
+D: setting network send timeout to 60 seconds
+D: setting network receive timeout to 60 seconds
+E: Receiving Association failed: 000b:090b TLS error: wrong version number
+D: Association Received: dvt-runner
+D: setting network send timeout to 60 seconds
+D: setting network receive timeout to 60 seconds
+E: Receiving Association failed: 000b:0902 TLS error: unsupported protocol
+D: Association Received: dvt-runner
+D: setting network send timeout to 60 seconds
+D: setting network receive timeout to 60 seconds
+E: Receiving Association failed: 000b:0902 TLS error: unsupported protocol
+D: Association Received: confident_taussig
+D: setting network send timeout to 60 seconds
+D: setting network receive timeout to 60 seconds
+D: ================== BEGIN TLS CONNECTION DETAILS =================
+D: Transport connection: TLS over TCP/IP
+D:   Protocol    : TLSv1.3
+D:   Ciphersuite : TLS_AES_256_GCM_SHA384, encryption: 256 bits
+D: Peer did not provide a certificate or certificate verification is disabled.
+D: =================== END TLS CONNECTION DETAILS ==================
+D: PDU Type: Associate Request, PDU Length: 205 + 6 bytes PDU header
+D:   01  00  00  00  00  cd  00  01  00  00  53  54  4f  52  45  53
+D:   43  50  20  20  20  20  20  20  20  20  45  43  48  4f  53  43
+D:   55  20  20  20  20  20  20  20  20  20  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00
+D:   00  00  00  00  00  00  00  00  00  00  10  00  00  15  31  2e
+D:   32  2e  38  34  30  2e  31  30  30  30  38  2e  33  2e  31  2e
+D:   31  2e  31  20  00  00  2e  01  00  ff  00  30  00  00  11  31
+D:   2e  32  2e  38  34  30  2e  31  30  30  30  38  2e  31  2e  31
+D:   40  00  00  11  31  2e  32  2e  38  34  30  2e  31  30  30  30
+D:   38  2e  31  2e  32  50  00  00  3a  51  00  00  04  00  00  40
+D:   00  52  00  00  1b  31  2e  32  2e  32  37  36  2e  30  2e  37
+D:   32  33  30  30  31  30  2e  33  2e  30  2e  33  2e  36  2e  37
+D:   55  00  00  0f  4f  46  46  49  53  5f  44  43  4d  54  4b  5f
+D:   33  36  37
+D: Parsing an A-ASSOCIATE PDU
+I: Association Received
+D: Parameters:
+D: ====================== BEGIN A-ASSOCIATE-RQ =====================
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.2.276.0.7230010.3.0.3.6.7
+D: Their Implementation Version Name: OFFIS_DCMTK_367
+D: Application Context Name:    1.2.840.10008.3.1.1.1
+D: Calling Application Name:    ECHOSCU
+D: Called Application Name:     STORESCP
+D: Responding Application Name: 
+D: Our Max PDU Receive Size:    16384
+D: Their Max PDU Receive Size:  16384
+D: Presentation Contexts:
+D:   Context ID:        1 (Proposed)
+D:     Abstract Syntax: =VerificationSOPClass
+D:     Proposed SCP/SCU Role: Default
+D:     Proposed Transfer Syntax(es):
+D:       =LittleEndianImplicit
+D: Requested Extended Negotiation: none
+D: Accepted Extended Negotiation:  none
+D: Requested User Identity Negotiation: none
+D: User Identity Negotiation Response:  none
+D: ======================= END A-ASSOCIATE-RQ ======================
+D: Constructing Associate AC PDU
+I: Association Acknowledged (Max Send PDV: 16372)
+D: ====================== BEGIN A-ASSOCIATE-AC =====================
+D: Our Implementation Class UID:      1.2.276.0.7230010.3.0.3.6.7
+D: Our Implementation Version Name:   OFFIS_DCMTK_367
+D: Their Implementation Class UID:    1.2.276.0.7230010.3.0.3.6.7
+D: Their Implementation Version Name: OFFIS_DCMTK_367
+D: Application Context Name:    1.2.840.10008.3.1.1.1
+D: Calling Application Name:    ECHOSCU
+D: Called Application Name:     STORESCP
+D: Responding Application Name: STORESCP
+D: Our Max PDU Receive Size:    16384
+D: Their Max PDU Receive Size:  16384
+D: Presentation Contexts:
+D:   Context ID:        1 (Accepted)
+D:     Abstract Syntax: =VerificationSOPClass
+D:     Proposed SCP/SCU Role: Default
+D:     Accepted SCP/SCU Role: Default
+D:     Accepted Transfer Syntax: =LittleEndianImplicit
+D: Requested Extended Negotiation: none
+D: Accepted Extended Negotiation:  none
+D: Requested User Identity Negotiation: none
+D: User Identity Negotiation Response:  none
+D: ======================= END A-ASSOCIATE-AC ======================
+D: DcmDataset::read() TransferSyntax="Little Endian Implicit"
+I: Received Echo Request
+D: ===================== INCOMING DIMSE MESSAGE ====================
+D: Message Type                  : C-ECHO RQ
+D: Presentation Context ID       : 1
+D: Message ID                    : 1
+D: Data Set                      : none
+D: ======================= END DIMSE MESSAGE =======================
+I: Association Release
+D: Association Received: elegant_booth
+D: setting network send timeout to 60 seconds
+D: setting network receive timeout to 60 seconds
+E: Receiving Association failed: 000b:090b TLS error: wrong version number

@@ -1,0 +1,9 @@
+target: dcmtk-aes (dcmtk-aes:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)
+failed   negotiate-verification   associate tls error: TLS-HANDSHAKE: the target sent a TLS alert: SSLV3_ALERT_HANDSHAKE_FAILURE; TLS: not established
+failed   echo-over-tls            echo      TLS error: the target sent a TLS alert: SSLV3_ALERT_HANDSHAKE_FAILURE
+passed   plaintext-refused        tls_reject 1 assertion(s) checked; verdict pass
+failed   tls10-refused            tls_reject fail tls_reject.refused TLS 1.0 only: expected refused, got accepted handshake_completed: handshake completed with TLSv1
+failed   tls11-refused            tls_reject fail tls_reject.refused TLS 1.1 only: expected refused, got accepted handshake_completed: handshake completed with TLSv1.1
+identity: TLS TLSv1, TLSv1.1, cipher AES128-SHA
+identity: certificate "O=LibreDVT RC verification,CN=dcmtk-peer" issued by "O=LibreDVT RC verification,CN=dvt06-test-ca", valid until 2026-11-25T04:37:04.000Z (valid at the start of the run, 1 day(s) left), SHA-256 c1b85de88790b6cce649b3955961e4d85b000efceac199fe6ca0a00dab7d5188, verified
+verdict: fail (Generic DICOM TLS audit)

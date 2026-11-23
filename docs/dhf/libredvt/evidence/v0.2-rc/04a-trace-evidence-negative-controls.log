@@ -1,0 +1,17 @@
+negative control 1: engine log without the PASS line of TestReportPrintsAllEvidence
+| DVT-SRS-157 | Active | TestReportPrintsAllEvidence | 0 of 1 **CHECK** |  |
+v0.2 rows: 58; fully verified by passing tests: 57; problems: 1
+exit 1
+negative control 2: three TestQido* tests marked FAIL
+| DVT-SRS-113 | Active | TestQidoOutputSchemaFailsClosed, TestRealDICOMwebHappyPath | 1 of 2 **CHECK** |  |
+| DVT-SRS-114 | Active | TestRealDICOMwebHappyPath, TestRealQidoMalformedResponsesFail, TestQidoNoMatchAndPaging, TestQidoPositiveControls | 2 of 4 **CHECK** |  |
+| DVT-SRS-115 | Active | TestRealDICOMwebHappyPath, TestRealQidoMalformedResponsesFail, TestQidoPositiveControls | 2 of 3 **CHECK** |  |
+| DVT-SRS-116 | Active | TestRealQidoMalformedResponsesFail, TestQidoPositiveControls | 1 of 2 **CHECK** |  |
+| DVT-SRS-117 | Active | TestRealDICOMwebHappyPath, TestRealQidoMalformedResponsesFail, TestQidoNoMatchAndPaging, TestQidoPositiveControls | 2 of 4 **CHECK** |  |
+| DVT-SRS-118 | Active | TestQidoOutputSchemaFailsClosed, TestReportsShowRealDICOMwebEvidence, TestRealDICOMwebHappyPath | 2 of 3 **CHECK** |  |
+| DVT-SRS-150 | Active | TestAssociateOutputSchemaFailsClosed, TestTLSProbeOutputSchemaAndNoCredentials, TestDICOMwebWorkerFailuresAreEngineErrors, TestQidoOutputSchemaFailsClosed, TestStowOutputSchemaFailsClosed, TestWadoOutputSchemaFailsClosed, TestRealAssociateRejectAbortCloseGarbageSilence, TestRealQidoMalformedResponsesFail, TestRealWadoMalformedResponsesFail, TestAssociateAbortCloseGarbageTimeoutAndRelease, TestSecretFileProblemsFailBeforeConnecting | 10 of 11 **CHECK** |  |
+| DVT-SRS-151 | Active | TestRealQidoMalformedResponsesFail, TestRealStowControls, TestQidoPositiveControls | 2 of 3 **CHECK** |  |
+| DVT-SRS-153 | Active | TestAssociateTLSArgumentsArePathsOnly, TestQidoOutputSchemaFailsClosed, TestWorkerNeverGetsSecretsOnArgvOrEnv, TestRealDICOMwebSecretsNeverInArtefacts | 3 of 4 **CHECK** |  |
+v0.2 rows: 58; fully verified by passing tests: 49; problems: 9
+engine log: 119 distinct passing tests, 3 failing
+exit 1

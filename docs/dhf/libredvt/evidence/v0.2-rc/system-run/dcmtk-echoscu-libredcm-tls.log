@@ -1,0 +1,6 @@
+I: Requesting Association
+I: Association Accepted (Max Send PDV: 131060)
+I: Sending Echo Request (MsgID 1)
+I: Received Echo Response (Success)
+I: Releasing Association
+exit 0

@@ -34,8 +34,9 @@ change of LibreDVT or its engines (§4).
 
 Added 2026-11-19 by Hermes/Claude for v0.2 (issue #34): association and TLS
 tests, DICOMweb, and use for client audits of other vendors' systems
-(intended use §1, user T4). The v0.2 requirements are `Draft`; each control
-counts only once its requirement is `Active` and verified.
+(intended use §1, user T4). The v0.2 requirements became `Active` in card
+DVT-0.2/6 (2026-11-23), after each had passing verifying tests and the tool
+validation was recorded; the controls below count from then on.
 
 | ID | Hazard | Cause | Consequence | Controls (requirements) |
 |---|---|---|---|---|
@@ -144,15 +145,48 @@ hold data returned by a client's system; the generic DICOMweb audit keeps
 none, and the README says how to switch them off (open decision in issue
 #34).
 
+Status 2026-11-23 (card DVT-0.2/6, DRAFT for approval): all twelve
+activities are done for the release candidate 0.2.0-rc.1, re-run on one
+commit; results in `docs/qms/tool-validation/README.md` (section *LibreDVT
+0.2 release candidate*) and `docs/dhf/libredvt/evidence/v0.2-rc/`:
+
+- every v0.2 requirement (58 rows, DVT-SRS-090…157) has tagged tests and
+  every one of those tests passed in the real-engine test run
+  (`04-trace-evidence.md`);
+- all v0.2 mutation checks re-run on that commit (activity 11);
+- the release-candidate image ran the bundled plans against LibreDCM in TLS
+  mode, LibreDCM in plain mode (the v0.1 plan, unchanged) and Orthanc +
+  DICOMweb over HTTPS: all as expected;
+- activity 12 is complete: the Generic DICOM TLS audit ran against DCMTK
+  `storescp` in four set-ups (correct TLS, no TLS, a retired profile that
+  accepts TLS 1.0/1.1, a certificate for another host) and DCMTK's own
+  `echoscu` and server logs state the same facts (26 of 26 checks as
+  expected);
+- no token or private-key line in any of the 56 artefacts of that run.
+
 ## 5. v0.2 residual risk (DRAFT for approval)
 
-DVT-HAZ-006 and DVT-HAZ-009 are reduced by the positive controls and the
-independent cross-checks (Orthanc, DCMTK). DVT-HAZ-007 is reduced by
-file-only secret references, redaction and the scan-before-write check;
-residual risk remains if an operator copies a secret into a free-text field
-(plan name, target name), which the scan also catches because it searches
-for the configured secret values, not for field names. DVT-HAZ-008 and
-DVT-HAZ-010 still depend partly on the operator classifying targets
-correctly and holding the client's authorisation; this is stated in the
-user documentation. Open decision for Patrick (issue #34): C-FIND against
-`production` targets stays allowed as in v0.1.
+Statement for LibreDVT 0.2.0-rc.1, written 2026-11-23 by Hermes/Claude after
+card DVT-0.2/6. It needs review and approval by Patrick Mulcahy.
+
+| Hazard | Controls verified | What remains | Residual risk |
+|---|---|---|---|
+| DVT-HAZ-006 false pass on TLS or host name | TLS 1.2+, chain and SAN checks, no bypass (architecture test), refusal probes fail closed, engine error when an old version cannot be offered; positive controls (wrong host, CN-only, unknown CA, expired, incomplete chain, old-version servers); mutants that switch host-name checking off or accept TLS 1.1 are caught; DCMTK cross-check agrees | No CRL or OCSP check (a revoked but unexpired certificate passes); LibreDVT tests what the target offers to LibreDVT's client, not every client the target might accept | Acceptable. Revocation is stated as a limit in the README and in every audit's scope |
+| DVT-HAZ-007 secret leakage | Secrets only as file references; `Authorization` always `[REDACTED]`; scan-before-write fails the run on any configured secret; no secrets on the worker command line or environment; no redirects; bearer over `http://` only to loopback; artefact greps in every card (0 hits) | An operator who pastes a secret into a free-text field is caught by the scan (it searches values, not field names), but the secret is still in their own plan file | Acceptable |
+| DVT-HAZ-008 store to production | `stow`, `qido`, `wado` (and v0.1 `store`, `move`) only against `lab` targets; missing class means production; no redirects; Retrieve URLs on another origin never requested | Depends on the operator classifying the client's system correctly | Acceptable with the operating rules in the README (lab targets only, written consent naming the systems) |
+| DVT-HAZ-009 misparsed multipart or STOW | Boundary from the header only, closing delimiter required, UID sets compared, failed and warning instances counted, size limits fail; malformed-response controls and mutants caught; Orthanc cross-check | Only the media types and transfer syntaxes listed in the README are claimed | Acceptable |
+| DVT-HAZ-010 load on or data from a third-party system | One request at a time (measured), page maximum, size limits, data steps only against `lab`, the DICOMweb audit keeps no body excerpts | HTML reports of user plans may hold response-body excerpts (default 64 KiB; open decision in issue #34); `echo`, `associate`, `tls_reject` and C-FIND still run against `production` targets (v0.1 behaviour, open decision) | Acceptable with the operating rules in the README |
+| DVT-HAZ-001…005 (v0.1) | Unchanged; the v0.1 positive controls and the LibreDCM plan pass unchanged on the release candidate | As in §3 | Acceptable |
+
+**Overall:** with the controls verified as recorded, the residual risk of
+using LibreDVT 0.2 for its intended use (verification records for LibreDCM
+and client interoperability and TLS audits of lab systems) is acceptable.
+The benefit is reproducible, independently cross-checked evidence; the
+remaining risks depend on documented operator rules (lab targets only,
+written client consent, synthetic data, delete stored test studies when the
+client asks) and on two limits stated in every report's scope (no
+revocation checking; a report shows what the target did in that run, not
+that it is secure or conformant in general). LibreDCM's own tests and the
+DCMTK conformance script stay in release verification as independent
+checks. Open decisions in issue #34 (C-FIND to production, body excerpts,
+TLS form behaviour) do not change this conclusion; each has a safe default.

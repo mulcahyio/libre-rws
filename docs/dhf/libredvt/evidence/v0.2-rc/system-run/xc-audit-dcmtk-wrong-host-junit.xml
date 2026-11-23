@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="LibreDVT" tests="5" failures="2" time="1.278">
+  <testsuite name="Generic DICOM TLS audit" tests="5" failures="2" timestamp="2026-11-23T04:37:28Z" time="1.278">
+    <properties>
+      <property name="run_id" value="20261123-043728-b69bcdb7"></property>
+      <property name="plan_sha256" value="e1b389667114cf6b92f7b479c83abaf4da3e1d05964d058d288100b1887390ac"></property>
+      <property name="target" value="dcmtk-wrong-host (dcmtk-wrong:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)"></property>
+      <property name="verdict" value="fail"></property>
+      <property name="target.name" value="dcmtk-wrong-host"></property>
+      <property name="target.protocol" value="dimse"></property>
+      <property name="target.endpoint" value="dcmtk-wrong:11112"></property>
+      <property name="target.class" value="lab"></property>
+      <property name="version.dicom-validator" value="0.9.0"></property>
+      <property name="version.dicom3tools" value="1.00.snapshot.20260927113651"></property>
+      <property name="version.libredvt" value="0.2.0-rc.1"></property>
+      <property name="version.pydicom" value="3.0.2"></property>
+      <property name="version.pynetdicom" value="3.0.4"></property>
+      <property name="version.python" value="3.12.16"></property>
+      <property name="version.standard-edition" value="2026d"></property>
+      <property name="version.worker" value="0.2.0"></property>
+    </properties>
+    <testcase name="negotiate-verification" classname="libredvt.associate" time="0.116">
+      <properties>
+        <property name="verdict" value="fail"></property>
+        <property name="assertions" value="0 passed, 0 warned, 0 failed"></property>
+        <property name="target.protocol" value="dimse"></property>
+        <property name="target.endpoint" value="dcmtk-wrong:11112"></property>
+        <property name="exchange.1" value="tls TLS-HANDSHAKE dcmtk-wrong:11112: error (tls error: certificate verification failed: Hostname mismatch, certificate is not valid for &#39;dcmtk-wrong&#39;. (code 62))"></property>
+        <property name="exchange.1.tls.version" value=""></property>
+        <property name="exchange.1.tls.cipher" value=""></property>
+        <property name="exchange.1.tls.verified" value="no"></property>
+        <property name="exchange.1.tls.client_cert_sent" value="no"></property>
+        <property name="exchange.1.tls.verify_error" value="certificate verification failed: Hostname mismatch, certificate is not valid for &#39;dcmtk-wrong&#39;. (code 62)"></property>
+        <property name="problem.1" value="tls: TLS-HANDSHAKE: certificate verification failed: Hostname mismatch, certificate is not valid for &#39;dcmtk-wrong&#39;. (code 62)"></property>
+      </properties>
+      <failure message="tls error: TLS-HANDSHAKE: certificate verification failed: Hostname mismatch, certificate is not valid for &#39;dcmtk-wrong&#39;. (code 62)" type="failed">tls error: TLS-HANDSHAKE: certificate verification failed: Hostname mismatch, certificate is not valid for &#39;dcmtk-wrong&#39;. (code 62)&#xA;TLS: not established (certificate verification failed: Hostname mismatch, certificate is not valid for &#39;dcmtk-wrong&#39;. (code 62))</failure>
+      <system-out>tls error: TLS-HANDSHAKE: certificate verification failed: Hostname mismatch, certificate is not valid for &#39;dcmtk-wrong&#39;. (code 62)&#xA;TLS: not established (certificate verification failed: Hostname mismatch, certificate is not valid for &#39;dcmtk-wrong&#39;. (code 62))&#xA;assertions:</system-out>
+    </testcase>
+    <testcase name="echo-over-tls" classname="libredvt.echo" time="0.378">
+      <properties></properties>
+      <failure message="TLS error: certificate verification failed: Hostname mismatch, certificate is not valid for &#39;dcmtk-wrong&#39;. (code 62)" type="failed">TLS error: certificate verification failed: Hostname mismatch, certificate is not valid for &#39;dcmtk-wrong&#39;. (code 62)</failure>
+      <system-out>TLS error: certificate verification failed: Hostname mismatch, certificate is not valid for &#39;dcmtk-wrong&#39;. (code 62)</system-out>
+    </testcase>
+    <testcase name="plaintext-refused" classname="libredvt.tls_reject" time="0.117">
+      <properties>
+        <property name="verdict" value="pass"></property>
+        <property name="assertions" value="1 passed, 0 warned, 0 failed"></property>
+        <property name="target.protocol" value="dimse"></property>
+        <property name="target.endpoint" value="dcmtk-wrong:11112"></property>
+        <property name="exchange.1" value="dimse A-ASSOCIATE dcmtk-wrong:11112: refused (association no_response)"></property>
+        <property name="exchange.1.association.result" value="no_response"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass&#xA;assertions:&#xA;  pass tls_reject.refused plaintext: expected refused, got refused (connection_reset: the connection was reset (ConnectionResetError))</system-out>
+    </testcase>
+    <testcase name="tls10-refused" classname="libredvt.tls_reject" time="0.117">
+      <properties>
+        <property name="verdict" value="pass"></property>
+        <property name="assertions" value="1 passed, 0 warned, 0 failed"></property>
+        <property name="target.protocol" value="dimse"></property>
+        <property name="target.endpoint" value="dcmtk-wrong:11112"></property>
+        <property name="exchange.1" value="tls TLS-HANDSHAKE dcmtk-wrong:11112: refused (tls error: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION)"></property>
+        <property name="exchange.1.tls.version" value=""></property>
+        <property name="exchange.1.tls.cipher" value=""></property>
+        <property name="exchange.1.tls.verified" value="no"></property>
+        <property name="exchange.1.tls.client_cert_sent" value="no"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass&#xA;assertions:&#xA;  pass tls_reject.refused TLS 1.0 only: expected refused, got refused (handshake_alert: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION)</system-out>
+    </testcase>
+    <testcase name="tls11-refused" classname="libredvt.tls_reject" time="0.115">
+      <properties>
+        <property name="verdict" value="pass"></property>
+        <property name="assertions" value="1 passed, 0 warned, 0 failed"></property>
+        <property name="target.protocol" value="dimse"></property>
+        <property name="target.endpoint" value="dcmtk-wrong:11112"></property>
+        <property name="exchange.1" value="tls TLS-HANDSHAKE dcmtk-wrong:11112: refused (tls error: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION)"></property>
+        <property name="exchange.1.tls.version" value=""></property>
+        <property name="exchange.1.tls.cipher" value=""></property>
+        <property name="exchange.1.tls.verified" value="no"></property>
+        <property name="exchange.1.tls.client_cert_sent" value="no"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass&#xA;assertions:&#xA;  pass tls_reject.refused TLS 1.1 only: expected refused, got refused (handshake_alert: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION)</system-out>
+    </testcase>
+  </testsuite>
+</testsuites>

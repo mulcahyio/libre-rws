@@ -1,0 +1,127 @@
+commit 015f3b3, 2026-11-23T04:37:04Z
+image libre/dvt:0.2.0-rc.1 sha256:46d4f9353274ec6bb9875c5674cbd1a5ee23d91ab1868ee0e75674cfb8694247
+image libre/dcm:dvt-0.2-rc sha256:61b3f840d15afd5efdd68392d7d4a9cf399a7a138aaeaf1ac650cc4df7395af1
+image rws-e2e-dcmtk sha256:a43f0e598a80880690838e1c6537342e7301aca6f181766cfa2d94a76bbe6487
+image orthancteam/orthanc:26.11.1@sha256:25738bcd515926ac8d33cacf09729a410a32c0a65d6cb8e61bd86fce81a4cd30 sha256:25738bcd515926ac8d33cacf09729a410a32c0a65d6cb8e61bd86fce81a4cd30
+libredvt version: LibreDVT 0.2.0-rc.1
+== synthetic PKI (openssl 3.6.5)
+libredcm: subject=O=LibreDVT RC verification, CN=libredcm X509v3 Subject Alternative Name:      DNS:libredcm 
+dcmtk-peer: subject=O=LibreDVT RC verification, CN=dcmtk-peer X509v3 Subject Alternative Name:      DNS:dcmtk-tls, DNS:dcmtk-aes 
+wrong-host: subject=O=LibreDVT RC verification, CN=other X509v3 Subject Alternative Name:      DNS:other.test 
+orthanc: subject=O=LibreDVT RC verification, CN=orthanc-https X509v3 Subject Alternative Name:      DNS:orthanc-https 
+sample-pacs: subject=O=Example Clinic Lab, CN=pacs.lab.example X509v3 Subject Alternative Name:      DNS:pacs.lab.example 
+dvt06-libredcm-tls health: healthy
+dvt06-libredcm-plain health: healthy
+dvt06-sample-pacs health: healthy
+orthanc: 1 start line(s)
+== 1. release candidate against real systems
+rc-libredcm-smoke (target libredcm-tls-lab, plan libredcm-smoke-tls.yaml): exit 0 :: verdict: pass (LibreDCM smoke (DIMSE + TLS))
+rc-dicom-tls-audit-libredcm (target libredcm-tls-lab, plan generic-dicom-tls-audit.yaml): exit 0 :: verdict: pass (Generic DICOM TLS audit)
+rc-libredcm-conformance-v01 (target libredcm-lab, plan libredcm-conformance.yaml): exit 0 :: verdict: pass (LibreDCM conformance)
+rc-dicomweb-audit (target dicomweb-lab, plan generic-dicomweb-audit.yaml): exit 0 :: verdict: pass (Generic DICOMweb audit)
+== 2. Generic DICOM TLS audit against DCMTK storescp
+xc-audit-dcmtk-tls (target dcmtk-tls, plan generic-dicom-tls-audit.yaml): exit 0 :: verdict: pass (Generic DICOM TLS audit)
+xc-audit-dcmtk-plain (target dcmtk-plain, plan generic-dicom-tls-audit.yaml): exit 1 :: verdict: fail (Generic DICOM TLS audit)
+xc-audit-dcmtk-aes (target dcmtk-aes, plan generic-dicom-tls-audit.yaml): exit 1 :: verdict: fail (Generic DICOM TLS audit)
+xc-audit-dcmtk-wrong-host (target dcmtk-wrong-host, plan generic-dicom-tls-audit.yaml): exit 1 :: verdict: fail (Generic DICOM TLS audit)
+-- DCMTK echoscu against the same servers (DCMTK does not check host names)
+echoscu libredcm-tls: exit 0
+echoscu libredcm-plain: exit 1
+echoscu dcmtk-tls-tls: exit 0
+echoscu dcmtk-tls-plain: exit 1
+echoscu dcmtk-plain-tls: exit 1
+echoscu dcmtk-plain-plain: exit 0
+echoscu dcmtk-aes-tls: exit 1
+echoscu dcmtk-aes-plain: exit 1
+echoscu dcmtk-wrong-tls: exit 0
+echoscu dcmtk-wrong-plain: exit 1
+echoscu dcmtk-aes-tls-aes-profile: exit 0
+== 3. anonymised sample audit
+sample-dicom-tls-audit (target example-clinic-lab-pacs, plan generic-dicom-tls-audit.yaml): exit 0 :: verdict: pass (Generic DICOM TLS audit)
+== server logs
+== TLS versions and suites each DCMTK server recorded (its own log, independent of LibreDVT)
+dcmtk-tls: 3 Association Received;1 Association Received: confident_taussig;5 Association Received: dvt-runner;1 Association Received: elegant_booth;3 Ciphersuite : TLS_AES_256_GCM_SHA384, encryption: 256 bits;3 Constructing Associate AC PDU;6 Our Max PDU Receive Size: 16384;3 Parsing an A-ASSOCIATE PDU;1 PDU Type: Associate Request, PDU Length: 205 + 6 bytes PDU header;1 PDU Type: Associate Request, PDU Length: 225 + 6 bytes PDU header;1 PDU Type: Associate Request, PDU Length: 274 + 6 bytes PDU header;3 Protocol : TLSv1.3;2 Receiving Association failed: 000b:0902 TLS error: unsupported protocol;2 Receiving Association failed: 000b:090b TLS error: wrong version number;2 Their Max PDU Receive Size: 16382;4 Their Max PDU Receive Size: 16384
+dcmtk-plain: 1 Association Aborted;2 Association Received;5 Association Received: dvt-runner;1 Association Received: interesting_dewdney;1 Association Received: sleepy_hofstadter;2 Constructing Associate AC PDU;4 Our Max PDU Receive Size: 16384;2 Parsing an A-ASSOCIATE PDU;1 PDU Type: Associate Request, PDU Length: 202 + 6 bytes PDU header;1 PDU Type: Associate Request, PDU Length: 205 + 6 bytes PDU header;5 Receiving Association failed: 0006:0321 Unrecognized PDU type: 16;4 Their Max PDU Receive Size: 16384
+dcmtk-aes: 3 Association Received;1 Association Received: confident_brattain;5 Association Received: dvt-runner;1 Association Received: jovial_cohen;1 Association Received: sleepy_heisenberg;3 Ciphersuite : AES128-SHA, encryption: 128 bits;1 Constructing Associate AC PDU;4 Our Max PDU Receive Size: 16384;1 Parsing an A-ASSOCIATE PDU;1 PDU Type: Associate Request, PDU Length: 205 + 6 bytes PDU header;1 Protocol : TLSv1;1 Protocol : TLSv1.1;1 Protocol : TLSv1.2;3 Receiving Association failed: 000b:08c1 TLS error: no shared cipher;2 Receiving Association failed: 000b:090b TLS error: wrong version number;2 Their Max PDU Receive Size: 0;2 Their Max PDU Receive Size: 16384
+dcmtk-wrong: 1 Association Received;5 Association Received: dvt-runner;1 Association Received: silly_moore;1 Association Received: suspicious_zhukovsky;1 Ciphersuite : TLS_AES_256_GCM_SHA384, encryption: 256 bits;1 Constructing Associate AC PDU;2 Our Max PDU Receive Size: 16384;1 Parsing an A-ASSOCIATE PDU;1 PDU Type: Associate Request, PDU Length: 205 + 6 bytes PDU header;1 Protocol : TLSv1.3;2 Receiving Association failed: 000b:0902 TLS error: unsupported protocol;2 Receiving Association failed: 000b:090b TLS error: wrong version number;2 Receiving Association failed: 000b:0c12 TLS error: sslv3 alert bad certificate;2 Their Max PDU Receive Size: 16384
+orthanc stored instances (REST): OCIruntimeexecfailed:execfailed:unabletostartcontainerprocess:exec:"curl":executablefilenotfoundin$PATH
+OK       rc-libredcm-smoke: verdict pass (expected pass)
+    negotiate: passed :: 7 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT RC verification,CN=libredcm", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [libredcm], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SH
+    echo-over-tls: passed :: TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT RC verification,CN=libredcm", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [libredcm], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 ba35f57bed37f3865fe01ffdafc9f5385
+    store-over-tls: passed :: TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT RC verification,CN=libredcm", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [libredcm], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 ba35f57bed37f3865fe01ffdafc9f5385
+    plaintext-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls11-refused: passed :: 1 assertion(s) checked; verdict pass
+OK       rc-dicom-tls-audit-libredcm: verdict pass (expected pass)
+    negotiate-verification: passed :: 3 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT RC verification,CN=libredcm", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [libredcm], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SH
+    echo-over-tls: passed :: TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT RC verification,CN=libredcm", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [libredcm], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 ba35f57bed37f3865fe01ffdafc9f5385
+    plaintext-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls10-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls11-refused: passed :: 1 assertion(s) checked; verdict pass
+OK       rc-libredcm-conformance-v01: verdict pass (expected pass)
+    echo: passed :: C-ECHO status 0x0000 (Success)
+    reject-wrong-called-ae: passed :: association with calling AE "LIBREDVT", called AE "NOT-LIBREDCM" rejected as expected
+    store-native-and-compressed: passed :: 6 of 6 files stored with status 0x0000
+    find-stored-studies: passed :: 1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es)) | 1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es)) | 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es)) | 1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))
+    move-and-compare-pixels: passed :: 6 of 6 expected instances received | note: fixtures/ct_explicit_le.dcm re-encoded from 1.2.840.10008.1.2.1 to 1.2.840.10008.1.2 (uncompressed; pixel data identical) | pixel data identical for 6 of 6 sent files
+OK       rc-dicomweb-audit: verdict pass (expected pass)
+    plaintext-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls11-refused: passed :: 1 assertion(s) checked; verdict pass
+    stow-samples: passed :: 33 assertion(s) checked; verdict pass | 6 of 6 files stored and referenced by the target | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT RC verification,CN=orthanc-https", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [orthanc-https], SAN IP [], 
+    qido-studies: passed :: 18 assertion(s) checked; verdict pass | 4 search request(s), 4 object(s) returned at level studies | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT RC verification,CN=orthanc-https", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [orthanc-https], S
+    qido-series: passed :: 18 assertion(s) checked; verdict pass | 4 search request(s), 4 object(s) returned at level series | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT RC verification,CN=orthanc-https", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [orthanc-https], SA
+    qido-instances: passed :: 26 assertion(s) checked; verdict pass | 6 search request(s), 6 object(s) returned at level instances | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT RC verification,CN=orthanc-https", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [orthanc-https],
+    qido-no-match: passed :: 2 assertion(s) checked; verdict pass | 1 search request(s), 0 object(s) returned at level studies | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT RC verification,CN=orthanc-https", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [orthanc-https], SA
+    wado-and-compare-pixels: passed :: 21 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT RC verification,CN=orthanc-https", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [orthanc-https], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:
+OK       xc-audit-dcmtk-tls: verdict pass (expected pass)
+    negotiate-verification: passed :: 3 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT RC verification,CN=dcmtk-peer", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [dcmtk-tls dcmtk-aes], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:3
+    echo-over-tls: passed :: TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT RC verification,CN=dcmtk-peer", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [dcmtk-tls dcmtk-aes], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 c1b85de88790b6cce649
+    plaintext-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls10-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls11-refused: passed :: 1 assertion(s) checked; verdict pass
+OK       xc-audit-dcmtk-plain: verdict fail (expected fail)
+    negotiate-verification: failed :: connection_closed error: TLS-HANDSHAKE: the connection was reset (ConnectionResetError) | TLS: not established
+    echo-over-tls: failed :: TLS error: [Errno 104] Connection reset by peer
+    plaintext-refused: failed :: fail tls_reject.refused plaintext: expected refused, got accepted dicom_reply: the target answered the A-ASSOCIATE-RQ with A-ASSOCIATE-AC
+    tls10-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls11-refused: passed :: 1 assertion(s) checked; verdict pass
+OK       xc-audit-dcmtk-aes: verdict fail (expected fail)
+    negotiate-verification: failed :: tls error: TLS-HANDSHAKE: the target sent a TLS alert: SSLV3_ALERT_HANDSHAKE_FAILURE | TLS: not established
+    echo-over-tls: failed :: TLS error: the target sent a TLS alert: SSLV3_ALERT_HANDSHAKE_FAILURE
+    plaintext-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls10-refused: failed :: fail tls_reject.refused TLS 1.0 only: expected refused, got accepted handshake_completed: handshake completed with TLSv1
+    tls11-refused: failed :: fail tls_reject.refused TLS 1.1 only: expected refused, got accepted handshake_completed: handshake completed with TLSv1.1
+OK       xc-audit-dcmtk-wrong-host: verdict fail (expected fail)
+    negotiate-verification: failed :: tls error: TLS-HANDSHAKE: certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62) | TLS: not established (certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62))
+    echo-over-tls: failed :: TLS error: certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)
+    plaintext-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls10-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls11-refused: passed :: 1 assertion(s) checked; verdict pass
+OK       sample-dicom-tls-audit: verdict pass (expected pass)
+    negotiate-verification: passed :: 3 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=Example Clinic Lab,CN=pacs.lab.example", issuer "O=Example Clinic Lab,CN=Example Clinic Lab CA", SAN DNS [pacs.lab.example], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37
+    echo-over-tls: passed :: TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=Example Clinic Lab,CN=pacs.lab.example", issuer "O=Example Clinic Lab,CN=Example Clinic Lab CA", SAN DNS [pacs.lab.example], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 c885a3b0fdbd39b979ecb
+    plaintext-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls10-refused: passed :: 1 assertion(s) checked; verdict pass
+    tls11-refused: passed :: 1 assertion(s) checked; verdict pass
+== DCMTK echoscu
+OK       echoscu libredcm-tls: success (expected success)
+OK       echoscu libredcm-plain: failed (expected failed)
+OK       echoscu dcmtk-tls-tls: success (expected success)
+OK       echoscu dcmtk-tls-plain: failed (expected failed)
+OK       echoscu dcmtk-plain-tls: failed (expected failed)
+OK       echoscu dcmtk-plain-plain: success (expected success)
+OK       echoscu dcmtk-aes-plain: failed (expected failed)
+OK       echoscu dcmtk-aes-tls-aes-profile: success (expected success)
+OK       echoscu dcmtk-wrong-tls: success (expected success)
+OK       echoscu dcmtk-wrong-plain: failed (expected failed)
+recorded echoscu dcmtk-aes-tls (DCMTK default profile vs retired AES profile): failed
+== DCMTK and the audit state the same facts
+AGREE    LibreDCM TLS: echoscu libredcm-tls success; audit echo-over-tls passed
+AGREE    LibreDCM TLS: echoscu libredcm-plain failed; audit plaintext-refused passed
+AGREE    DCMTK +tls: echoscu dcmtk-tls-tls success; audit echo-over-tls passed
+AGREE    DCMTK +tls: echoscu dcmtk-tls-plain failed; audit plaintext-refused passed
+AGREE    DCMTK plain: echoscu dcmtk-plain-tls failed; audit echo-over-tls failed
+AGREE    DCMTK plain: echoscu dcmtk-plain-plain success; audit plaintext-refused failed
+AGREE    DCMTK AES profile: echoscu dcmtk-aes-plain failed; audit plaintext-refused passed
+secret check: 56 artefacts, 179 needles (token in 3 forms, key lines), 0 leaks
+== 26 of 26 checks as expected (9 LibreDVT runs, 10 echoscu runs, 7 agreement checks)
+summary exit 0

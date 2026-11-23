@@ -29,6 +29,8 @@ command output from 2026-11-10 unless stated.
 | DCMTK | 3.6.7 (image `rws-e2e-dcmtk`) | Medium | Reference implementation; behaviour cross-checked by Go end-to-end tests | Fit |
 | Orthanc + DICOMweb plugin | Orthanc 1.13.1, DICOMweb plugin 1.24 (`orthancteam/orthanc:26.11.1@sha256:25738bcd515926ac8d33cacf09729a410a32c0a65d6cb8e61bd86fce81a4cd30`) | Medium | Independent DICOMweb reference for the LibreDVT cross-check; stored files checked byte for byte through Orthanc's own REST API | Fit as a cross-check peer (test container only, not distributed) |
 | LibreDVT | 0.1.0-dev (branch `feat/libredvt-v0.1`; engines pinned in `modules/dvt/worker/requirements.txt`) | High | Scripted positive controls with the real engines (CI job `libredvt`), failure injection, mutation check, end-to-end comparison with DCMTK | Fit for v0.1 use, pending review |
+| LibreDVT 0.2 | 0.2.0-rc.1 (branch `feat/libredvt-0.2-rc`, image `libre/dvt:0.2.0-rc.1`; engines unchanged) | High | Positive and negative controls with the real engines, failure injection, mutation re-run of every v0.2 card on one commit, requirement-by-requirement test evidence, independent cross-checks against DCMTK 3.6.7, Orthanc + DICOMweb and LibreDCM | Fit for v0.2 use, pending Patrick's review and approval (card DVT-0.2/6) |
+| Chromium headless (PDF printing) | 155.0.8059.84 (Arch Linux package) | Low (documentation only) | PDF of the sample audit checked by eye against the HTML | Fit for printing reports |
 | Libre WT system test (`scripts/e2e/wt-system-test.sh`, `.py`, `wt_make_data.py`, `wt_compare.py`) | repo version (card WT-0.2/9) | High | Positive control of the comparison, failure injection (no console; already-used console), tightened vacuous checks, independence from the product code, failures on real discrepancies during development | Fit for Libre WT 0.2 verification, pending review |
 | `scripts/e2e/wt-screenshots.mjs` | repo version (card WT-0.2/9) | Low (documentation only) | Negative control of its page-width check | Fit |
 | AI coding tools | Claude (Hermes, Claude Code) | Low | Output controlled by review, CI and tests (SOP-011 §3) | Fit |
@@ -392,6 +394,125 @@ command output from 2026-11-10 unless stated.
     1280 px.
   - Fit for v0.1 use unchanged; the v0.2 functions are not yet released
     for use (validated in card DVT-0.2/6).
+
+## LibreDVT 0.2 release candidate (card DVT-0.2/6, 2026-11-23)
+
+(added 2026-11-23 by Hermes/Claude for issue #34, DRAFT for approval;
+evidence in `docs/dhf/libredvt/evidence/v0.2-rc/`)
+
+- **Intended use (v0.2):** as for v0.1, plus association-negotiation and
+  DICOM TLS tests and DICOMweb QIDO-RS, WADO-RS and STOW-RS tests of
+  LibreDCM and of other vendors' lab systems, for verification records and
+  Mulcahy.io client interoperability and TLS audits
+  (`docs/dhf/libredvt/intended-use.md`, UN-07…UN-11).
+- **Risk: high.** A silent false pass could release a defective LibreDCM
+  build or tell a client that their traffic is protected when it is not
+  (DVT-HAZ-001, -006, -009); a leaked secret or a store into a clinical
+  archive would harm a client (DVT-HAZ-007, -008, -010). Controls and the
+  residual-risk statement: `docs/dhf/libredvt/risk-management.md` §2.1, §5.
+- **Configuration:** commit `015f3b3` on `feat/libredvt-0.2-rc` (module code
+  of the release candidate; later commits in this card change documents
+  and evidence only); image `libre/dvt:0.2.0-rc.1`
+  (`sha256:46d4f9353274ec6bb9875c5674cbd1a5ee23d91ab1868ee0e75674cfb8694247`),
+  test stage `libre/dvt-test:0.2-rc`. Engines and Python packages unchanged
+  since v0.1 (`modules/dvt/worker/requirements.txt`; no `go.mod` change in
+  the v0.2 stack). Peers: DCMTK 3.6.7 (`rws-e2e-dcmtk`), Orthanc 1.13.1 +
+  DICOMweb 1.24 (digest-pinned), LibreDCM `libre/dcm:dvt-0.2-rc` built from
+  the same commit.
+- **Activities and results (real output):**
+  1. *Requirement evidence.* All 58 v0.2 rows (DVT-SRS-090…157) are
+     `Active`. `scripts/trace-evidence.py` reads the real-engine test log
+     (`go test -v -tags engines ./modules/dvt/...` in the image's test
+     stage, exit 0, 10 packages ok, 122 distinct tests passed, 0 failed)
+     and finds, for every row, at least one tagged test and every tagged
+     test passing: 58 of 58 (`04-trace-evidence.md`). Negative controls:
+     one PASS line removed → that row flagged, exit 1; three tests marked
+     FAIL → 9 rows flagged, exit 1 (`04a-…`). `trace.py --check`: 93 of 93
+     active requirements verified; `needs.py`: every requirement traced to
+     a user need.
+  2. *Positive and negative controls, failure injection.* Re-run inside the
+     same test run: the TLS controls (wrong host, CN-only, unknown CA,
+     expired, not yet valid, incomplete chain, self-signed, TLS 1.0/1.1-only
+     servers, client-certificate failures), the association controls
+     (reject, abort, close, garbage, silence, wrong contexts, roles,
+     implementation fields), the DICOMweb controls (wrong boundary,
+     truncated multipart, wrong content types, missing/extra/duplicate
+     instances, changed pixels, failed STOW instances behind HTTP 200,
+     redirects, oversized bodies, endless paging, echoed token) and the
+     failure injection for every new worker command (missing worker, crash,
+     hang, garbage and schema-invalid output) all fail the step as
+     designed; correct peers pass. The v0.1 controls pass unchanged.
+  3. *Mutation check.* All v0.2 mutation checks re-run on the
+     release-candidate commit in a git worktree (`mutation/`,
+     `scripts/mutation-all.sh`): card 2 foundation 32 of 32 applicable
+     mutants killed (M18 not applicable, see findings); card 3 association
+     and TLS 23 of 23 (14 Go, 9 worker); card 4 DICOMweb 41 of 41 (31 Go,
+     10 worker); card 5 UI, CLI, reports and bundled plans 21 of 21; card 6
+     printable report 4 of 4. **121 of 121 applicable mutants killed**,
+     none survived, none failed to compile; baselines passed first and the
+     worktree was clean afterwards. The mutants include host-name check
+     off, Common-Name fallback, TLS 1.1 accepted, clear-text fallback,
+     rejected context ignored, failed STOW instances ignored, truncated
+     multipart accepted, boundary taken from the body, unredacted
+     `Authorization` accepted, zero-assertion step passed, verdict rules
+     flipped, unknown plan fields accepted, production guard removed, and
+     the report and parity controls.
+  4. *Independent cross-checks* (`03-system-run.log`, 26 of 26 checks as
+     expected; expectations written before the run in
+     `scripts/summarize.py`):
+     - the release-candidate image from the command line: *LibreDCM smoke*
+       5/5 and *Generic DICOM TLS audit* 5/5 against LibreDCM in TLS mode;
+       the v0.1 *LibreDCM conformance* plan 5/5 against LibreDCM plain (6
+       of 6 stored, moved back with identical pixel data); *Generic
+       DICOMweb audit* 8/8 against Orthanc + DICOMweb over HTTPS with a
+       bearer token;
+     - the *Generic DICOM TLS audit* against DCMTK `storescp`: pass with
+       its default TLS profile; fail with the expected findings with no TLS
+       (plaintext accepted), the retired AES profile (TLS 1.0 and 1.1
+       accepted; LibreDVT's verified client fails closed, "no shared
+       cipher") and a certificate for another host (LibreDVT refuses it;
+       DCMTK's `echoscu`, which does not check host names, connects);
+     - DCMTK `echoscu` and the DCMTK server logs state the same facts as
+       the audit in 7 of 7 agreement checks (echo over TLS, plaintext
+       accepted or refused), and the server logs record the protocol of
+       each probe (TLS 1.3 accepted; "unsupported protocol" / "wrong
+       version number" for the old-version and plaintext probes on a
+       correct server; TLS 1.0 and 1.1 handshakes on the AES profile).
+  5. *Secret check.* The synthetic token in three encodings and every
+     private-key line of the synthetic PKI in none of the 56 artefacts.
+  6. *Printable report (DVT-SRS-157, new in this card).* Report test plus
+     PDF checked by eye (`docs/dhf/libredvt/manual-verification.md`).
+- **Findings during validation:** the foundation mutant M18 (DIMSE TLS
+  "fails safe, nothing sent") no longer applies: card DVT-0.2/3 replaced
+  that placeholder with real TLS, and card 3's mutants (for example G8,
+  clear-text fallback for v0.1 steps) cover the new code; recorded as not
+  applicable, not as killed. The printed HTML report broke step names
+  mid-word and clipped long values; fixed with print styles (DVT-SRS-157).
+  The Orthanc statistics line in the system-run log failed because the
+  Orthanc image has no `curl`; it is informational only (STOW, QIDO and
+  WADO results come from LibreDVT's own read-back and pixel comparison,
+  and card DVT-0.2/4 compared stored files byte for byte through Orthanc's
+  REST API).
+- **Conclusion:** LibreDVT 0.2.0-rc.1 is fit for its v0.2 intended use,
+  pending Patrick Mulcahy's review and approval of this record and the
+  residual-risk statement. Use for records or client work starts with the
+  approved, tagged release.
+- **Re-validate:** any change under `modules/dvt/` or `Dockerfile.dvt` (CI
+  job `libredvt` re-runs the real-engine tests), any engine, Python
+  package or base-image change, a new step type or protocol, and a change
+  of a peer image used in the cross-checks.
+
+## Chromium headless (PDF printing)
+
+- **Intended use:** print LibreDVT's HTML reports to PDF for client
+  deliverables (`--print-to-pdf --no-pdf-header-footer`). The HTML report
+  stays the record; the PDF is a copy for reading.
+- **Risk: low** (documentation only). A rendering fault would show as a
+  visibly wrong page; the HTML is kept next to the PDF.
+- **Activity (2026-11-23):** the sample audit printed by Chromium
+  155.0.8059.84 compared by eye with the HTML (all five steps, the
+  endpoint identity and every assertion present; no clipped text).
+- **Re-validate:** not required beyond checking each deliverable by eye.
 
 ## Libre WT system test (card WT-0.2/9, 2026-11-17)
 

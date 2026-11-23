@@ -329,3 +329,16 @@ AGPL-3.0, used only as an unmodified test container, not distributed with
 LibreDVT; first used in card DVT-0.2/4: `orthancteam/orthanc:26.11.1@sha256:25738bcd515926ac8d33cacf09729a410a32c0a65d6cb8e61bd86fce81a4cd30`,
 Orthanc 1.13.1, DICOMweb plugin 1.24), DCMTK 3.6.7 (BSD, already used for
 LibreDCM conformance).
+
+**Printable reports (card DVT-0.2/6, DRAFT for approval).**
+
+The HTML report is self-contained (inline stylesheet, no script). For a PDF
+deliverable the user prints it from a browser. The embedded stylesheet has
+one `@media print` block: light colours whatever the reader's colour scheme,
+every `<details>` section open (Chromium's `::details-content`), no scroll
+boxes or height limits that would clip content, rows and headings kept
+together, and the first (step name) column broken only between words
+(DVT-SRS-157). No PDF library is added: the PDF of the sample audit was
+printed with Chromium 155 headless (`--print-to-pdf`), a documentation tool
+outside the product. Report markup is unchanged, so v0.1 reports still
+render identically (DVT-SRS-145).

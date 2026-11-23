@@ -12,13 +12,15 @@ LibreDVT is a quality-system tool, not a medical device. Its results are used
 as verification records, so it is validated as a high-risk tool
 (QMS-SOP-011). Design file: [`docs/dhf/libredvt/`](../../docs/dhf/libredvt/SRS.md).
 
-> **v0.2 in progress (DRAFT).** Association negotiation and DICOM TLS tests
-> (card DVT-0.2/3), DICOMweb QIDO-RS, WADO-RS and STOW-RS tests (card
-> DVT-0.2/4) and the web UI, command line, reports and example plans for
-> them (card DVT-0.2/5) are built.
-> See the [v0.2 plan](../../docs/dhf/libredvt/v0.2-plan.md). The v0.2
-> functions are not released for use until the v0.2 tool validation is
-> approved. The sections below describe v0.1 unless they say v0.2.
+> **v0.2 release candidate (0.2.0-rc.1, DRAFT for approval).** Association
+> negotiation and DICOM TLS tests, DICOMweb QIDO-RS, WADO-RS and STOW-RS
+> tests, the web UI, command line, reports and example plans for them are
+> built and verified (cards DVT-0.2/1 to /6, issue #34); see the
+> [release notes](../../docs/releases/libredvt-v0.2.0-rc.1.md) and the
+> [v0.2 plan](../../docs/dhf/libredvt/v0.2-plan.md). Use the v0.2 functions
+> for records or client work only after Patrick Mulcahy approves the v0.2
+> tool validation and the release is tagged. The sections below describe
+> v0.1 unless they say v0.2.
 
 ## What it does (v0.1)
 
@@ -221,6 +223,69 @@ that holds real data, set `limits: {max_body_excerpt_bytes: 0}` in the plan
 Choose another target when you run a plan if yours has another name. Run
 audits only against systems you have written permission to test; plans that
 store images need a `lab` target.
+
+### Running a client audit safely (v0.2, DRAFT)
+
+LibreDVT can audit another vendor's DICOM or DICOMweb system for a client
+(for example as a Mulcahy.io interoperability or TLS audit). It connects to
+the client's system as an ordinary DICOM or DICOMweb client. Do it only
+like this:
+
+1. **Written consent first.** Get the client's written permission before
+   any connection. It names the systems (host, port or base URL, AE
+   titles), the time window, the tests (the plan files), whether images may
+   be stored, who receives the report, and a contact who can stop the test.
+   No consent, no test: LibreDVT cannot check this for you.
+2. **Lab or test systems only.** Register the client's system with class
+   `lab` only when it is a test system the client agreed may receive test
+   images. Anything else is `production` (the default when no class is
+   set): LibreDVT then refuses `store`, `move`, `stow`, `qido` and `wado`.
+   `echo`, `associate`, `tls_reject` and C-FIND still run against
+   production targets, so do not point them at a clinical system unless the
+   consent says so.
+3. **Synthetic data only.** The bundled plans use the public sample images
+   in the image (no patient data). Never load real patient files into
+   LibreDVT. Ask the client to delete the stored test studies afterwards, or
+   delete them yourself if the consent allows it.
+4. **Secrets in files.** Put the client's CA certificate, client
+   certificate and key, and bearer token in files under `secrets_dir`
+   (default `/run/secrets`), readable only by you. Never type a secret into
+   a plan, a target name or a note: LibreDVT redacts and scans for the
+   configured secrets, but cannot know a value you did not configure.
+5. **No response bodies from real systems.** On a system that may hold
+   real data, keep `limits: {max_body_excerpt_bytes: 0}` in the plan (the
+   bundled *Generic DICOMweb audit* does), so no returned data reaches the
+   report.
+6. **Gentle by design.** LibreDVT sends one association or HTTP request at
+   a time and caps paging and response sizes. Still agree the window with
+   the client and stop if they ask.
+7. **Keep and share carefully.** Give the report only to the people named
+   in the consent. Delete runs and uploads from LibreDVT when the job is
+   done (*Results* page).
+
+**What a report proves.** In that run, at that time, against that
+endpoint: which associations and presentation contexts the system accepted
+or refused, the TLS version, cipher and certificate it presented and
+whether that certificate verified for its host name against the CA you
+gave, whether it refused plaintext, TLS 1.0 and TLS 1.1 (and connections
+without a client certificate, if the plan asks), and, for DICOMweb, whether
+it stored, found and returned the sample images unchanged. Every check is
+listed with the expected and the actual value; anything LibreDVT could not
+check is a failure, never a pass.
+
+**What a report does not prove.** It is not a certification, a penetration
+test or a vulnerability scan. It does not show that the system is secure
+or DICOM-conformant in general, that other ports, AE titles, clients or
+configurations behave the same, or that the system will behave the same
+tomorrow. LibreDVT does not check certificate revocation (CRL/OCSP), cipher
+lists beyond what its own client and probes offer, or any DICOM service
+outside the plan. Say so in the audit's scope.
+
+**PDF.** The HTML report prints cleanly: open it in a browser and print to
+PDF, or use Chromium headless:
+`chromium --headless --no-pdf-header-footer --print-to-pdf=report.pdf report.html`.
+Every evidence section is printed open. A sample audit (HTML and PDF) is in
+[`docs/releases/libredvt-v0.2.0-rc.1-sample-audit/`](../../docs/releases/libredvt-v0.2.0-rc.1-sample-audit/README.md).
 
 ## Test plans
 

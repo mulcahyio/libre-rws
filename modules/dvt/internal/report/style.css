@@ -62,3 +62,23 @@ label.check { display: flex; gap: .5rem; align-items: center; font-weight: 600; 
 .hint { color: var(--ink-muted); font-size: .85rem; margin: .2rem 0 0; }
 td.nowrap, .nowrap { white-space: nowrap; word-break: normal; }
 .spaced { margin-top: 1rem; }
+/* v0.2: the first (name) column breaks between words only; printed reports (PDF) */
+td.mono:first-child { word-break: normal; overflow-wrap: break-word; }
+@media print {
+  :root {
+    --libre-teal: #0A7570; --libre-teal-soft: #D5ECEA; --on-libre-teal: #FFFFFF;
+    --ink: #0F1B24; --ink-muted: #4A5B64; --line: #C9D3D6; --line-strong: #7D8E96;
+    --surface-100: #FFFFFF; --surface-200: #FFFFFF; --surface-300: #F4F7F7;
+    --ok: #1F7A4D; --warn: #8A5A00; --error: #B3261E; --focus: #0A7570;
+  }
+  @page { margin: 14mm 12mm; }
+  body { font-size: 10pt; }
+  header.top, form, button { display: none; }
+  main { max-width: none; padding: 0; }
+  table { table-layout: auto; }
+  tr, dl.meta, .badge { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }
+  .scroll { overflow: visible; }
+  pre { max-height: none; overflow: visible; }
+  details::details-content { content-visibility: visible; display: block; }
+}

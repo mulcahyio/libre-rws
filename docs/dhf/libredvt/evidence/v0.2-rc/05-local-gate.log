@@ -1,0 +1,175 @@
+commit 136a554, 2026-11-23T04:48:49Z, go version go1.26.11 linux/amd64
+
+== rws-go fmt ./... (files changed)
+none
+-> exit 0
+
+== rws-go vet ./...
+-> exit 0
+
+== rws-go vet -tags official ./modules/...
+-> exit 0
+
+== rws-go vet -tags engines ./modules/dvt/...
+-> exit 0
+
+== rws-go test -race -count=1 ./...
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/cmd/libredcm	2.118s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/blob	1.103s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/control	5.400s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm	1.251s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/events	1.418s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway	4.185s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/index	2.724s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/licensing	1.062s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/cmd/libredvt	1.257s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	51.921s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/fakepeer	1.605s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/plan	1.085s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/redact	1.037s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/report	1.173s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/result	1.048s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	1.157s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/store	1.077s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/web	1.124s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/cmd/librewt	3.456s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/accounts	1.776s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/dcmclient	1.328s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/fleet	1.751s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/web	15.559s
+ok  	github.com/mulcahyio/libre-rws/platform/config	1.043s
+ok  	github.com/mulcahyio/libre-rws/platform/dicomuid	2.143s
+ok  	github.com/mulcahyio/libre-rws/platform/runtime	1.081s
+-> exit 0
+
+== rws-go test -count=1 -tags official ./modules/...
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/cmd/libredcm	0.613s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/blob	0.019s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/control	1.764s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/dcm	0.045s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/events	0.276s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/gateway	1.402s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/index	0.502s
+ok  	github.com/mulcahyio/libre-rws/modules/dicom/internal/licensing	0.009s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/cmd/libredvt	0.085s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	50.857s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/fakepeer	0.543s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/plan	0.023s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/redact	0.014s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/report	0.039s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/result	0.016s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.063s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/store	0.026s
+ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/web	0.040s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/cmd/librewt	1.278s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/accounts	0.429s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/dcmclient	0.275s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/fleet	0.399s
+ok  	github.com/mulcahyio/libre-rws/modules/wt/internal/web	9.839s
+-> exit 0
+
+== third_party tests (gonetdicom, librekey)
+ok  	github.com/godicom-dev/gonetdicom	1.008s
+ok  	github.com/godicom-dev/gonetdicom/ae	1.238s
+ok  	github.com/godicom-dev/gonetdicom/dicomweb	1.530s
+ok  	github.com/godicom-dev/gonetdicom/dimse	1.018s
+ok  	github.com/godicom-dev/gonetdicom/pdu	1.024s
+ok  	github.com/godicom-dev/gonetdicom/status	1.012s
+-> exit 0
+ok  	github.com/mulcahyio/librekey/client	1.021s
+ok  	github.com/mulcahyio/librekey/fingerprint	1.009s
+ok  	github.com/mulcahyio/librekey/license	1.024s
+-> exit 0
+
+== gosec v2.30.0 -exclude-dir=third_party ./...
+-> exit 0
+
+== govulncheck v1.9.0 ./...
+Your code is affected by 0 vulnerabilities.
+This scan also found 0 vulnerabilities in packages you import and 4
+vulnerabilities in modules you require, but your code doesn't appear to call
+these vulnerabilities.
+Use '-show verbose' for more details.
+-> exit 0
+
+== trace.py --write --check
+wrote docs/dhf/libredcm/generated/trace-matrix.md
+Requirements: 75 (71 active). Active with verification: 71. Active without verification: 0. Tags pointing at unknown IDs: 0. Tags pointing at retired IDs: 0.
+-> exit 0
+
+== needs.py
+User needs: 19. Requirements: 75 (74 not retired). Not traced to a need: 0. Unknown or retired citations: 0.
+-> exit 0
+
+== trace.py --module libredvt --prefix DVT --write --check
+wrote docs/dhf/libredvt/generated/trace-matrix.md
+Requirements: 93 (93 active). Active with verification: 93. Active without verification: 0. Tags pointing at unknown IDs: 0. Tags pointing at retired IDs: 0.
+-> exit 0
+
+== needs.py --module libredvt --prefix DVT
+User needs: 11. Requirements: 93 (93 not retired). Not traced to a need: 0. Unknown or retired citations: 0.
+-> exit 0
+
+== trace.py --module librewt --prefix WT --check
+Requirements: 37 (37 active). Active with verification: 37. Active without verification: 0. Tags pointing at unknown IDs: 0. Tags pointing at retired IDs: 0.
+-> exit 0
+
+== needs.py --module librewt --prefix WT
+User needs: 14. Requirements: 37 (37 not retired). Not traced to a need: 0. Unknown or retired citations: 0.
+-> exit 0
+
+== mdlinks.py
+checked 81 files, 0 broken links
+-> exit 0
+
+== dcs.py
+dcs: dimse 7, storage 170, transfer syntaxes 14, settings 21, patient keys 5, study keys 14, series keys 16, image keys 18; 0 problems
+-> exit 0
+
+== test_qms_tools.py
+Ran 26 tests in 0.672s
+
+OK
+-> exit 0
+
+== bash -n on changed shell scripts
+docs/dhf/libredvt/evidence/v0.2-rc/scripts/mutation-all.sh: 0
+docs/dhf/libredvt/evidence/v0.2-rc/scripts/system-run.sh: 0
+
+== node --check scripts/e2e/dvt-screenshots.mjs
+-> exit 0
+
+== parse summarize.py, trace-evidence.py
+-> exit 0
+
+== gitleaks over feat/libredvt-0.2-ui..HEAD
+
+[90m4:50AM[0m [32mINF[0m [1m3 commits scanned.[0m
+[90m4:50AM[0m [32mINF[0m [1mscanned ~983686 bytes (983.69 KB) in 83ms[0m
+[90m4:50AM[0m [32mINF[0m [1mno leaks found[0m
+-> exit 0
+
+== SBOM regenerated (cyclonedx-gomod v1.12.0) and SOUP list (soup.py): no change expected
+-> exit 0
+Traceback (most recent call last):
+  File "<string>", line 5, in <module>
+    print(len(a),'components regenerated,',len(b),'committed; differences:',sorted(f(a)^f(b)))
+                                                                            ~~~~~~^^^^^^^^^^^
+TypeError: '<' not supported between instances of 'str' and 'NoneType'
+-> exit 1
+wrote docs/dhf/libredcm/soup.md: 12 direct, 36 indirect; 0 direct without evaluation
+-> exit 0
+soup.md files changed: 0
+
+== go.mod / go.sum / worker requirements unchanged against master
+-> exit 0
+
+GATE: 1 failing step(s)
+
+== Correction (added after the run): the SBOM comparison above failed in the gate script itself (sorting a set that held None versions), not in the SBOM. Re-run with string versions (2026-11-23T04:52:45Z, same commit 136a554):
+cyclonedx-gomod exit 0
+48 components regenerated, 48 committed
+only in regenerated: [('github.com/godicom-dev/gonetdicom', 'v0.2.0-beta.1.0.20261109225137-5a5135ce5569'), ('github.com/mulcahyio/librekey', 'v0.2.0-beta.1.0.20261109225137-5a5135ce5569')]
+only in committed: [('github.com/godicom-dev/gonetdicom', 'None'), ('github.com/mulcahyio/librekey', 'None')]
+Result: the same 48 modules as the committed SBOM. The only difference is the version string of the two locally replaced modules (gonetdicom fork, LibreKey client copy), which cyclonedx-gomod fills with the main repository's pseudo-version (see the cyclonedx-gomod note in docs/qms/tool-validation/README.md). No dependency change. soup.py: 0 soup.md files changed.
+GATE after correction: 0 failing steps

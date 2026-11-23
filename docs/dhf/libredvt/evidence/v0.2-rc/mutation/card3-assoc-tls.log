@@ -1,0 +1,179 @@
+== mutation check 2026-11-22 23:36:40 EST, head 015f3b33b250deac8ab087e7dcaec3a56e1c0e1e
+baseline Go unit tests: rc=0
+baseline real-engine tests (TestReal*): rc=0
+G1 ignore a rejected context (Go assertion): KILLED (rc=1)
+          runner_assoc_test.go:137: rejected context accepted: verdict pass
+          runner_assoc_test.go:141: context missing from AC: failed "problem:protocol", want "fail:assoc.context.result,problem:protocol"
+          runner_assoc_test.go:137: accepted context rejected: verdict pass
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.008s
+      FAIL
+G2 accept TLS 1.1 in a tls_reject probe (Go verdict): KILLED (rc=1)
+          runner_assoc_test.go:314: handshake_completed: pass, want fail
+          runner_assoc_test.go:314: cert_verify_failed: pass, want fail
+          runner_assoc_test.go:360: dicomweb tls_version handshake_completed 0: pass [tls-probe-web]
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.008s
+      FAIL
+G3 failed release counted as a clean pass: KILLED (rc=1)
+      --- FAIL: TestAssociateAbortCloseGarbageTimeoutAndRelease (0.00s)
+          runner_assoc_test.go:229: abort on release, checks passed: pass [10 assertion(s) checked; verdict pass association accepted; max PDU 16384, Implementation Class UID "1.2.3.9", Version Name "PEER_1"]
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.004s
+      FAIL
+G4 A-ASSOCIATE-RJ values not compared: KILLED (rc=1)
+          runner_assoc_test.go:190: other reason: verdict pass
+          runner_assoc_test.go:190: other source: verdict pass
+          runner_assoc_test.go:190: transient result: verdict pass
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.004s
+      FAIL
+G5 context missing from the A-ASSOCIATE-AC not a protocol error: KILLED (rc=1)
+      --- FAIL: TestAssociatePositiveControls (0.00s)
+          runner_assoc_test.go:141: context missing from AC: failed "fail:assoc.context.result", want "fail:assoc.context.result,problem:protocol"
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G6 max PDU expectation ignored: KILLED (rc=1)
+      --- FAIL: TestAssociatePositiveControls (0.00s)
+          runner_assoc_test.go:137: max pdu: verdict pass
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G7 missing role reply read as the expected roles: KILLED (rc=1)
+      --- FAIL: TestAssociatePositiveControls (0.00s)
+          runner_assoc_test.go:137: no role reply: verdict pass
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G8 v0.1 step passes without verified TLS facts (clear-text fallback): KILLED (rc=1)
+      testing.tRunner(0xbc2afe8e908, 0x7af778)
+      	/usr/local/go/src/testing/testing.go:2036 +0xea
+      created by testing.(*T).Run in goroutine 1
+      	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.006s
+      FAIL
+G9 TLS move without Storage SCP certificate allowed: KILLED (rc=1)
+      --- FAIL: TestTLSMoveNeedsSCPCertificate (0.00s)
+          runner_assoc_test.go:372: no SCP certificate: fail calls [] [configuration error, nothing was sent: scp_tls_cert: file not readable]
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.003s
+      FAIL
+G10 associate output schema not checked: KILLED (rc=1)
+          assoc_test.go:94: context result: accepted
+      --- FAIL: TestAssociateTLSArgumentsArePathsOnly (0.00s)
+          assoc_test.go:122: TLS target without handshake: <nil>
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	4.037s
+      FAIL
+G11 probe that sent a client certificate accepted: KILLED (rc=1)
+      --- FAIL: TestTLSProbeOutputSchemaAndNoCredentials (4.02s)
+          assoc_test.go:191: client cert sent: accepted
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	4.032s
+      FAIL
+G12 client certificate/key pair not checked before connecting: KILLED (rc=1)
+      --- FAIL: TestLoadSecretsChecksCAAndClientKeyPair (0.00s)
+          target_test.go:328: mismatched key: want "do not form a usable pair", got <nil>
+          target_test.go:328: key is a cert: want "do not form a usable pair", got <nil>
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/store	0.004s
+      FAIL
+G13 a verification bypass added to non-test code: KILLED (rc=1)
+      --- FAIL: TestNoTLSVerificationBypass (0.01s)
+          arch_test.go:103: internal/engine/assoc.go holds "InsecureSkipVerify": no code path may weaken TLS verification (DVT-SRS-103)
+          arch_test.go:103: internal/engine/assoc.go holds "InsecureSkip": no code path may weaken TLS verification (DVT-SRS-103)
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/cmd/libredvt	0.009s
+      FAIL
+G14 probe passed the client key: KILLED (rc=1)
+              /run/secrets/c.key
+              --mode
+              plaintext
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	0.011s
+      FAIL
+P1 host-name check off (worker), policy guard removed too: KILLED (rc=1)
+          assoc_engines_test.go:314: DNS name only in CN: the peer received an A-ASSOCIATE-RQ after a failed handshake
+          assoc_engines_test.go:309: wrong host: pass 3 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT test PKI,CN=other", issuer "O=LibreDVT test PKI,CN=test-root-ca", SAN DNS [other.test], SAN IP [], valid 2026-11-23T03:39:42.000Z to 2026-11-24T04:39:42.000Z, SHA-256 544829db8c73fab4c8a04bbb66cd3232f215ad8913c9240e3e842e4c229d1a00; client certificate offered: false | association accepted; max PDU 16384, Implementation Class UID "1.3.6.1.4.1.67686.9.3.1", Version Name "FAKEPEER_1"
+          assoc_engines_test.go:314: wrong host: the peer received an A-ASSOCIATE-RQ after a failed handshake
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	7.926s
+      FAIL
+P2 Common Name fallback (worker), policy guard removed too: KILLED (rc=1)
+      --- FAIL: TestRealTLSVerification (7.82s)
+          assoc_engines_test.go:309: DNS name only in CN: pass 3 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT test PKI,CN=peer.test", issuer "O=LibreDVT test PKI,CN=test-root-ca", SAN DNS [], SAN IP [], valid 2026-11-23T03:39:51.000Z to 2026-11-24T04:39:51.000Z, SHA-256 133d06ccbfbba0c9856bb4f829ac102c395ef1e498f879024fb40c3bb3520e65; client certificate offered: false | association accepted; max PDU 16384, Implementation Class UID "1.3.6.1.4.1.67686.9.3.1", Version Name "FAKEPEER_1"
+          assoc_engines_test.go:314: DNS name only in CN: the peer received an A-ASSOCIATE-RQ after a failed handshake
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	7.822s
+      FAIL
+P3 accept TLS 1.1 (worker minimum version), policy guard removed too: KILLED (rc=1)
+      --- FAIL: TestRealTLSVersions (2.78s)
+          assoc_engines_test.go:337: TLS 1.1 only server: pass 3 assertion(s) checked; verdict pass | TLS: TLSv1.1 ECDHE-ECDSA-AES128-SHA, certificate verified; peer subject "O=LibreDVT test PKI,CN=peer", issuer "O=LibreDVT test PKI,CN=test-root-ca", SAN DNS [peer.test], SAN IP [127.0.0.1], valid 2026-11-23T03:39:59.000Z to 2026-11-24T04:39:59.000Z, SHA-256 d9a1a9441f26d8cff85f9fc10f651dae6c9c4d7ccf37b4640b9697b6e80e9a12; client certificate offered: false | association accepted; max PDU 16384, Implementation Class UID "1.3.6.1.4.1.67686.9.3.1", Version Name "FAKEPEER_1"
+          assoc_engines_test.go:342: TLS 1.1 only server: handshake "", RQ true: plaintext or old-version traffic reached the peer
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	2.780s
+      FAIL
+P4 rejected presentation context reported as accepted (worker): KILLED (rc=1)
+      --- FAIL: TestRealAssociateNegotiation (0.55s)
+          assoc_engines_test.go:76: matching peer: fail fail assoc.context.result context 5 (1.2.3.4.5): expected rejected, got accepted  | association accepted; max PDU 16384, Implementation Class UID "1.2.3.9", Version Name "PEER_1"
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.552s
+      FAIL
+P5 old-version handshake reported as refused (worker probe): KILLED (rc=1)
+      --- FAIL: TestRealTLSReject (4.94s)
+          assoc_engines_test.go:448: TLS 1.1 accepted: pass [{ID:tls_reject.refused Subject:TLS 1.1 only Expected:refused Actual:refused Outcome:pass Message:handshake_alert: handshake completed with TLSv1.1}] 1 assertion(s) checked; verdict pass
+          assoc_engines_test.go:448: TLS 1.0 accepted: pass [{ID:tls_reject.refused Subject:TLS 1.0 only Expected:refused Actual:refused Outcome:pass Message:handshake_alert: handshake completed with TLSv1}] 1 assertion(s) checked; verdict pass
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	4.939s
+      FAIL
+P6 Storage SCP accepts targets without a client certificate: KILLED (rc=1)
+      --- FAIL: TestRealSCPTLSDuringMove (5.93s)
+          assoc_engines_test.go:504: no client certificate: sub-association accepted true (want false), SCP connections [{Peer:127.0.0.1:43720 Started:2026-11-23T04:40:09.764Z Outcome:completed Error: TLS:0x2729a0b0320}], sub &{Error: Answer:2 Released:true}
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	5.935s
+      FAIL
+P7 abort on release recorded as released: KILLED (rc=1)
+      --- FAIL: TestRealAssociateNegotiation (10.10s)
+          assoc_engines_test.go:146: aborts on release (passes): pass, findings "" (want "warn:assoc.release"): 10 assertion(s) checked; verdict pass | association accepted; max PDU 16384, Implementation Class UID "1.2.3.9", Version Name "PEER_1"
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	10.103s
+      FAIL
+P8 A-ABORT answer reported as a rejection (worker): KILLED (rc=1)
+      --- FAIL: TestRealAssociateRejectAbortCloseGarbageSilence (5.34s)
+          assoc_engines_test.go:190: abort: fail [] fail assoc.result 127.0.0.1:37751: expected accepted, got rejected  | association rejected; max PDU 0, Implementation Class UID "", Version Name ""
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	5.338s
+      FAIL
+P9 expired certificate accepted (verification off in the worker's trust load): KILLED (rc=1)
+          assoc_engines_test.go:314: expired: the peer received an A-ASSOCIATE-RQ after a failed handshake
+          assoc_engines_test.go:309: not yet valid: pass 3 assertion(s) checked; verdict pass | TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT test PKI,CN=peer", issuer "O=LibreDVT test PKI,CN=test-root-ca", SAN DNS [], SAN IP [127.0.0.1], valid 2026-11-24T04:40:32.000Z to 2026-11-25T04:40:32.000Z, SHA-256 28c3b7e16e1c1e1d726969331968d241e9098da4f1a5ee0218c2abe736b881d8; client certificate offered: false | association accepted; max PDU 16384, Implementation Class UID "1.3.6.1.4.1.67686.9.3.1", Version Name "FAKEPEER_1"
+          assoc_engines_test.go:314: not yet valid: the peer received an A-ASSOCIATE-RQ after a failed handshake
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	7.867s
+      FAIL
+worktree clean after run: yes
+== 23 of 23 mutants killed
+   KILLED       G1 ignore a rejected context (Go assertion)
+   KILLED       G2 accept TLS 1.1 in a tls_reject probe (Go verdict)
+   KILLED       G3 failed release counted as a clean pass
+   KILLED       G4 A-ASSOCIATE-RJ values not compared
+   KILLED       G5 context missing from the A-ASSOCIATE-AC not a protocol error
+   KILLED       G6 max PDU expectation ignored
+   KILLED       G7 missing role reply read as the expected roles
+   KILLED       G8 v0.1 step passes without verified TLS facts (clear-text fallback)
+   KILLED       G9 TLS move without Storage SCP certificate allowed
+   KILLED       G10 associate output schema not checked
+   KILLED       G11 probe that sent a client certificate accepted
+   KILLED       G12 client certificate/key pair not checked before connecting
+   KILLED       G13 a verification bypass added to non-test code
+   KILLED       G14 probe passed the client key
+   KILLED       P1 host-name check off (worker), policy guard removed too
+   KILLED       P2 Common Name fallback (worker), policy guard removed too
+   KILLED       P3 accept TLS 1.1 (worker minimum version), policy guard removed too
+   KILLED       P4 rejected presentation context reported as accepted (worker)
+   KILLED       P5 old-version handshake reported as refused (worker probe)
+   KILLED       P6 Storage SCP accepts targets without a client certificate
+   KILLED       P7 abort on release recorded as released
+   KILLED       P8 A-ABORT answer reported as a rejection (worker)
+   KILLED       P9 expired certificate accepted (verification off in the worker's trust load)
