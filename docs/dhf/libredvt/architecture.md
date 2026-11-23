@@ -253,7 +253,46 @@ approval). They settle details the decisions above left open:
    `_create_unverified_context`, a Common Name fallback and a disabled
    host-name check).
 
+Implementation notes, card DVT-0.2/4 (2026-11-19, Hermes/Claude, DRAFT for
+approval):
+
+1. **DICOMweb client on the standard library.** The worker's `qido`,
+   `wado` and `stow` commands use `http.client` over a socket wrapped by
+   the one TLS context factory, one connection per request
+   (`Connection: close`), no redirect following, and a strict multipart
+   parser written for LibreDVT (RFC 2046/2387: boundary only from the
+   Content-Type, CRLF-anchored delimiters, closing delimiter required).
+   No new dependency.
+2. **Facts in the worker, decisions in Go.** The worker reports exchanges
+   (`HTTPInfo` with status, headers, body size/SHA-256/excerpt, part
+   facts), resolved query keys and keywords (it has the DICOM dictionary;
+   Go has none, DVT-SRS-080), the values of the checked tags per QIDO
+   object, per-part DICOM facts, metadata values and STOW response items.
+   `engine/dicomweb.go` holds the output to its schema (exchange order,
+   closed value sets, redacted `Authorization`, TLS facts on every https
+   request); `runner/dicomweb.go` builds every assertion. Pixel comparison
+   and object validation reuse the v0.1 `compare` and validation engines on
+   the received parts.
+3. **`from_store` searches one UID at a time** on the level's unique key,
+   so an archive's default page size cannot hide an object; `wado
+   from_store` retrieves each stored study and expects exactly the stored
+   instances (as v0.1 `move`). With `compare_pixels` and no
+   `transfer_syntax`, LibreDVT asks for `transfer-syntax=*` (stored syntax):
+   without a parameter PS3.18 lets a server answer Explicit VR Little
+   Endian, which the pixel check would report as a transcode.
+4. **Go DICOMweb test server** `internal/fakepeer/web.go` (test only, same
+   import restriction): `net/http`, `mime/multipart` and `encoding/json`
+   with about 50 fault switches (wrong boundary, truncated multipart,
+   non-DICOM part, wrong UIDs, failed instances reported as success,
+   redirects, oversized bodies, a token echoed into an error page). It
+   records each request's `Authorization`, the SHA-256 of each STOW part and
+   the maximum number of open connections.
+5. **`tls_reject` on DICOMweb targets** reuses the probe with one bare HTTP
+   request (`--base-url`); see `cybersecurity.md` for the HTTP 400 rule.
+
 Test-only configuration items added by v0.2 (recorded in the tool
 validation when first used): Orthanc and its DICOMweb plugin (GPL-3.0 /
 AGPL-3.0, used only as an unmodified test container, not distributed with
-LibreDVT), DCMTK 3.6.7 (BSD, already used for LibreDCM conformance).
+LibreDVT; first used in card DVT-0.2/4: `orthancteam/orthanc:26.11.1@sha256:25738bcd515926ac8d33cacf09729a410a32c0a65d6cb8e61bd86fce81a4cd30`,
+Orthanc 1.13.1, DICOMweb plugin 1.24), DCMTK 3.6.7 (BSD, already used for
+LibreDCM conformance).
