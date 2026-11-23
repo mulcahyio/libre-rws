@@ -286,7 +286,10 @@ approval):
    non-DICOM part, wrong UIDs, failed instances reported as success,
    redirects, oversized bodies, a token echoed into an error page). It
    records each request's `Authorization`, the SHA-256 of each STOW part and
-   the maximum number of open connections.
+   the maximum number of requests in progress at once (counted before any
+   response byte is written, so a sequential client can never be reported
+   as parallel; `TestWebConcurrencyMeasurement` shows parallel requests are
+   caught).
 5. **`tls_reject` on DICOMweb targets** reuses the probe with one bare HTTP
    request (`--base-url`); see `cybersecurity.md` for the HTTP 400 rule.
 

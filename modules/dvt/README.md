@@ -13,7 +13,8 @@ as verification records, so it is validated as a high-risk tool
 (QMS-SOP-011). Design file: [`docs/dhf/libredvt/`](../../docs/dhf/libredvt/SRS.md).
 
 > **v0.2 in progress (DRAFT).** Association negotiation and DICOM TLS tests
-> are built (card DVT-0.2/3); DICOMweb QIDO-RS, WADO-RS and STOW-RS follow.
+> (card DVT-0.2/3) and DICOMweb QIDO-RS, WADO-RS and STOW-RS tests (card
+> DVT-0.2/4) are built.
 > See the [v0.2 plan](../../docs/dhf/libredvt/v0.2-plan.md). The v0.2
 > functions are not released for use until the v0.2 tool validation is
 > approved. The sections below describe v0.1 unless they say v0.2.
@@ -80,9 +81,8 @@ refused (exit 2).
 
 **v0.2 in progress (DRAFT).** Plans may already contain the v0.2 step types
 `associate`, `tls_reject`, `qido`, `wado` and `stow`; they are checked
-strictly and against the target's protocol. `qido`, `wado` and `stow` are
-not built yet and fail without sending anything; they run only against
-`lab` targets. Configured secrets never appear in reports, stored runs or
+strictly and against the target's protocol. `qido`, `wado` and `stow` run
+only against `lab` targets. Configured secrets never appear in reports, stored runs or
 process arguments; if one is found in any output it is replaced by
 `[REDACTED]` and the run fails.
 
@@ -125,6 +125,49 @@ handshake. A `move` to a TLS target needs `LIBRE_DVT_SCP_TLS_CERT` and
 target's client certificate unless the target sets
 `move_client_cert: optional`. Certificate revocation (CRL/OCSP) is not
 checked.
+
+### DICOMweb tests (v0.2, DRAFT)
+
+```yaml
+# targets.yaml (run -targets targets.yaml)
+targets:
+  - name: vendor-web-lab
+    class: lab                     # qido, wado and stow run only against lab targets
+    protocol: dicomweb
+    base_url: https://pacs.lab.example:8443/dicom-web
+    tls: {ca_file: /pki/ca.crt}
+    auth: {type: bearer, token_file: /run/secrets/token}   # optional
+```
+
+```yaml
+name: Vendor DICOMweb audit
+target: vendor-web-lab
+timeout: 60s
+steps:
+  - {id: plaintext-refused, type: tls_reject, mode: plaintext}
+  - {id: stow, type: stow, files: [fixtures/*.dcm], verify_retrieve: true}
+  - {id: qido-studies, type: qido, level: studies, from_store: true,
+     require_attributes: [StudyInstanceUID, PatientID, StudyDate]}
+  - {id: qido-paged, type: qido, level: studies, limit: 2, expect_uids: ["1.2.3", "1.2.4", "1.2.5"]}
+  - {id: wado, type: wado, from_store: true, compare_pixels: true}
+  - {id: wado-meta, type: wado, level: study, study: "1.2.3", files: [fixtures/a.dcm],
+     metadata: true, compare_attributes: [PatientID, Modality]}
+```
+
+| Step | Passes when |
+|---|---|
+| `qido` | every search answers 200 (or 204 for no match) with `application/dicom+json`, the body is a DICOM JSON array, every object has the level's unique key and matches the query, the expected UIDs are all there (or none, with `expect_none`) and every `require_attributes` key is present. With `limit`, LibreDVT pages with `offset` until a short page; a page larger than `limit` fails |
+| `wado` | the response is `multipart/related` with the boundary from its Content-Type and a closing delimiter, every part is `application/dicom` and a DICOM Part 10 object in the asked transfer syntax (header and file agree), exactly the expected instances come back (none missing, extra or twice) with the right Study, Series and SOP Instance UIDs, and, with `compare_pixels`, pixel data is byte-identical to the sent file. With `metadata`, the DICOM JSON metadata holds every expected instance and the compared attributes match the files |
+| `stow` | every sent instance is in the Referenced SOP Sequence with its SOP Class, none is in the Failed SOP Sequence, and no unexpected instance is referenced. A failed instance fails the step even when the HTTP status is 200. Instance warnings fail unless `allow_warnings: true`. `verify_retrieve` reads each instance back and compares its pixel data |
+
+The worker uses Python's standard library: one request at a time over the
+same TLS settings as DIMSE (TLS 1.2+, chain and host name checked, no
+bypass), redirects never followed, and size limits (`limits:` in the plan)
+that fail the step instead of truncating. The bearer token is read from its
+file, sent only to the base URL's own origin (over `http://` only to a
+loopback host) and recorded as `[REDACTED]` everywhere. Retrieve URLs from
+STOW responses are recorded but never requested. `tls_reject` works on
+DICOMweb targets too.
 
 ## Test plans
 

@@ -160,7 +160,9 @@ origin over TLS (or loopback HTTP).
 - DICOMweb client in the worker on the standard library (`http.client`
   over the same TLS context factory). One request per connection, the next
   only after the previous one closed: a target never sees parallel traffic
-  (DVT-SRS-155; the Go test server measured at most 1 open connection).
+  (DVT-SRS-155; the Go test server measured at most 1 request in progress,
+  counted before any response byte is written; its own test shows parallel
+  requests are counted as parallel).
 - Redirects are never followed. A 3xx fails the step with its `Location`
   recorded; a 307 on a STOW is not re-sent; the other origin receives
   nothing (DVT-SRS-151).
