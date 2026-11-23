@@ -14,6 +14,42 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **LibreDVT v0.2 web UI, command line, reports and example plans for the
+  new protocols (issue #34, card DVT-0.2/5, DRAFT for approval).**
+  - Targets page: separate forms for DIMSE targets (with an optional DICOM
+    TLS block: minimum version, CA file, server name, client certificate
+    and key, the target's certificate on C-MOVE) and DICOMweb targets (base
+    URL, bearer token from a file, TLS settings). The forms use the target
+    file schema: an extra field such as an inline `token` refuses the form.
+    Secrets are file paths only and must lie under `secrets_dir` when the
+    target is saved. The table shows protocol, endpoint, TLS settings and
+    authentication by path, and checks the referenced files; it never shows
+    their contents. Any TLS field turns TLS on.
+  - Reports (HTML, JUnit, JSON): the target's protocol, endpoint and class;
+    an *Endpoint identity* section (TLS versions and ciphers, server
+    certificate subject, issuer, names, validity with days left, SHA-256,
+    verification, Implementation Class UID and Version Name); per step every
+    exchange, TLS details, association results per presentation context,
+    HTTP headers (`Authorization` always `[REDACTED]`), body facts,
+    multipart parts, per-instance results and every assertion. JUnit
+    carries the same facts as properties and every assertion in
+    `system-out`. Runs stored by v0.1 load and render as before.
+  - `libredvt run` prints the target and the endpoint identity. The web UI
+    and the command line build their runner the same way; tests run one
+    plan and target through both and compare the results.
+  - Bundled example plans: *LibreDCM smoke (DIMSE + TLS)*, *Generic DICOM
+    TLS audit* (sends no images) and *Generic DICOMweb audit* (keeps no
+    response-body excerpts in its evidence). The plans page lists each
+    bundled plan's step types.
+  - Fixed: the web UI failed to start when a report had already been
+    rendered in the same process (html/template cannot clone a used
+    template set); found by the parity test.
+  - Tested: unit tests, real-engine parity tests against the Go DIMSE TLS
+    peer and DICOMweb TLS server, the three bundled plans through the web UI
+    against LibreDCM (TLS) and Orthanc + DICOMweb (HTTPS), all passing with
+    no token in any artefact, screenshots in light and dark mode checked by
+    eye, mutation check; see
+    `docs/dhf/libredvt/evidence/v0.2-ui/`.
 - **LibreDVT v0.2 DICOMweb QIDO-RS, WADO-RS and STOW-RS tests (issue #34,
   card DVT-0.2/4, DRAFT for approval).**
   - New `qido` step: searches at study, series or instance level with
