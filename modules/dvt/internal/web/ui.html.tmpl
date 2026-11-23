@@ -89,7 +89,7 @@
 <p class="muted">Systems under test. Store and move steps (DIMSE) and all QIDO-RS, WADO-RS and STOW-RS steps (DICOMweb) only run against targets of class <b>lab</b>; anything else, including a target without a class, is treated as <b>production</b> and protected.</p>
 {{if .Data.Targets}}
 <div class="scroll"><table><tr><th>Name</th><th>Protocol</th><th>Endpoint</th><th>Security</th><th>Class</th><th>Referenced files</th><th></th></tr>
-{{range .Data.Targets}}<tr><td class="mono">{{.Name}}</td><td>{{.Proto}}</td>
+{{range .Data.Targets}}<tr><td class="mono nowrap">{{.Name}}</td><td>{{.Proto}}</td>
 <td class="mono">{{.Endpoint}}{{if eq .Proto "dimse"}}<br>called {{.CalledAET}}, calling {{.CallingAET}}{{end}}</td>
 <td>{{if .HasTLS}}<span class="badge pass">TLS{{with .TLS}} {{.MinVersion}}+{{end}}</span>{{else}}<span class="badge warn">no TLS</span>{{end}}
 {{with .TLS}}{{if .CAFile}}<div class="hint">CA <span class="mono">{{.CAFile}}</span></div>{{else}}<div class="hint">CA: image trust store</div>{{end}}
@@ -101,7 +101,7 @@
 <td>{{if eq .Files "ok"}}<span class="badge pass">ok</span>{{else if .Files}}<span class="sev-error">{{.Files}}</span>{{else}}<span class="muted">none</span>{{end}}</td>
 <td><form class="inline" method="post" action="/targets/{{.Name}}/delete">{{template "csrf" $csrf}}<button class="secondary" type="submit">Delete</button></form></td></tr>{{end}}
 </table></div>{{else}}<p class="muted">No targets yet.</p>{{end}}
-<div class="notice"><b>Secrets by reference.</b> Bearer tokens, private keys and CA certificates are never typed into this page. Put them in files {{if $sd}}under <span class="mono">{{$sd}}</span> (setting <span class="mono">secrets_dir</span>){{else}}on the LibreDVT host{{end}} and enter the file paths. LibreDVT shows the paths, never the contents, and keeps the values out of every report. There is no setting that turns certificate or host-name checks off.</div>
+<div class="notice spaced"><b>Secrets by reference.</b> Bearer tokens, private keys and CA certificates are never typed into this page. Put them in files {{if $sd}}under <span class="mono">{{$sd}}</span> (setting <span class="mono">secrets_dir</span>){{else}}on the LibreDVT host{{end}} and enter the file paths. LibreDVT shows the paths, never the contents, and keeps the values out of every report. There is no setting that turns certificate or host-name checks off.</div>
 <h2>Add or replace a DIMSE target</h2>
 <div class="card">
 <form method="post" action="/targets">

@@ -60,3 +60,5 @@ fieldset { border: 1px solid var(--line); border-radius: 6px; margin: .8rem 0; p
 legend { font-weight: 600; color: var(--ink-muted); padding: 0 .3rem; }
 label.check { display: flex; gap: .5rem; align-items: center; font-weight: 600; }
 .hint { color: var(--ink-muted); font-size: .85rem; margin: .2rem 0 0; }
+td.nowrap, .nowrap { white-space: nowrap; word-break: normal; }
+.spaced { margin-top: 1rem; }

@@ -116,7 +116,7 @@
   <div class="scroll"><table>
     <tr><th>#</th><th>Protocol</th><th>Operation</th><th>Endpoint</th><th>Outcome</th><th>Result</th><th>Time</th></tr>
     {{range $e.Exchanges}}<tr><td>{{.Seq}}</td><td>{{.Protocol}}</td><td class="mono">{{.Operation}}</td><td class="mono wrap">{{.Endpoint}}</td>
-    <td><span class="badge {{if eq .Outcome "error"}}fail{{else}}muted{{end}}">{{.Outcome}}</span></td><td>{{xresult .}}</td><td>{{.DurationMS}} ms</td></tr>{{end}}
+    <td><span class="badge {{if eq .Outcome "error"}}fail{{else}}muted{{end}}">{{.Outcome}}</span></td><td>{{xresult .}}</td><td class="nowrap">{{.DurationMS}} ms</td></tr>{{end}}
   </table></div>
   {{range $e.Exchanges}}{{$x := .}}
   {{with .TLS}}

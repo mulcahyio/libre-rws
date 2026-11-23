@@ -366,6 +366,7 @@ func TestReportsShowFailuresTargetAndIdentity(t *testing.T) {
 		`<span class="badge fail">failure</span> 0xA700 out of resources`, `<span class="badge warn">warning</span> 0xB000 coercion`,
 		"Authorization: Bearer [REDACTED]", "{&#34;&lt;b&gt;&#34;:1}", "<b>tls</b>: certificate verify failed",
 		"result 1, source 1, reason 7", `<span class="badge fail">fail</span>`, "0 passed, 1 warned, 1 failed",
+		`<td class="mono">stow.status</td><td class="mono wrap"></td><td class="wrap">200</td><td class="wrap">409</td>`,
 	} {
 		if !strings.Contains(s, want) {
 			t.Errorf("HTML lacks %q", want)
