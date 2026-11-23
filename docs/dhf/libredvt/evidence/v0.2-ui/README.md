@@ -14,6 +14,7 @@ mutation run was at `a893780` (before the report tests were strengthened).
 | `01a-mutation-check-first-run.log` | first run: 19 of 21 killed, 1 survived (U4), 1 did not compile (W4); see below |
 | `02-engine-tests.log` | `docker build -f deploy/docker/Dockerfile.dvt --target test .`: unit and real-engine tests (`-tags engines`), 121 top-level tests passed, 0 failed, exit 0 |
 | `03-ui-demo.log` | the demo stack (`scripts/ui-demo.sh`), the web-form setup and the three bundled plans (`scripts/ui-setup.sh`), the token scan, and the screenshot run |
+| `04-local-gate.log` | the full local gate at `9cee795`: fmt, vet (plain, official, engines), race tests, official tests, third-party tests, gosec 0 issues, govulncheck 0 affecting, trace/needs for all modules, mdlinks, dcs, QMS tool tests, gitleaks: 0 failing steps |
 | `runs/` | per bundled plan: the run JSON, HTML report, JUnit XML and plan as downloaded from the web UI; the targets page as served |
 | `screenshots/` | 11 pages in light and dark (`scripts/e2e/dvt-screenshots.mjs`) |
 | `scripts/` | mutation script, demo stack and setup scripts |
