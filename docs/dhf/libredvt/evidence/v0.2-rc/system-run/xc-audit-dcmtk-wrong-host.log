@@ -1,0 +1,7 @@
+target: dcmtk-wrong-host (dcmtk-wrong:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)
+failed   negotiate-verification   associate tls error: TLS-HANDSHAKE: certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62); TLS: not established (certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62))
+failed   echo-over-tls            echo      TLS error: certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)
+passed   plaintext-refused        tls_reject 1 assertion(s) checked; verdict pass
+passed   tls10-refused            tls_reject 1 assertion(s) checked; verdict pass
+passed   tls11-refused            tls_reject 1 assertion(s) checked; verdict pass
+verdict: fail (Generic DICOM TLS audit)

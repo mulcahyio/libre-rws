@@ -1,0 +1,3323 @@
+{
+  "id": "20261123-043719-9c38eacf",
+  "plan": "Generic DICOMweb audit",
+  "plan_sha256": "e86593f1a9c756171d9a5511c5dd3659c7dc4717dce34712c84e0b83183b843b",
+  "target": "dicomweb-lab",
+  "target_desc": "dicomweb-lab (dicomweb https://orthanc-https:8042/dicom-web, auth bearer, class lab)",
+  "target_info": {
+    "name": "dicomweb-lab",
+    "class": "lab",
+    "protocol": "dicomweb",
+    "endpoint": "https://orthanc-https:8042/dicom-web"
+  },
+  "started": "2026-11-23T04:37:19.60913655Z",
+  "finished": "2026-11-23T04:37:22.876917552Z",
+  "steps": [
+    {
+      "id": "plaintext-refused",
+      "type": "tls_reject",
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-23T04:37:20.037271679Z",
+      "duration": 123044781,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dicomweb-lab",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "https://orthanc-https:8042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies?limit=1",
+            "started": "2026-11-23T04:37:20.154Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies?limit=1",
+              "status": 0
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "plaintext",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "connection_closed: the target closed the connection without answering"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "tls11-refused",
+      "type": "tls_reject",
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-23T04:37:20.160395332Z",
+      "duration": 126196248,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dicomweb-lab",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "https://orthanc-https:8042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "https://orthanc-https:8042/dicom-web",
+            "started": "2026-11-23T04:37:20.28Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "error": {
+              "kind": "tls",
+              "message": "the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+            },
+            "tls": {
+              "version": "",
+              "cipher": "",
+              "verified": false,
+              "client_cert_sent": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "TLS 1.1 only",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "handshake_alert: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "stow-samples",
+      "type": "stow",
+      "status": "passed",
+      "messages": [
+        "33 assertion(s) checked; verdict pass",
+        "6 of 6 files stored and referenced by the target",
+        "TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject \"O=LibreDVT RC verification,CN=orthanc-https\", issuer \"O=LibreDVT RC verification,CN=dvt06-test-ca\", SAN DNS [orthanc-https], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a; client certificate offered: false"
+      ],
+      "started": "2026-11-23T04:37:20.286617602Z",
+      "duration": 1026947529,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dicomweb-lab",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "https://orthanc-https:8042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "http",
+            "operation": "POST",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies",
+            "started": "2026-11-23T04:37:20.751Z",
+            "duration_ms": 26,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "POST",
+              "url": "https://orthanc-https:8042/dicom-web/studies",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Content-Length": [
+                  "57121"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=libredvt-9a284dc8b11e4d1a9b917f62d1f83e58"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "2548"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 2548,
+                "sha256": "edcee78bf13a381af85943da8b39020262ce3967e633048d244ad41469b3a428"
+              }
+            }
+          },
+          {
+            "seq": 2,
+            "protocol": "http",
+            "operation": "POST",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies",
+            "started": "2026-11-23T04:37:20.778Z",
+            "duration_ms": 9,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "POST",
+              "url": "https://orthanc-https:8042/dicom-web/studies",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Content-Length": [
+                  "8839"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=libredvt-704cbf0593964c5fa0b8edc9da3837e8"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1527"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1527,
+                "sha256": "3b1e4f1c107e1926dcc1c6ae7876adc54869fe4597f9a2275a21da3ebc4f9f73"
+              }
+            }
+          },
+          {
+            "seq": 3,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322/series/1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322/instances/1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "started": "2026-11-23T04:37:20.938Z",
+            "duration_ms": 11,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322/series/1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322/instances/1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+              "request_headers": {
+                "Accept": [
+                  "multipart/related; type=\"application/dicom\"; transfer-syntax=*"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "39435"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=40294f89-efb6-465b-b0ac-7b9033e7af0c-ef1a78c6-7467-4a33-86e8-b6f7d3c47"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "multipart/related; type=\"application/dicom\"; boundary=40294f89-efb6-465b-b0ac-7b9033e7af0c-ef1a78c6-7467-4a33-86e8-b6f7d3c47",
+                "size": 39435,
+                "sha256": "ed8c22a7d2d6b026a6553dafb727af879ecca1de56513de9d9a221dd2440f803"
+              },
+              "parts": [
+                {
+                  "index": 1,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.1",
+                  "sop_instance_uid": "1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+                  "size": 39206,
+                  "sha256": "3dd31e5cc835b3f2cdd46c9da1982f59251e78518fefa8163d914631c66437d6"
+                }
+              ]
+            }
+          },
+          {
+            "seq": 4,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies/1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996/series/1.2.276.0.7230010.3.1.3.296485376.1.1521713419.1802493/instances/1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+            "started": "2026-11-23T04:37:21.038Z",
+            "duration_ms": 5,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies/1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996/series/1.2.276.0.7230010.3.1.3.296485376.1.1521713419.1802493/instances/1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+              "request_headers": {
+                "Accept": [
+                  "multipart/related; type=\"application/dicom\"; transfer-syntax=*"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "3818"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=420116bc-c4a2-4d1b-b4be-5b0d59b9c413-4860d2b9-f104-48de-b31e-5de22b161"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "multipart/related; type=\"application/dicom\"; boundary=420116bc-c4a2-4d1b-b4be-5b0d59b9c413-4860d2b9-f104-48de-b31e-5de22b161",
+                "size": 3818,
+                "sha256": "791b15c6f01b29571681e06ef1c62a511ef033a3f24a53162b375a62b0db4bb4"
+              },
+              "parts": [
+                {
+                  "index": 1,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.4.91",
+                  "sop_instance_uid": "1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+                  "size": 3590,
+                  "sha256": "8d5d503fd46b9a59c628762d71d7391ea1a2a5fd8d339ac82ef9e281a15ef65f"
+                }
+              ]
+            }
+          },
+          {
+            "seq": 5,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/series/1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457/instances/1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+            "started": "2026-11-23T04:37:21.044Z",
+            "duration_ms": 4,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/series/1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457/instances/1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+              "request_headers": {
+                "Accept": [
+                  "multipart/related; type=\"application/dicom\"; transfer-syntax=*"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "6388"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=70f27285-62b4-45d2-9d8e-4d374bd511e9-2b57513a-126b-4d89-ba06-c4cfedf28"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "multipart/related; type=\"application/dicom\"; boundary=70f27285-62b4-45d2-9d8e-4d374bd511e9-2b57513a-126b-4d89-ba06-c4cfedf28",
+                "size": 6388,
+                "sha256": "c4807c74d2cbaced7cd106cf3ad6384d3cde4330b04fc885f335cdf55107198c"
+              },
+              "parts": [
+                {
+                  "index": 1,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.4.80",
+                  "sop_instance_uid": "1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+                  "size": 6160,
+                  "sha256": "662d134797a2efdb5fff52a4d7e4ab199a579a47ff8535d56037f42aa6028de7"
+                }
+              ]
+            }
+          },
+          {
+            "seq": 6,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/series/1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457/instances/1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+            "started": "2026-11-23T04:37:21.048Z",
+            "duration_ms": 3,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/series/1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457/instances/1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+              "request_headers": {
+                "Accept": [
+                  "multipart/related; type=\"application/dicom\"; transfer-syntax=*"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "8018"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=a5aa62f6-c904-4018-aab3-4c3806b10c0d-154b5f86-964b-44fb-9503-e96140fd3"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "multipart/related; type=\"application/dicom\"; boundary=a5aa62f6-c904-4018-aab3-4c3806b10c0d-154b5f86-964b-44fb-9503-e96140fd3",
+                "size": 8018,
+                "sha256": "8d47f0f7616b5a9abd154c6dc99dc3f2b15cdc3e5e491cca7ecf4c82f667991b"
+              },
+              "parts": [
+                {
+                  "index": 1,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.5",
+                  "sop_instance_uid": "1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+                  "size": 7790,
+                  "sha256": "2e5cb60878dc0acc494298ccdad28fce2cf14c51096e5d8cedab40248ea02e6c"
+                }
+              ]
+            }
+          },
+          {
+            "seq": 7,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+            "started": "2026-11-23T04:37:21.052Z",
+            "duration_ms": 3,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+              "request_headers": {
+                "Accept": [
+                  "multipart/related; type=\"application/dicom\"; transfer-syntax=*"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "3652"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=be4cec8c-52c8-4f61-99e0-29436be3a943-6068f7d0-a86d-4f25-a40f-3a1f3cabf"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "multipart/related; type=\"application/dicom\"; boundary=be4cec8c-52c8-4f61-99e0-29436be3a943-6068f7d0-a86d-4f25-a40f-3a1f3cabf",
+                "size": 3652,
+                "sha256": "10834b0e8571c1cd12a5955ddddc14e2b604d884ca1be8fbf699c3333d84b5e3"
+              },
+              "parts": [
+                {
+                  "index": 1,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.4.50",
+                  "sop_instance_uid": "1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+                  "size": 3424,
+                  "sha256": "6548a45a0800626cf70a59766146ff3b790a393ee0c9fca359f92c70f370b382"
+                }
+              ]
+            }
+          },
+          {
+            "seq": 8,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "started": "2026-11-23T04:37:21.057Z",
+            "duration_ms": 3,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+              "request_headers": {
+                "Accept": [
+                  "multipart/related; type=\"application/dicom\"; transfer-syntax=*"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "5432"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=8bb6a369-e9ae-4024-bd60-24ba0452c4d5-2d6981e7-8abe-4423-833d-82ddaadcd"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "multipart/related; type=\"application/dicom\"; boundary=8bb6a369-e9ae-4024-bd60-24ba0452c4d5-2d6981e7-8abe-4423-833d-82ddaadcd",
+                "size": 5432,
+                "sha256": "175fea11b3e37725016b4e74379c4ae72fd25b8350d20e7f0d24343a27e12127"
+              },
+              "parts": [
+                {
+                  "index": 1,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.4.70",
+                  "sop_instance_uid": "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+                  "size": 5204,
+                  "sha256": "a492ed4a120c51a076126a6021e8cab1acb0172da3d42c62843b2a34a8ddd252"
+                }
+              ]
+            }
+          }
+        ],
+        "instances": [
+          {
+            "sop_instance_uid": "1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.2",
+            "transfer_syntax": "1.2.840.10008.1.2.1",
+            "file": "fixtures/ct_explicit_le.dcm",
+            "size": 39206,
+            "sha256": "3dd31e5cc835b3f2cdd46c9da1982f59251e78518fefa8163d914631c66437d6",
+            "remote_result": "success",
+            "retrieve_url": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322/series/1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322/instances/1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "pixel_sha256_sent": "7a481f6ffff833aef4d8bd54819bd8f472aaa7232090208e056c90eacf079926",
+            "pixel_sha256_received": "7a481f6ffff833aef4d8bd54819bd8f472aaa7232090208e056c90eacf079926"
+          },
+          {
+            "sop_instance_uid": "1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.2",
+            "transfer_syntax": "1.2.840.10008.1.2.4.91",
+            "file": "fixtures/ct_j2k.dcm",
+            "size": 3590,
+            "sha256": "8d5d503fd46b9a59c628762d71d7391ea1a2a5fd8d339ac82ef9e281a15ef65f",
+            "remote_result": "success",
+            "retrieve_url": "https://orthanc-https:8042/dicom-web/studies/1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996/series/1.2.276.0.7230010.3.1.3.296485376.1.1521713419.1802493/instances/1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+            "pixel_sha256_sent": "68aee8e22a687912dc27c2958f233ea32f7f926a81c29ac53385bd8034045dd5",
+            "pixel_sha256_received": "68aee8e22a687912dc27c2958f233ea32f7f926a81c29ac53385bd8034045dd5"
+          },
+          {
+            "sop_instance_uid": "1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.4",
+            "transfer_syntax": "1.2.840.10008.1.2.4.80",
+            "file": "fixtures/mr_jpeg_ls.dcm",
+            "size": 6160,
+            "sha256": "662d134797a2efdb5fff52a4d7e4ab199a579a47ff8535d56037f42aa6028de7",
+            "remote_result": "success",
+            "retrieve_url": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/series/1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457/instances/1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+            "pixel_sha256_sent": "72a751d89e33873b3c3df8a480dbcd712a6b3954e268fa35a0173d7ca5c39d76",
+            "pixel_sha256_received": "72a751d89e33873b3c3df8a480dbcd712a6b3954e268fa35a0173d7ca5c39d76"
+          },
+          {
+            "sop_instance_uid": "1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.4",
+            "transfer_syntax": "1.2.840.10008.1.2.5",
+            "file": "fixtures/mr_rle.dcm",
+            "size": 7790,
+            "sha256": "2e5cb60878dc0acc494298ccdad28fce2cf14c51096e5d8cedab40248ea02e6c",
+            "remote_result": "success",
+            "retrieve_url": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/series/1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457/instances/1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+            "pixel_sha256_sent": "27629e20b89cb49ee78393d4951ed360dbc5612461c683341cfa32063952abd6",
+            "pixel_sha256_received": "27629e20b89cb49ee78393d4951ed360dbc5612461c683341cfa32063952abd6"
+          },
+          {
+            "sop_instance_uid": "1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.7",
+            "transfer_syntax": "1.2.840.10008.1.2.4.50",
+            "file": "fixtures/sc_jpeg_baseline.dcm",
+            "size": 3424,
+            "sha256": "6548a45a0800626cf70a59766146ff3b790a393ee0c9fca359f92c70f370b382",
+            "remote_result": "success",
+            "retrieve_url": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+            "pixel_sha256_sent": "f58bd091427b02f28175d7e48b82c864b43d6fe7447055326e9d608660a15b31",
+            "pixel_sha256_received": "f58bd091427b02f28175d7e48b82c864b43d6fe7447055326e9d608660a15b31"
+          },
+          {
+            "sop_instance_uid": "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.7",
+            "transfer_syntax": "1.2.840.10008.1.2.4.70",
+            "file": "fixtures/sc_jpeg_lossless.dcm",
+            "size": 5204,
+            "sha256": "a492ed4a120c51a076126a6021e8cab1acb0172da3d42c62843b2a34a8ddd252",
+            "remote_result": "success",
+            "retrieve_url": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "pixel_sha256_sent": "169629625bae012550b474e64a8d4d8232710177c01ecaccf3fe4f987200afdf",
+            "pixel_sha256_received": "169629625bae012550b474e64a8d4d8232710177c01ecaccf3fe4f987200afdf"
+          },
+          {
+            "sop_instance_uid": "1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.2",
+            "transfer_syntax": "1.2.840.10008.1.2.1",
+            "file": "fixtures/ct_explicit_le.dcm",
+            "size": 39206,
+            "sha256": "3dd31e5cc835b3f2cdd46c9da1982f59251e78518fefa8163d914631c66437d6",
+            "remote_result": "success",
+            "pixel_sha256_sent": "7a481f6ffff833aef4d8bd54819bd8f472aaa7232090208e056c90eacf079926",
+            "pixel_sha256_received": "7a481f6ffff833aef4d8bd54819bd8f472aaa7232090208e056c90eacf079926"
+          },
+          {
+            "sop_instance_uid": "1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.2",
+            "transfer_syntax": "1.2.840.10008.1.2.4.91",
+            "file": "fixtures/ct_j2k.dcm",
+            "size": 3590,
+            "sha256": "8d5d503fd46b9a59c628762d71d7391ea1a2a5fd8d339ac82ef9e281a15ef65f",
+            "remote_result": "success",
+            "pixel_sha256_sent": "68aee8e22a687912dc27c2958f233ea32f7f926a81c29ac53385bd8034045dd5",
+            "pixel_sha256_received": "68aee8e22a687912dc27c2958f233ea32f7f926a81c29ac53385bd8034045dd5"
+          },
+          {
+            "sop_instance_uid": "1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.4",
+            "transfer_syntax": "1.2.840.10008.1.2.4.80",
+            "file": "fixtures/mr_jpeg_ls.dcm",
+            "size": 6160,
+            "sha256": "662d134797a2efdb5fff52a4d7e4ab199a579a47ff8535d56037f42aa6028de7",
+            "remote_result": "success",
+            "pixel_sha256_sent": "72a751d89e33873b3c3df8a480dbcd712a6b3954e268fa35a0173d7ca5c39d76",
+            "pixel_sha256_received": "72a751d89e33873b3c3df8a480dbcd712a6b3954e268fa35a0173d7ca5c39d76"
+          },
+          {
+            "sop_instance_uid": "1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.4",
+            "transfer_syntax": "1.2.840.10008.1.2.5",
+            "file": "fixtures/mr_rle.dcm",
+            "size": 7790,
+            "sha256": "2e5cb60878dc0acc494298ccdad28fce2cf14c51096e5d8cedab40248ea02e6c",
+            "remote_result": "success",
+            "pixel_sha256_sent": "27629e20b89cb49ee78393d4951ed360dbc5612461c683341cfa32063952abd6",
+            "pixel_sha256_received": "27629e20b89cb49ee78393d4951ed360dbc5612461c683341cfa32063952abd6"
+          },
+          {
+            "sop_instance_uid": "1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.7",
+            "transfer_syntax": "1.2.840.10008.1.2.4.50",
+            "file": "fixtures/sc_jpeg_baseline.dcm",
+            "size": 3424,
+            "sha256": "6548a45a0800626cf70a59766146ff3b790a393ee0c9fca359f92c70f370b382",
+            "remote_result": "success",
+            "pixel_sha256_sent": "f58bd091427b02f28175d7e48b82c864b43d6fe7447055326e9d608660a15b31",
+            "pixel_sha256_received": "f58bd091427b02f28175d7e48b82c864b43d6fe7447055326e9d608660a15b31"
+          },
+          {
+            "sop_instance_uid": "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.7",
+            "transfer_syntax": "1.2.840.10008.1.2.4.70",
+            "file": "fixtures/sc_jpeg_lossless.dcm",
+            "size": 5204,
+            "sha256": "a492ed4a120c51a076126a6021e8cab1acb0172da3d42c62843b2a34a8ddd252",
+            "remote_result": "success",
+            "pixel_sha256_sent": "169629625bae012550b474e64a8d4d8232710177c01ecaccf3fe4f987200afdf",
+            "pixel_sha256_received": "169629625bae012550b474e64a8d4d8232710177c01ecaccf3fe4f987200afdf"
+          }
+        ],
+        "assertions": [
+          {
+            "id": "stow.instance.referenced",
+            "subject": "1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "expected": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.2",
+            "actual": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.2",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.instance.referenced",
+            "subject": "1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+            "expected": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.2",
+            "actual": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.2",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.instance.referenced",
+            "subject": "1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+            "expected": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.4",
+            "actual": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.4",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.instance.referenced",
+            "subject": "1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+            "expected": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.4",
+            "actual": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.4",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.instance.referenced",
+            "subject": "1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+            "expected": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.7",
+            "actual": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.7",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.instance.referenced",
+            "subject": "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "expected": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.7",
+            "actual": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.7",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322/series/1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322/instances/1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322/series/1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322/instances/1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "expected": "multipart/related",
+            "actual": "multipart/related",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996/series/1.2.276.0.7230010.3.1.3.296485376.1.1521713419.1802493/instances/1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996/series/1.2.276.0.7230010.3.1.3.296485376.1.1521713419.1802493/instances/1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+            "expected": "multipart/related",
+            "actual": "multipart/related",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/series/1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457/instances/1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/series/1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457/instances/1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+            "expected": "multipart/related",
+            "actual": "multipart/related",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/series/1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457/instances/1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/series/1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457/instances/1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+            "expected": "multipart/related",
+            "actual": "multipart/related",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+            "expected": "multipart/related",
+            "actual": "multipart/related",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "expected": "multipart/related",
+            "actual": "multipart/related",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.part.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322/series/1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322/instances/1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322 part 1",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.part.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996/series/1.2.276.0.7230010.3.1.3.296485376.1.1521713419.1802493/instances/1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246 part 1",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.part.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/series/1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457/instances/1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265 part 1",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.part.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/series/1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457/instances/1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457 part 1",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.part.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194 part 1",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.part.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116 part 1",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.uid.set",
+            "subject": "retrieved instances",
+            "expected": "exactly the 6 expected",
+            "actual": "6 received",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.pixels",
+            "subject": "fixtures/ct_explicit_le.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.pixels",
+            "subject": "fixtures/ct_j2k.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.pixels",
+            "subject": "fixtures/mr_jpeg_ls.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.pixels",
+            "subject": "fixtures/mr_rle.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.pixels",
+            "subject": "fixtures/sc_jpeg_baseline.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.verify.pixels",
+            "subject": "fixtures/sc_jpeg_lossless.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "qido-studies",
+      "type": "qido",
+      "status": "passed",
+      "messages": [
+        "18 assertion(s) checked; verdict pass",
+        "4 search request(s), 4 object(s) returned at level studies",
+        "TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject \"O=LibreDVT RC verification,CN=orthanc-https\", issuer \"O=LibreDVT RC verification,CN=dvt06-test-ca\", SAN DNS [orthanc-https], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a; client certificate offered: false"
+      ],
+      "started": "2026-11-23T04:37:21.31367285Z",
+      "duration": 262087773,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dicomweb-lab",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "https://orthanc-https:8042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996",
+            "started": "2026-11-23T04:37:21.539Z",
+            "duration_ms": 10,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "982"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 982,
+                "sha256": "471807b0cd74d2d791b94f8f6352b1a031a89c1f25d9cf502d8ede0a31866ecc"
+              }
+            }
+          },
+          {
+            "seq": 2,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+            "started": "2026-11-23T04:37:21.55Z",
+            "duration_ms": 3,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1187"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1187,
+                "sha256": "f463547c66d394d402c20943e3e50eef4a770f914659f96112a5b3d3a648c54c"
+              }
+            }
+          },
+          {
+            "seq": 3,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+            "started": "2026-11-23T04:37:21.553Z",
+            "duration_ms": 3,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1161"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1161,
+                "sha256": "1efcde4289199485d073881787e12611e766f344735103f919dd150a190d2c7d"
+              }
+            }
+          },
+          {
+            "seq": 4,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.3.6.1.4.1.5962.1.2.4.20040826185059.5457",
+            "started": "2026-11-23T04:37:21.557Z",
+            "duration_ms": 3,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.3.6.1.4.1.5962.1.2.4.20040826185059.5457",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1159"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1159,
+                "sha256": "26c7397c52a76086647ba59f332207125b6df5bccd854963013303b1163c47ce"
+              }
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.3.6.1.4.1.5962.1.2.4.20040826185059.5457",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.3.6.1.4.1.5962.1.2.4.20040826185059.5457",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?0020000D=1.3.6.1.4.1.5962.1.2.4.20040826185059.5457",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.object.unique_key",
+            "subject": "studies",
+            "expected": "0020000D in every object",
+            "actual": "4 of 4",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.object.attribute",
+            "subject": "studies",
+            "expected": "StudyInstanceUID, PatientID, StudyDate in every object",
+            "actual": "4 of 4",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.3.6.1.4.1.5962.1.2.4.20040826185059.5457",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "qido-series",
+      "type": "qido",
+      "status": "passed",
+      "messages": [
+        "18 assertion(s) checked; verdict pass",
+        "4 search request(s), 4 object(s) returned at level series",
+        "TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject \"O=LibreDVT RC verification,CN=orthanc-https\", issuer \"O=LibreDVT RC verification,CN=dvt06-test-ca\", SAN DNS [orthanc-https], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a; client certificate offered: false"
+      ],
+      "started": "2026-11-23T04:37:21.575812598Z",
+      "duration": 266854446,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dicomweb-lab",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "https://orthanc-https:8042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/series?0020000E=1.2.276.0.7230010.3.1.3.296485376.1.1521713419.1802493",
+            "started": "2026-11-23T04:37:21.808Z",
+            "duration_ms": 10,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/series?0020000E=1.2.276.0.7230010.3.1.3.296485376.1.1521713419.1802493",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1237"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1237,
+                "sha256": "eb4f4591f05fea7b2035ce77439b3928277b652f1a1bceab0de25cf1d9ccc604"
+              }
+            }
+          },
+          {
+            "seq": 2,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/series?0020000E=1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062",
+            "started": "2026-11-23T04:37:21.819Z",
+            "duration_ms": 3,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/series?0020000E=1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1387"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1387,
+                "sha256": "f6166d92d62bab8a7691d940dc13b8ff4d0f44a6735a13d18a8b2c6e7c3acc1c"
+              }
+            }
+          },
+          {
+            "seq": 3,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/series?0020000E=1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322",
+            "started": "2026-11-23T04:37:21.822Z",
+            "duration_ms": 4,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/series?0020000E=1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1323"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1323,
+                "sha256": "a3b29e614594daba1016bb93fd69a0af672a1234373b9bb64dcd4446ce817688"
+              }
+            }
+          },
+          {
+            "seq": 4,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/series?0020000E=1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457",
+            "started": "2026-11-23T04:37:21.826Z",
+            "duration_ms": 3,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/series?0020000E=1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1319"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1319,
+                "sha256": "789ab7c0d734c43c733da2e2a81c37069f8497f66b2cd52c4ab7798b7b057881"
+              }
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/series?0020000E=1.2.276.0.7230010.3.1.3.296485376.1.1521713419.1802493",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/series?0020000E=1.2.276.0.7230010.3.1.3.296485376.1.1521713419.1802493",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/series?0020000E=1.2.276.0.7230010.3.1.3.296485376.1.1521713419.1802493",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/series?0020000E=1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/series?0020000E=1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/series?0020000E=1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/series?0020000E=1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/series?0020000E=1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/series?0020000E=1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/series?0020000E=1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/series?0020000E=1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/series?0020000E=1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.object.unique_key",
+            "subject": "series",
+            "expected": "0020000E in every object",
+            "actual": "4 of 4",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.object.attribute",
+            "subject": "series",
+            "expected": "SeriesInstanceUID, Modality in every object",
+            "actual": "4 of 4",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.2.276.0.7230010.3.1.3.296485376.1.1521713419.1802493",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.3.6.1.4.1.5962.1.3.4.1.20040826185059.5457",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "qido-instances",
+      "type": "qido",
+      "status": "passed",
+      "messages": [
+        "26 assertion(s) checked; verdict pass",
+        "6 search request(s), 6 object(s) returned at level instances",
+        "TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject \"O=LibreDVT RC verification,CN=orthanc-https\", issuer \"O=LibreDVT RC verification,CN=dvt06-test-ca\", SAN DNS [orthanc-https], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a; client certificate offered: false"
+      ],
+      "started": "2026-11-23T04:37:21.842734121Z",
+      "duration": 277182963,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dicomweb-lab",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "https://orthanc-https:8042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+            "started": "2026-11-23T04:37:22.073Z",
+            "duration_ms": 10,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1924"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1924,
+                "sha256": "3913eb1217d896f0cce80eff025de5af843c9e563760980e3d1049af80ce6b5c"
+              }
+            }
+          },
+          {
+            "seq": 2,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+            "started": "2026-11-23T04:37:22.084Z",
+            "duration_ms": 4,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1794"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1794,
+                "sha256": "c5335ad59cb7fa4cc27a9655d970f687e69c8c71cc8ca01185d2d4f8863d0c43"
+              }
+            }
+          },
+          {
+            "seq": 3,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+            "started": "2026-11-23T04:37:22.089Z",
+            "duration_ms": 4,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1873"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1873,
+                "sha256": "acc46bb778b2f7a5cb7ac0ce50484faaabb1d41dd8f437c1546ad3384bfa874e"
+              }
+            }
+          },
+          {
+            "seq": 4,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "started": "2026-11-23T04:37:22.093Z",
+            "duration_ms": 3,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1942"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1942,
+                "sha256": "ad6e209271a0103099e1cb2d9f5c701151ea1b588a898a60ccbbb2fde43ac120"
+              }
+            }
+          },
+          {
+            "seq": 5,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "started": "2026-11-23T04:37:22.097Z",
+            "duration_ms": 4,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1845"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1845,
+                "sha256": "485886b01b9294bccbdafb4cdd3643614981bffa2454b6d1dc1de84cfdd54e02"
+              }
+            }
+          },
+          {
+            "seq": 6,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+            "started": "2026-11-23T04:37:22.101Z",
+            "duration_ms": 4,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1837"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1837,
+                "sha256": "0815d1d576ff30b9f5c82ffd0f40e00d3c5a2e0ab1a41cfa3e602c4d07f4916a"
+              }
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.status",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "https://orthanc-https:8042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.object.unique_key",
+            "subject": "instances",
+            "expected": "00080018 in every object",
+            "actual": "6 of 6",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.object.attribute",
+            "subject": "instances",
+            "expected": "SOPClassUID, SOPInstanceUID in every object",
+            "actual": "6 of 6",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "qido-no-match",
+      "type": "qido",
+      "status": "passed",
+      "messages": [
+        "2 assertion(s) checked; verdict pass",
+        "1 search request(s), 0 object(s) returned at level studies",
+        "TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject \"O=LibreDVT RC verification,CN=orthanc-https\", issuer \"O=LibreDVT RC verification,CN=dvt06-test-ca\", SAN DNS [orthanc-https], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a; client certificate offered: false"
+      ],
+      "started": "2026-11-23T04:37:22.120005084Z",
+      "duration": 254348073,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dicomweb-lab",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "https://orthanc-https:8042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT",
+            "started": "2026-11-23T04:37:22.35Z",
+            "duration_ms": 10,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "2"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 2,
+                "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+              }
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "qido.none",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT",
+            "expected": "204, or 200 with an empty JSON array",
+            "actual": "200, array, 0 object(s)",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "wado-and-compare-pixels",
+      "type": "wado",
+      "status": "passed",
+      "messages": [
+        "21 assertion(s) checked; verdict pass",
+        "TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject \"O=LibreDVT RC verification,CN=orthanc-https\", issuer \"O=LibreDVT RC verification,CN=dvt06-test-ca\", SAN DNS [orthanc-https], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a; client certificate offered: false"
+      ],
+      "started": "2026-11-23T04:37:22.37439375Z",
+      "duration": 502382023,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dicomweb-lab",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "https://orthanc-https:8042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies/1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996",
+            "started": "2026-11-23T04:37:22.512Z",
+            "duration_ms": 11,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies/1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996",
+              "request_headers": {
+                "Accept": [
+                  "multipart/related; type=\"application/dicom\"; transfer-syntax=*"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "3818"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=626d83f4-09de-435c-8684-c774015e55e5-8ac8312c-1f25-4563-a8ac-b8f91068c"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "multipart/related; type=\"application/dicom\"; boundary=626d83f4-09de-435c-8684-c774015e55e5-8ac8312c-1f25-4563-a8ac-b8f91068c",
+                "size": 3818,
+                "sha256": "5d55210e9e7605b0721fcec85a8c44c8132f768734a8555e6a99230dc99d8855"
+              },
+              "parts": [
+                {
+                  "index": 1,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.4.91",
+                  "sop_instance_uid": "1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+                  "size": 3590,
+                  "sha256": "8d5d503fd46b9a59c628762d71d7391ea1a2a5fd8d339ac82ef9e281a15ef65f"
+                }
+              ]
+            }
+          },
+          {
+            "seq": 2,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+            "started": "2026-11-23T04:37:22.612Z",
+            "duration_ms": 5,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+              "request_headers": {
+                "Accept": [
+                  "multipart/related; type=\"application/dicom\"; transfer-syntax=*"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "close"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=d5e75bd3-73c0-43ab-a6db-50f58abea10a-0c9a5b3b-c8a6-4560-b8fc-9f2439b44"
+                ]
+              },
+              "body": {
+                "content_type": "multipart/related; type=\"application/dicom\"; boundary=d5e75bd3-73c0-43ab-a6db-50f58abea10a-0c9a5b3b-c8a6-4560-b8fc-9f2439b44",
+                "size": 9008,
+                "sha256": "0bfe4f9a5ac5287e5fa57d88cefdba7ad536d64083a0177316c458aa37df4ac3"
+              },
+              "parts": [
+                {
+                  "index": 1,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.4.70",
+                  "sop_instance_uid": "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+                  "size": 5204,
+                  "sha256": "a492ed4a120c51a076126a6021e8cab1acb0172da3d42c62843b2a34a8ddd252"
+                },
+                {
+                  "index": 2,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.4.50",
+                  "sop_instance_uid": "1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+                  "size": 3424,
+                  "sha256": "6548a45a0800626cf70a59766146ff3b790a393ee0c9fca359f92c70f370b382"
+                }
+              ]
+            }
+          },
+          {
+            "seq": 3,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+            "started": "2026-11-23T04:37:22.618Z",
+            "duration_ms": 4,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+              "request_headers": {
+                "Accept": [
+                  "multipart/related; type=\"application/dicom\"; transfer-syntax=*"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "39435"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=e56af096-e9c6-4063-b680-74a027cb733a-16a297ae-118e-4e14-a527-170c1f1e0"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "multipart/related; type=\"application/dicom\"; boundary=e56af096-e9c6-4063-b680-74a027cb733a-16a297ae-118e-4e14-a527-170c1f1e0",
+                "size": 39435,
+                "sha256": "a46021c755a8874ccd09219f9e427cfff6c69e1f2d59b4c8e1f5b4d589e93d61"
+              },
+              "parts": [
+                {
+                  "index": 1,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.1",
+                  "sop_instance_uid": "1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+                  "size": 39206,
+                  "sha256": "3dd31e5cc835b3f2cdd46c9da1982f59251e78518fefa8163d914631c66437d6"
+                }
+              ]
+            }
+          },
+          {
+            "seq": 4,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457",
+            "started": "2026-11-23T04:37:22.623Z",
+            "duration_ms": 4,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_256_GCM_SHA384",
+              "verified": true,
+              "peer": {
+                "subject": "O=LibreDVT RC verification,CN=orthanc-https",
+                "issuer": "O=LibreDVT RC verification,CN=dvt06-test-ca",
+                "san_dns": [
+                  "orthanc-https"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "cdf05d779abb6ef1af32be195c5815e8adbd1a0fb68da2e880d837833b22e11a"
+              },
+              "client_cert_sent": false
+            },
+            "http": {
+              "method": "GET",
+              "url": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457",
+              "request_headers": {
+                "Accept": [
+                  "multipart/related; type=\"application/dicom\"; transfer-syntax=*"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "orthanc-https:8042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "close"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=c247e076-5cb8-49dd-b2c1-118cb8af829b-f22e072c-f74d-454a-a854-24629f9ad"
+                ]
+              },
+              "body": {
+                "content_type": "multipart/related; type=\"application/dicom\"; boundary=c247e076-5cb8-49dd-b2c1-118cb8af829b-f22e072c-f74d-454a-a854-24629f9ad",
+                "size": 14330,
+                "sha256": "9140b9530cbef1bc365d32eb6510f8af3329f62834c1c6056e34dc852b1ea11d"
+              },
+              "parts": [
+                {
+                  "index": 1,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.5",
+                  "sop_instance_uid": "1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+                  "size": 7790,
+                  "sha256": "2e5cb60878dc0acc494298ccdad28fce2cf14c51096e5d8cedab40248ea02e6c"
+                },
+                {
+                  "index": 2,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.4.80",
+                  "sop_instance_uid": "1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+                  "size": 6160,
+                  "sha256": "662d134797a2efdb5fff52a4d7e4ab199a579a47ff8535d56037f42aa6028de7"
+                }
+              ]
+            }
+          }
+        ],
+        "instances": [
+          {
+            "sop_instance_uid": "1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.2",
+            "transfer_syntax": "1.2.840.10008.1.2.4.91",
+            "file": "fixtures/ct_j2k.dcm",
+            "size": 3590,
+            "sha256": "8d5d503fd46b9a59c628762d71d7391ea1a2a5fd8d339ac82ef9e281a15ef65f",
+            "remote_result": "success",
+            "pixel_sha256_sent": "68aee8e22a687912dc27c2958f233ea32f7f926a81c29ac53385bd8034045dd5",
+            "pixel_sha256_received": "68aee8e22a687912dc27c2958f233ea32f7f926a81c29ac53385bd8034045dd5"
+          },
+          {
+            "sop_instance_uid": "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.7",
+            "transfer_syntax": "1.2.840.10008.1.2.4.70",
+            "file": "fixtures/sc_jpeg_lossless.dcm",
+            "size": 5204,
+            "sha256": "a492ed4a120c51a076126a6021e8cab1acb0172da3d42c62843b2a34a8ddd252",
+            "remote_result": "success",
+            "pixel_sha256_sent": "169629625bae012550b474e64a8d4d8232710177c01ecaccf3fe4f987200afdf",
+            "pixel_sha256_received": "169629625bae012550b474e64a8d4d8232710177c01ecaccf3fe4f987200afdf"
+          },
+          {
+            "sop_instance_uid": "1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.7",
+            "transfer_syntax": "1.2.840.10008.1.2.4.50",
+            "file": "fixtures/sc_jpeg_baseline.dcm",
+            "size": 3424,
+            "sha256": "6548a45a0800626cf70a59766146ff3b790a393ee0c9fca359f92c70f370b382",
+            "remote_result": "success",
+            "pixel_sha256_sent": "f58bd091427b02f28175d7e48b82c864b43d6fe7447055326e9d608660a15b31",
+            "pixel_sha256_received": "f58bd091427b02f28175d7e48b82c864b43d6fe7447055326e9d608660a15b31"
+          },
+          {
+            "sop_instance_uid": "1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.2",
+            "transfer_syntax": "1.2.840.10008.1.2.1",
+            "file": "fixtures/ct_explicit_le.dcm",
+            "size": 39206,
+            "sha256": "3dd31e5cc835b3f2cdd46c9da1982f59251e78518fefa8163d914631c66437d6",
+            "remote_result": "success",
+            "pixel_sha256_sent": "7a481f6ffff833aef4d8bd54819bd8f472aaa7232090208e056c90eacf079926",
+            "pixel_sha256_received": "7a481f6ffff833aef4d8bd54819bd8f472aaa7232090208e056c90eacf079926"
+          },
+          {
+            "sop_instance_uid": "1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.4",
+            "transfer_syntax": "1.2.840.10008.1.2.5",
+            "file": "fixtures/mr_rle.dcm",
+            "size": 7790,
+            "sha256": "2e5cb60878dc0acc494298ccdad28fce2cf14c51096e5d8cedab40248ea02e6c",
+            "remote_result": "success",
+            "pixel_sha256_sent": "27629e20b89cb49ee78393d4951ed360dbc5612461c683341cfa32063952abd6",
+            "pixel_sha256_received": "27629e20b89cb49ee78393d4951ed360dbc5612461c683341cfa32063952abd6"
+          },
+          {
+            "sop_instance_uid": "1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.4",
+            "transfer_syntax": "1.2.840.10008.1.2.4.80",
+            "file": "fixtures/mr_jpeg_ls.dcm",
+            "size": 6160,
+            "sha256": "662d134797a2efdb5fff52a4d7e4ab199a579a47ff8535d56037f42aa6028de7",
+            "remote_result": "success",
+            "pixel_sha256_sent": "72a751d89e33873b3c3df8a480dbcd712a6b3954e268fa35a0173d7ca5c39d76",
+            "pixel_sha256_received": "72a751d89e33873b3c3df8a480dbcd712a6b3954e268fa35a0173d7ca5c39d76"
+          }
+        ],
+        "assertions": [
+          {
+            "id": "wado.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996",
+            "expected": "multipart/related",
+            "actual": "multipart/related",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+            "expected": "multipart/related",
+            "actual": "multipart/related",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+            "expected": "multipart/related",
+            "actual": "multipart/related",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.status",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457",
+            "expected": "multipart/related",
+            "actual": "multipart/related",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.part.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996 part 1",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.part.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114 part 1",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.part.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114 part 2",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.part.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322 part 1",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.part.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457 part 1",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.part.content_type",
+            "subject": "https://orthanc-https:8042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457 part 2",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.uid.set",
+            "subject": "retrieved instances",
+            "expected": "exactly the 6 expected",
+            "actual": "6 received",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.pixels",
+            "subject": "fixtures/ct_explicit_le.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.pixels",
+            "subject": "fixtures/ct_j2k.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.pixels",
+            "subject": "fixtures/mr_jpeg_ls.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.pixels",
+            "subject": "fixtures/mr_rle.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.pixels",
+            "subject": "fixtures/sc_jpeg_baseline.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.pixels",
+            "subject": "fixtures/sc_jpeg_lossless.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          }
+        ],
+        "redactions": 0
+      }
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "0.2.0-rc.1",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "pass"
+}

@@ -14,6 +14,30 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **LibreDVT 0.2.0 release candidate 1: tool validation and verification
+  (issue #34, card DVT-0.2/6, DRAFT for approval; not tagged).**
+  - All v0.2 requirements (DVT-SRS-090…156) are now `Active`; new
+    DVT-SRS-157: the HTML report prints cleanly to PDF (every evidence
+    section open, light colours, nothing clipped, step names broken only
+    between words). Print styles only; report markup unchanged.
+  - User guide: *Running a client audit safely* (written consent, lab
+    targets only, synthetic data, secrets in files, no response bodies from
+    real systems) and what a report proves and does not prove; how to make
+    a PDF.
+  - Release notes, pull-request merge order and an anonymised sample audit
+    report (HTML and PDF) under `docs/releases/`.
+  - Tool-validation record, residual-risk statement, cybersecurity notes,
+    architecture and manual-verification record updated for the release
+    candidate. No dependency change (SBOM and SOUP unchanged).
+  - Tested (2026-11-23, image `libre/dvt:0.2.0-rc.1`): real-engine test run
+    (every v0.2 requirement's tagged tests passed); all v0.2 mutation
+    checks re-run on one commit (121 of 121 applicable mutants killed); the bundled plans from the command line
+    against LibreDCM in TLS mode, LibreDCM plain (v0.1 plan unchanged) and
+    Orthanc + DICOMweb over HTTPS, all passing; the Generic DICOM TLS audit
+    cross-checked against DCMTK 3.6.7 (26 of 26 checks as expected,
+    including three set-ups where it must find problems); no token or key
+    line in any of the 56 artefacts; see
+    `docs/dhf/libredvt/evidence/v0.2-rc/`.
 - **LibreDVT v0.2 web UI, command line, reports and example plans for the
   new protocols (issue #34, card DVT-0.2/5, DRAFT for approval).**
   - Targets page: separate forms for DIMSE targets (with an optional DICOM

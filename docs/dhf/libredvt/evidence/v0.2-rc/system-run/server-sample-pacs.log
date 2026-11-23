@@ -1,0 +1,11 @@
+time=2026-11-23T04:37:05.713Z level=INFO msg="LibreDCM starting" module=LibreDCM node=3b9635e390b0 version=dev storage=fs index=sqlite events=log
+time=2026-11-23T04:37:05.714Z level=INFO msg="admin endpoint listening" module=LibreDCM node=3b9635e390b0 addr=:8081
+time=2026-11-23T04:37:05.714Z level=INFO msg="component starting" module=LibreDCM node=3b9635e390b0 component=dimse-gateway
+time=2026-11-23T04:37:05.714Z level=INFO msg="component starting" module=LibreDCM node=3b9635e390b0 component=event-outbox
+time=2026-11-23T04:37:05.714Z level=INFO msg="component starting" module=LibreDCM node=3b9635e390b0 component=config-reload
+time=2026-11-23T04:37:05.714Z level=INFO msg="DICOM listener started" module=LibreDCM node=3b9635e390b0 component=dimse addr=[::]:11112 ae_title=LABPACS tls=true
+time=2026-11-23T04:37:34.758Z level=INFO msg="scp accepted connection" module=LibreDCM node=3b9635e390b0 component=dimse remote=172.26.0.10:53938
+time=2026-11-23T04:37:35.081Z level=INFO msg="scp accepted connection" module=LibreDCM node=3b9635e390b0 component=dimse remote=172.26.0.10:33171
+time=2026-11-23T04:37:35.260Z level=INFO msg="scp accepted connection" module=LibreDCM node=3b9635e390b0 component=dimse remote=172.26.0.10:53948
+time=2026-11-23T04:37:35.379Z level=INFO msg="scp accepted connection" module=LibreDCM node=3b9635e390b0 component=dimse remote=172.26.0.10:53962
+time=2026-11-23T04:37:35.498Z level=INFO msg="scp accepted connection" module=LibreDCM node=3b9635e390b0 component=dimse remote=172.26.0.10:53964

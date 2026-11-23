@@ -222,6 +222,35 @@ origin over TLS (or loopback HTTP).
   `max_body_excerpt_bytes: 0`, and the README tells users to do the same on
   systems that may hold real data (open decision in issue #34).
 
+### Release candidate 0.2.0-rc.1 (card DVT-0.2/6, 2026-11-23, DRAFT for approval)
+
+- No new network, authentication or storage path in this card. The only
+  code change is a print stylesheet for the HTML report (DVT-SRS-157); it
+  is part of the embedded stylesheet and adds no script, font or remote
+  resource, so the content security policy is unchanged.
+- Secret check on the release-candidate system run: the synthetic bearer
+  token (plain, base64 and base64url forms) and every private-key line of
+  the synthetic PKI were searched in all 56 artefacts (run JSON, HTML,
+  JUnit, logs, DCMTK and server logs): 0 hits
+  (`evidence/v0.2-rc/03-system-run.log`).
+- TLS behaviour against independent servers confirmed by their own logs:
+  DCMTK `storescp` with its default profile negotiated TLS 1.3 with
+  LibreDVT and recorded "unsupported protocol" / "wrong version number" for
+  the TLS 1.0, 1.1 and plaintext probes; the retired AES profile recorded
+  TLS 1.0 and 1.1 handshakes (reported by LibreDVT as findings) and "no
+  shared cipher" for LibreDVT's verified client; the wrong-host server
+  recorded "sslv3 alert bad certificate" (LibreDVT refused the certificate).
+- Operating rules for client audits are in the user guide
+  (`modules/dvt/README.md`, *Running a client audit safely*): lab targets
+  only, written consent that names the systems, the window and the tests,
+  secrets in files under `secrets_dir`, no body excerpts on systems that
+  may hold real data, reports shared only with the client.
+- Unchanged limits: no CRL/OCSP; LibreDVT is not a vulnerability scanner or
+  penetration test and does not test cipher-suite lists, renegotiation or
+  other TLS weaknesses beyond the checks in its plans.
+- gosec and govulncheck on the release-candidate commit: see the PR and
+  `evidence/v0.2-rc/05-local-gate.log`.
+
 ## Static analysis (2026-11-10)
 
 gosec v2.30.0 on `modules/dvt`: 26 findings, triaged to 0 open. Fixed: file

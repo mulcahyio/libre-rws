@@ -1,0 +1,239 @@
+{
+  "id": "20261123-043724-bfd0b34d",
+  "plan": "Generic DICOM TLS audit",
+  "plan_sha256": "e1b389667114cf6b92f7b479c83abaf4da3e1d05964d058d288100b1887390ac",
+  "target": "dcmtk-plain",
+  "target_desc": "dcmtk-plain (dcmtk-plain:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)",
+  "target_info": {
+    "name": "dcmtk-plain",
+    "class": "lab",
+    "protocol": "dimse",
+    "endpoint": "dcmtk-plain:11112"
+  },
+  "started": "2026-11-23T04:37:24.918471489Z",
+  "finished": "2026-11-23T04:37:26.19040816Z",
+  "steps": [
+    {
+      "id": "negotiate-verification",
+      "type": "associate",
+      "status": "failed",
+      "messages": [
+        "connection_closed error: TLS-HANDSHAKE: the connection was reset (ConnectionResetError)",
+        "TLS: not established"
+      ],
+      "started": "2026-11-23T04:37:25.348395338Z",
+      "duration": 119219170,
+      "verdict": "fail",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-plain",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-plain:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "dcmtk-plain:11112",
+            "started": "2026-11-23T04:37:25.461Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "error": {
+              "kind": "connection_closed",
+              "message": "the connection was reset (ConnectionResetError)"
+            },
+            "tls": {
+              "version": "",
+              "cipher": "",
+              "verified": false,
+              "client_cert_sent": false
+            }
+          }
+        ],
+        "assertions": [],
+        "errors": [
+          {
+            "kind": "connection_closed",
+            "message": "TLS-HANDSHAKE: the connection was reset (ConnectionResetError)"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "echo-over-tls",
+      "type": "echo",
+      "status": "failed",
+      "messages": [
+        "TLS error: [Errno 104] Connection reset by peer"
+      ],
+      "started": "2026-11-23T04:37:25.467625792Z",
+      "duration": 378075519,
+      "details": "{\"associated\": false, \"error\": \"TLS: [Errno 104] Connection reset by peer\", \"rejected\": false, \"tls_error\": \"[Errno 104] Connection reset by peer\"}\n"
+    },
+    {
+      "id": "plaintext-refused",
+      "type": "tls_reject",
+      "status": "failed",
+      "messages": [
+        "fail tls_reject.refused plaintext: expected refused, got accepted dicom_reply: the target answered the A-ASSOCIATE-RQ with A-ASSOCIATE-AC"
+      ],
+      "started": "2026-11-23T04:37:25.845716581Z",
+      "duration": 114112782,
+      "verdict": "fail",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-plain",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-plain:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "dimse",
+            "operation": "A-ASSOCIATE",
+            "endpoint": "dcmtk-plain:11112",
+            "started": "2026-11-23T04:37:25.954Z",
+            "duration_ms": 0,
+            "outcome": "completed",
+            "association": {
+              "result": "accepted",
+              "released": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "plaintext",
+            "expected": "refused",
+            "actual": "accepted",
+            "outcome": "fail",
+            "message": "dicom_reply: the target answered the A-ASSOCIATE-RQ with A-ASSOCIATE-AC"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "tls10-refused",
+      "type": "tls_reject",
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-23T04:37:25.959839505Z",
+      "duration": 115533018,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-plain",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-plain:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "dcmtk-plain:11112",
+            "started": "2026-11-23T04:37:26.068Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "error": {
+              "kind": "connection_closed",
+              "message": "the connection was reset (ConnectionResetError)"
+            },
+            "tls": {
+              "version": "",
+              "cipher": "",
+              "verified": false,
+              "client_cert_sent": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "TLS 1.0 only",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "connection_reset: the connection was reset (ConnectionResetError)"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "tls11-refused",
+      "type": "tls_reject",
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-23T04:37:26.075380237Z",
+      "duration": 115019458,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-plain",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-plain:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "dcmtk-plain:11112",
+            "started": "2026-11-23T04:37:26.184Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "error": {
+              "kind": "connection_closed",
+              "message": "the connection was reset (ConnectionResetError)"
+            },
+            "tls": {
+              "version": "",
+              "cipher": "",
+              "verified": false,
+              "client_cert_sent": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "TLS 1.1 only",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "connection_reset: the connection was reset (ConnectionResetError)"
+          }
+        ],
+        "redactions": 0
+      }
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "0.2.0-rc.1",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "fail"
+}

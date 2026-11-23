@@ -1,0 +1,7 @@
+target: dcmtk-plain (dcmtk-plain:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)
+failed   negotiate-verification   associate connection_closed error: TLS-HANDSHAKE: the connection was reset (ConnectionResetError); TLS: not established
+failed   echo-over-tls            echo      TLS error: [Errno 104] Connection reset by peer
+failed   plaintext-refused        tls_reject fail tls_reject.refused plaintext: expected refused, got accepted dicom_reply: the target answered the A-ASSOCIATE-RQ with A-ASSOCIATE-AC
+passed   tls10-refused            tls_reject 1 assertion(s) checked; verdict pass
+passed   tls11-refused            tls_reject 1 assertion(s) checked; verdict pass
+verdict: fail (Generic DICOM TLS audit)

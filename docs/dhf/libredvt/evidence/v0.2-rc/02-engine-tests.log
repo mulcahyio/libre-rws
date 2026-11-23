@@ -1,0 +1,774 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.dvt
+#1 transferring dockerfile: 3.65kB done
+#1 DONE 0.0s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 DONE 0.3s
+
+#3 docker-image://docker.io/docker/dockerfile:1@sha256:572cebbc2b15e6f84c077742952674889cb63cd5e9b80abdffcbe587b6f19183
+#3 resolve docker.io/docker/dockerfile:1@sha256:572cebbc2b15e6f84c077742952674889cb63cd5e9b80abdffcbe587b6f19183 0.1s done
+#3 CACHED
+
+#4 [internal] load metadata for docker.io/library/golang:1.26.10-bookworm@sha256:5de7c99eb78ca5e515a4c340235d0955ec5964a5071c492c15503d7c267da473
+#4 DONE 0.1s
+
+#5 [internal] load metadata for docker.io/library/python:3.12-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+#5 DONE 0.1s
+
+#6 [internal] load .dockerignore
+#6 transferring context: 96B done
+#6 DONE 0.0s
+
+#7 [build 1/8] FROM docker.io/library/golang:1.26.10-bookworm@sha256:5de7c99eb78ca5e515a4c340235d0955ec5964a5071c492c15503d7c267da473
+#7 resolve docker.io/library/golang:1.26.10-bookworm@sha256:5de7c99eb78ca5e515a4c340235d0955ec5964a5071c492c15503d7c267da473 0.1s done
+#7 DONE 0.1s
+
+#8 [engines 1/7] FROM docker.io/library/python:3.12-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df
+#8 resolve docker.io/library/python:3.12-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df 0.1s done
+#8 DONE 0.1s
+
+#9 [internal] load build context
+#9 transferring context: 868.91kB 0.0s done
+#9 DONE 0.0s
+
+#10 [build 6/8] COPY platform/ platform/
+#10 CACHED
+
+#11 [build 5/8] RUN go mod download
+#11 CACHED
+
+#12 [build 2/8] WORKDIR /src
+#12 CACHED
+
+#13 [build 4/8] COPY third_party/ third_party/
+#13 CACHED
+
+#14 [build 3/8] COPY go.mod go.sum ./
+#14 CACHED
+
+#15 [build 7/8] COPY modules/ modules/
+#15 CACHED
+
+#16 [build 8/8] RUN go build -ldflags "-s -w -X main.version=dev" -o /out/libredvt ./modules/dvt/cmd/libredvt
+#16 DONE 3.7s
+
+#17 [test 2/9] COPY --from=build /go/pkg/mod /go/pkg/mod
+#17 CACHED
+
+#18 [test 4/9] COPY go.mod go.sum ./
+#18 CACHED
+
+#19 [test 5/9] COPY third_party/ third_party/
+#19 CACHED
+
+#20 [engines 2/7] COPY modules/dvt/worker/requirements.txt /opt/libredvt/worker/requirements.txt
+#20 CACHED
+
+#21 [engines 3/7] RUN pip install --no-deps -r /opt/libredvt/worker/requirements.txt && pip check
+#21 CACHED
+
+#22 [engines 4/7] COPY modules/dvt/worker/build_assets.py /opt/libredvt/worker/build_assets.py
+#22 CACHED
+
+#23 [engines 5/7] RUN python /opt/libredvt/worker/build_assets.py /opt/libredvt "2026d"
+#23 CACHED
+
+#24 [engines 6/7] COPY modules/dvt/worker/libredvt_worker.py /opt/libredvt/worker/libredvt_worker.py
+#24 CACHED
+
+#25 [test 1/9] COPY --from=build /usr/local/go /usr/local/go
+#25 CACHED
+
+#26 [test 3/9] WORKDIR /src
+#26 CACHED
+
+#27 [engines 7/7] COPY modules/dvt/plans/ /opt/libredvt/plans/
+#27 CACHED
+
+#28 [test 6/9] COPY platform/ platform/
+#28 CACHED
+
+#29 [test 7/9] COPY modules/ modules/
+#29 DONE 0.1s
+
+#30 [test 8/9] COPY deploy/ deploy/
+#30 DONE 0.1s
+
+#31 [test 9/9] RUN go test -count=1 -v -tags engines ./modules/dvt/...
+#31 9.003 === RUN   TestNoLibreDCMDICOMLibraries
+#31 9.003 --- PASS: TestNoLibreDCMDICOMLibraries (0.00s)
+#31 9.003 === RUN   TestNoTLSVerificationBypass
+#31 9.003 --- PASS: TestNoTLSVerificationBypass (0.01s)
+#31 9.003 === RUN   TestFakePeerOnlyImportedByTests
+#31 9.003 --- PASS: TestFakePeerOnlyImportedByTests (0.00s)
+#31 9.003 === RUN   TestComposePublishesOnLocalhostByDefault
+#31 9.003 --- PASS: TestComposePublishesOnLocalhostByDefault (0.00s)
+#31 9.003 === RUN   TestImageIsPinnedNonRootAndOffline
+#31 9.003 --- PASS: TestImageIsPinnedNonRootAndOffline (0.00s)
+#31 9.003 === RUN   TestRunCommandExitStatusAndOutputs
+#31 9.003 passed   v                        validate  1 files: 0 errors, 0 warnings, 0 engine errors; verdict pass
+#31 9.003 verdict: pass (good)
+#31 9.003 failed   v                        validate  2 files: 1 errors, 0 warnings, 0 engine errors; verdict fail
+#31 9.003 verdict: fail (bad)
+#31 9.003 plan rejected: plan: yaml: unmarshal errors:
+#31 9.003   line 3: field filez not found in type plan.Step
+#31 9.003 not run  e                        echo      not run: target "nowhere" is not registered
+#31 9.003 run error: target "nowhere" is not registered
+#31 9.003 verdict: fail (n)
+#31 9.003 --- PASS: TestRunCommandExitStatusAndOutputs (0.01s)
+#31 9.003 === RUN   TestValidateCommandDirectories
+#31 9.003 pass               /tmp/TestValidateCommandDirectories1287554971/001/fx/good.dcm
+#31 9.003 verdict: pass (1 files, 0 errors, 0 warnings, 0 engine errors)
+#31 9.003 fail               /tmp/TestValidateCommandDirectories1287554971/001/fx/bad.dcm
+#31 9.003     error   dciodvfy        Modality(0008,0060) Missing attribute for Type 1
+#31 9.003 pass               /tmp/TestValidateCommandDirectories1287554971/001/fx/good.dcm
+#31 9.003 verdict: fail (2 files, 1 errors, 0 warnings, 0 engine errors)
+#31 9.003 --- PASS: TestValidateCommandDirectories (0.01s)
+#31 9.003 === RUN   TestRunWithTargetFileKeepsSecretsOutOfArtefacts
+#31 9.003 target: web (dicomweb https://pacs.lab.example/dicom-web, auth bearer, class lab)
+#31 9.003 failed   v                        validate  1 files: 1 errors, 0 warnings, 0 engine errors; verdict fail; engine error: 2 secret value(s) found in the output and replaced by [REDACTED]; the run fails (DVT-SRS-152)
+#31 9.003 failed   q                        qido      engine error: engine error: worker qido: unparseable output: EOF
+#31 9.003 verdict: fail (web)
+#31 9.003 target: web (h:104, called AE A, calling AE LIBREDVT, class lab)
+#31 9.003 not run  v                        validate  not run: plan rejected for this target: step 2 (q): a qido step needs a dicomweb target; web is dimse
+#31 9.003 not run  q                        qido      not run: plan rejected for this target: step 2 (q): a qido step needs a dicomweb target; web is dimse
+#31 9.003 run error: plan rejected for this target: step 2 (q): a qido step needs a dicomweb target; web is dimse
+#31 9.003 verdict: fail (web)
+#31 9.003 targets rejected: target file: yaml: unmarshal errors:
+#31 9.003   line 2: field token not found in type store.Auth
+#31 9.003 --- PASS: TestRunWithTargetFileKeepsSecretsOutOfArtefacts (0.01s)
+#31 9.003 === RUN   TestRealCLIAndWebGiveTheSameResult
+#31 9.003 === RUN   TestRealCLIAndWebGiveTheSameResult/dimse-tls
+#31 9.003 target: pacs (127.0.0.1:45125, called AE FAKEPEER, calling AE LIBREDVT, TLS 1.2+, class lab)
+#31 9.003 passed   negotiate                associate 9 assertion(s) checked; verdict pass; TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT test PKI,CN=peer", issuer "O=LibreDVT test PKI,CN=test-root-ca", SAN DNS [], SAN IP [127.0.0.1], valid 2026-11-23T03:31:48.000Z to 2026-11-24T04:31:48.000Z, SHA-256 8de5f93e9b7ee29a1c62bd48f62d699cccf99b74e87fd3c46a1bc622d3433be8; client certificate offered: false; association accepted; max PDU 16384, Implementation Class UID "1.3.6.1.4.1.67686.9.3.146.9", Version Name "PARITY_PEER"
+#31 9.003 passed   plaintext-refused        tls_reject 1 assertion(s) checked; verdict pass
+#31 9.003 passed   tls11-refused            tls_reject 1 assertion(s) checked; verdict pass
+#31 9.003 identity: TLS TLSv1.3, cipher TLS_AES_128_GCM_SHA256
+#31 9.003 identity: certificate "O=LibreDVT test PKI,CN=peer" issued by "O=LibreDVT test PKI,CN=test-root-ca", valid until 2026-11-24T04:31:48.000Z (valid at the start of the run, 0 day(s) left), SHA-256 8de5f93e9b7ee29a1c62bd48f62d699cccf99b74e87fd3c46a1bc622d3433be8, verified
+#31 9.003 identity: Implementation Class UID 1.3.6.1.4.1.67686.9.3.146.9, Version Name PARITY_PEER
+#31 9.003 verdict: pass (parity dimse)
+#31 9.003 2026/11/23 04:31:49 INFO login ip=127.0.0.1
+#31 9.003 2026/11/23 04:31:49 INFO target saved name=pacs protocol=dimse class=lab tls=true
+#31 9.003 2026/11/23 04:31:50 INFO run finished id=20261123-043149-4dcb3f32 plan="parity dimse" verdict=pass
+#31 9.003     parity_engines_test.go:103: parity: 3 steps, 11 assertions, verdict pass, identical from CLI and web UI
+#31 9.003 === RUN   TestRealCLIAndWebGiveTheSameResult/dicomweb-tls-bearer
+#31 9.003 target: web (dicomweb https://127.0.0.1:40913/dicom-web, auth bearer, class lab)
+#31 9.003 2026/11/23 04:31:51 http: TLS handshake error from 127.0.0.1:53096: client sent an HTTP request to an HTTPS server
+#31 9.003 passed   plaintext-refused        tls_reject 1 assertion(s) checked; verdict pass
+#31 9.003 passed   qido-patient             qido      7 assertion(s) checked; verdict pass; 1 search request(s), 1 object(s) returned at level studies; TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT test PKI,CN=peer", issuer "O=LibreDVT test PKI,CN=test-root-ca", SAN DNS [], SAN IP [127.0.0.1], valid 2026-11-23T03:31:48.000Z to 2026-11-24T04:31:48.000Z, SHA-256 8de5f93e9b7ee29a1c62bd48f62d699cccf99b74e87fd3c46a1bc622d3433be8; client certificate offered: false
+#31 9.003 passed   qido-instances           qido      5 assertion(s) checked; verdict pass; 1 search request(s), 1 object(s) returned at level instances; TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT test PKI,CN=peer", issuer "O=LibreDVT test PKI,CN=test-root-ca", SAN DNS [], SAN IP [127.0.0.1], valid 2026-11-23T03:31:48.000Z to 2026-11-24T04:31:48.000Z, SHA-256 8de5f93e9b7ee29a1c62bd48f62d699cccf99b74e87fd3c46a1bc622d3433be8; client certificate offered: false
+#31 9.003 passed   qido-none                qido      1 assertion(s) checked; verdict pass; 1 search request(s), 0 object(s) returned at level studies; TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT test PKI,CN=peer", issuer "O=LibreDVT test PKI,CN=test-root-ca", SAN DNS [], SAN IP [127.0.0.1], valid 2026-11-23T03:31:48.000Z to 2026-11-24T04:31:48.000Z, SHA-256 8de5f93e9b7ee29a1c62bd48f62d699cccf99b74e87fd3c46a1bc622d3433be8; client certificate offered: false
+#31 9.003 identity: TLS TLSv1.3, cipher TLS_AES_128_GCM_SHA256
+#31 9.003 identity: certificate "O=LibreDVT test PKI,CN=peer" issued by "O=LibreDVT test PKI,CN=test-root-ca", valid until 2026-11-24T04:31:48.000Z (valid at the start of the run, 0 day(s) left), SHA-256 8de5f93e9b7ee29a1c62bd48f62d699cccf99b74e87fd3c46a1bc622d3433be8, verified
+#31 9.003 verdict: pass (parity dicomweb)
+#31 9.003 2026/11/23 04:31:52 INFO login ip=127.0.0.1
+#31 9.003 2026/11/23 04:31:52 INFO target saved name=web protocol=dicomweb class=lab tls=true
+#31 9.003 2026/11/23 04:31:52 http: TLS handshake error from 127.0.0.1:59774: client sent an HTTP request to an HTTPS server
+#31 9.003 2026/11/23 04:31:53 INFO run finished id=20261123-043152-c639cab7 plan="parity dicomweb" verdict=pass
+#31 9.003     parity_engines_test.go:128: parity: 4 steps, 14 assertions, verdict pass, identical from CLI and web UI
+#31 9.003 --- PASS: TestRealCLIAndWebGiveTheSameResult (4.41s)
+#31 9.003     --- PASS: TestRealCLIAndWebGiveTheSameResult/dimse-tls (1.68s)
+#31 9.003     --- PASS: TestRealCLIAndWebGiveTheSameResult/dicomweb-tls-bearer (2.73s)
+#31 9.003 === RUN   TestCLIAndWebGiveTheSameResult
+#31 9.003 target: web (dicomweb https://pacs.lab.example/dicom-web, auth bearer, class lab)
+#31 9.003 passed   good                     validate  1 files: 0 errors, 0 warnings, 0 engine errors; verdict pass
+#31 9.003 failed   bad                      validate  1 files: 1 errors, 0 warnings, 0 engine errors; verdict fail
+#31 9.003 failed   q                        qido      engine error: engine error: worker qido: unparseable output: EOF
+#31 9.003 verdict: fail (parity)
+#31 9.003 2026/11/23 04:31:53 INFO login ip=127.0.0.1
+#31 9.003 2026/11/23 04:31:53 INFO target saved name=web protocol=dicomweb class=lab tls=true
+#31 9.003 2026/11/23 04:31:53 INFO run finished id=20261123-043153-50f5364c plan=parity verdict=fail
+#31 9.003     parity_test.go:199: parity: 3 steps, 0 assertions, verdict fail, identical from CLI and web UI
+#31 9.003 target: web (dicomweb https://pacs.lab.example/dicom-web, auth bearer, class lab)
+#31 9.003 passed   good                     validate  1 files: 0 errors, 0 warnings, 0 engine errors; verdict pass
+#31 9.003 failed   bad                      validate  1 files: 1 errors, 0 warnings, 0 engine errors; verdict fail
+#31 9.003 failed   q                        qido      engine error: engine error: worker qido: unparseable output: EOF
+#31 9.003 verdict: fail (parity)
+#31 9.003 2026/11/23 04:31:53 INFO login ip=127.0.0.1
+#31 9.003 2026/11/23 04:31:53 INFO target saved name=web protocol=dicomweb class=production tls=true
+#31 9.003 2026/11/23 04:31:53 INFO run finished id=20261123-043153-e6904cfc plan=parity verdict=fail
+#31 9.003 --- PASS: TestCLIAndWebGiveTheSameResult (0.03s)
+#31 9.003 PASS
+#31 9.003 ok  	github.com/mulcahyio/libre-rws/modules/dvt/cmd/libredvt	4.481s
+#31 68.74 === RUN   TestAssociateOutputSchemaFailsClosed
+#31 68.74 --- PASS: TestAssociateOutputSchemaFailsClosed (4.04s)
+#31 68.74 === RUN   TestAssociateTLSArgumentsArePathsOnly
+#31 68.74 --- PASS: TestAssociateTLSArgumentsArePathsOnly (0.00s)
+#31 68.74 === RUN   TestTLSProbeOutputSchemaAndNoCredentials
+#31 68.74 --- PASS: TestTLSProbeOutputSchemaAndNoCredentials (4.02s)
+#31 68.74 === RUN   TestQidoOutputSchemaFailsClosed
+#31 68.74 --- PASS: TestQidoOutputSchemaFailsClosed (0.02s)
+#31 68.74 === RUN   TestWadoOutputSchemaFailsClosed
+#31 68.74 --- PASS: TestWadoOutputSchemaFailsClosed (0.01s)
+#31 68.74 === RUN   TestStowOutputSchemaFailsClosed
+#31 68.74 --- PASS: TestStowOutputSchemaFailsClosed (0.01s)
+#31 68.74 === RUN   TestDICOMwebWorkerFailuresAreEngineErrors
+#31 68.74 --- PASS: TestDICOMwebWorkerFailuresAreEngineErrors (4.01s)
+#31 68.74 === RUN   TestTLSProbeWebSchema
+#31 68.74 --- PASS: TestTLSProbeWebSchema (0.01s)
+#31 68.74 === RUN   TestParseDciodvfyRealOutput
+#31 68.74 --- PASS: TestParseDciodvfyRealOutput (0.00s)
+#31 68.74 === RUN   TestParseDcentvfyRealOutput
+#31 68.74 --- PASS: TestParseDcentvfyRealOutput (0.00s)
+#31 68.74 === RUN   TestDicom3toolsUntrustworthyOutputIsEngineError
+#31 68.74 --- PASS: TestDicom3toolsUntrustworthyOutputIsEngineError (0.00s)
+#31 68.74 === RUN   TestValidateNonDICOMNotPassedToIODValidators
+#31 68.74 --- PASS: TestValidateNonDICOMNotPassedToIODValidators (0.01s)
+#31 68.74 === RUN   TestValidateEngineFailuresNeverPass
+#31 68.74 === RUN   TestValidateEngineFailuresNeverPass/dciodvfy_missing
+#31 68.74 === RUN   TestValidateEngineFailuresNeverPass/dciodvfy_crashes
+#31 68.74 === RUN   TestValidateEngineFailuresNeverPass/dciodvfy_hangs
+#31 68.74 === RUN   TestValidateEngineFailuresNeverPass/dciodvfy_garbage
+#31 68.74 === RUN   TestValidateEngineFailuresNeverPass/worker_crashes
+#31 68.74 === RUN   TestValidateEngineFailuresNeverPass/worker_garbage
+#31 68.74 === RUN   TestValidateEngineFailuresNeverPass/worker_hangs
+#31 68.74 === RUN   TestValidateEngineFailuresNeverPass/worker_drops_results
+#31 68.74 --- PASS: TestValidateEngineFailuresNeverPass (20.18s)
+#31 68.74     --- PASS: TestValidateEngineFailuresNeverPass/dciodvfy_missing (0.00s)
+#31 68.74     --- PASS: TestValidateEngineFailuresNeverPass/dciodvfy_crashes (0.15s)
+#31 68.74     --- PASS: TestValidateEngineFailuresNeverPass/dciodvfy_hangs (10.01s)
+#31 68.74     --- PASS: TestValidateEngineFailuresNeverPass/dciodvfy_garbage (0.00s)
+#31 68.74     --- PASS: TestValidateEngineFailuresNeverPass/worker_crashes (0.00s)
+#31 68.74     --- PASS: TestValidateEngineFailuresNeverPass/worker_garbage (0.00s)
+#31 68.74     --- PASS: TestValidateEngineFailuresNeverPass/worker_hangs (10.01s)
+#31 68.74     --- PASS: TestValidateEngineFailuresNeverPass/worker_drops_results (0.00s)
+#31 68.74 === RUN   TestVersionsReported
+#31 68.74 --- PASS: TestVersionsReported (0.00s)
+#31 68.74 === RUN   TestPeerTimeoutPassedAndBounded
+#31 68.74 --- PASS: TestPeerTimeoutPassedAndBounded (18.50s)
+#31 68.74 === RUN   TestWorkerSendsLibreDVTIdentification
+#31 68.74 --- PASS: TestWorkerSendsLibreDVTIdentification (2.31s)
+#31 68.74 === RUN   TestImplementationIdentification
+#31 68.74 --- PASS: TestImplementationIdentification (0.00s)
+#31 68.74 === RUN   TestEnginePositiveControlsPerFile
+#31 68.74 --- PASS: TestEnginePositiveControlsPerFile (8.88s)
+#31 68.74 === RUN   TestEnginePositiveControlConsistency
+#31 68.74 --- PASS: TestEnginePositiveControlConsistency (1.77s)
+#31 68.74 === RUN   TestEngineVersionsAndBuiltInStandard
+#31 68.74 --- PASS: TestEngineVersionsAndBuiltInStandard (0.42s)
+#31 68.74 === RUN   TestWorkerNeverGetsSecretsOnArgvOrEnv
+#31 68.74 === RUN   TestWorkerNeverGetsSecretsOnArgvOrEnv/raw_argument
+#31 68.74 === RUN   TestWorkerNeverGetsSecretsOnArgvOrEnv/base64_argument
+#31 68.74 === RUN   TestWorkerNeverGetsSecretsOnArgvOrEnv/environment
+#31 68.74 --- PASS: TestWorkerNeverGetsSecretsOnArgvOrEnv (0.01s)
+#31 68.74     --- PASS: TestWorkerNeverGetsSecretsOnArgvOrEnv/raw_argument (0.00s)
+#31 68.74     --- PASS: TestWorkerNeverGetsSecretsOnArgvOrEnv/base64_argument (0.00s)
+#31 68.74     --- PASS: TestWorkerNeverGetsSecretsOnArgvOrEnv/environment (0.00s)
+#31 68.74 PASS
+#31 68.74 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	64.215s
+#31 68.74 === RUN   TestWebConcurrencyMeasurement
+#31 68.74 --- PASS: TestWebConcurrencyMeasurement (0.54s)
+#31 68.74 PASS
+#31 68.74 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/fakepeer	0.540s
+#31 68.74 === RUN   TestBundledExamplePlans
+#31 68.74 --- PASS: TestBundledExamplePlans (0.00s)
+#31 68.74 === RUN   TestParseGoodPlan
+#31 68.74 --- PASS: TestParseGoodPlan (0.00s)
+#31 68.74 === RUN   TestParseRejectsMistakesBeforeRunning
+#31 68.74 --- PASS: TestParseRejectsMistakesBeforeRunning (0.00s)
+#31 68.74 === RUN   TestResolveFilesEveryPatternMustMatch
+#31 68.74 --- PASS: TestResolveFilesEveryPatternMustMatch (0.00s)
+#31 68.74 === RUN   TestValidAET
+#31 68.74 --- PASS: TestValidAET (0.00s)
+#31 68.74 === RUN   TestParseV02StepTypes
+#31 68.74 --- PASS: TestParseV02StepTypes (0.00s)
+#31 68.74 === RUN   TestV02PlanRulesRejectBeforeRunning
+#31 68.74 --- PASS: TestV02PlanRulesRejectBeforeRunning (0.00s)
+#31 68.74 === RUN   TestCheckTargetMatchesStepTypeToProtocol
+#31 68.74 --- PASS: TestCheckTargetMatchesStepTypeToProtocol (0.00s)
+#31 68.74 === RUN   TestBundledV01PlanParsesUnchanged
+#31 68.74 --- PASS: TestBundledV01PlanParsesUnchanged (0.00s)
+#31 68.74 PASS
+#31 68.74 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/plan	0.010s
+#31 68.74 === RUN   TestTokenAndEncodingsAreRedacted
+#31 68.74 --- PASS: TestTokenAndEncodingsAreRedacted (0.00s)
+#31 68.74 === RUN   TestPEMKeyIsRedacted
+#31 68.74 --- PASS: TestPEMKeyIsRedacted (0.00s)
+#31 68.74 === RUN   TestShortFormsAndNilSet
+#31 68.74 --- PASS: TestShortFormsAndNilSet (0.00s)
+#31 68.74 PASS
+#31 68.74 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/redact	0.007s
+#31 68.74 === RUN   TestReportPrintsAllEvidence
+#31 68.74 --- PASS: TestReportPrintsAllEvidence (0.00s)
+#31 68.74 === RUN   TestRenderScansEveryArtefactBeforeWriting
+#31 68.74 --- PASS: TestRenderScansEveryArtefactBeforeWriting (0.00s)
+#31 68.74 === RUN   TestJUnit
+#31 68.74 --- PASS: TestJUnit (0.00s)
+#31 68.74 === RUN   TestHTMLReportSelfContained
+#31 68.74 --- PASS: TestHTMLReportSelfContained (0.00s)
+#31 68.74 === RUN   TestStoredV01RunLoadsAndRendersUnchanged
+#31 68.74 --- PASS: TestStoredV01RunLoadsAndRendersUnchanged (0.00s)
+#31 68.74 === RUN   TestReportsShowRealDIMSEAndTLSEvidence
+#31 68.74     report_v02_test.go:283: HTML fields checked: 80, JUnit fields checked: 38
+#31 68.74 --- PASS: TestReportsShowRealDIMSEAndTLSEvidence (0.00s)
+#31 68.74 === RUN   TestReportsShowRealDICOMwebEvidence
+#31 68.74     report_v02_test.go:313: HTML fields checked: 1124, JUnit fields checked: 437
+#31 68.74 --- PASS: TestReportsShowRealDICOMwebEvidence (0.01s)
+#31 68.74 === RUN   TestReportsShowFailuresTargetAndIdentity
+#31 68.74 --- PASS: TestReportsShowFailuresTargetAndIdentity (0.00s)
+#31 68.74 === RUN   TestEndpointIdentity
+#31 68.74 --- PASS: TestEndpointIdentity (0.00s)
+#31 68.74 PASS
+#31 68.74 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/report	0.025s
+#31 68.74 === RUN   TestDecideStepVerdictRule
+#31 68.74 --- PASS: TestDecideStepVerdictRule (0.00s)
+#31 68.74 === RUN   TestApplyEvidenceSetsStatusFromVerdictOnly
+#31 68.74 --- PASS: TestApplyEvidenceSetsStatusFromVerdictOnly (0.00s)
+#31 68.74 === RUN   TestEvidenceCheckClosedValueSets
+#31 68.74 --- PASS: TestEvidenceCheckClosedValueSets (0.00s)
+#31 68.74 === RUN   TestEvidenceFieldNamesMatchTheModel
+#31 68.74 --- PASS: TestEvidenceFieldNamesMatchTheModel (0.00s)
+#31 68.74 === RUN   TestV01StepsKeepTheirJSON
+#31 68.74 --- PASS: TestV01StepsKeepTheirJSON (0.00s)
+#31 68.74 === RUN   TestDecideVerdictRules
+#31 68.74 --- PASS: TestDecideVerdictRules (0.00s)
+#31 68.74 === RUN   TestValidationFinish
+#31 68.74 --- PASS: TestValidationFinish (0.00s)
+#31 68.74 === RUN   TestRunFinish
+#31 68.74 --- PASS: TestRunFinish (0.00s)
+#31 68.74 PASS
+#31 68.74 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/result	0.004s
+#31 139.4 === RUN   TestRealAssociateNegotiation
+#31 139.4 --- PASS: TestRealAssociateNegotiation (10.14s)
+#31 139.4 === RUN   TestRealAssociateRejectAbortCloseGarbageSilence
+#31 139.4 --- PASS: TestRealAssociateRejectAbortCloseGarbageSilence (5.30s)
+#31 139.4 === RUN   TestRealTLSVerification
+#31 139.4 --- PASS: TestRealTLSVerification (7.74s)
+#31 139.4 === RUN   TestRealTLSVersions
+#31 139.4 --- PASS: TestRealTLSVersions (2.72s)
+#31 139.4 === RUN   TestRealMutualTLS
+#31 139.4 --- PASS: TestRealMutualTLS (2.47s)
+#31 139.4 === RUN   TestRealV01EchoOverTLS
+#31 139.4 --- PASS: TestRealV01EchoOverTLS (1.53s)
+#31 139.4 === RUN   TestRealTLSReject
+#31 139.4 --- PASS: TestRealTLSReject (4.87s)
+#31 139.4 === RUN   TestRealSCPTLSDuringMove
+#31 139.4 --- PASS: TestRealSCPTLSDuringMove (5.94s)
+#31 139.4 === RUN   TestRealDICOMwebHappyPath
+#31 139.4     dicomweb_engines_test.go:147:   stow         pass     39 assertion(s) checked; verdict pass | 6 of 6 files stored and referenced by the target
+#31 139.4     dicomweb_engines_test.go:147:   qido-studies pass     18 assertion(s) checked; verdict pass | 4 search request(s), 4 object(s) returned at level studies
+#31 139.4     dicomweb_engines_test.go:147:   qido-series  pass     18 assertion(s) checked; verdict pass | 4 search request(s), 4 object(s) returned at level series
+#31 139.4     dicomweb_engines_test.go:147:   qido-instances pass     25 assertion(s) checked; verdict pass | 6 search request(s), 6 object(s) returned at level instances
+#31 139.4     dicomweb_engines_test.go:147:   qido-patient pass     6 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies
+#31 139.4     dicomweb_engines_test.go:147:   qido-paged   pass     12 assertion(s) checked; verdict pass | 3 search request(s), 4 object(s) returned at level studies
+#31 139.4     dicomweb_engines_test.go:147:   qido-none    pass     1 assertion(s) checked; verdict pass | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4     dicomweb_engines_test.go:147:   wado-store   pass     27 assertion(s) checked; verdict pass
+#31 139.4     dicomweb_engines_test.go:147:   wado-ts      pass     7 assertion(s) checked; verdict pass
+#31 139.4     dicomweb_engines_test.go:147:   wado-meta    pass     8 assertion(s) checked; verdict pass
+#31 139.4 --- PASS: TestRealDICOMwebHappyPath (4.65s)
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail//qido
+#31 139.4     dicomweb_engines_test.go:249:   q            pass     7 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail//qido#01
+#31 139.4     dicomweb_engines_test.go:249:   q            pass     11 assertion(s) checked; verdict pass | 3 search request(s), 4 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/qido-drop-first/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     fail qido.status http://127.0.0.1:43005/dicom-web/studies?PatientID=1CT1: expected 200, got 204 PS3.18: 200 with matches; 204 means no match | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/qido-ctype-json/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     fail qido.content_type http://127.0.0.1:37273/dicom-web/studies?PatientID=1CT1: expected application/dicom+json, got application/json  | 1 search request(s), 1 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/qido-bad-json/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     fail qido.json http://127.0.0.1:38259/dicom-web/studies?PatientID=1CT1: expected JSON array of DICOM JSON objects, got invalid not JSON: JSONDecodeError PS3.18 Annex F | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/qido-html/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     fail qido.content_type http://127.0.0.1:36281/dicom-web/studies?PatientID=1CT1: expected application/dicom+json, got text/html  | fail qido.json http://127.0.0.1:36281/dicom-web/studies?PatientID=1CT1: expected JSON array of DICOM JSON objects, got invalid not JSON: JSONDecodeError PS3.18 Annex F | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/qido-204/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     fail qido.status http://127.0.0.1:39443/dicom-web/studies?PatientID=1CT1: expected 200, got 204 PS3.18: 200 with matches; 204 means no match | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/qido-500/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     fail qido.status http://127.0.0.1:33159/dicom-web/studies?PatientID=1CT1: expected 200, got 500 PS3.18: 200 with matches; 204 means no match | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/qido-no-unique-key/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     fail qido.object.unique_key object 1: expected 0020000D with a value, got missing  | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 1 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/qido-wrong-patient/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     fail qido.object.match 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected PatientID = 1CT1, got OTHER-PATIENT returned object does not match the query | 1 search request(s), 1 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/qido-ignore-limit/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     fail qido.page.size http://127.0.0.1:42661/dicom-web/studies?limit=2&offset=0: expected at most 2 objects, got 4  | 1 search request(s), 4 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/qido-endless/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     limit error: the target was still returning full pages after limits.max_pages (3) pages | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 3 search request(s), 6 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/qido-huge-json/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     limit error: GET http://127.0.0.1:37843/dicom-web/studies?PatientID=1CT1: DICOM JSON document larger than the limit (65536 bytes) | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/qido-stream-big/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     limit error: GET http://127.0.0.1:33687/dicom-web/studies?PatientID=1CT1: response body larger than the limit (1048576 bytes) | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/redirect/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     protocol error: GET http://127.0.0.1:46685/dicom-web/studies?PatientID=1CT1: HTTP 302 redirect to "http://127.0.0.1:42141/dicom-web/dicom-web/studies" was not followed | fail qido.status http://127.0.0.1:46685/dicom-web/studies?PatientID=1CT1: expected 200, got 302 PS3.18: 200 with matches; 204 means no match | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/http-malformed/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     protocol error: GET http://127.0.0.1:44885/dicom-web/studies?PatientID=1CT1: malformed HTTP response: BadStatusLine: SSH-2.0-not-http
+#31 139.4          | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4 === RUN   TestRealQidoMalformedResponsesFail/truncated-body/qido
+#31 139.4     dicomweb_engines_test.go:249:   q            fail     protocol error: GET http://127.0.0.1:42037/dicom-web/studies?PatientID=1CT1: truncated response body (13 bytes, more expected) | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4 --- PASS: TestRealQidoMalformedResponsesFail (11.29s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail//qido (0.67s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail//qido#01 (0.62s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/qido-drop-first/qido (0.67s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/qido-ctype-json/qido (0.67s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/qido-bad-json/qido (0.67s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/qido-html/qido (0.67s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/qido-204/qido (0.67s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/qido-500/qido (0.66s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/qido-no-unique-key/qido (0.68s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/qido-wrong-patient/qido (0.69s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/qido-ignore-limit/qido (0.58s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/qido-endless/qido (0.60s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/qido-huge-json/qido (0.69s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/qido-stream-big/qido (0.69s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/redirect/qido (0.69s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/http-malformed/qido (0.67s)
+#31 139.4     --- PASS: TestRealQidoMalformedResponsesFail/truncated-body/qido (0.68s)
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail//a
+#31 139.4     dicomweb_engines_test.go:301:   w            pass     6 assertion(s) checked; verdict pass
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail//b
+#31 139.4     dicomweb_engines_test.go:301:   w            pass     7 assertion(s) checked; verdict pass
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail//c
+#31 139.4     dicomweb_engines_test.go:301:   w            pass     6 assertion(s) checked; verdict pass
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-boundary-in-data/d
+#31 139.4     dicomweb_engines_test.go:301:   w            pass     6 assertion(s) checked; verdict pass
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-truncated/e
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     protocol error: GET http://127.0.0.1:40241/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: multipart: part 1: no closing boundary delimiter (truncated body) | fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got missing 
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-bad-boundary/f
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     protocol error: GET http://127.0.0.1:36663/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: multipart: the body does not contain the boundary from the Content-Type | fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got missing 
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-octet/g
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     protocol error: http://127.0.0.1:42947/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322 part 1: part Content-Type is application/octet-stream, not application/dicom | fail wado.part.content_type http://127.0.0.1:42947/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322 part 1: expected application/dicom, got application/octet-stream  | fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got missing 
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-garbage-part/h
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     protocol error: http://127.0.0.1:35595/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322 part 1: not a DICOM Part 10 object: InvalidDicomError | fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got missing 
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-drop-one/i
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got missing 
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-extra-one/j
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     fail wado.uid.set 1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246: expected not expected, got received unexpected instance
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-duplicate/k
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got received 2 times 
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-ignore-ts/l
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     fail wado.part.transfer_syntax 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected 1.2.840.10008.1.2.4.70, got 1.2.840.10008.1.2.1 File Meta Transfer Syntax UID | fail wado.part.ts_header 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected 1.2.840.10008.1.2.1, got 1.2.840.10008.1.2.4.70 transfer-syntax parameter of the part's Content-Type
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-ts-header/m
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     fail wado.part.ts_header 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected 1.2.840.10008.1.2.1, got 1.2.840.10008.1.2 transfer-syntax parameter of the part's Content-Type
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-alter-pixel/n
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     fail wado.pixels fixtures/ct_explicit_le.dcm: expected pixel data identical to the sent file, got pixel data differs 
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-206/o
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     fail wado.status http://127.0.0.1:38563/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected 200, got 206  | fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got missing 
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-404/p
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     fail wado.status http://127.0.0.1:33349/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected 200, got 404  | fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got missing 
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-503/q
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     fail wado.status http://127.0.0.1:34779/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected 200, got 503  | fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got missing 
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-not-multipart/r
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     protocol error: GET http://127.0.0.1:38355/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: multipart: Content-Type is application/dicom, not multipart/related | fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got missing 
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/wado-many-parts/s
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     limit error: GET http://127.0.0.1:35431/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: more than 2 parts (limit) | fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got missing 
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail//t
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     limit error: GET http://127.0.0.1:42043/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: part 1 is larger than the limit (1024 bytes) | fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got missing 
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/meta-drop-one/u
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     fail wado.metadata.instance 1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265: expected in the metadata once, got 0 times  | fail wado.metadata.attribute 1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265 PatientID: expected ["4MR1"], got (instance missing) value in the original file vs. the metadata
+#31 139.4 === RUN   TestRealWadoMalformedResponsesFail/meta-wrong-patient/v
+#31 139.4     dicomweb_engines_test.go:301:   w            fail     fail wado.metadata.attribute 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457 PatientID: expected ["4MR1"], got ["OTHER-PATIENT"] value in the original file vs. the metadata | fail wado.metadata.attribute 1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265 PatientID: expected ["4MR1"], got ["OTHER-PATIENT"] value in the original file vs. the metadata
+#31 139.4 === NAME  TestRealWadoMalformedResponsesFail
+#31 139.4     dicomweb_engines_test.go:321:   w            pass     6 assertion(s) checked; verdict pass
+#31 139.4     dicomweb_engines_test.go:321:   w            fail     fail wado.validate x001-p00001.dcm: expected no errors and no engine errors, got 2 errors, 0 engine errors 
+#31 139.4 --- PASS: TestRealWadoMalformedResponsesFail (24.70s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail//a (1.17s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail//b (1.17s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail//c (0.92s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-boundary-in-data/d (1.17s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-truncated/e (0.83s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-bad-boundary/f (0.82s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-octet/g (0.83s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-garbage-part/h (0.92s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-drop-one/i (0.81s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-extra-one/j (0.91s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-duplicate/k (0.91s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-ignore-ts/l (0.91s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-ts-header/m (0.91s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-alter-pixel/n (1.14s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-206/o (0.81s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-404/p (0.81s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-503/q (0.81s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-not-multipart/r (0.82s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/wado-many-parts/s (0.81s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail//t (0.81s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/meta-drop-one/u (0.91s)
+#31 139.4     --- PASS: TestRealWadoMalformedResponsesFail/meta-wrong-patient/v (0.91s)
+#31 139.4 === RUN   TestRealStowControls
+#31 139.4 === RUN   TestRealStowControls//m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            pass     3 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-fail-one/m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            fail     fail stow.instance.failed 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected stored, got failed, Failure Reason 0xA700  | fail stow.status http://127.0.0.1:46565/dicom-web/studies: expected 200 with no failed instance, got 202 with 1 failed instance(s)  | 1 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-409/m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            fail     fail stow.instance.failed 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected stored, got failed, Failure Reason 0xA700  | fail stow.instance.failed 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457: expected stored, got failed, Failure Reason 0xA700  | fail stow.status http://127.0.0.1:41883/dicom-web/studies: expected 200 with no failed instance, got 409 with 2 failed instance(s)  | 0 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-omit-one/m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            fail     fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected in the Referenced SOP Sequence once, got missing  | 1 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-extra-ref/m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            fail     fail stow.instance.extra 1.2.3.4.5.6.7: expected not referenced, got referenced although not sent unexpected extra UID | 2 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-wrong-class/m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            fail     fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected referenced with SOP Class 1.2.840.10008.5.1.4.1.1.2, got referenced with SOP Class 1.2.840.10008.5.1.4.1.1.7  | 1 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-200-with-failure/m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            fail     fail stow.instance.failed 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected stored, got failed, Failure Reason 0xC000  | fail stow.status http://127.0.0.1:43233/dicom-web/studies: expected 200 with no failed instance, got 200 with 1 failed instance(s)  | 1 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-warning/m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            fail     fail stow.instance.warning 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected no warning, got Warning Reason 0xB000 set allow_warnings to accept warnings | fail stow.status http://127.0.0.1:40945/dicom-web/studies: expected 200 with no failed instance, got 202 with 0 failed instance(s)  | 2 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-warning/],_allow_warnings:_true
+#31 139.4     dicomweb_engines_test.go:363:   s            pass with warnings warn stow.instance.warning 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected no warning, got Warning Reason 0xB000 allowed by allow_warnings | warn stow.status http://127.0.0.1:46765/dicom-web/studies: expected 200, got 202 accepted with warnings (allow_warnings) | 4 assertion(s) checked; verdict pass with warnings | 2 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-empty-200/m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            fail     protocol error: http://127.0.0.1:43715/dicom-web/studies: the STOW-RS response is not a DICOM JSON object (empty ) | fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457: expected in the Referenced SOP Sequence once, got missing  | 0 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-xml/m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            fail     protocol error: http://127.0.0.1:39343/dicom-web/studies: the STOW-RS response is not a DICOM JSON object (other_type Content-Type application/dicom+xml) | fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457: expected in the Referenced SOP Sequence once, got missing  | 0 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-json-array/m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            fail     protocol error: http://127.0.0.1:40725/dicom-web/studies: the STOW-RS response is not a DICOM JSON object (not_object a JSON list, not an object) | fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457: expected in the Referenced SOP Sequence once, got missing  | 0 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-bad-json/m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            fail     protocol error: http://127.0.0.1:44985/dicom-web/studies: the STOW-RS response is not a DICOM JSON object (invalid not JSON: JSONDecodeError) | fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457: expected in the Referenced SOP Sequence once, got missing  | 0 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-retrieve-other-origin/m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            pass with warnings warn stow.retrieve_url.origin http://127.0.0.1:42427/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected the target's own origin, got another origin (recorded, not requested)  | warn stow.retrieve_url.origin http://127.0.0.1:42427/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: expected the target's own origin, got another origin (recorded, not requested)  | 5 assertion(s) checked; verdict pass with warnings | 2 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-307/m,_fixtures/mr_rle.dcm]
+#31 139.4     dicomweb_engines_test.go:363:   s            fail     protocol error: POST http://127.0.0.1:37313/dicom-web/studies: HTTP 307 redirect to "http://127.0.0.1:42427/dicom-web/dicom-web/studies" was not followed | protocol error: http://127.0.0.1:37313/dicom-web/studies: the STOW-RS response is not a DICOM JSON object (empty ) | fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457: expected in the Referenced SOP Sequence once, got missing  | fail stow.status http://127.0.0.1:37313/dicom-web/studies: expected 200 with no failed instance, got 307 with 0 failed instance(s)  | 0 of 2 files stored and referenced by the target
+#31 139.4 === RUN   TestRealStowControls/stow-alter-stored/,_verify_retrieve:_true
+#31 139.4     dicomweb_engines_test.go:363:   s            fail     fail stow.verify.pixels fixtures/ct_explicit_le.dcm: expected pixel data identical to the sent file, got pixel data differs  | fail stow.verify.pixels fixtures/mr_rle.dcm: expected pixel data identical to the sent file, got pixel data differs  | 2 of 2 files stored and referenced by the target
+#31 139.4 === NAME  TestRealStowControls
+#31 139.4     dicomweb_engines_test.go:389:   s            fail     config error: junk.dcm: not a readable DICOM Part 10 file (not a DICOM file); nothing was sent
+#31 139.4     dicomweb_engines_test.go:397:   stow         fail     guard error: refused: stow steps only run against targets of class lab; web is production
+#31 139.4     dicomweb_engines_test.go:397:   qido-studies fail     guard error: refused: qido steps only run against targets of class lab; web is production
+#31 139.4     dicomweb_engines_test.go:397:   qido-series  fail     guard error: refused: qido steps only run against targets of class lab; web is production
+#31 139.4     dicomweb_engines_test.go:397:   qido-instances fail     guard error: refused: qido steps only run against targets of class lab; web is production
+#31 139.4     dicomweb_engines_test.go:397:   qido-patient fail     guard error: refused: qido steps only run against targets of class lab; web is production
+#31 139.4     dicomweb_engines_test.go:397:   qido-paged   fail     guard error: refused: qido steps only run against targets of class lab; web is production
+#31 139.4     dicomweb_engines_test.go:397:   qido-none    fail     guard error: refused: qido steps only run against targets of class lab; web is production
+#31 139.4     dicomweb_engines_test.go:397:   wado-store   fail     guard error: refused: wado steps only run against targets of class lab; web is production
+#31 139.4     dicomweb_engines_test.go:397:   wado-ts      fail     guard error: refused: wado steps only run against targets of class lab; web is production
+#31 139.4     dicomweb_engines_test.go:397:   wado-meta    fail     guard error: refused: wado steps only run against targets of class lab; web is production
+#31 139.4     dicomweb_engines_test.go:397:   stow         fail     guard error: refused: stow steps only run against targets of class lab; web is 
+#31 139.4     dicomweb_engines_test.go:397:   qido-studies fail     guard error: refused: qido steps only run against targets of class lab; web is 
+#31 139.4     dicomweb_engines_test.go:397:   qido-series  fail     guard error: refused: qido steps only run against targets of class lab; web is 
+#31 139.4     dicomweb_engines_test.go:397:   qido-instances fail     guard error: refused: qido steps only run against targets of class lab; web is 
+#31 139.4     dicomweb_engines_test.go:397:   qido-patient fail     guard error: refused: qido steps only run against targets of class lab; web is 
+#31 139.4     dicomweb_engines_test.go:397:   qido-paged   fail     guard error: refused: qido steps only run against targets of class lab; web is 
+#31 139.4     dicomweb_engines_test.go:397:   qido-none    fail     guard error: refused: qido steps only run against targets of class lab; web is 
+#31 139.4     dicomweb_engines_test.go:397:   wado-store   fail     guard error: refused: wado steps only run against targets of class lab; web is 
+#31 139.4     dicomweb_engines_test.go:397:   wado-ts      fail     guard error: refused: wado steps only run against targets of class lab; web is 
+#31 139.4     dicomweb_engines_test.go:397:   wado-meta    fail     guard error: refused: wado steps only run against targets of class lab; web is 
+#31 139.4 --- PASS: TestRealStowControls (16.52s)
+#31 139.4     --- PASS: TestRealStowControls//m,_fixtures/mr_rle.dcm] (0.92s)
+#31 139.4     --- PASS: TestRealStowControls/stow-fail-one/m,_fixtures/mr_rle.dcm] (0.91s)
+#31 139.4     --- PASS: TestRealStowControls/stow-409/m,_fixtures/mr_rle.dcm] (0.91s)
+#31 139.4     --- PASS: TestRealStowControls/stow-omit-one/m,_fixtures/mr_rle.dcm] (0.91s)
+#31 139.4     --- PASS: TestRealStowControls/stow-extra-ref/m,_fixtures/mr_rle.dcm] (0.90s)
+#31 139.4     --- PASS: TestRealStowControls/stow-wrong-class/m,_fixtures/mr_rle.dcm] (0.90s)
+#31 139.4     --- PASS: TestRealStowControls/stow-200-with-failure/m,_fixtures/mr_rle.dcm] (0.91s)
+#31 139.4     --- PASS: TestRealStowControls/stow-warning/m,_fixtures/mr_rle.dcm] (0.90s)
+#31 139.4     --- PASS: TestRealStowControls/stow-warning/],_allow_warnings:_true (0.91s)
+#31 139.4     --- PASS: TestRealStowControls/stow-empty-200/m,_fixtures/mr_rle.dcm] (0.91s)
+#31 139.4     --- PASS: TestRealStowControls/stow-xml/m,_fixtures/mr_rle.dcm] (0.90s)
+#31 139.4     --- PASS: TestRealStowControls/stow-json-array/m,_fixtures/mr_rle.dcm] (0.91s)
+#31 139.4     --- PASS: TestRealStowControls/stow-bad-json/m,_fixtures/mr_rle.dcm] (0.90s)
+#31 139.4     --- PASS: TestRealStowControls/stow-retrieve-other-origin/m,_fixtures/mr_rle.dcm] (0.91s)
+#31 139.4     --- PASS: TestRealStowControls/stow-307/m,_fixtures/mr_rle.dcm] (0.91s)
+#31 139.4     --- PASS: TestRealStowControls/stow-alter-stored/,_verify_retrieve:_true (1.41s)
+#31 139.4 === RUN   TestRealDICOMwebOverTLS
+#31 139.4     dicomweb_engines_test.go:436:   q            pass     6 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies | TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT test PKI,CN=web", issuer "O=LibreDVT test PKI,CN=test-root-ca", SAN DNS [], SAN IP [127.0.0.1], valid 2026-11-23T03:33:26.000Z to 2026-11-24T04:33:26.000Z, SHA-256 234938fb676168facb3e2c2374e84e15c168db4ec7baaf9caf1a57d251b48de2; client certificate offered: false
+#31 139.4 2026/11/23 04:33:28 http: TLS handshake error from 127.0.0.1:40322: local error: tls: bad record MAC
+#31 139.4     dicomweb_engines_test.go:448:   q            fail     tls error: GET https://127.0.0.1:39025/dicom-web/studies?PatientID=1CT1: certificate verification failed: Hostname mismatch, certificate is not valid for 'other.test'. (code 62) | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4 2026/11/23 04:33:28 http: TLS handshake error from 127.0.0.1:40338: local error: tls: bad record MAC
+#31 139.4     dicomweb_engines_test.go:448:   q            fail     tls error: GET https://127.0.0.1:39025/dicom-web/studies?PatientID=1CT1: certificate verification failed: unable to get local issuer certificate (code 20) | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4     dicomweb_engines_test.go:455:   q            pass     6 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies | TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT test PKI,CN=web", issuer "O=LibreDVT test PKI,CN=test-root-ca", SAN DNS [], SAN IP [127.0.0.1], valid 2026-11-23T03:33:26.000Z to 2026-11-24T04:33:26.000Z, SHA-256 234938fb676168facb3e2c2374e84e15c168db4ec7baaf9caf1a57d251b48de2; client certificate offered: true
+#31 139.4 2026/11/23 04:33:30 http: TLS handshake error from 127.0.0.1:50252: tls: client didn't provide a certificate
+#31 139.4     dicomweb_engines_test.go:458:   q            fail     tls error: GET https://127.0.0.1:34075/dicom-web/studies?PatientID=1CT1: the target sent a TLS alert: TLSV13_ALERT_CERTIFICATE_REQUIRED | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies | TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject "O=LibreDVT test PKI,CN=web", issuer "O=LibreDVT test PKI,CN=test-root-ca", SAN DNS [], SAN IP [127.0.0.1], valid 2026-11-23T03:33:26.000Z to 2026-11-24T04:33:26.000Z, SHA-256 234938fb676168facb3e2c2374e84e15c168db4ec7baaf9caf1a57d251b48de2; client certificate offered: false
+#31 139.4 2026/11/23 04:33:30 http: TLS handshake error from 127.0.0.1:40342: client sent an HTTP request to an HTTPS server
+#31 139.4     dicomweb_engines_test.go:476:   p            pass     1 assertion(s) checked; verdict pass
+#31 139.4     dicomweb_engines_test.go:476:   p            fail     fail tls_reject.refused plaintext: expected refused, got accepted http_reply: the target answered with HTTP status 200
+#31 139.4 2026/11/23 04:33:31 http: TLS handshake error from 127.0.0.1:53456: tls: client offered only unsupported versions: [302 301]
+#31 139.4     dicomweb_engines_test.go:476:   p            pass     1 assertion(s) checked; verdict pass
+#31 139.4     dicomweb_engines_test.go:476:   p            fail     fail tls_reject.refused TLS 1.1 only: expected refused, got accepted handshake_completed: handshake completed with TLSv1.1
+#31 139.4 2026/11/23 04:33:33 http: TLS handshake error from 127.0.0.1:58494: tls: client didn't provide a certificate
+#31 139.4     dicomweb_engines_test.go:476:   p            pass     1 assertion(s) checked; verdict pass
+#31 139.4     dicomweb_engines_test.go:476:   p            fail     fail tls_reject.refused no_client_cert: expected refused, got accepted http_reply: the target answered with HTTP status 200
+#31 139.4 --- PASS: TestRealDICOMwebOverTLS (6.72s)
+#31 139.4 === RUN   TestRealDICOMwebSecretsNeverInArtefacts
+#31 139.4     dicomweb_engines_test.go:498:   stow         pass     39 assertion(s) checked; verdict pass | 6 of 6 files stored and referenced by the target
+#31 139.4     dicomweb_engines_test.go:498:   qido-studies pass     18 assertion(s) checked; verdict pass | 4 search request(s), 4 object(s) returned at level studies
+#31 139.4     dicomweb_engines_test.go:498:   qido-series  pass     18 assertion(s) checked; verdict pass | 4 search request(s), 4 object(s) returned at level series
+#31 139.4     dicomweb_engines_test.go:498:   qido-instances pass     25 assertion(s) checked; verdict pass | 6 search request(s), 6 object(s) returned at level instances
+#31 139.4     dicomweb_engines_test.go:498:   qido-patient pass     6 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies
+#31 139.4     dicomweb_engines_test.go:498:   qido-paged   pass     12 assertion(s) checked; verdict pass | 3 search request(s), 4 object(s) returned at level studies
+#31 139.4     dicomweb_engines_test.go:498:   qido-none    pass     1 assertion(s) checked; verdict pass | 1 search request(s), 0 object(s) returned at level studies
+#31 139.4     dicomweb_engines_test.go:498:   wado-store   pass     27 assertion(s) checked; verdict pass
+#31 139.4     dicomweb_engines_test.go:498:   wado-ts      pass     7 assertion(s) checked; verdict pass
+#31 139.4     dicomweb_engines_test.go:498:   wado-meta    pass     8 assertion(s) checked; verdict pass
+#31 139.4     dicomweb_engines_test.go:498:   stow         fail     protocol error: http://127.0.0.1:35839/dicom-web/studies: the STOW-RS response is not a DICOM JSON object (other_type Content-Type text/plain) | protocol error: http://127.0.0.1:35839/dicom-web/studies: the STOW-RS response is not a DICOM JSON object (other_type Content-Type text/plain) | fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457: expected in the Referenced SOP Sequence once, got missing  | fail stow.status http://127.0.0.1:35839/dicom-web/studies: expected 200 with no failed instance, got 500 with 0 failed instance(s)  | fail stow.instance.referenced 1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116: expected in the Referenced SOP Sequence once, got missing  | fail stow.status http://127.0.0.1:35839/dicom-web/studies: expected 200 with no failed instance, got 500 with 0 failed instance(s)  | 0 of 6 files stored and referenced by the target | engine error: 2 secret value(s) found in the output and replaced by [REDACTED]; the run fails (DVT-SRS-152)
+#31 139.4     dicomweb_engines_test.go:498:   qido-studies fail     config error: nothing to search for: no earlier store or stow step sent an object at level studies
+#31 139.4     dicomweb_engines_test.go:498:   qido-series  fail     config error: nothing to search for: no earlier store or stow step sent an object at level series
+#31 139.4     dicomweb_engines_test.go:498:   qido-instances fail     config error: nothing to search for: no earlier store or stow step sent an object at level instances
+#31 139.4     dicomweb_engines_test.go:498:   qido-patient fail     fail qido.status http://127.0.0.1:35839/dicom-web/studies?PatientID=1CT1: expected 200, got 500 PS3.18: 200 with matches; 204 means no match | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies | engine error: 1 secret value(s) found in the output and replaced by [REDACTED]; the run fails (DVT-SRS-152)
+#31 139.4     dicomweb_engines_test.go:498:   qido-paged   fail     fail qido.status http://127.0.0.1:35839/dicom-web/studies?limit=2&offset=0: expected 200, got 500 PS3.18: 200 with matches; 204 means no match | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies | engine error: 1 secret value(s) found in the output and replaced by [REDACTED]; the run fails (DVT-SRS-152)
+#31 139.4     dicomweb_engines_test.go:498:   qido-none    fail     fail qido.none http://127.0.0.1:35839/dicom-web/studies?PatientID=NOBODY: expected 204, or 200 with an empty JSON array, got 500, invalid, 0 object(s)  | 1 search request(s), 0 object(s) returned at level studies | engine error: 1 secret value(s) found in the output and replaced by [REDACTED]; the run fails (DVT-SRS-152)
+#31 139.4     dicomweb_engines_test.go:498:   wado-store   fail     config error: nothing to retrieve: no earlier store or stow step sent an instance
+#31 139.4     dicomweb_engines_test.go:498:   wado-ts      fail     fail wado.status http://127.0.0.1:35839/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322/series/1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322/instances/1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected 200, got 500  | fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got missing  | engine error: 1 secret value(s) found in the output and replaced by [REDACTED]; the run fails (DVT-SRS-152)
+#31 139.4     dicomweb_engines_test.go:498:   wado-meta    fail     fail wado.status http://127.0.0.1:35839/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/metadata: expected 200, got 500  | fail wado.metadata.instance 1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265: expected in the metadata once, got 0 times  | fail wado.metadata.instance 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457: expected in the metadata once, got 0 times  | fail wado.metadata.attribute 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457 PatientID: expected ["4MR1"], got (instance missing) value in the original file vs. the metadata | fail wado.metadata.attribute 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457 Modality: expected ["MR"], got (instance missing) value in the original file vs. the metadata | fail wado.metadata.attribute 1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265 PatientID: expected ["4MR1"], got (instance missing) value in the original file vs. the metadata | fail wado.metadata.attribute 1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265 Modality: expected ["MR"], got (instance missing) value in the original file vs. the metadata | engine error: 1 secret value(s) found in the output and replaced by [REDACTED]; the run fails (DVT-SRS-152)
+#31 139.4 --- PASS: TestRealDICOMwebSecretsNeverInArtefacts (7.13s)
+#31 139.4 === RUN   TestNetworkPositiveControls
+#31 139.4 === RUN   TestNetworkPositiveControls/ok
+#31 139.4     integration_test.go:126: [ok] echo    passed   C-ECHO status 0x0000 (Success)
+#31 139.4     integration_test.go:126: [ok] reject  passed   association with calling AE "LIBREDVT", called AE "NOT-FAKEPACS" rejected as expected
+#31 139.4     integration_test.go:126: [ok] store   passed   6 of 6 files stored with status 0x0000
+#31 139.4     integration_test.go:126: [ok] find    passed   1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es)); 1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))
+#31 139.4     integration_test.go:126: [ok] move    passed   6 of 6 expected instances received; pixel data identical for 6 of 6 sent files
+#31 139.4 === RUN   TestNetworkPositiveControls/refuse-store
+#31 139.4     integration_test.go:126: [refuse-store] echo    passed   C-ECHO status 0x0000 (Success)
+#31 139.4     integration_test.go:126: [refuse-store] reject  passed   association with calling AE "LIBREDVT", called AE "NOT-FAKEPACS" rejected as expected
+#31 139.4     integration_test.go:126: [refuse-store] store   failed   fixtures/ct_explicit_le.dcm: C-STORE status 0xA700 ; fixtures/ct_j2k.dcm: C-STORE status 0xA700 ; fixtures/mr_jpeg_ls.dcm: C-STORE status 0xA700 ; fixtures/mr_rle.dcm: C-STORE status 0xA700 ; fixtures/sc_jpeg_baseline.dcm: C-STORE status 0xA700 ; fixtures/sc_jpeg_lossless.dcm: C-STORE status 0xA700 ; 0 of 6 files stored with status 0x0000
+#31 139.4     integration_test.go:126: [refuse-store] find    failed   no studies to query (no earlier store step succeeded)
+#31 139.4     integration_test.go:126: [refuse-store] move    failed   no studies to retrieve (no earlier store step succeeded or no file matched)
+#31 139.4 === RUN   TestNetworkPositiveControls/drop-one
+#31 139.4     integration_test.go:126: [drop-one] echo    passed   C-ECHO status 0x0000 (Success)
+#31 139.4     integration_test.go:126: [drop-one] reject  passed   association with calling AE "LIBREDVT", called AE "NOT-FAKEPACS" rejected as expected
+#31 139.4     integration_test.go:126: [drop-one] store   passed   6 of 6 files stored with status 0x0000
+#31 139.4     integration_test.go:126: [drop-one] find    passed   1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es)); 1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))
+#31 139.4     integration_test.go:126: [drop-one] move    failed   4 expected instance(s) not received: [1.2.276.0.7230010.3.1.4.8323329.15150.1506363677.126194 1.2.826.0.1.3680043.2.1143.6234428899086018376578420169896863246 1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322]; 2 of 6 expected instances received; fixtures/ct_explicit_le.dcm: not received; fixtures/ct_j2k.dcm: not received; fixtures/mr_jpeg_ls.dcm: not received; fixtures/sc_jpeg_baseline.dcm: not received; pixel data identical for 2 of 6 sent files
+#31 139.4 === RUN   TestNetworkPositiveControls/alter-pixels
+#31 139.4     integration_test.go:126: [alter-pixels] echo    passed   C-ECHO status 0x0000 (Success)
+#31 139.4     integration_test.go:126: [alter-pixels] reject  passed   association with calling AE "LIBREDVT", called AE "NOT-FAKEPACS" rejected as expected
+#31 139.4     integration_test.go:126: [alter-pixels] store   passed   6 of 6 files stored with status 0x0000
+#31 139.4     integration_test.go:126: [alter-pixels] find    passed   1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es)); 1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))
+#31 139.4     integration_test.go:126: [alter-pixels] move    failed   6 of 6 expected instances received; fixtures/ct_explicit_le.dcm: pixel data differs; fixtures/ct_j2k.dcm: pixel data differs; fixtures/mr_jpeg_ls.dcm: pixel data differs; fixtures/mr_rle.dcm: pixel data differs; fixtures/sc_jpeg_baseline.dcm: pixel data differs; fixtures/sc_jpeg_lossless.dcm: pixel data differs; pixel data identical for 0 of 6 sent files
+#31 139.4 === RUN   TestNetworkPositiveControls/accept-any
+#31 139.4     integration_test.go:126: [accept-any] echo    passed   C-ECHO status 0x0000 (Success)
+#31 139.4     integration_test.go:126: [accept-any] reject  failed   association with calling AE "LIBREDVT", called AE "NOT-FAKEPACS" was accepted; expected a rejection
+#31 139.4     integration_test.go:126: [accept-any] store   passed   6 of 6 files stored with status 0x0000
+#31 139.4     integration_test.go:126: [accept-any] find    passed   1.2.276.0.7230010.3.1.2.296485376.1.1521713414.1800996: found (1 match(es)); 1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: found (1 match(es)); 1.3.6.1.4.1.5962.1.2.4.20040826185059.5457: found (1 match(es))
+#31 139.4     integration_test.go:126: [accept-any] move    passed   6 of 6 expected instances received; pixel data identical for 6 of 6 sent files
+#31 139.4 --- PASS: TestNetworkPositiveControls (20.17s)
+#31 139.4     --- PASS: TestNetworkPositiveControls/ok (4.60s)
+#31 139.4     --- PASS: TestNetworkPositiveControls/refuse-store (1.92s)
+#31 139.4     --- PASS: TestNetworkPositiveControls/drop-one (4.46s)
+#31 139.4     --- PASS: TestNetworkPositiveControls/alter-pixels (4.59s)
+#31 139.4     --- PASS: TestNetworkPositiveControls/accept-any (4.59s)
+#31 139.4 === RUN   TestNetworkTargetDownAndProductionGuard
+#31 139.4     integration_test.go:147: [down] echo    failed   association not established: association aborted
+#31 139.4     integration_test.go:147: [down] reject  failed   no association rejection received: no association rejection received (connection failed or aborted)
+#31 139.4     integration_test.go:147: [down] store   failed   association not established: association aborted
+#31 139.4     integration_test.go:147: [down] find    failed   no studies to query (no earlier store step succeeded)
+#31 139.4     integration_test.go:147: [down] move    failed   no studies to retrieve (no earlier store step succeeded or no file matched)
+#31 139.4     integration_test.go:154: [production] echo    passed   C-ECHO status 0x0000 (Success)
+#31 139.4     integration_test.go:154: [production] reject  passed   association with calling AE "LIBREDVT", called AE "NOT-FAKEPACS" rejected as expected
+#31 139.4     integration_test.go:154: [production] store   failed   refused: store steps only run against targets of class lab; fake is production
+#31 139.4     integration_test.go:154: [production] find    failed   no studies to query (no earlier store step succeeded)
+#31 139.4     integration_test.go:154: [production] move    failed   refused: move steps only run against targets of class lab; fake is production
+#31 139.4 --- PASS: TestNetworkTargetDownAndProductionGuard (2.87s)
+#31 139.4 === RUN   TestAssociatePositiveControls
+#31 139.4 --- PASS: TestAssociatePositiveControls (0.00s)
+#31 139.4 === RUN   TestAssociateExpectedRejection
+#31 139.4 --- PASS: TestAssociateExpectedRejection (0.00s)
+#31 139.4 === RUN   TestAssociateAbortCloseGarbageTimeoutAndRelease
+#31 139.4 --- PASS: TestAssociateAbortCloseGarbageTimeoutAndRelease (0.00s)
+#31 139.4 === RUN   TestProbeVerdictTable
+#31 139.4 --- PASS: TestProbeVerdictTable (0.00s)
+#31 139.4 === RUN   TestTLSRejectStep
+#31 139.4 --- PASS: TestTLSRejectStep (0.01s)
+#31 139.4 === RUN   TestTLSMoveNeedsSCPCertificate
+#31 139.4 --- PASS: TestTLSMoveNeedsSCPCertificate (0.00s)
+#31 139.4 === RUN   TestHappyPathPasses
+#31 139.4 --- PASS: TestHappyPathPasses (0.00s)
+#31 139.4 === RUN   TestProductionGuard
+#31 139.4 --- PASS: TestProductionGuard (0.00s)
+#31 139.4 === RUN   TestEchoAndRejectFailures
+#31 139.4 --- PASS: TestEchoAndRejectFailures (0.00s)
+#31 139.4 === RUN   TestStoreMoveCompareFailures
+#31 139.4 --- PASS: TestStoreMoveCompareFailures (0.00s)
+#31 139.4 === RUN   TestUnknownTargetMeansStepsNotRun
+#31 139.4 --- PASS: TestUnknownTargetMeansStepsNotRun (0.00s)
+#31 139.4 === RUN   TestNativeReencodingIsNotedNotFailed
+#31 139.4 --- PASS: TestNativeReencodingIsNotedNotFailed (0.00s)
+#31 139.4 === RUN   TestDICOMwebDataStepsLabOnly
+#31 139.4 --- PASS: TestDICOMwebDataStepsLabOnly (0.00s)
+#31 139.4 === RUN   TestPlanMustFitTargetProtocol
+#31 139.4 --- PASS: TestPlanMustFitTargetProtocol (0.00s)
+#31 139.4 === RUN   TestSecretFileProblemsFailBeforeConnecting
+#31 139.4 --- PASS: TestSecretFileProblemsFailBeforeConnecting (0.00s)
+#31 139.4 === RUN   TestSecretInjectedIntoOutputIsRedactedAndFailsTheRun
+#31 139.4 --- PASS: TestSecretInjectedIntoOutputIsRedactedAndFailsTheRun (0.00s)
+#31 139.4 === RUN   TestStepProtocolTableMatchesRunner
+#31 139.4 --- PASS: TestStepProtocolTableMatchesRunner (0.00s)
+#31 139.4 === RUN   TestQidoPositiveControls
+#31 139.4 --- PASS: TestQidoPositiveControls (0.00s)
+#31 139.4 === RUN   TestQidoNoMatchAndPaging
+#31 139.4 --- PASS: TestQidoNoMatchAndPaging (0.00s)
+#31 139.4 === RUN   TestStowPositiveControls
+#31 139.4 --- PASS: TestStowPositiveControls (0.00s)
+#31 139.4 === RUN   TestStowRefusesNonDICOMWithoutSending
+#31 139.4 --- PASS: TestStowRefusesNonDICOMWithoutSending (0.00s)
+#31 139.4 === RUN   TestStowThenQidoWadoFromStore
+#31 139.4 --- PASS: TestStowThenQidoWadoFromStore (0.00s)
+#31 139.4 === RUN   TestWadoMetadata
+#31 139.4 --- PASS: TestWadoMetadata (0.00s)
+#31 139.4 === RUN   TestStowVerifyRetrieve
+#31 139.4 --- PASS: TestStowVerifyRetrieve (0.00s)
+#31 139.4 === RUN   TestBearerOverClearTextRefusedBeforeEngine
+#31 139.4 --- PASS: TestBearerOverClearTextRefusedBeforeEngine (0.00s)
+#31 139.4 PASS
+#31 139.4 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	134.796s
+#31 139.4 === RUN   TestTargetsDefaultToProduction
+#31 139.4 --- PASS: TestTargetsDefaultToProduction (0.00s)
+#31 139.4 === RUN   TestTargetValidation
+#31 139.4 --- PASS: TestTargetValidation (0.00s)
+#31 139.4 === RUN   TestResultsNewestFirstAndDelete
+#31 139.4 --- PASS: TestResultsNewestFirstAndDelete (0.00s)
+#31 139.4 === RUN   TestSafeName
+#31 139.4 --- PASS: TestSafeName (0.00s)
+#31 139.4 === RUN   TestSaveUploadZip
+#31 139.4 --- PASS: TestSaveUploadZip (0.00s)
+#31 139.4 === RUN   TestV01TargetRecordLoadsAsDIMSE
+#31 139.4 --- PASS: TestV01TargetRecordLoadsAsDIMSE (0.00s)
+#31 139.4 === RUN   TestDICOMwebBaseURLRules
+#31 139.4 --- PASS: TestDICOMwebBaseURLRules (0.00s)
+#31 139.4 === RUN   TestBearerOverHTTPOnlyToLoopback
+#31 139.4 --- PASS: TestBearerOverHTTPOnlyToLoopback (0.00s)
+#31 139.4 === RUN   TestTargetSchemaIsStrict
+#31 139.4 --- PASS: TestTargetSchemaIsStrict (0.00s)
+#31 139.4 === RUN   TestTargetFileYAMLSameSchema
+#31 139.4 --- PASS: TestTargetFileYAMLSameSchema (0.00s)
+#31 139.4 === RUN   TestLoadSecretsChecksEveryReferencedFile
+#31 139.4 --- PASS: TestLoadSecretsChecksEveryReferencedFile (0.00s)
+#31 139.4 === RUN   TestLoadSecretsChecksCAAndClientKeyPair
+#31 139.4 --- PASS: TestLoadSecretsChecksCAAndClientKeyPair (0.00s)
+#31 139.4 PASS
+#31 139.4 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/store	0.009s
+#31 139.4 === RUN   TestRefusesToStartWithoutPassword
+#31 139.4 --- PASS: TestRefusesToStartWithoutPassword (0.00s)
+#31 139.4 === RUN   TestEverythingButLoginAndHealthNeedsSession
+#31 139.4 --- PASS: TestEverythingButLoginAndHealthNeedsSession (0.00s)
+#31 139.4 === RUN   TestSessionExpiresAfterIdle
+#31 139.4 2026/11/23 04:31:49 INFO login ip=127.0.0.1
+#31 139.4 --- PASS: TestSessionExpiresAfterIdle (0.00s)
+#31 139.4 === RUN   TestCSRFAndLoginRateLimit
+#31 139.4 2026/11/23 04:31:49 INFO login ip=127.0.0.1
+#31 139.4 2026/11/23 04:31:49 INFO target saved name=lab protocol=dimse class=lab tls=false
+#31 139.4 2026/11/23 04:31:49 WARN login failed ip=127.0.0.1
+#31 139.4 2026/11/23 04:31:49 WARN login failed ip=127.0.0.1
+#31 139.4 2026/11/23 04:31:49 WARN login failed ip=127.0.0.1
+#31 139.4 2026/11/23 04:31:49 WARN login failed ip=127.0.0.1
+#31 139.4 2026/11/23 04:31:49 WARN login failed ip=127.0.0.1
+#31 139.4 2026/11/23 04:31:49 WARN login rate limited ip=127.0.0.1
+#31 139.4 --- PASS: TestCSRFAndLoginRateLimit (0.00s)
+#31 139.4 === RUN   TestUploadValidateAndDelete
+#31 139.4 2026/11/23 04:31:49 INFO login ip=127.0.0.1
+#31 139.4 2026/11/23 04:31:49 INFO validation finished id=20261123-043149-8f1c4938 files=1 verdict=pass
+#31 139.4 2026/11/23 04:31:49 INFO deleted id=20261123-043149-8f1c4938
+#31 139.4 --- PASS: TestUploadValidateAndDelete (0.00s)
+#31 139.4 === RUN   TestTargetFormsUseTheTargetFileSchema
+#31 139.4 --- PASS: TestTargetFormsUseTheTargetFileSchema (0.00s)
+#31 139.4 === RUN   TestTargetsPageKeepsSecretsByReference
+#31 139.4 2026/11/23 04:31:49 INFO login ip=127.0.0.1
+#31 139.4 2026/11/23 04:31:49 INFO target saved name=vendor-web-lab protocol=dicomweb class=lab tls=true
+#31 139.4 2026/11/23 04:31:49 INFO target saved name=pacs-tls protocol=dimse class=production tls=true
+#31 139.4 2026/11/23 04:31:49 INFO target saved name=missing protocol=dicomweb class=lab tls=true
+#31 139.4 --- PASS: TestTargetsPageKeepsSecretsByReference (0.00s)
+#31 139.4 === RUN   TestPlansPageListsBundledExamplePlans
+#31 139.4 2026/11/23 04:31:49 INFO login ip=127.0.0.1
+#31 139.4 --- PASS: TestPlansPageListsBundledExamplePlans (0.00s)
+#31 139.4 PASS
+#31 139.4 ok  	github.com/mulcahyio/libre-rws/modules/dvt/internal/web	0.021s
+#31 DONE 139.5s
+
+#32 exporting to image
+#32 exporting layers
+#32 exporting layers 1.1s done
+#32 exporting manifest sha256:2d1d13df33a44f24486aa09b673a8ccfecf4f54d6d3ad743e7976b3b5566120a 0.0s done
+#32 exporting config sha256:8fe7ef214e4e6fa0952be32c7432defdbd9241808dc5d5deb6110e337ce442ed 0.0s done
+#32 exporting attestation manifest sha256:eac5d38be9692215b6525fb990eecba16d0e0e309cc235970e36bef12d3727ed 0.0s done
+#32 exporting manifest list sha256:c94c4acf70b57b7ab2502b5ebfd86f2dfaacec199e63fdd05e48f58df1c1fc77 0.0s done
+#32 naming to docker.io/libre/dvt-test:0.2-rc done
+#32 unpacking to docker.io/libre/dvt-test:0.2-rc
+#32 unpacking to docker.io/libre/dvt-test:0.2-rc 0.4s done
+#32 DONE 1.6s
+exit 0

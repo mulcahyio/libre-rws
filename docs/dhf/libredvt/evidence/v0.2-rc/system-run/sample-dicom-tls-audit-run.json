@@ -1,0 +1,300 @@
+{
+  "id": "20261123-043734-f85ad500",
+  "plan": "Generic DICOM TLS audit",
+  "plan_sha256": "e1b389667114cf6b92f7b479c83abaf4da3e1d05964d058d288100b1887390ac",
+  "target": "example-clinic-lab-pacs",
+  "target_desc": "example-clinic-lab-pacs (pacs.lab.example:11112, called AE LABPACS, calling AE AUDITOR, TLS 1.2+, class lab)",
+  "target_info": {
+    "name": "example-clinic-lab-pacs",
+    "class": "lab",
+    "protocol": "dimse",
+    "endpoint": "pacs.lab.example:11112"
+  },
+  "started": "2026-11-23T04:37:34.204179314Z",
+  "finished": "2026-11-23T04:37:35.504954274Z",
+  "steps": [
+    {
+      "id": "negotiate-verification",
+      "type": "associate",
+      "status": "passed",
+      "messages": [
+        "3 assertion(s) checked; verdict pass",
+        "TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject \"O=Example Clinic Lab,CN=pacs.lab.example\", issuer \"O=Example Clinic Lab,CN=Example Clinic Lab CA\", SAN DNS [pacs.lab.example], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 c885a3b0fdbd39b979ecb99cc117c02d369fb6f48f1ad60939d074a6bd63512c; client certificate offered: false",
+        "association accepted; max PDU 131072, Implementation Class UID \"1.3.6.1.4.1.67686.1.1.1.0.0\", Version Name \"LIBREDCM_0_0\""
+      ],
+      "started": "2026-11-23T04:37:34.648381009Z",
+      "duration": 159844820,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "example-clinic-lab-pacs",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "pacs.lab.example:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "pacs.lab.example:11112",
+            "started": "2026-11-23T04:37:34.758Z",
+            "duration_ms": 6,
+            "outcome": "completed",
+            "tls": {
+              "version": "TLSv1.3",
+              "cipher": "TLS_AES_128_GCM_SHA256",
+              "verified": true,
+              "peer": {
+                "subject": "O=Example Clinic Lab,CN=pacs.lab.example",
+                "issuer": "O=Example Clinic Lab,CN=Example Clinic Lab CA",
+                "san_dns": [
+                  "pacs.lab.example"
+                ],
+                "not_before": "2026-11-23T04:37:04.000Z",
+                "not_after": "2026-11-25T04:37:04.000Z",
+                "sha256": "c885a3b0fdbd39b979ecb99cc117c02d369fb6f48f1ad60939d074a6bd63512c"
+              },
+              "client_cert_sent": false
+            }
+          },
+          {
+            "seq": 2,
+            "protocol": "dimse",
+            "operation": "A-ASSOCIATE",
+            "endpoint": "pacs.lab.example:11112",
+            "started": "2026-11-23T04:37:34.765Z",
+            "duration_ms": 36,
+            "outcome": "completed",
+            "association": {
+              "result": "accepted",
+              "max_pdu": 131072,
+              "impl_class_uid": "1.3.6.1.4.1.67686.1.1.1.0.0",
+              "impl_version": "LIBREDCM_0_0",
+              "contexts": [
+                {
+                  "id": 1,
+                  "abstract_syntax": "1.2.840.10008.1.1",
+                  "proposed_transfer_syntaxes": [
+                    "1.2.840.10008.1.2.1",
+                    "1.2.840.10008.1.2"
+                  ],
+                  "result": "accepted",
+                  "accepted_transfer_syntax": "1.2.840.10008.1.2.1"
+                }
+              ],
+              "released": true
+            }
+          },
+          {
+            "seq": 3,
+            "protocol": "dimse",
+            "operation": "A-RELEASE",
+            "endpoint": "pacs.lab.example:11112",
+            "started": "2026-11-23T04:37:34.801Z",
+            "duration_ms": 0,
+            "outcome": "completed"
+          }
+        ],
+        "assertions": [
+          {
+            "id": "assoc.result",
+            "subject": "pacs.lab.example:11112",
+            "expected": "accepted",
+            "actual": "accepted",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.context.result",
+            "subject": "context 1 (1.2.840.10008.1.1)",
+            "expected": "accepted",
+            "actual": "accepted",
+            "outcome": "pass"
+          },
+          {
+            "id": "assoc.release",
+            "subject": "pacs.lab.example:11112",
+            "expected": "released",
+            "actual": "released",
+            "outcome": "pass"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "echo-over-tls",
+      "type": "echo",
+      "status": "passed",
+      "messages": [
+        "TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject \"O=Example Clinic Lab,CN=pacs.lab.example\", issuer \"O=Example Clinic Lab,CN=Example Clinic Lab CA\", SAN DNS [pacs.lab.example], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 c885a3b0fdbd39b979ecb99cc117c02d369fb6f48f1ad60939d074a6bd63512c; client certificate offered: false",
+        "C-ECHO status 0x0000 (Success)"
+      ],
+      "started": "2026-11-23T04:37:34.808236309Z",
+      "duration": 340071136,
+      "details": "{\"associated\": true, \"status\": 0, \"tls\": {\"cipher\": \"TLS_AES_128_GCM_SHA256\", \"client_cert_sent\": false, \"peer\": {\"issuer\": \"O=Example Clinic Lab,CN=Example Clinic Lab CA\", \"not_after\": \"2026-11-25T04:37:04.000Z\", \"not_before\": \"2026-11-23T04:37:04.000Z\", \"san_dns\": [\"pacs.lab.example\"], \"san_ip\": [], \"sha256\": \"c885a3b0fdbd39b979ecb99cc117c02d369fb6f48f1ad60939d074a6bd63512c\", \"subject\": \"O=Example Clinic Lab,CN=pacs.lab.example\"}, \"verified\": true, \"version\": \"TLSv1.3\"}}\n"
+    },
+    {
+      "id": "plaintext-refused",
+      "type": "tls_reject",
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-23T04:37:35.148322447Z",
+      "duration": 119494981,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "example-clinic-lab-pacs",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "pacs.lab.example:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "dimse",
+            "operation": "A-ASSOCIATE",
+            "endpoint": "pacs.lab.example:11112",
+            "started": "2026-11-23T04:37:35.26Z",
+            "duration_ms": 1,
+            "outcome": "refused",
+            "association": {
+              "result": "no_response",
+              "released": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "plaintext",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "connection_closed: the target closed the connection without answering"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "tls10-refused",
+      "type": "tls_reject",
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-23T04:37:35.267828702Z",
+      "duration": 118986970,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "example-clinic-lab-pacs",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "pacs.lab.example:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "pacs.lab.example:11112",
+            "started": "2026-11-23T04:37:35.379Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "error": {
+              "kind": "tls",
+              "message": "the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+            },
+            "tls": {
+              "version": "",
+              "cipher": "",
+              "verified": false,
+              "client_cert_sent": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "TLS 1.0 only",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "handshake_alert: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "tls11-refused",
+      "type": "tls_reject",
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-23T04:37:35.386826229Z",
+      "duration": 118117653,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "example-clinic-lab-pacs",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "pacs.lab.example:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "pacs.lab.example:11112",
+            "started": "2026-11-23T04:37:35.498Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "error": {
+              "kind": "tls",
+              "message": "the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+            },
+            "tls": {
+              "version": "",
+              "cipher": "",
+              "verified": false,
+              "client_cert_sent": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "TLS 1.1 only",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "handshake_alert: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+          }
+        ],
+        "redactions": 0
+      }
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "0.2.0-rc.1",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "pass"
+}

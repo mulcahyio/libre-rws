@@ -1,0 +1,240 @@
+{
+  "id": "20261123-043728-b69bcdb7",
+  "plan": "Generic DICOM TLS audit",
+  "plan_sha256": "e1b389667114cf6b92f7b479c83abaf4da3e1d05964d058d288100b1887390ac",
+  "target": "dcmtk-wrong-host",
+  "target_desc": "dcmtk-wrong-host (dcmtk-wrong:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)",
+  "target_info": {
+    "name": "dcmtk-wrong-host",
+    "class": "lab",
+    "protocol": "dimse",
+    "endpoint": "dcmtk-wrong:11112"
+  },
+  "started": "2026-11-23T04:37:28.180591871Z",
+  "finished": "2026-11-23T04:37:29.458388107Z",
+  "steps": [
+    {
+      "id": "negotiate-verification",
+      "type": "associate",
+      "status": "failed",
+      "messages": [
+        "tls error: TLS-HANDSHAKE: certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)",
+        "TLS: not established (certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62))"
+      ],
+      "started": "2026-11-23T04:37:28.614401027Z",
+      "duration": 116488416,
+      "verdict": "fail",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-wrong-host",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-wrong:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "dcmtk-wrong:11112",
+            "started": "2026-11-23T04:37:28.723Z",
+            "duration_ms": 2,
+            "outcome": "error",
+            "error": {
+              "kind": "tls",
+              "message": "certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)"
+            },
+            "tls": {
+              "version": "",
+              "cipher": "",
+              "verified": false,
+              "verify_error": "certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)",
+              "client_cert_sent": false
+            }
+          }
+        ],
+        "assertions": [],
+        "errors": [
+          {
+            "kind": "tls",
+            "message": "TLS-HANDSHAKE: certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "echo-over-tls",
+      "type": "echo",
+      "status": "failed",
+      "messages": [
+        "TLS error: certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)"
+      ],
+      "started": "2026-11-23T04:37:28.730902734Z",
+      "duration": 378281384,
+      "details": "{\"associated\": false, \"error\": \"TLS: certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)\", \"rejected\": false, \"tls_error\": \"certificate verification failed: Hostname mismatch, certificate is not valid for 'dcmtk-wrong'. (code 62)\"}\n"
+    },
+    {
+      "id": "plaintext-refused",
+      "type": "tls_reject",
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-23T04:37:29.109197207Z",
+      "duration": 116824696,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-wrong-host",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-wrong:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "dimse",
+            "operation": "A-ASSOCIATE",
+            "endpoint": "dcmtk-wrong:11112",
+            "started": "2026-11-23T04:37:29.219Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "association": {
+              "result": "no_response",
+              "released": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "plaintext",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "connection_reset: the connection was reset (ConnectionResetError)"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "tls10-refused",
+      "type": "tls_reject",
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-23T04:37:29.226033418Z",
+      "duration": 116878228,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-wrong-host",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-wrong:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "dcmtk-wrong:11112",
+            "started": "2026-11-23T04:37:29.336Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "error": {
+              "kind": "tls",
+              "message": "the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+            },
+            "tls": {
+              "version": "",
+              "cipher": "",
+              "verified": false,
+              "client_cert_sent": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "TLS 1.0 only",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "handshake_alert: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "tls11-refused",
+      "type": "tls_reject",
+      "status": "passed",
+      "messages": [
+        "1 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-23T04:37:29.342922029Z",
+      "duration": 115458123,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "dcmtk-wrong-host",
+          "class": "lab",
+          "protocol": "dimse",
+          "endpoint": "dcmtk-wrong:11112"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "tls",
+            "operation": "TLS-HANDSHAKE",
+            "endpoint": "dcmtk-wrong:11112",
+            "started": "2026-11-23T04:37:29.452Z",
+            "duration_ms": 0,
+            "outcome": "refused",
+            "error": {
+              "kind": "tls",
+              "message": "the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+            },
+            "tls": {
+              "version": "",
+              "cipher": "",
+              "verified": false,
+              "client_cert_sent": false
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "tls_reject.refused",
+            "subject": "TLS 1.1 only",
+            "expected": "refused",
+            "actual": "refused",
+            "outcome": "pass",
+            "message": "handshake_alert: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION"
+          }
+        ],
+        "redactions": 0
+      }
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "0.2.0-rc.1",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "fail"
+}

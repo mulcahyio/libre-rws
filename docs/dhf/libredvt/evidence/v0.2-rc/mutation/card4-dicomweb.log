@@ -1,0 +1,444 @@
+== mutation check 2026-11-22 23:40:40 EST, head 015f3b33b250deac8ab087e7dcaec3a56e1c0e1e
+baseline Go unit tests: rc=0
+baseline real-engine DICOMweb tests: rc=0
+G1 expected QIDO UID not checked: KILLED (rc=1)
+      --- FAIL: TestQidoPositiveControls (0.00s)
+          runner_web_test.go:96: missing expected UID: pass, want fail with "qido.uid.present 1.2.3": 7 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies
+      ...
+      --- FAIL: TestQidoPositiveControls (0.00s)
+          runner_web_test.go:96: missing expected UID: pass, want fail with "qido.uid.present 1.2.3": 7 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G2 QIDO Content-Type not checked: KILLED (rc=1)
+      --- FAIL: TestQidoPositiveControls (0.00s)
+          runner_web_test.go:96: wrong content type: pass, want fail with "qido.content_type": 6 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies
+      ...
+      --- FAIL: TestQidoPositiveControls (0.00s)
+          runner_web_test.go:96: wrong content type: pass, want fail with "qido.content_type": 6 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G3 returned object not matched against the query: KILLED (rc=1)
+      --- FAIL: TestQidoPositiveControls (0.00s)
+          runner_web_test.go:96: other Patient ID: pass, want fail with "qido.object.match": 7 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies
+      ...
+      --- FAIL: TestQidoPositiveControls (0.00s)
+          runner_web_test.go:96: other Patient ID: pass, want fail with "qido.object.match": 7 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.006s
+      FAIL
+G4 page larger than limit accepted: KILLED (rc=1)
+      --- FAIL: TestQidoNoMatchAndPaging (0.00s)
+          runner_web_test.go:162: paging page above limit: pass, want fail: 8 assertion(s) checked; verdict pass | 1 search request(s), 3 object(s) returned at level studies
+      ...
+      --- FAIL: TestQidoNoMatchAndPaging (0.00s)
+          runner_web_test.go:162: paging page above limit: pass, want fail: 8 assertion(s) checked; verdict pass | 1 search request(s), 3 object(s) returned at level studies
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.004s
+      FAIL
+G5 endless paging accepted: KILLED (rc=1)
+      --- FAIL: TestQidoNoMatchAndPaging (0.00s)
+          runner_web_test.go:162: paging never stops paging: pass, want fail: 12 assertion(s) checked; verdict pass | 2 search request(s), 4 object(s) returned at level studies
+      ...
+      --- FAIL: TestQidoNoMatchAndPaging (0.00s)
+          runner_web_test.go:162: paging never stops paging: pass, want fail: 12 assertion(s) checked; verdict pass | 2 search request(s), 4 object(s) returned at level studies
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.004s
+      FAIL
+G6 redirect not a problem: KILLED (rc=1)
+      --- FAIL: TestQidoPositiveControls (0.00s)
+          runner_web_test.go:96: redirect: fail, want fail with "redirect to \"https://elsewhere.example/x\" was not followed": fail qido.status https://pacs.lab.example/dicom-web/studies: expected 200, got 302 PS3.18: 200 with matches; 204 means no match | fail qido.uid.present 1.2.3: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+      ...
+      --- FAIL: TestQidoPositiveControls (0.00s)
+          runner_web_test.go:96: redirect: fail, want fail with "redirect to \"https://elsewhere.example/x\" was not followed": fail qido.status https://pacs.lab.example/dicom-web/studies: expected 200, got 302 PS3.18: 200 with matches; 204 means no match | fail qido.uid.present 1.2.3: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G7 QIDO unique key not checked: KILLED (rc=1)
+      --- FAIL: TestQidoPositiveControls (0.00s)
+      panic: runtime error: index out of range [0] with length 0 [recovered, repanicked]
+      ...
+      testing.tRunner(0xc92d28a908, 0x7af7a0)
+      	/usr/local/go/src/testing/testing.go:2036 +0xea
+      created by testing.(*T).Run in goroutine 1
+      	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.006s
+      FAIL
+G8 required attribute not checked: KILLED (rc=1)
+      --- FAIL: TestQidoPositiveControls (0.00s)
+          runner_web_test.go:96: required attribute missing: pass, want fail with "StudyDate (00080020) present": 7 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies
+      ...
+      --- FAIL: TestQidoPositiveControls (0.00s)
+          runner_web_test.go:96: required attribute missing: pass, want fail with "StudyDate (00080020) present": 7 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G9 expect_none passes with matches: KILLED (rc=1)
+      --- FAIL: TestQidoNoMatchAndPaging (0.00s)
+          runner_web_test.go:125: expect_none 200 object: pass, want fail: 2 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies
+          runner_web_test.go:125: expect_none 500: pass, want fail: 1 assertion(s) checked; verdict pass | 1 search request(s), 0 object(s) returned at level studies
+      ...
+      --- FAIL: TestQidoNoMatchAndPaging (0.00s)
+          runner_web_test.go:125: expect_none 200 object: pass, want fail: 2 assertion(s) checked; verdict pass | 1 search request(s), 1 object(s) returned at level studies
+          runner_web_test.go:125: expect_none 500: pass, want fail: 1 assertion(s) checked; verdict pass | 1 search request(s), 0 object(s) returned at level studies
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.004s
+      FAIL
+G10 WADO 206 accepted: KILLED (rc=1)
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: 503: fail, want fail with "wado.status": fail wado.uid.set 1.2.a.dcm: expected received once, got missing  | fail wado.uid.set 1.2.b.dcm: expected received once, got missing 
+          runner_web_test.go:345: 206: pass, want fail with "wado.status": 8 assertion(s) checked; verdict pass
+          runner_web_test.go:345: 404: fail, want fail with "wado.status": fail wado.uid.set 1.2.a.dcm: expected received once, got missing  | fail wado.uid.set 1.2.b.dcm: expected received once, got missing 
+      ...
+          runner_web_test.go:345: 503: fail, want fail with "wado.status": fail wado.uid.set 1.2.a.dcm: expected received once, got missing  | fail wado.uid.set 1.2.b.dcm: expected received once, got missing 
+          runner_web_test.go:345: 206: pass, want fail with "wado.status": 8 assertion(s) checked; verdict pass
+          runner_web_test.go:345: 404: fail, want fail with "wado.status": fail wado.uid.set 1.2.a.dcm: expected received once, got missing  | fail wado.uid.set 1.2.b.dcm: expected received once, got missing 
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.006s
+      FAIL
+G11 missing WADO instance ignored: KILLED (rc=1)
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: one missing: pass, want fail with "1.2.b.dcm": 7 assertion(s) checked; verdict pass
+      ...
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: one missing: pass, want fail with "1.2.b.dcm": 7 assertion(s) checked; verdict pass
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G12 extra WADO instance ignored: KILLED (rc=1)
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: one extra: pass, want fail with "unexpected instance": 11 assertion(s) checked; verdict pass
+      ...
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: one extra: pass, want fail with "unexpected instance": 11 assertion(s) checked; verdict pass
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G13 duplicate WADO instance ignored: KILLED (rc=1)
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: one twice: pass, want fail with "received 2 times": 11 assertion(s) checked; verdict pass
+      ...
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: one twice: pass, want fail with "received 2 times": 11 assertion(s) checked; verdict pass
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G14 requested transfer syntax not checked: KILLED (rc=1)
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: other TS: pass, want fail with "wado.part.transfer_syntax": 9 assertion(s) checked; verdict pass
+      ...
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: other TS: pass, want fail with "wado.part.transfer_syntax": 9 assertion(s) checked; verdict pass
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G15 part transfer-syntax header not compared: KILLED (rc=1)
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: TS header differs: pass, want fail with "wado.part.ts_header": 9 assertion(s) checked; verdict pass
+      ...
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: TS header differs: pass, want fail with "wado.part.ts_header": 9 assertion(s) checked; verdict pass
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G16 part media type not checked (Go assertion and worker error, whole family): KILLED (rc=1)
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: octet-stream part: pass, want fail with "wado.part.content_type": 7 assertion(s) checked; verdict pass
+      ...
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: octet-stream part: pass, want fail with "wado.part.content_type": 7 assertion(s) checked; verdict pass
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G17 pixel difference ignored: KILLED (rc=1)
+      --- FAIL: TestStowThenQidoWadoFromStore (0.00s)
+          runner_web_test.go:345: pixel differs: pass, want fail with "pixel data differs": 9 assertion(s) checked; verdict pass
+      --- FAIL: TestStowVerifyRetrieve (0.00s)
+          runner_web_test.go:416: pixels changed: pass, want fail: 12 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+      ...
+          runner_web_test.go:345: pixel differs: pass, want fail with "pixel data differs": 9 assertion(s) checked; verdict pass
+      --- FAIL: TestStowVerifyRetrieve (0.00s)
+          runner_web_test.go:416: pixels changed: pass, want fail: 12 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.006s
+      FAIL
+G18 metadata attribute not compared: KILLED (rc=1)
+      --- FAIL: TestWadoMetadata (0.00s)
+          runner_web_test.go:380: Patient ID changed: pass, want fail: 6 assertion(s) checked; verdict pass
+      ...
+      --- FAIL: TestWadoMetadata (0.00s)
+          runner_web_test.go:380: Patient ID changed: pass, want fail: 6 assertion(s) checked; verdict pass
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.004s
+      FAIL
+G19 failed STOW instances ignored: KILLED (rc=1)
+      --- FAIL: TestStowPositiveControls (0.00s)
+          runner_web_test.go:233: failed reported as success: pass, want fail with "stow.instance.failed": 3 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+          runner_web_test.go:233: 202 with failed: fail, want fail with "Failure Reason 0xA700": fail stow.instance.referenced 1.2.a.dcm: expected in the Referenced SOP Sequence once, got missing  | fail stow.status https://pacs.lab.example/dicom-web/studies: expected 200 with no failed instance, got 202 with 0 failed instance(s)  | 1 of 2 files stored and referenced by the target
+          runner_web_test.go:233: 200 also lists failed: pass, want fail with "stow.instance.failed": 3 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+      ...
+          runner_web_test.go:233: failed reported as success: pass, want fail with "stow.instance.failed": 3 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+          runner_web_test.go:233: 202 with failed: fail, want fail with "Failure Reason 0xA700": fail stow.instance.referenced 1.2.a.dcm: expected in the Referenced SOP Sequence once, got missing  | fail stow.status https://pacs.lab.example/dicom-web/studies: expected 200 with no failed instance, got 202 with 0 failed instance(s)  | 1 of 2 files stored and referenced by the target
+          runner_web_test.go:233: 200 also lists failed: pass, want fail with "stow.instance.failed": 3 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G20 STOW instance missing from the Referenced SOP Sequence ignored: KILLED (rc=1)
+      --- FAIL: TestStowPositiveControls (0.00s)
+          runner_web_test.go:233: UID missing: pass, want fail with "stow.instance.referenced": 3 assertion(s) checked; verdict pass | 1 of 2 files stored and referenced by the target
+      ...
+      --- FAIL: TestStowPositiveControls (0.00s)
+          runner_web_test.go:233: UID missing: pass, want fail with "stow.instance.referenced": 3 assertion(s) checked; verdict pass | 1 of 2 files stored and referenced by the target
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G21 STOW warning passes without allow_warnings: KILLED (rc=1)
+      --- FAIL: TestStowPositiveControls (0.00s)
+          runner_web_test.go:233: warning not allowed: fail, want fail with "stow.instance.warning": fail stow.status https://pacs.lab.example/dicom-web/studies: expected 200 with no failed instance, got 202 with 0 failed instance(s)  | 2 of 2 files stored and referenced by the target
+          runner_web_test.go:233: 200 with a warning: pass, want fail with "stow.instance.warning": 4 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+          runner_web_test.go:233: top-level warning: fail, want fail with "Warning Reason 0xB007": fail stow.status https://pacs.lab.example/dicom-web/studies: expected 200 with no failed instance, got 202 with 0 failed instance(s)  | 2 of 2 files stored and referenced by the target
+      ...
+          runner_web_test.go:233: warning not allowed: fail, want fail with "stow.instance.warning": fail stow.status https://pacs.lab.example/dicom-web/studies: expected 200 with no failed instance, got 202 with 0 failed instance(s)  | 2 of 2 files stored and referenced by the target
+          runner_web_test.go:233: 200 with a warning: pass, want fail with "stow.instance.warning": 4 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+          runner_web_test.go:233: top-level warning: fail, want fail with "Warning Reason 0xB007": fail stow.status https://pacs.lab.example/dicom-web/studies: expected 200 with no failed instance, got 202 with 0 failed instance(s)  | 2 of 2 files stored and referenced by the target
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G22 extra referenced UID ignored: KILLED (rc=1)
+      --- FAIL: TestStowPositiveControls (0.00s)
+          runner_web_test.go:233: extra UID: pass, want fail with "stow.instance.extra": 3 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+      ...
+      --- FAIL: TestStowPositiveControls (0.00s)
+          runner_web_test.go:233: extra UID: pass, want fail with "stow.instance.extra": 3 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.006s
+      FAIL
+G23 STOW response type not checked: KILLED (rc=1)
+      --- FAIL: TestStowPositiveControls (0.00s)
+          runner_web_test.go:233: XML body: fail, want fail with "not a DICOM JSON object": fail stow.instance.referenced 1.2.a.dcm: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.2.b.dcm: expected in the Referenced SOP Sequence once, got missing  | 0 of 2 files stored and referenced by the target
+          runner_web_test.go:233: JSON array: fail, want fail with "not a DICOM JSON object": fail stow.instance.referenced 1.2.a.dcm: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.2.b.dcm: expected in the Referenced SOP Sequence once, got missing  | 0 of 2 files stored and referenced by the target
+          runner_web_test.go:233: malformed JSON: fail, want fail with "not a DICOM JSON object": fail stow.instance.referenced 1.2.a.dcm: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.2.b.dcm: expected in the Referenced SOP Sequence once, got missing  | 0 of 2 files stored and referenced by the target
+          runner_web_test.go:233: other type with refs: pass, want fail with "not a DICOM JSON object": 3 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+          runner_web_test.go:233: empty body 200: fail, want fail with "not a DICOM JSON object": fail stow.instance.referenced 1.2.a.dcm: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.2.b.dcm: expected in the Referenced SOP Sequence once, got missing  | 0 of 2 files stored and referenced by the target
+      ...
+          runner_web_test.go:233: malformed JSON: fail, want fail with "not a DICOM JSON object": fail stow.instance.referenced 1.2.a.dcm: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.2.b.dcm: expected in the Referenced SOP Sequence once, got missing  | 0 of 2 files stored and referenced by the target
+          runner_web_test.go:233: other type with refs: pass, want fail with "not a DICOM JSON object": 3 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+          runner_web_test.go:233: empty body 200: fail, want fail with "not a DICOM JSON object": fail stow.instance.referenced 1.2.a.dcm: expected in the Referenced SOP Sequence once, got missing  | fail stow.instance.referenced 1.2.b.dcm: expected in the Referenced SOP Sequence once, got missing  | 0 of 2 files stored and referenced by the target
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G24 STOW SOP Class not compared: KILLED (rc=1)
+      --- FAIL: TestStowPositiveControls (0.00s)
+          runner_web_test.go:233: SOP class mismatch: pass, want fail with "referenced with SOP Class": 3 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+      ...
+      --- FAIL: TestStowPositiveControls (0.00s)
+          runner_web_test.go:233: SOP class mismatch: pass, want fail with "referenced with SOP Class": 3 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.005s
+      FAIL
+G25 non-DICOM file sent: KILLED (rc=1)
+      --- FAIL: TestStowRefusesNonDICOMWithoutSending (0.00s)
+      ...
+      --- FAIL: TestStowRefusesNonDICOMWithoutSending (0.00s)
+          runner_web_test.go:252: non-DICOM file: pass calls [stow]: 3 assertion(s) checked; verdict pass | 2 of 2 files stored and referenced by the target
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.003s
+      FAIL
+G26 bearer token over clear text off-host allowed (runner second line): KILLED (rc=1)
+      --- FAIL: TestBearerOverClearTextRefusedBeforeEngine (0.00s)
+      ...
+      --- FAIL: TestBearerOverClearTextRefusedBeforeEngine (0.00s)
+          runner_web_test.go:438: token over http off-host: fail [qido] fail qido.uid.present 1.2.3: expected present, got missing  | 0 search request(s), 0 object(s) returned at level studies
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.003s
+      FAIL
+G27 any HTTP reply counted as a refusal: KILLED (rc=1)
+      --- FAIL: TestTLSRejectStep (0.01s)
+      ...
+          runner_assoc_test.go:360: dicomweb plaintext http_reply 200: pass [tls-probe-web]
+          runner_assoc_test.go:360: dicomweb plaintext http_reply 401: pass [tls-probe-web]
+          runner_assoc_test.go:360: dicomweb no_client_cert http_reply 204: pass [tls-probe-web]
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	0.007s
+      FAIL
+G28 HTTP exchanges not schema-checked (qido): KILLED (rc=1)
+      --- FAIL: TestQidoOutputSchemaFailsClosed (0.02s)
+      ...
+          dicomweb_test.go:66: auth not redacted: accepted
+          dicomweb_test.go:66: tls on http: accepted
+          dicomweb_test.go:66: wrong protocol: accepted
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	0.024s
+      FAIL
+G29 unredacted Authorization accepted: KILLED (rc=1)
+      --- FAIL: TestQidoOutputSchemaFailsClosed (0.02s)
+      ...
+      --- FAIL: TestQidoOutputSchemaFailsClosed (0.02s)
+          dicomweb_test.go:66: auth not redacted: accepted
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	0.023s
+      FAIL
+G30 STOW output with requests after an unusable file accepted: KILLED (rc=1)
+      --- FAIL: TestStowOutputSchemaFailsClosed (0.01s)
+      ...
+      --- FAIL: TestStowOutputSchemaFailsClosed (0.01s)
+          dicomweb_test.go:138: sent despite error: accepted
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	0.014s
+      FAIL
+G31 probe that sent headers accepted: KILLED (rc=1)
+      --- FAIL: TestTLSProbeWebSchema (0.01s)
+      ...
+      --- FAIL: TestTLSProbeWebSchema (0.01s)
+          dicomweb_test.go:211: headers sent: accepted
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/engine	0.011s
+      FAIL
+P1 truncated multipart accepted (no closing delimiter): KILLED (rc=1)
+      --- FAIL: TestRealWadoMalformedResponsesFail (24.84s)
+          --- FAIL: TestRealWadoMalformedResponsesFail/wado-truncated/e (0.92s)
+              dicomweb_engines_test.go:305: wado-truncated: pass, want fail with "no closing boundary delimiter"
+      ...
+              dicomweb_engines_test.go:305: wado-truncated: pass, want fail with "no closing boundary delimiter"
+          dicomweb_engines_test.go:321:   w            pass     6 assertion(s) checked; verdict pass
+          dicomweb_engines_test.go:321:   w            fail     fail wado.validate x001-p00001.dcm: expected no errors and no engine errors, got 2 errors, 0 engine errors 
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	24.848s
+      FAIL
+P2 boundary taken from the body when the header's is absent: KILLED (rc=1)
+      --- FAIL: TestRealWadoMalformedResponsesFail (24.75s)
+          --- FAIL: TestRealWadoMalformedResponsesFail/wado-bad-boundary/f (0.81s)
+              dicomweb_engines_test.go:305: wado-bad-boundary: fail, want fail with "does not contain the boundary"
+      ...
+              dicomweb_engines_test.go:305: wado-bad-boundary: fail, want fail with "does not contain the boundary"
+          dicomweb_engines_test.go:321:   w            pass     6 assertion(s) checked; verdict pass
+          dicomweb_engines_test.go:321:   w            fail     fail wado.validate x001-p00001.dcm: expected no errors and no engine errors, got 2 errors, 0 engine errors 
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	24.756s
+      FAIL
+P3 boundary text inside part data splits the part: KILLED (rc=1)
+      --- FAIL: TestRealWadoMalformedResponsesFail (24.45s)
+          --- FAIL: TestRealWadoMalformedResponsesFail/wado-boundary-in-data/d (0.82s)
+              dicomweb_engines_test.go:305: wado-boundary-in-data: fail, want pass with ""
+      ...
+              dicomweb_engines_test.go:305: wado-boundary-in-data: fail, want pass with ""
+          dicomweb_engines_test.go:321:   w            pass     6 assertion(s) checked; verdict pass
+          dicomweb_engines_test.go:321:   w            fail     fail wado.validate x001-p00001.dcm: expected no errors and no engine errors, got 2 errors, 0 engine errors 
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	24.457s
+      FAIL
+P4 Authorization value written to the evidence: KILLED (rc=1)
+      --- FAIL: TestRealDICOMwebHappyPath (2.60s)
+      ...
+          dicomweb_engines_test.go:147:   wado-ts      fail     engine error: engine error: worker wado: exchange 1: Authorization header value not redacted
+          dicomweb_engines_test.go:147:   wado-meta    fail     engine error: engine error: worker wado: exchange 1: Authorization header value not redacted
+          dicomweb_engines_test.go:149: correct DICOMweb server: fail
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	2.601s
+      FAIL
+P5 DICOM JSON size limit ignored: KILLED (rc=1)
+      --- FAIL: TestRealQidoMalformedResponsesFail (11.32s)
+          --- FAIL: TestRealQidoMalformedResponsesFail/qido-huge-json/qido (0.70s)
+              dicomweb_engines_test.go:253: qido-huge-json: pass, want fail with "limit error"
+      ...
+          --- FAIL: TestRealQidoMalformedResponsesFail/qido-huge-json/qido (0.70s)
+              dicomweb_engines_test.go:249:   q            pass     7 assertion(s) checked; verdict pass | 1 search request(s), 2000 object(s) returned at level studies
+              dicomweb_engines_test.go:253: qido-huge-json: pass, want fail with "limit error"
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	11.319s
+      FAIL
+P6 Failed SOP Sequence not read: KILLED (rc=1)
+      --- FAIL: TestRealStowControls (16.60s)
+          --- FAIL: TestRealStowControls/stow-fail-one/m,_fixtures/mr_rle.dcm] (0.92s)
+              dicomweb_engines_test.go:367: stow-fail-one: fail, want fail with "Failure Reason 0xA700"
+          --- FAIL: TestRealStowControls/stow-200-with-failure/m,_fixtures/mr_rle.dcm] (0.92s)
+              dicomweb_engines_test.go:367: stow-200-with-failure: pass, want fail with "stow.instance.failed"
+      ...
+          dicomweb_engines_test.go:397:   wado-store   fail     guard error: refused: wado steps only run against targets of class lab; web is 
+          dicomweb_engines_test.go:397:   wado-ts      fail     guard error: refused: wado steps only run against targets of class lab; web is 
+          dicomweb_engines_test.go:397:   wado-meta    fail     guard error: refused: wado steps only run against targets of class lab; web is 
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	16.598s
+      FAIL
+P7 truncated body (short Content-Length) accepted: KILLED (rc=1)
+      --- FAIL: TestRealQidoMalformedResponsesFail (11.20s)
+          --- FAIL: TestRealQidoMalformedResponsesFail/truncated-body/qido (0.67s)
+              dicomweb_engines_test.go:253: truncated-body: fail, want fail with "truncated"
+      ...
+          --- FAIL: TestRealQidoMalformedResponsesFail/truncated-body/qido (0.67s)
+              dicomweb_engines_test.go:249:   q            fail     fail qido.json http://127.0.0.1:37789/dicom-web/studies?PatientID=1CT1: expected JSON array of DICOM JSON objects, got invalid not JSON: JSONDecodeError PS3.18 Annex F | fail qido.uid.present 1.3.6.1.4.1.5962.1.2.1.20040119072730.12322: expected present, got missing  | 1 search request(s), 0 object(s) returned at level studies
+              dicomweb_engines_test.go:253: truncated-body: fail, want fail with "truncated"
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	11.205s
+      FAIL
+P8 paging stops after the first page: KILLED (rc=1)
+      --- FAIL: TestRealDICOMwebHappyPath (4.67s)
+      ...
+          dicomweb_engines_test.go:147:   wado-ts      pass     7 assertion(s) checked; verdict pass
+          dicomweb_engines_test.go:147:   wado-meta    pass     8 assertion(s) checked; verdict pass
+          dicomweb_engines_test.go:149: correct DICOMweb server: fail
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	4.670s
+      FAIL
+P9 STOW sends changed bytes: KILLED (rc=1)
+      --- FAIL: TestRealDICOMwebHappyPath (2.47s)
+      ...
+          dicomweb_engines_test.go:147:   wado-ts      fail     fail wado.status http://127.0.0.1:40263/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322/series/1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322/instances/1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected 200, got 404  | fail wado.uid.set 1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322: expected received once, got missing 
+          dicomweb_engines_test.go:147:   wado-meta    fail     fail wado.status http://127.0.0.1:40263/dicom-web/studies/1.3.6.1.4.1.5962.1.2.4.20040826185059.5457/metadata: expected 200, got 404  | fail wado.metadata.instance 1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265: expected in the metadata once, got 0 times  | fail wado.metadata.instance 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457: expected in the metadata once, got 0 times  | fail wado.metadata.attribute 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457 PatientID: expected ["4MR1"], got (instance missing) value in the original file vs. the metadata | fail wado.metadata.attribute 1.3.6.1.4.1.5962.1.1.4.1.1.20040826185059.5457 Modality: expected ["MR"], got (instance missing) value in the original file vs. the metadata | fail wado.metadata.attribute 1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265 PatientID: expected ["4MR1"], got (instance missing) value in the original file vs. the metadata | fail wado.metadata.attribute 1.2.826.0.1.3680043.8.498.33398961699581875222868204465690831265 Modality: expected ["MR"], got (instance missing) value in the original file vs. the metadata
+          dicomweb_engines_test.go:149: correct DICOMweb server: fail
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	2.469s
+      FAIL
+P10 refusal probe sends an Authorization header: KILLED (rc=1)
+      --- FAIL: TestRealDICOMwebOverTLS (6.74s)
+      ...
+          dicomweb_engines_test.go:476:   p            pass     1 assertion(s) checked; verdict pass
+          dicomweb_engines_test.go:476:   p            fail     fail tls_reject.refused no_client_cert: expected refused, got accepted http_reply: the target answered with HTTP status 200
+          dicomweb_engines_test.go:485: a probe sent Authorization
+      FAIL
+      FAIL	github.com/mulcahyio/libre-rws/modules/dvt/internal/runner	6.740s
+      FAIL
+worktree clean after run: yes
+== 41 of 41 mutants killed
+   KILLED       G1 expected QIDO UID not checked
+   KILLED       G2 QIDO Content-Type not checked
+   KILLED       G3 returned object not matched against the query
+   KILLED       G4 page larger than limit accepted
+   KILLED       G5 endless paging accepted
+   KILLED       G6 redirect not a problem
+   KILLED       G7 QIDO unique key not checked
+   KILLED       G8 required attribute not checked
+   KILLED       G9 expect_none passes with matches
+   KILLED       G10 WADO 206 accepted
+   KILLED       G11 missing WADO instance ignored
+   KILLED       G12 extra WADO instance ignored
+   KILLED       G13 duplicate WADO instance ignored
+   KILLED       G14 requested transfer syntax not checked
+   KILLED       G15 part transfer-syntax header not compared
+   KILLED       G16 part media type not checked (Go assertion and worker error, whole family)
+   KILLED       G17 pixel difference ignored
+   KILLED       G18 metadata attribute not compared
+   KILLED       G19 failed STOW instances ignored
+   KILLED       G20 STOW instance missing from the Referenced SOP Sequence ignored
+   KILLED       G21 STOW warning passes without allow_warnings
+   KILLED       G22 extra referenced UID ignored
+   KILLED       G23 STOW response type not checked
+   KILLED       G24 STOW SOP Class not compared
+   KILLED       G25 non-DICOM file sent
+   KILLED       G26 bearer token over clear text off-host allowed (runner second line)
+   KILLED       G27 any HTTP reply counted as a refusal
+   KILLED       G28 HTTP exchanges not schema-checked (qido)
+   KILLED       G29 unredacted Authorization accepted
+   KILLED       G30 STOW output with requests after an unusable file accepted
+   KILLED       G31 probe that sent headers accepted
+   KILLED       P1 truncated multipart accepted (no closing delimiter)
+   KILLED       P2 boundary taken from the body when the header's is absent
+   KILLED       P3 boundary text inside part data splits the part
+   KILLED       P4 Authorization value written to the evidence
+   KILLED       P5 DICOM JSON size limit ignored
+   KILLED       P6 Failed SOP Sequence not read
+   KILLED       P7 truncated body (short Content-Length) accepted
+   KILLED       P8 paging stops after the first page
+   KILLED       P9 STOW sends changed bytes
+   KILLED       P10 refusal probe sends an Authorization header

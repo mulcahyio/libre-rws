@@ -1,0 +1,3 @@
+I: Requesting Association
+F: Association Request Failed: 000b:0c10 TLS error: sslv3 alert handshake failure
+exit 1

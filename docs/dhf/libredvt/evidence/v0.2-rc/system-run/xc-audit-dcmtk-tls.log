@@ -1,0 +1,10 @@
+target: dcmtk-tls (dcmtk-tls:11112, called AE STORESCP, calling AE LIBREDVT, TLS 1.2+, class lab)
+passed   negotiate-verification   associate 3 assertion(s) checked; verdict pass; TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT RC verification,CN=dcmtk-peer", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [dcmtk-tls dcmtk-aes], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 c1b85de88790b6cce649b3955961e4d85b000efceac199fe6ca0a00dab7d5188; client certificate offered: false; association accepted; max PDU 16384, Implementation Class UID "1.2.276.0.7230010.3.0.3.6.7", Version Name "OFFIS_DCMTK_367"
+passed   echo-over-tls            echo      TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject "O=LibreDVT RC verification,CN=dcmtk-peer", issuer "O=LibreDVT RC verification,CN=dvt06-test-ca", SAN DNS [dcmtk-tls dcmtk-aes], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 c1b85de88790b6cce649b3955961e4d85b000efceac199fe6ca0a00dab7d5188; client certificate offered: false; C-ECHO status 0x0000 (Success)
+passed   plaintext-refused        tls_reject 1 assertion(s) checked; verdict pass
+passed   tls10-refused            tls_reject 1 assertion(s) checked; verdict pass
+passed   tls11-refused            tls_reject 1 assertion(s) checked; verdict pass
+identity: TLS TLSv1.3, cipher TLS_AES_256_GCM_SHA384
+identity: certificate "O=LibreDVT RC verification,CN=dcmtk-peer" issued by "O=LibreDVT RC verification,CN=dvt06-test-ca", valid until 2026-11-25T04:37:04.000Z (valid at the start of the run, 1 day(s) left), SHA-256 c1b85de88790b6cce649b3955961e4d85b000efceac199fe6ca0a00dab7d5188, verified
+identity: Implementation Class UID 1.2.276.0.7230010.3.0.3.6.7, Version Name OFFIS_DCMTK_367
+verdict: pass (Generic DICOM TLS audit)

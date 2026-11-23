@@ -1,0 +1,21 @@
+targets:
+  - {name: libredcm-tls-lab, class: lab, protocol: dimse, host: libredcm, port: 11112, called_aet: LIBREDCM, calling_aet: LIBREDVT, tls: {ca_file: /pki/ca.crt}}
+  - {name: libredcm-lab, class: lab, protocol: dimse, host: libredcm-plain, port: 11112, called_aet: LIBREDCM, calling_aet: LIBREDVT}
+  - {name: dcmtk-tls, class: lab, protocol: dimse, host: dcmtk-tls, port: 11112, called_aet: STORESCP, tls: {ca_file: /pki/ca.crt}}
+  - {name: dcmtk-plain, class: lab, protocol: dimse, host: dcmtk-plain, port: 11112, called_aet: STORESCP, tls: {ca_file: /pki/ca.crt}}
+  - {name: dcmtk-aes, class: lab, protocol: dimse, host: dcmtk-aes, port: 11112, called_aet: STORESCP, tls: {ca_file: /pki/ca.crt}}
+  - {name: dcmtk-wrong-host, class: lab, protocol: dimse, host: dcmtk-wrong, port: 11112, called_aet: STORESCP, tls: {ca_file: /pki/ca.crt}}
+  - name: dicomweb-lab
+    class: lab
+    protocol: dicomweb
+    base_url: https://orthanc-https:8042/dicom-web
+    auth: {type: bearer, token_file: /pki/token}
+    tls: {ca_file: /pki/ca.crt}
+  - name: example-clinic-lab-pacs
+    class: lab
+    protocol: dimse
+    host: pacs.lab.example
+    port: 11112
+    called_aet: LABPACS
+    calling_aet: AUDITOR
+    tls: {ca_file: /pki/sample-ca.crt}

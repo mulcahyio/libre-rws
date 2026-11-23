@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="LibreDVT" tests="5" failures="0" time="1.301">
+  <testsuite name="Generic DICOM TLS audit" tests="5" failures="0" timestamp="2026-11-23T04:37:34Z" time="1.301">
+    <properties>
+      <property name="run_id" value="20261123-043734-f85ad500"></property>
+      <property name="plan_sha256" value="e1b389667114cf6b92f7b479c83abaf4da3e1d05964d058d288100b1887390ac"></property>
+      <property name="target" value="example-clinic-lab-pacs (pacs.lab.example:11112, called AE LABPACS, calling AE AUDITOR, TLS 1.2+, class lab)"></property>
+      <property name="verdict" value="pass"></property>
+      <property name="target.name" value="example-clinic-lab-pacs"></property>
+      <property name="target.protocol" value="dimse"></property>
+      <property name="target.endpoint" value="pacs.lab.example:11112"></property>
+      <property name="target.class" value="lab"></property>
+      <property name="identity.tls_versions" value="TLSv1.3"></property>
+      <property name="identity.cipher_suites" value="TLS_AES_128_GCM_SHA256"></property>
+      <property name="identity.cert.1.subject" value="O=Example Clinic Lab,CN=pacs.lab.example"></property>
+      <property name="identity.cert.1.issuer" value="O=Example Clinic Lab,CN=Example Clinic Lab CA"></property>
+      <property name="identity.cert.1.san_dns" value="pacs.lab.example"></property>
+      <property name="identity.cert.1.san_ip" value=""></property>
+      <property name="identity.cert.1.not_before" value="2026-11-23T04:37:04.000Z"></property>
+      <property name="identity.cert.1.not_after" value="2026-11-25T04:37:04.000Z"></property>
+      <property name="identity.cert.1.sha256" value="c885a3b0fdbd39b979ecb99cc117c02d369fb6f48f1ad60939d074a6bd63512c"></property>
+      <property name="identity.cert.1.verified" value="yes"></property>
+      <property name="identity.cert.1.at_run" value="valid at the start of the run, 1 day(s) left"></property>
+      <property name="identity.implementation.1.class_uid" value="1.3.6.1.4.1.67686.1.1.1.0.0"></property>
+      <property name="identity.implementation.1.version_name" value="LIBREDCM_0_0"></property>
+      <property name="version.dicom-validator" value="0.9.0"></property>
+      <property name="version.dicom3tools" value="1.00.snapshot.20260927113651"></property>
+      <property name="version.libredvt" value="0.2.0-rc.1"></property>
+      <property name="version.pydicom" value="3.0.2"></property>
+      <property name="version.pynetdicom" value="3.0.4"></property>
+      <property name="version.python" value="3.12.16"></property>
+      <property name="version.standard-edition" value="2026d"></property>
+      <property name="version.worker" value="0.2.0"></property>
+    </properties>
+    <testcase name="negotiate-verification" classname="libredvt.associate" time="0.160">
+      <properties>
+        <property name="verdict" value="pass"></property>
+        <property name="assertions" value="3 passed, 0 warned, 0 failed"></property>
+        <property name="target.protocol" value="dimse"></property>
+        <property name="target.endpoint" value="pacs.lab.example:11112"></property>
+        <property name="exchange.1" value="tls TLS-HANDSHAKE pacs.lab.example:11112: completed (TLSv1.3)"></property>
+        <property name="exchange.1.tls.version" value="TLSv1.3"></property>
+        <property name="exchange.1.tls.cipher" value="TLS_AES_128_GCM_SHA256"></property>
+        <property name="exchange.1.tls.verified" value="yes"></property>
+        <property name="exchange.1.tls.client_cert_sent" value="no"></property>
+        <property name="exchange.1.tls.peer_subject" value="O=Example Clinic Lab,CN=pacs.lab.example"></property>
+        <property name="exchange.1.tls.peer_issuer" value="O=Example Clinic Lab,CN=Example Clinic Lab CA"></property>
+        <property name="exchange.1.tls.peer_not_after" value="2026-11-25T04:37:04.000Z"></property>
+        <property name="exchange.1.tls.peer_sha256" value="c885a3b0fdbd39b979ecb99cc117c02d369fb6f48f1ad60939d074a6bd63512c"></property>
+        <property name="exchange.2" value="dimse A-ASSOCIATE pacs.lab.example:11112: completed (association accepted)"></property>
+        <property name="exchange.2.association.result" value="accepted"></property>
+        <property name="exchange.2.association.impl_class_uid" value="1.3.6.1.4.1.67686.1.1.1.0.0"></property>
+        <property name="exchange.2.association.impl_version" value="LIBREDCM_0_0"></property>
+        <property name="exchange.2.association.context.1" value="1.2.840.10008.1.1 accepted 1.2.840.10008.1.2.1"></property>
+        <property name="exchange.3" value="dimse A-RELEASE pacs.lab.example:11112: completed"></property>
+      </properties>
+      <system-out>3 assertion(s) checked; verdict pass&#xA;TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject &#34;O=Example Clinic Lab,CN=pacs.lab.example&#34;, issuer &#34;O=Example Clinic Lab,CN=Example Clinic Lab CA&#34;, SAN DNS [pacs.lab.example], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 c885a3b0fdbd39b979ecb99cc117c02d369fb6f48f1ad60939d074a6bd63512c; client certificate offered: false&#xA;association accepted; max PDU 131072, Implementation Class UID &#34;1.3.6.1.4.1.67686.1.1.1.0.0&#34;, Version Name &#34;LIBREDCM_0_0&#34;&#xA;assertions:&#xA;  pass assoc.result pacs.lab.example:11112: expected accepted, got accepted&#xA;  pass assoc.context.result context 1 (1.2.840.10008.1.1): expected accepted, got accepted&#xA;  pass assoc.release pacs.lab.example:11112: expected released, got released</system-out>
+    </testcase>
+    <testcase name="echo-over-tls" classname="libredvt.echo" time="0.340">
+      <properties></properties>
+      <system-out>TLS: TLSv1.3 TLS_AES_128_GCM_SHA256, certificate verified; peer subject &#34;O=Example Clinic Lab,CN=pacs.lab.example&#34;, issuer &#34;O=Example Clinic Lab,CN=Example Clinic Lab CA&#34;, SAN DNS [pacs.lab.example], SAN IP [], valid 2026-11-23T04:37:04.000Z to 2026-11-25T04:37:04.000Z, SHA-256 c885a3b0fdbd39b979ecb99cc117c02d369fb6f48f1ad60939d074a6bd63512c; client certificate offered: false&#xA;C-ECHO status 0x0000 (Success)</system-out>
+    </testcase>
+    <testcase name="plaintext-refused" classname="libredvt.tls_reject" time="0.119">
+      <properties>
+        <property name="verdict" value="pass"></property>
+        <property name="assertions" value="1 passed, 0 warned, 0 failed"></property>
+        <property name="target.protocol" value="dimse"></property>
+        <property name="target.endpoint" value="pacs.lab.example:11112"></property>
+        <property name="exchange.1" value="dimse A-ASSOCIATE pacs.lab.example:11112: refused (association no_response)"></property>
+        <property name="exchange.1.association.result" value="no_response"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass&#xA;assertions:&#xA;  pass tls_reject.refused plaintext: expected refused, got refused (connection_closed: the target closed the connection without answering)</system-out>
+    </testcase>
+    <testcase name="tls10-refused" classname="libredvt.tls_reject" time="0.119">
+      <properties>
+        <property name="verdict" value="pass"></property>
+        <property name="assertions" value="1 passed, 0 warned, 0 failed"></property>
+        <property name="target.protocol" value="dimse"></property>
+        <property name="target.endpoint" value="pacs.lab.example:11112"></property>
+        <property name="exchange.1" value="tls TLS-HANDSHAKE pacs.lab.example:11112: refused (tls error: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION)"></property>
+        <property name="exchange.1.tls.version" value=""></property>
+        <property name="exchange.1.tls.cipher" value=""></property>
+        <property name="exchange.1.tls.verified" value="no"></property>
+        <property name="exchange.1.tls.client_cert_sent" value="no"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass&#xA;assertions:&#xA;  pass tls_reject.refused TLS 1.0 only: expected refused, got refused (handshake_alert: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION)</system-out>
+    </testcase>
+    <testcase name="tls11-refused" classname="libredvt.tls_reject" time="0.118">
+      <properties>
+        <property name="verdict" value="pass"></property>
+        <property name="assertions" value="1 passed, 0 warned, 0 failed"></property>
+        <property name="target.protocol" value="dimse"></property>
+        <property name="target.endpoint" value="pacs.lab.example:11112"></property>
+        <property name="exchange.1" value="tls TLS-HANDSHAKE pacs.lab.example:11112: refused (tls error: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION)"></property>
+        <property name="exchange.1.tls.version" value=""></property>
+        <property name="exchange.1.tls.cipher" value=""></property>
+        <property name="exchange.1.tls.verified" value="no"></property>
+        <property name="exchange.1.tls.client_cert_sent" value="no"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass&#xA;assertions:&#xA;  pass tls_reject.refused TLS 1.1 only: expected refused, got refused (handshake_alert: the target sent a TLS alert: TLSV1_ALERT_PROTOCOL_VERSION)</system-out>
+    </testcase>
+  </testsuite>
+</testsuites>
