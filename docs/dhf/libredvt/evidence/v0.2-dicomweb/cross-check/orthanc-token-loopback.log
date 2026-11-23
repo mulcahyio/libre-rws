@@ -1,0 +1,4 @@
+passed   stow                     stow      3 assertion(s) checked; verdict pass; 2 of 2 files stored and referenced by the target
+passed   qido                     qido      9 assertion(s) checked; verdict pass; 2 search request(s), 2 object(s) returned at level instances
+passed   wado                     wado      9 assertion(s) checked; verdict pass
+verdict: pass (DICOMweb with bearer token over loopback http)

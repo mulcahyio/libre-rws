@@ -155,6 +155,49 @@ origin over TLS (or loopback HTTP).
   0 so they can see whether a server still accepts them; the pinned image
   can offer both (shown against the Go test peer and DCMTK).
 
+### Implemented controls (card DVT-0.2/4, 2026-11-19, DRAFT for approval)
+
+- DICOMweb client in the worker on the standard library (`http.client`
+  over the same TLS context factory). One request per connection, the next
+  only after the previous one closed: a target never sees parallel traffic
+  (DVT-SRS-155; the Go test server measured at most 1 request in progress,
+  counted before any response byte is written; its own test shows parallel
+  requests are counted as parallel).
+- Redirects are never followed. A 3xx fails the step with its `Location`
+  recorded; a 307 on a STOW is not re-sent; the other origin receives
+  nothing (DVT-SRS-151).
+- The bearer token is read by the worker from its file, checked (one line,
+  RFC 6750 characters, at least 16), and sent only to the base URL's own
+  origin. Over `http://` it is sent only to a loopback host; the worker
+  checks this a third time after the target schema and the runner
+  (DVT-SRS-111, -112). Retrieve URLs from STOW responses are recorded and
+  never requested; one pointing to another origin gives a warning.
+- Every exchange records the `Authorization` value as `[REDACTED]` (and
+  `Set-Cookie` response headers likewise). Go refuses worker output with an
+  unredacted `Authorization` value as an engine error (DVT-SRS-118).
+- Refusal probes against DICOMweb targets send one bare `GET …/studies`
+  with no headers beyond Host, Accept and Connection: no token, no client
+  certificate (DVT-SRS-106). An HTTP 400 answer counts as a refusal (TLS
+  servers answer a clear-text request on their port with 400 and do not
+  serve it); any other HTTP status shows the request was served.
+- Size limits on the response body, DICOM JSON documents, multipart part
+  size and part count, and the page count; reaching one fails the step and
+  never truncates (DVT-SRS-154). A body shorter than its Content-Length is
+  a protocol error.
+- DICOMweb steps run only against `lab` targets; production and
+  unclassified targets receive no connection (DVT-SRS-134, shown with the
+  Go test server's connection count).
+- Shown end to end: the real worker against the Go test server echoing the
+  `Authorization` header into its error page: the token is caught,
+  redacted and the run fails; a clean run against Orthanc with a token
+  over loopback leaves no token form in any of 30 artefacts.
+- Known limitation: some HTTPS front ends (for example nginx with
+  `ssl_verify_client on`) answer a request without a client certificate
+  with HTTP 400 after the handshake; LibreDVT counts that as a refusal. A
+  plain-HTTP server that answers LibreDVT's bare search with 400 would also
+  count as refusing clear text; such a server is not known, and any other
+  status fails the probe.
+
 ## Static analysis (2026-11-10)
 
 gosec v2.30.0 on `modules/dvt`: 26 findings, triaged to 0 open. Fixed: file

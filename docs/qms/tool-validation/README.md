@@ -27,6 +27,7 @@ command output from 2026-11-10 unless stated.
 | `scripts/qms/part11_check.py` | repo version | Medium | Live run (10/10) and negative test | Fit |
 | `scripts/qms/release-verify.sh` | repo version | High | Used for 0.2.0-beta.1; review of the script | Fit with findings |
 | DCMTK | 3.6.7 (image `rws-e2e-dcmtk`) | Medium | Reference implementation; behaviour cross-checked by Go end-to-end tests | Fit |
+| Orthanc + DICOMweb plugin | Orthanc 1.13.1, DICOMweb plugin 1.24 (`orthancteam/orthanc:26.11.1@sha256:25738bcd515926ac8d33cacf09729a410a32c0a65d6cb8e61bd86fce81a4cd30`) | Medium | Independent DICOMweb reference for the LibreDVT cross-check; stored files checked byte for byte through Orthanc's own REST API | Fit as a cross-check peer (test container only, not distributed) |
 | LibreDVT | 0.1.0-dev (branch `feat/libredvt-v0.1`; engines pinned in `modules/dvt/worker/requirements.txt`) | High | Scripted positive controls with the real engines (CI job `libredvt`), failure injection, mutation check, end-to-end comparison with DCMTK | Fit for v0.1 use, pending review |
 | Libre WT system test (`scripts/e2e/wt-system-test.sh`, `.py`, `wt_make_data.py`, `wt_compare.py`) | repo version (card WT-0.2/9) | High | Positive control of the comparison, failure injection (no console; already-used console), tightened vacuous checks, independence from the product code, failures on real discrepancies during development | Fit for Libre WT 0.2 verification, pending review |
 | `scripts/e2e/wt-screenshots.mjs` | repo version (card WT-0.2/9) | Low (documentation only) | Negative control of its page-width check | Fit |
@@ -166,6 +167,27 @@ command output from 2026-11-10 unless stated.
   and pixel data is compared byte for byte after retrieval.
 - **Re-validate:** on a version change of the test image.
 
+## Orthanc + DICOMweb plugin (test container)
+
+(added 2026-11-22 by Hermes/Claude for card DVT-0.2/4, DRAFT for approval)
+
+- **Intended use:** independent DICOMweb server (QIDO-RS, WADO-RS,
+  STOW-RS over HTTPS, mutual TLS and loopback HTTP) for the LibreDVT v0.2
+  cross-check. Not part of any product; never distributed. Orthanc is
+  GPL-3.0 and the plugin AGPL-3.0; both run unmodified in their published
+  image.
+- **Configuration item:** `orthancteam/orthanc:26.11.1@sha256:25738bcd515926ac8d33cacf09729a410a32c0a65d6cb8e61bd86fce81a4cd30`,
+  reporting Orthanc 1.13.1 and DICOMweb plugin 1.24 (recorded in
+  `docs/dhf/libredvt/evidence/v0.2-dicomweb/03-cross-check.log`).
+- **Risk: medium.** A defect in Orthanc could make a correct LibreDVT check
+  look wrong (seen as an unexpected result and investigated) or hide a
+  LibreDVT defect only if both share it. They share no code (Orthanc is C++
+  built on DCMTK; LibreDVT's client is Python with its own multipart parser). The stored
+  files are compared byte for byte with the fixtures through Orthanc's own
+  REST API, outside DICOMweb, so the STOW result does not rest on LibreDVT
+  alone.
+- **Re-validate:** on a change of the image digest.
+
 ## LibreDVT 0.1 (DICOM Validation & Test)
 
 (added 2026-11-10 by Hermes/Claude; design file `docs/dhf/libredvt/`)
@@ -289,6 +311,52 @@ command output from 2026-11-10 unless stated.
     Fit for v0.1 use
     unchanged; the v0.2 functions are not yet released for use (validated
     in card DVT-0.2/6).
+- **Change 2026-11-22 (issue #34, card DVT-0.2/4, DRAFT for approval):**
+  DICOMweb `qido`, `wado` and `stow` steps and `tls_reject` on DICOMweb
+  targets. Client in the worker on Python's standard library; no new
+  dependency. Re-validation (real output, evidence in
+  `docs/dhf/libredvt/evidence/v0.2-dicomweb/`):
+  - Positive controls with the real engines against a Go DICOMweb test
+    server (`net/http`, `mime/multipart`; no shared code with the worker);
+    real-engine test stage exit 0, 110 top-level tests passed, 0 failed.
+    Controls: wrong boundary, truncated multipart, wrong content
+    type, non-DICOM part, missing/extra/duplicate instances, wrong UIDs,
+    wrong transfer syntax (body and part header), changed pixel data,
+    failed STOW instances reported as success (200 with a Failed SOP
+    Sequence), missing or extra references, wrong SOP Class, unusable
+    STOW responses, 3xx redirects (never followed), oversized bodies,
+    JSON documents, parts and part counts, endless paging, short bodies,
+    and a token echoed into an error page. Each fails the step. Boundary
+    text inside part data must not split a part (passes).
+  - Mutation check: 41 of 41 mutants killed (31 Go, 10 worker),
+    including failed STOW instances ignored, truncated multipart accepted,
+    boundary taken from the body, boundary text inside data splitting a
+    part, unredacted `Authorization` accepted, paging stopped after one
+    page, changed STOW bytes and any HTTP reply counted as a refusal. The
+    first run killed 39 of 41: the boundary-in-data control did not put
+    real boundary text in the data, and one mutant was equivalent (the
+    fixtures already end in 0x00). Both controls were corrected.
+  - Deviation: the first real-engine run failed once because the test
+    server counted a sequential client's connections as overlapping (a
+    race between the client's reconnect and the server's close callback).
+    The server now counts requests before any response byte is written;
+    its own test shows sequential requests count as 1 and parallel ones as
+    more. A false alarm in the test server, not a LibreDVT defect.
+  - Independent cross-check against Orthanc 1.13.1 with the DICOMweb
+    plugin 1.24 (`orthancteam/orthanc:26.11.1`, digest-pinned, test
+    container only): 5 of 5 runs as expected (HTTPS audit with refusal
+    probes, STOW of 6 files with retrieve check, QIDO at three levels with
+    paging, WADO with pixel comparison, explicit syntax and metadata;
+    mutual TLS; a token over loopback HTTP; negatives: no client
+    authentication, wrong host name). Orthanc's REST API served each
+    stored instance byte-identical to its fixture (6 of 6). No token or
+    private-key line in any of the 30 artefacts.
+  - Bearer-token redaction: the real worker against a server echoing the
+    `Authorization` header into its error page: token caught, redacted,
+    run failed; clean runs leave no token form (plain, base64,
+    base64url) in the JSON, HTML or JUnit artefacts.
+  - Fit for v0.1 use unchanged; the v0.2 functions are not yet released
+    for use (validated in card DVT-0.2/6).
 
 ## Libre WT system test (card WT-0.2/9, 2026-11-17)
 

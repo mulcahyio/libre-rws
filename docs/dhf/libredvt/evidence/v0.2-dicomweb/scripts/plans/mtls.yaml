@@ -1,0 +1,9 @@
+# Mutual TLS against Orthanc with SslVerifyPeers true and the test CA as
+# trusted client CA (expected: pass): a probe without a certificate is
+# refused, a search with LibreDVT's client certificate works.
+name: DICOMweb mutual TLS
+target: orthanc-mtls
+timeout: 20s
+steps:
+  - {id: no-client-cert-refused, type: tls_reject, mode: no_client_cert, verifies: [DVT-SRS-105]}
+  - {id: search-with-client-cert, type: qido, level: studies, query: {PatientID: NOBODY-LIBREDVT}, expect_none: true, verifies: [DVT-SRS-104]}

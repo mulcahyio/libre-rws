@@ -238,6 +238,17 @@ func (e *Evidence) Warn(id, subject, expected, actual, message string) {
 	e.Assertions = append(e.Assertions, Assertion{ID: id, Subject: subject, Expected: expected, Actual: actual, Outcome: AssertWarn, Message: message})
 }
 
+// AssertIf records an assertion whose outcome Go decided by a rule other
+// than string equality (for example "200 or 204", or "at most N").
+func (e *Evidence) AssertIf(id, subject, expected, actual string, ok bool, message string) bool {
+	out := AssertFail
+	if ok {
+		out = AssertPass
+	}
+	e.Assertions = append(e.Assertions, Assertion{ID: id, Subject: subject, Expected: expected, Actual: actual, Outcome: out, Message: message})
+	return ok
+}
+
 // nothingChecked is the problem DecideStep reports for a step without
 // assertions.
 const nothingChecked = "nothing was checked"

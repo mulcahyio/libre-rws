@@ -1,0 +1,54 @@
+Generating random hostid in /etc/hostid: 77426964
+Startup command: exec "Orthanc /tmp/orthanc.json"
+W1119 11:51:08.934897             MAIN main.cpp:2545] Orthanc version: 1.13.1
+W1119 11:51:08.934956             MAIN main.cpp:2550] This binary includes the following patch to a third-party library: civetweb-1.16.patch
+W1119 11:51:08.935527             MAIN OrthancConfiguration.cpp:79] Reading the configuration file: /tmp/orthanc.json
+W1119 11:51:08.935601             MAIN OrthancConfiguration.cpp:791] The paths in the Orthanc configuration will be interpreted relative to folder: /tmp
+W1119 11:51:08.946276             MAIN main.cpp:1037] Loading plugin(s) from: "/run/orthanc/plugins"
+W1119 11:51:08.946295             MAIN PluginsManager.cpp:259] Inexistent path to plugins: /run/orthanc/plugins
+W1119 11:51:08.946298             MAIN main.cpp:1037] Loading plugin(s) from: "/usr/share/orthanc/plugins"
+W1119 11:51:08.946911             MAIN PluginsManager.cpp:287] Registering plugin 'dicom-web' (version 1.24)
+W1119 11:51:08.946929             MAIN dicom-web:/Plugin.cpp:619] Performance warning in DICOMweb: The plugin was compiled against Orthanc SDK <= 1.5.6. STOW and WADO chunked transfers will be entirely stored in RAM.
+W1119 11:51:08.946999             MAIN dicom-web:/Plugin.cpp:641] URI to the DICOMweb REST API: /dicom-web/
+W1119 11:51:08.947154             MAIN dicom-web:/Plugin.cpp:754] DICOMweb public root: /dicom-web/
+W1119 11:51:08.947157             MAIN dicom-web:/Plugin.cpp:756] The DICOMweb plugin will use 1 threads to load DICOM files for WADO-RS queries
+W1119 11:51:08.947160             MAIN dicom-web:/Plugin.cpp:770] URI to the WADO-URI API: /wado
+W1119 11:51:08.952552             MAIN PluginsManager.cpp:287] Registering plugin 'gdcm' (version 1.8)
+W1119 11:51:08.952647             MAIN PluginsManager.cpp:159] Gdcm.RestrictTransferSyntaxes configuration is set and not empty, Orthanc will use GDCM to transcode SOME transfer syntaxes:
+W1119 11:51:08.952651             MAIN PluginsManager.cpp:159] Orthanc will use GDCM to decode transfer syntax: 1.2.840.10008.1.2.4.90
+W1119 11:51:08.952653             MAIN PluginsManager.cpp:159] Orthanc will use GDCM to decode transfer syntax: 1.2.840.10008.1.2.4.91
+W1119 11:51:08.952655             MAIN PluginsManager.cpp:159] Orthanc will use GDCM to decode transfer syntax: 1.2.840.10008.1.2.4.92
+W1119 11:51:08.952657             MAIN PluginsManager.cpp:159] Orthanc will use GDCM to decode transfer syntax: 1.2.840.10008.1.2.4.93
+W1119 11:51:08.952659             MAIN PluginsManager.cpp:159] Throttling GDCM to 4 concurrent thread(s)
+W1119 11:51:08.952665             MAIN PluginsManager.cpp:159] Version of GDCM: 3.0.24
+W1119 11:51:08.956276             MAIN PluginsManager.cpp:287] Registering plugin 'orthanc-explorer-2' (version 1.15.1)
+W1119 11:51:08.956483             MAIN PluginsManager.cpp:159] Root URI to the Orthanc-Explorer 2 application: /ui/
+W1119 11:51:08.956559             MAIN OrthancInitialization.cpp:442] SQLite index directory: /var/lib/orthanc/db
+W1119 11:51:08.956818             MAIN OrthancInitialization.cpp:529] Storage directory: /var/lib/orthanc/db
+W1119 11:51:08.968406             MAIN HttpClient.cpp:1210] HTTPS will use the CA certificates from this file: "/etc/ssl/certs/ca-certificates.crt"
+W1119 11:51:08.968663             MAIN LuaContext.cpp:95] Lua says: Lua toolbox installed
+W1119 11:51:08.968736             MAIN LuaContext.cpp:95] Lua says: Lua toolbox installed
+W1119 11:51:08.968976             MAIN ServerContext.cpp:526] Performance option "MaximumStorageCacheSize" is not defined in your configuration, setting it to 128MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.969009             MAIN ServerContext.cpp:757] Performance option "StorageLoaderThreadsCount" is not defined in your configuration, setting it to 4, based on the "ConcurrentJobs" option clamped to the range [4,50]
+W1119 11:51:08.969013             MAIN ServerContext.cpp:526] Performance option "StorageMemoryCapacity" is not defined in your configuration, setting it to 512MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.969015             MAIN ServerContext.cpp:526] Performance option "DicomParserMemoryCapacity" is not defined in your configuration, setting it to 256MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.969018             MAIN ServerContext.cpp:526] Performance option "DicomParserCacheSize" is not defined in your configuration, setting it to 256MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.969020             MAIN ServerContext.cpp:526] Performance option "TranscoderMemoryCapacity" is not defined in your configuration, setting it to 256MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.969022             MAIN ServerContext.cpp:526] Performance option "TranscoderCacheSize" is not defined in your configuration, setting it to 256MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.969024             MAIN ServerContext.cpp:526] Performance option "SequentialDicomReaderWindowCapacity" is not defined in your configuration, setting it to 128MB. Depending on the available memory on the system, you may want to adapt this value.
+W1119 11:51:08.969026             MAIN ServerContext.cpp:783] Performance option "SequentialDicomReaderThreadsCount" is not defined in your configuration, setting it to the same value as "StorageLoaderThreadsCount": 4
+W1119 11:51:08.969029             MAIN ServerContext.cpp:806] Performance option "SequentialDicomReaderWindowSize" is not defined in your configuration, setting it to 4
+W1119 11:51:08.969268             MAIN ServerContext.cpp:1003] Patient level is enabled
+W1119 11:51:08.969271             MAIN ServerContext.cpp:994] Disk compression is disabled
+W1119 11:51:08.969275             MAIN ServerIndex.cpp:402] No limit on the number of stored patients
+W1119 11:51:08.969277             MAIN ServerIndex.cpp:422] No limit on the size of the storage area
+W1119 11:51:08.969453             MAIN JobsEngine.cpp:280] The jobs engine has started with 2 threads
+W1119 11:51:08.969622             MAIN main.cpp:1531] DICOM server listening with AET ORTHANC on port: 4242
+W1119 11:51:08.969635             MAIN HttpServer.cpp:2283] HTTP compression is disabled
+W1119 11:51:08.969639             MAIN main.cpp:1207] Limiting the maximum body size in HTTP requests to 8192MB
+W1119 11:51:08.969641             MAIN main.cpp:1219] Limiting on the maximum file size uncompressed from ZIP/gzip archives to 4096MB
+W1119 11:51:08.969646             MAIN main.cpp:1239] ====> Remote access is enabled while user authentication is explicitly disabled, your setup is POSSIBLY INSECURE <====
+W1119 11:51:08.969654             MAIN main.cpp:1367] Remote LUA script execution is disabled
+W1119 11:51:08.969656             MAIN main.cpp:1379] REST API cannot write to the file system because the "RestApiWriteToFileSystemEnabled" configuration is set to false.  The URI /instances/../export is disabled.  This is the most secure configuration.
+W1119 11:51:08.971928             MAIN HttpServer.cpp:2028] HTTP server listening on port: 8042s (HTTPS encryption is enabled, remote access is allowed)
+W1119 11:51:08.971936             MAIN main.cpp:1049] Orthanc has started

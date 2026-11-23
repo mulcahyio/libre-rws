@@ -77,6 +77,7 @@ type StoreFile struct {
 	File              string `json:"file"`
 	SOPInstanceUID    string `json:"sop_instance_uid"`
 	StudyInstanceUID  string `json:"study_instance_uid"`
+	SeriesInstanceUID string `json:"series_instance_uid"`
 	TransferSyntaxUID string `json:"transfer_syntax_uid"`
 	Status            *int   `json:"status"`
 	Error             string `json:"error"`

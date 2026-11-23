@@ -118,6 +118,18 @@ only name is a DNS name in the CN, because OpenSSL never matches an IP
 address against the CN (an IP-only CN certificate could not catch a CN
 fallback; the mutation check showed it).
 
+Status 2026-11-19 (card DVT-0.2/4, DRAFT for approval): activities 8, 9 and
+10, the DICOMweb part of 11 and the Orthanc part of 12 are done; results in
+`docs/qms/tool-validation/README.md` and
+`docs/dhf/libredvt/evidence/v0.2-dicomweb/`. The DICOMweb test server is Go
+(`internal/fakepeer/web.go`: `net/http`, `mime/multipart`); LibreDVT's
+client is Python (`http.client` and its own multipart parser). Two controls
+are proven in a slightly different form than listed: the "202" control is
+a 202 with a failed instance (a 202 whose problems are all warnings passes
+with warnings only under `allow_warnings`, DVT-SRS-130), and the oversized
+body is shown for the response, the DICOM JSON document and the part size
+and count limits separately.
+
 ## 5. v0.2 residual risk (DRAFT for approval)
 
 DVT-HAZ-006 and DVT-HAZ-009 are reduced by the positive controls and the

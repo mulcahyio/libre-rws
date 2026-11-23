@@ -56,7 +56,7 @@ func TestRunWithTargetFileKeepsSecretsOutOfArtefacts(t *testing.T) {
 		}
 	}
 	j, _ := os.ReadFile(out["-json"])
-	for _, want := range []string{"[REDACTED]", "secret value(s) found", "not available in this build", `"kind": "engine"`} {
+	for _, want := range []string{"[REDACTED]", "secret value(s) found", "worker qido", `"kind": "engine"`} {
 		if !strings.Contains(string(j), want) {
 			t.Fatalf("JSON report lacks %q", want)
 		}

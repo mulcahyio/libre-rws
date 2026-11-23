@@ -1,0 +1,2 @@
+failed   search                   qido      tls error: GET https://orthanc-alias:8042/dicom-web/studies?PatientID=NOBODY-LIBREDVT: certificate verification failed: Hostname mismatch, certificate is not valid for 'orthanc-alias'. (code 62); 1 search request(s), 0 object(s) returned at level studies
+verdict: fail (DICOMweb search)

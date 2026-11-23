@@ -1,0 +1,8 @@
+# A TLS server that does not require a client certificate must make this
+# step fail (finding about the server, not LibreDVT). Expected: fail against
+# orthanc-https (SslVerifyPeers false), pass against orthanc-mtls.
+name: DICOMweb client certificate required
+target: orthanc-https
+timeout: 20s
+steps:
+  - {id: no-client-cert-refused, type: tls_reject, mode: no_client_cert, verifies: [DVT-SRS-105, DVT-SRS-106]}

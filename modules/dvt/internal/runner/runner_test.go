@@ -26,9 +26,50 @@ type fake struct {
 	compare func(sent []string) []engine.CompareFile
 	assoc   func(p engine.Peer, req engine.AssociateRequest) engine.AssociateResult
 	probe   func(p engine.Peer, mode, version string) engine.ProbeResult
+	qidoFn  func(w engine.Web, q engine.QidoRequest) engine.QidoResult
+	wadoFn  func(w engine.Web, q engine.WadoRequest) engine.WadoResult
+	stowFn  func(w engine.Web, study string, batch int, files []string) engine.StowResult
+	probeW  func(w engine.Web, mode, version string) engine.ProbeResult
+	webs    []engine.Web
 	peers   []engine.Peer
 	err     error
 	calls   []string
+}
+
+func (f *fake) Qido(_ context.Context, w engine.Web, q engine.QidoRequest) (engine.QidoResult, string, error) {
+	f.calls = append(f.calls, "qido")
+	f.webs = append(f.webs, w)
+	if f.qidoFn != nil {
+		return f.qidoFn(w, q), "{}", f.err
+	}
+	return engine.QidoResult{}, "{}", f.err
+}
+
+func (f *fake) Wado(_ context.Context, w engine.Web, q engine.WadoRequest) (engine.WadoResult, string, error) {
+	f.calls = append(f.calls, "wado")
+	f.webs = append(f.webs, w)
+	if f.wadoFn != nil {
+		return f.wadoFn(w, q), "{}", f.err
+	}
+	return engine.WadoResult{}, "{}", f.err
+}
+
+func (f *fake) Stow(_ context.Context, w engine.Web, study string, batch int, files []string) (engine.StowResult, string, error) {
+	f.calls = append(f.calls, "stow")
+	f.webs = append(f.webs, w)
+	if f.stowFn != nil {
+		return f.stowFn(w, study, batch, files), "{}", f.err
+	}
+	return engine.StowResult{}, "{}", f.err
+}
+
+func (f *fake) TLSProbeWeb(_ context.Context, w engine.Web, mode, version string) (engine.ProbeResult, string, error) {
+	f.calls = append(f.calls, "tls-probe-web")
+	f.webs = append(f.webs, w)
+	if f.probeW != nil {
+		return f.probeW(w, mode, version), "{}", f.err
+	}
+	return engine.ProbeResult{}, "{}", f.err
 }
 
 func (f *fake) Associate(_ context.Context, p engine.Peer, req engine.AssociateRequest) (engine.AssociateResult, string, error) {
@@ -58,7 +99,7 @@ func (f *fake) Validate(_ context.Context, files []string, _ map[string]string) 
 func (f *fake) Probe(_ context.Context, files []string) ([]engine.ProbeFile, error) {
 	var out []engine.ProbeFile
 	for _, x := range files {
-		out = append(out, engine.ProbeFile{File: x, DICOM: true, SOPInstanceUID: "1.2." + filepath.Base(x), StudyInstanceUID: "9.9"})
+		out = append(out, engine.ProbeFile{File: x, DICOM: true, SOPInstanceUID: "1.2." + filepath.Base(x), StudyInstanceUID: "9.9", SeriesInstanceUID: "9.9.1", TransferSyntaxUID: "1.2.840.10008.1.2.1"})
 	}
 	return out, nil
 }

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="LibreDVT" tests="3" failures="0" time="1.571">
+  <testsuite name="DICOMweb with bearer token over loopback http" tests="3" failures="0" timestamp="2026-11-19T11:51:18Z" time="1.571">
+    <properties>
+      <property name="run_id" value="20261119-115118-6debf529"></property>
+      <property name="plan_sha256" value="9d9e69819f06a47672b9e55588562d77bb911e7b967525525caa9de4415bc311"></property>
+      <property name="target" value="orthanc-loopback (dicomweb http://127.0.0.1:18042/dicom-web, auth bearer, class lab)"></property>
+      <property name="verdict" value="pass"></property>
+      <property name="version.dicom-validator" value="0.9.0"></property>
+      <property name="version.dicom3tools" value="1.00.snapshot.20260927113651"></property>
+      <property name="version.libredvt" value="0.2.0-dev"></property>
+      <property name="version.pydicom" value="3.0.2"></property>
+      <property name="version.pynetdicom" value="3.0.4"></property>
+      <property name="version.python" value="3.12.16"></property>
+      <property name="version.standard-edition" value="2026d"></property>
+      <property name="version.worker" value="0.2.0"></property>
+    </properties>
+    <testcase name="stow" classname="libredvt.stow" time="0.498">
+      <properties>
+        <property name="verifies" value="DVT-SRS-111, DVT-SRS-128"></property>
+      </properties>
+      <system-out>3 assertion(s) checked; verdict pass&#xA;2 of 2 files stored and referenced by the target</system-out>
+    </testcase>
+    <testcase name="qido" classname="libredvt.qido" time="0.153">
+      <properties>
+        <property name="verifies" value="DVT-SRS-135"></property>
+      </properties>
+      <system-out>9 assertion(s) checked; verdict pass&#xA;2 search request(s), 2 object(s) returned at level instances</system-out>
+    </testcase>
+    <testcase name="wado" classname="libredvt.wado" time="0.487">
+      <properties>
+        <property name="verifies" value="DVT-SRS-123"></property>
+      </properties>
+      <system-out>9 assertion(s) checked; verdict pass</system-out>
+    </testcase>
+  </testsuite>
+</testsuites>

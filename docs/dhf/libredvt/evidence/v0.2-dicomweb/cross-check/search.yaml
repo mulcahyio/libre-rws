@@ -1,0 +1,7 @@
+# One search; used for the wrong-host run (expected: fail on the host-name
+# check, before any HTTP request).
+name: DICOMweb search
+target: orthanc-wrong-host
+timeout: 20s
+steps:
+  - {id: search, type: qido, level: studies, query: {PatientID: NOBODY-LIBREDVT}, expect_none: true, verifies: [DVT-SRS-102]}

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="LibreDVT" tests="12" failures="0" time="4.930">
+  <testsuite name="Orthanc DICOMweb audit (cross-check)" tests="12" failures="0" timestamp="2026-11-19T11:51:10Z" time="4.930">
+    <properties>
+      <property name="run_id" value="20261119-115110-63de5ece"></property>
+      <property name="plan_sha256" value="fd30cbee3e63f371bf2af28595f68f8d2d90af1c671046290990af3e6666f964"></property>
+      <property name="target" value="orthanc-https (dicomweb https://orthanc-https:8042/dicom-web, auth none, class lab)"></property>
+      <property name="verdict" value="pass"></property>
+      <property name="version.dicom-validator" value="0.9.0"></property>
+      <property name="version.dicom3tools" value="1.00.snapshot.20260927113651"></property>
+      <property name="version.libredvt" value="0.2.0-dev"></property>
+      <property name="version.pydicom" value="3.0.2"></property>
+      <property name="version.pynetdicom" value="3.0.4"></property>
+      <property name="version.python" value="3.12.16"></property>
+      <property name="version.standard-edition" value="2026d"></property>
+      <property name="version.worker" value="0.2.0"></property>
+    </properties>
+    <testcase name="plaintext-refused" classname="libredvt.tls_reject" time="0.126">
+      <properties>
+        <property name="verifies" value="DVT-SRS-105"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass</system-out>
+    </testcase>
+    <testcase name="tls11-refused" classname="libredvt.tls_reject" time="0.124">
+      <properties>
+        <property name="verifies" value="DVT-SRS-105"></property>
+      </properties>
+      <system-out>1 assertion(s) checked; verdict pass</system-out>
+    </testcase>
+    <testcase name="stow" classname="libredvt.stow" time="1.034">
+      <properties>
+        <property name="verifies" value="DVT-SRS-128, DVT-SRS-129, DVT-SRS-130, DVT-SRS-132, DVT-SRS-136"></property>
+      </properties>
+      <system-out>33 assertion(s) checked; verdict pass&#xA;6 of 6 files stored and referenced by the target&#xA;TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=orthanc&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt04-test-ca&#34;, SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:08.000Z, SHA-256 db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43; client certificate offered: false</system-out>
+    </testcase>
+    <testcase name="qido-studies" classname="libredvt.qido" time="0.267">
+      <properties>
+        <property name="verifies" value="DVT-SRS-113, DVT-SRS-115, DVT-SRS-135"></property>
+      </properties>
+      <system-out>18 assertion(s) checked; verdict pass&#xA;4 search request(s), 4 object(s) returned at level studies&#xA;TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=orthanc&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt04-test-ca&#34;, SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:08.000Z, SHA-256 db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43; client certificate offered: false</system-out>
+    </testcase>
+    <testcase name="qido-series" classname="libredvt.qido" time="0.264">
+      <properties>
+        <property name="verifies" value="DVT-SRS-113, DVT-SRS-115"></property>
+      </properties>
+      <system-out>18 assertion(s) checked; verdict pass&#xA;4 search request(s), 4 object(s) returned at level series&#xA;TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=orthanc&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt04-test-ca&#34;, SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:08.000Z, SHA-256 db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43; client certificate offered: false</system-out>
+    </testcase>
+    <testcase name="qido-instances" classname="libredvt.qido" time="0.276">
+      <properties>
+        <property name="verifies" value="DVT-SRS-113, DVT-SRS-115"></property>
+      </properties>
+      <system-out>26 assertion(s) checked; verdict pass&#xA;6 search request(s), 6 object(s) returned at level instances&#xA;TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=orthanc&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt04-test-ca&#34;, SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:08.000Z, SHA-256 db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43; client certificate offered: false</system-out>
+    </testcase>
+    <testcase name="qido-patient" classname="libredvt.qido" time="0.246">
+      <properties>
+        <property name="verifies" value="DVT-SRS-114, DVT-SRS-116"></property>
+      </properties>
+      <system-out>6 assertion(s) checked; verdict pass&#xA;1 search request(s), 1 object(s) returned at level studies&#xA;TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=orthanc&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt04-test-ca&#34;, SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:08.000Z, SHA-256 db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43; client certificate offered: false</system-out>
+    </testcase>
+    <testcase name="qido-paged" classname="libredvt.qido" time="0.164">
+      <properties>
+        <property name="verifies" value="DVT-SRS-117"></property>
+      </properties>
+      <system-out>17 assertion(s) checked; verdict pass&#xA;3 search request(s), 4 object(s) returned at level studies&#xA;TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=orthanc&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt04-test-ca&#34;, SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:08.000Z, SHA-256 db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43; client certificate offered: false</system-out>
+    </testcase>
+    <testcase name="qido-none" classname="libredvt.qido" time="0.251">
+      <properties>
+        <property name="verifies" value="DVT-SRS-114"></property>
+      </properties>
+      <system-out>2 assertion(s) checked; verdict pass&#xA;1 search request(s), 0 object(s) returned at level studies&#xA;TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=orthanc&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt04-test-ca&#34;, SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:08.000Z, SHA-256 db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43; client certificate offered: false</system-out>
+    </testcase>
+    <testcase name="wado-store" classname="libredvt.wado" time="0.519">
+      <properties>
+        <property name="verifies" value="DVT-SRS-119, DVT-SRS-120, DVT-SRS-121, DVT-SRS-123, DVT-SRS-126"></property>
+      </properties>
+      <system-out>21 assertion(s) checked; verdict pass&#xA;TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=orthanc&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt04-test-ca&#34;, SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:08.000Z, SHA-256 db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43; client certificate offered: false</system-out>
+    </testcase>
+    <testcase name="wado-explicit" classname="libredvt.wado" time="0.724">
+      <properties>
+        <property name="verifies" value="DVT-SRS-122, DVT-SRS-123"></property>
+      </properties>
+      <system-out>6 assertion(s) checked; verdict pass&#xA;TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=orthanc&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt04-test-ca&#34;, SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:08.000Z, SHA-256 db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43; client certificate offered: false</system-out>
+    </testcase>
+    <testcase name="wado-meta" classname="libredvt.wado" time="0.499">
+      <properties>
+        <property name="verifies" value="DVT-SRS-124"></property>
+      </properties>
+      <system-out>10 assertion(s) checked; verdict pass&#xA;TLS: TLSv1.3 TLS_AES_256_GCM_SHA384, certificate verified; peer subject &#34;O=LibreDVT cross-check,CN=orthanc&#34;, issuer &#34;O=LibreDVT cross-check,CN=dvt04-test-ca&#34;, SAN DNS [orthanc-https orthanc-mtls], SAN IP [], valid 2026-11-19T11:51:08.000Z to 2026-11-20T11:51:08.000Z, SHA-256 db37bc961c5f373a133da8ab29d5707579161071283c6110dbc0bd572f031d43; client certificate offered: false</system-out>
+    </testcase>
+  </testsuite>
+</testsuites>

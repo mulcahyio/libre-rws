@@ -1,0 +1,600 @@
+{
+  "id": "20261119-115118-6debf529",
+  "plan": "DICOMweb with bearer token over loopback http",
+  "plan_sha256": "9d9e69819f06a47672b9e55588562d77bb911e7b967525525caa9de4415bc311",
+  "target": "orthanc-loopback",
+  "target_desc": "orthanc-loopback (dicomweb http://127.0.0.1:18042/dicom-web, auth bearer, class lab)",
+  "started": "2026-11-19T11:51:18.709037867Z",
+  "finished": "2026-11-19T11:51:20.279847035Z",
+  "steps": [
+    {
+      "id": "stow",
+      "type": "stow",
+      "verifies": [
+        "DVT-SRS-111",
+        "DVT-SRS-128"
+      ],
+      "status": "passed",
+      "messages": [
+        "3 assertion(s) checked; verdict pass",
+        "2 of 2 files stored and referenced by the target"
+      ],
+      "started": "2026-11-19T11:51:19.141797777Z",
+      "duration": 498080217,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "orthanc-loopback",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "http://127.0.0.1:18042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "http",
+            "operation": "POST",
+            "endpoint": "http://127.0.0.1:18042/dicom-web/studies",
+            "started": "2026-11-19T11:51:19.607Z",
+            "duration_ms": 19,
+            "outcome": "completed",
+            "http": {
+              "method": "POST",
+              "url": "http://127.0.0.1:18042/dicom-web/studies",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Content-Length": [
+                  "44621"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=libredvt-aa0fb00227894865a97897a45248160c"
+                ],
+                "Host": [
+                  "127.0.0.1:18042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1438"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1438,
+                "sha256": "9f4ac0b32e3dccd8eaf97b515d1536d05b7ba4bc7a5c9def3a7030b3a8006a9b",
+                "excerpt": "{\n\t\"00080005\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"ISO_IR 100\"\n\t\t],\n\t\t\"vr\" : \"CS\"\n\t},\n\t\"00081190\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"http://127.0.0.1:18042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322\"\n\t\t],\n\t\t\"vr\" : \"UR\"\n\t},\n\t\"00081199\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t{\n\t\t\t\t\"00081150\" : \n\t\t\t\t{\n\t\t\t\t\t\"Value\" : \n\t\t\t\t\t[\n\t\t\t\t\t\t\"1.2.840.10008.5.1.4.1.1.2\"\n\t\t\t\t\t],\n\t\t\t\t\t\"vr\" : \"UI\"\n\t\t\t\t},\n\t\t\t\t\"00081155\" : \n\t\t\t\t{\n\t\t\t\t\t\"Value\" : \n\t\t\t\t\t[\n\t\t\t\t\t\t\"1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322\"\n\t\t\t\t\t],\n\t\t\t\t\t\"vr\" : \"UI\"\n\t\t\t\t},\n\t\t\t\t\"00081190\" : \n\t\t\t\t{\n\t\t\t\t\t\"Value\" : \n\t\t\t\t\t[\n\t\t\t\t\t\t\"http://127.0.0.1:18042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322/series/1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322/instances/1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322\"\n\t\t\t\t\t],\n\t\t\t\t\t\"vr\" : \"UR\"\n\t\t\t\t}\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"00081150\" : \n\t\t\t\t{\n\t\t\t\t\t\"Value\" : \n\t\t\t\t\t[\n\t\t\t\t\t\t\"1.2.840.10008.5.1.4.1.1.7\"\n\t\t\t\t\t],\n\t\t\t\t\t\"vr\" : \"UI\"\n\t\t\t\t},\n\t\t\t\t\"00081155\" : \n\t\t\t\t{\n\t\t\t\t\t\"Value\" : \n\t\t\t\t\t[\n\t\t\t\t\t\t\"1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116\"\n\t\t\t\t\t],\n\t\t\t\t\t\"vr\" : \"UI\"\n\t\t\t\t},\n\t\t\t\t\"00081190\" : \n\t\t\t\t{\n\t\t\t\t\t\"Value\" : \n\t\t\t\t\t[\n\t\t\t\t\t\t\"http://127.0.0.1:18042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116\"\n\t\t\t\t\t],\n\t\t\t\t\t\"vr\" : \"UR\"\n\t\t\t\t}\n\t\t\t}\n\t\t],\n\t\t\"vr\" : \"SQ\"\n\t}\n}\n"
+              }
+            }
+          }
+        ],
+        "instances": [
+          {
+            "sop_instance_uid": "1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.2",
+            "transfer_syntax": "1.2.840.10008.1.2.1",
+            "file": "ct_explicit_le.dcm",
+            "size": 39206,
+            "sha256": "3dd31e5cc835b3f2cdd46c9da1982f59251e78518fefa8163d914631c66437d6",
+            "remote_result": "success",
+            "retrieve_url": "http://127.0.0.1:18042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322/series/1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322/instances/1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322"
+          },
+          {
+            "sop_instance_uid": "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.7",
+            "transfer_syntax": "1.2.840.10008.1.2.4.70",
+            "file": "sc_jpeg_lossless.dcm",
+            "size": 5204,
+            "sha256": "a492ed4a120c51a076126a6021e8cab1acb0172da3d42c62843b2a34a8ddd252",
+            "remote_result": "success",
+            "retrieve_url": "http://127.0.0.1:18042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116"
+          }
+        ],
+        "assertions": [
+          {
+            "id": "stow.instance.referenced",
+            "subject": "1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "expected": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.2",
+            "actual": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.2",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.instance.referenced",
+            "subject": "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "expected": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.7",
+            "actual": "referenced with SOP Class 1.2.840.10008.5.1.4.1.1.7",
+            "outcome": "pass"
+          },
+          {
+            "id": "stow.status",
+            "subject": "http://127.0.0.1:18042/dicom-web/studies",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "qido",
+      "type": "qido",
+      "verifies": [
+        "DVT-SRS-135"
+      ],
+      "status": "passed",
+      "messages": [
+        "9 assertion(s) checked; verdict pass",
+        "2 search request(s), 2 object(s) returned at level instances"
+      ],
+      "started": "2026-11-19T11:51:19.639997522Z",
+      "duration": 152666851,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "orthanc-loopback",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "http://127.0.0.1:18042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "http://127.0.0.1:18042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "started": "2026-11-19T11:51:19.775Z",
+            "duration_ms": 7,
+            "outcome": "completed",
+            "http": {
+              "method": "GET",
+              "url": "http://127.0.0.1:18042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "127.0.0.1:18042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1938"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1938,
+                "sha256": "c7cf271f31d89aeca059e71559cadee099ef633dcbcf0f6e78094fc95bba0c05",
+                "excerpt": "[{\n\t\"00080005\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"ISO_IR 192\"\n\t\t],\n\t\t\"vr\" : \"CS\"\n\t},\n\t\"00080016\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"1.2.840.10008.5.1.4.1.1.7\"\n\t\t],\n\t\t\"vr\" : \"UI\"\n\t},\n\t\"00080018\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116\"\n\t\t],\n\t\t\"vr\" : \"UI\"\n\t},\n\t\"00080020\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"20170101\"\n\t\t],\n\t\t\"vr\" : \"DA\"\n\t},\n\t\"00080030\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"120000\"\n\t\t],\n\t\t\"vr\" : \"TM\"\n\t},\n\t\"00080050\" : \n\t{\n\t\t\"vr\" : \"SH\"\n\t},\n\t\"00080056\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"ONLINE\"\n\t\t],\n\t\t\"vr\" : \"CS\"\n\t},\n\t\"00080060\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"OT\"\n\t\t],\n\t\t\"vr\" : \"CS\"\n\t},\n\t\"00080090\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t{\n\t\t\t\t\"Alphabetic\" : \"Moriarty^James\"\n\t\t\t}\n\t\t],\n\t\t\"vr\" : \"PN\"\n\t},\n\t\"00081190\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"http://127.0.0.1:18042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114/series/1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062/instances/1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116\"\n\t\t],\n\t\t\"vr\" : \"UR\"\n\t},\n\t\"00100010\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t{\n\t\t\t\t\"Alphabetic\" : \"Lestrade^G\"\n\t\t\t}\n\t\t],\n\t\t\"vr\" : \"PN\"\n\t},\n\t\"00100020\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"ID1\"\n\t\t],\n\t\t\"vr\" : \"LO\"\n\t},\n\t\"00100030\" : \n\t{\n\t\t\"vr\" : \"DA\"\n\t},\n\t\"00100040\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"F\"\n\t\t],\n\t\t\"vr\" : \"CS\"\n\t},\n\t\"0020000D\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114\"\n\t\t],\n\t\t\"vr\" : \"UI\"\n\t},\n\t\"0020000E\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"1.2.826.0.1.3680043.8.498.16157229083793556332623330502397121062\"\n\t\t],\n\t\t\"vr\" : \"UI\"\n\t},\n\t\"00200010\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"1\"\n\t\t],\n\t\t\"vr\" : \"SH\"\n\t},\n\t\"00200011\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t1\n\t\t],\n\t\t\"vr\" : \"IS\"\n\t},\n\t\"00200013\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t1\n\t\t],\n\t\t\"vr\" : \"IS\"\n\t},\n\t\"00280010\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t100\n\t\t],\n\t\t\"vr\" : \"US\"\n\t},\n\t\"00280011\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t100\n\t\t],\n\t\t\"vr\" : \"US\"\n\t},\n\t\"00280100\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t8\n\t\t],\n\t\t\"vr\" : \"US\"\n\t}\n}\n]"
+              }
+            }
+          },
+          {
+            "seq": 2,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "http://127.0.0.1:18042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "started": "2026-11-19T11:51:19.782Z",
+            "duration_ms": 2,
+            "outcome": "completed",
+            "http": {
+              "method": "GET",
+              "url": "http://127.0.0.1:18042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+              "request_headers": {
+                "Accept": [
+                  "application/dicom+json"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "127.0.0.1:18042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "1841"
+                ],
+                "Content-Type": [
+                  "application/dicom+json"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "application/dicom+json",
+                "size": 1841,
+                "sha256": "7afae4ac01e2022cb8580c6e0f3e7a902fcababb2f33ad493e3deead4046eac1",
+                "excerpt": "[{\n\t\"00080005\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"ISO_IR 192\"\n\t\t],\n\t\t\"vr\" : \"CS\"\n\t},\n\t\"00080016\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"1.2.840.10008.5.1.4.1.1.2\"\n\t\t],\n\t\t\"vr\" : \"UI\"\n\t},\n\t\"00080018\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322\"\n\t\t],\n\t\t\"vr\" : \"UI\"\n\t},\n\t\"00080020\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"20040119\"\n\t\t],\n\t\t\"vr\" : \"DA\"\n\t},\n\t\"00080030\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"072730\"\n\t\t],\n\t\t\"vr\" : \"TM\"\n\t},\n\t\"00080050\" : \n\t{\n\t\t\"vr\" : \"SH\"\n\t},\n\t\"00080056\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"ONLINE\"\n\t\t],\n\t\t\"vr\" : \"CS\"\n\t},\n\t\"00080060\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"CT\"\n\t\t],\n\t\t\"vr\" : \"CS\"\n\t},\n\t\"00080090\" : \n\t{\n\t\t\"vr\" : \"PN\"\n\t},\n\t\"00080201\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"-0500\"\n\t\t],\n\t\t\"vr\" : \"SH\"\n\t},\n\t\"00081190\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"http://127.0.0.1:18042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322/series/1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322/instances/1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322\"\n\t\t],\n\t\t\"vr\" : \"UR\"\n\t},\n\t\"00100010\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t{\n\t\t\t\t\"Alphabetic\" : \"CompressedSamples^CT1\"\n\t\t\t}\n\t\t],\n\t\t\"vr\" : \"PN\"\n\t},\n\t\"00100020\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"1CT1\"\n\t\t],\n\t\t\"vr\" : \"LO\"\n\t},\n\t\"00100030\" : \n\t{\n\t\t\"vr\" : \"DA\"\n\t},\n\t\"00100040\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"O\"\n\t\t],\n\t\t\"vr\" : \"CS\"\n\t},\n\t\"0020000D\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"1.3.6.1.4.1.5962.1.2.1.20040119072730.12322\"\n\t\t],\n\t\t\"vr\" : \"UI\"\n\t},\n\t\"0020000E\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"1.3.6.1.4.1.5962.1.3.1.1.20040119072730.12322\"\n\t\t],\n\t\t\"vr\" : \"UI\"\n\t},\n\t\"00200010\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t\"1CT1\"\n\t\t],\n\t\t\"vr\" : \"SH\"\n\t},\n\t\"00200011\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t1\n\t\t],\n\t\t\"vr\" : \"IS\"\n\t},\n\t\"00200013\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t1\n\t\t],\n\t\t\"vr\" : \"IS\"\n\t},\n\t\"00280010\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t128\n\t\t],\n\t\t\"vr\" : \"US\"\n\t},\n\t\"00280011\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t128\n\t\t],\n\t\t\"vr\" : \"US\"\n\t},\n\t\"00280100\" : \n\t{\n\t\t\"Value\" : \n\t\t[\n\t\t\t16\n\t\t],\n\t\t\"vr\" : \"US\"\n\t}\n}\n]"
+              }
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "id": "qido.status",
+            "subject": "http://127.0.0.1:18042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "http://127.0.0.1:18042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "http://127.0.0.1:18042/dicom-web/instances?00080018=1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.status",
+            "subject": "http://127.0.0.1:18042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass",
+            "message": "PS3.18: 200 with matches; 204 means no match"
+          },
+          {
+            "id": "qido.content_type",
+            "subject": "http://127.0.0.1:18042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "expected": "application/dicom+json",
+            "actual": "application/dicom+json",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.json",
+            "subject": "http://127.0.0.1:18042/dicom-web/instances?00080018=1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "expected": "JSON array of DICOM JSON objects",
+            "actual": "array ",
+            "outcome": "pass",
+            "message": "PS3.18 Annex F"
+          },
+          {
+            "id": "qido.object.unique_key",
+            "subject": "instances",
+            "expected": "00080018 in every object",
+            "actual": "2 of 2",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          },
+          {
+            "id": "qido.uid.present",
+            "subject": "1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "expected": "present",
+            "actual": "present",
+            "outcome": "pass"
+          }
+        ],
+        "redactions": 0
+      }
+    },
+    {
+      "id": "wado",
+      "type": "wado",
+      "verifies": [
+        "DVT-SRS-123"
+      ],
+      "status": "passed",
+      "messages": [
+        "9 assertion(s) checked; verdict pass"
+      ],
+      "started": "2026-11-19T11:51:19.792720803Z",
+      "duration": 487004395,
+      "verdict": "pass",
+      "evidence": {
+        "schema": "libredvt.evidence/1",
+        "target": {
+          "name": "orthanc-loopback",
+          "class": "lab",
+          "protocol": "dicomweb",
+          "endpoint": "http://127.0.0.1:18042/dicom-web"
+        },
+        "exchanges": [
+          {
+            "seq": 1,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "http://127.0.0.1:18042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+            "started": "2026-11-19T11:51:19.929Z",
+            "duration_ms": 6,
+            "outcome": "completed",
+            "http": {
+              "method": "GET",
+              "url": "http://127.0.0.1:18042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+              "request_headers": {
+                "Accept": [
+                  "multipart/related; type=\"application/dicom\"; transfer-syntax=*"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "127.0.0.1:18042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "5432"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=909db356-bfe2-4ec0-9917-584b2eab0d6d-03c4d2ed-b1b6-49a9-bad5-402f74c08"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "multipart/related; type=\"application/dicom\"; boundary=909db356-bfe2-4ec0-9917-584b2eab0d6d-03c4d2ed-b1b6-49a9-bad5-402f74c08",
+                "size": 5432,
+                "sha256": "f464b29b622c457b3d8765baeaa90587a99e606862cb1b4d70b37cb7d2684541"
+              },
+              "parts": [
+                {
+                  "index": 1,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.4.70",
+                  "sop_instance_uid": "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+                  "size": 5204,
+                  "sha256": "a492ed4a120c51a076126a6021e8cab1acb0172da3d42c62843b2a34a8ddd252"
+                }
+              ]
+            }
+          },
+          {
+            "seq": 2,
+            "protocol": "http",
+            "operation": "GET",
+            "endpoint": "http://127.0.0.1:18042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+            "started": "2026-11-19T11:51:20.025Z",
+            "duration_ms": 2,
+            "outcome": "completed",
+            "http": {
+              "method": "GET",
+              "url": "http://127.0.0.1:18042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+              "request_headers": {
+                "Accept": [
+                  "multipart/related; type=\"application/dicom\"; transfer-syntax=*"
+                ],
+                "Authorization": [
+                  "[REDACTED]"
+                ],
+                "Connection": [
+                  "close"
+                ],
+                "Host": [
+                  "127.0.0.1:18042"
+                ],
+                "User-Agent": [
+                  "LibreDVT-worker/0.2.0"
+                ]
+              },
+              "status": 200,
+              "response_headers": {
+                "Connection": [
+                  "keep-alive"
+                ],
+                "Content-Length": [
+                  "39435"
+                ],
+                "Content-Type": [
+                  "multipart/related; type=\"application/dicom\"; boundary=281b7477-000c-4c60-a9be-d4f8ff3a0043-5e5369f4-c28a-47b9-9a11-8096378fd"
+                ],
+                "Keep-Alive": [
+                  "timeout=1"
+                ],
+                "X-Content-Type-Options": [
+                  "nosniff"
+                ]
+              },
+              "body": {
+                "content_type": "multipart/related; type=\"application/dicom\"; boundary=281b7477-000c-4c60-a9be-d4f8ff3a0043-5e5369f4-c28a-47b9-9a11-8096378fd",
+                "size": 39435,
+                "sha256": "d261f08750a751681a46ca800ca2d5016feae99f14367b1fae1e54c6aba16f2a"
+              },
+              "parts": [
+                {
+                  "index": 1,
+                  "content_type": "application/dicom",
+                  "transfer_syntax": "1.2.840.10008.1.2.1",
+                  "sop_instance_uid": "1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+                  "size": 39206,
+                  "sha256": "3dd31e5cc835b3f2cdd46c9da1982f59251e78518fefa8163d914631c66437d6"
+                }
+              ]
+            }
+          }
+        ],
+        "instances": [
+          {
+            "sop_instance_uid": "1.2.826.0.1.3680043.8.498.49043964482360854182530167603505525116",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.7",
+            "transfer_syntax": "1.2.840.10008.1.2.4.70",
+            "file": "sc_jpeg_lossless.dcm",
+            "size": 5204,
+            "sha256": "a492ed4a120c51a076126a6021e8cab1acb0172da3d42c62843b2a34a8ddd252",
+            "remote_result": "success",
+            "pixel_sha256_sent": "169629625bae012550b474e64a8d4d8232710177c01ecaccf3fe4f987200afdf",
+            "pixel_sha256_received": "169629625bae012550b474e64a8d4d8232710177c01ecaccf3fe4f987200afdf"
+          },
+          {
+            "sop_instance_uid": "1.3.6.1.4.1.5962.1.1.1.1.1.20040119072730.12322",
+            "sop_class_uid": "1.2.840.10008.5.1.4.1.1.2",
+            "transfer_syntax": "1.2.840.10008.1.2.1",
+            "file": "ct_explicit_le.dcm",
+            "size": 39206,
+            "sha256": "3dd31e5cc835b3f2cdd46c9da1982f59251e78518fefa8163d914631c66437d6",
+            "remote_result": "success",
+            "pixel_sha256_sent": "7a481f6ffff833aef4d8bd54819bd8f472aaa7232090208e056c90eacf079926",
+            "pixel_sha256_received": "7a481f6ffff833aef4d8bd54819bd8f472aaa7232090208e056c90eacf079926"
+          }
+        ],
+        "assertions": [
+          {
+            "id": "wado.status",
+            "subject": "http://127.0.0.1:18042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.content_type",
+            "subject": "http://127.0.0.1:18042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114",
+            "expected": "multipart/related",
+            "actual": "multipart/related",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.status",
+            "subject": "http://127.0.0.1:18042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+            "expected": "200",
+            "actual": "200",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.content_type",
+            "subject": "http://127.0.0.1:18042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322",
+            "expected": "multipart/related",
+            "actual": "multipart/related",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.part.content_type",
+            "subject": "http://127.0.0.1:18042/dicom-web/studies/1.2.826.0.1.3680043.8.498.12406831542731051035295345080039845114 part 1",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.part.content_type",
+            "subject": "http://127.0.0.1:18042/dicom-web/studies/1.3.6.1.4.1.5962.1.2.1.20040119072730.12322 part 1",
+            "expected": "application/dicom",
+            "actual": "application/dicom",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.uid.set",
+            "subject": "retrieved instances",
+            "expected": "exactly the 2 expected",
+            "actual": "2 received",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.pixels",
+            "subject": "ct_explicit_le.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          },
+          {
+            "id": "wado.pixels",
+            "subject": "sc_jpeg_lossless.dcm",
+            "expected": "pixel data identical to the sent file",
+            "actual": "identical",
+            "outcome": "pass"
+          }
+        ],
+        "redactions": 0
+      }
+    }
+  ],
+  "versions": {
+    "dicom-validator": "0.9.0",
+    "dicom3tools": "1.00.snapshot.20260927113651",
+    "libredvt": "0.2.0-dev",
+    "pydicom": "3.0.2",
+    "pynetdicom": "3.0.4",
+    "python": "3.12.16",
+    "standard-edition": "2026d",
+    "worker": "0.2.0"
+  },
+  "verdict": "pass"
+}

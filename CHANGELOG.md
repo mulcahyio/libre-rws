@@ -14,6 +14,42 @@ QMS and retrospective design-file work for LibreDCM (Kanban board
 LibreDCM's behaviour unless stated.
 
 ### Added
+- **LibreDVT v0.2 DICOMweb QIDO-RS, WADO-RS and STOW-RS tests (issue #34,
+  card DVT-0.2/4, DRAFT for approval).**
+  - New `qido` step: searches at study, series or instance level with
+    query keys (keywords or tags), checks the HTTP status, the
+    `application/dicom+json` content type, the JSON structure, each
+    object's unique key and the queried values, expected or absent UIDs,
+    required attributes and paging (`limit`/`offset`, a page larger than
+    asked fails). `from_store` searches one stored UID at a time.
+  - New `wado` step: retrieves a study, series or instance (or its
+    metadata) and checks the multipart response strictly (boundary only from
+    the Content-Type, closing delimiter required), each part's content type,
+    transfer syntax (header and file), Study/Series/SOP Instance UIDs,
+    missing, extra and duplicate instances, and, with `compare_pixels`,
+    pixel data byte for byte against the sent file. `from_store` retrieves
+    every stored study.
+  - New `stow` step (lab targets only): sends files in batches and accounts
+    for every instance in the response (Referenced SOP Sequence, Failed SOP
+    Sequence with its Failure Reason, warnings, extra or wrong references).
+    A failed instance fails the step even when the HTTP status says success;
+    instance warnings fail unless `allow_warnings: true`. `verify_retrieve` reads
+    each stored instance back and compares its pixel data.
+  - `tls_reject` now also works on DICOMweb targets.
+  - Security: bearer token read from its file and sent only to the base
+    URL's own origin (over `http://` only to a loopback host); every
+    recorded `Authorization` value is `[REDACTED]`; redirects are never
+    followed; one request at a time; size limits fail the step and never
+    truncate. No new dependency (the worker uses Python's standard library).
+  - Tested: unit tests with a fake engine; real-engine tests against a new
+    Go DICOMweb test server with about 50 fault switches (wrong boundary,
+    truncated multipart, wrong content type, wrong UIDs, failed instances
+    reported as success, redirects, oversized bodies, a token echoed into
+    an error page), each of which fails the step; mutation check; cross-check
+    against Orthanc 1.13.1 with the DICOMweb plugin 1.24 in a digest-pinned
+    test container (5 of 5 runs as expected, 6 of 6 stored files
+    byte-identical, no token or key in any of 30 artefacts). Evidence in
+    `docs/dhf/libredvt/evidence/v0.2-dicomweb/`.
 - **LibreDVT v0.2 association negotiation and DICOM TLS tests (issue #34,
   card DVT-0.2/3, DRAFT for approval).**
   - New `associate` step: proposes the plan's presentation contexts (with
@@ -59,9 +95,8 @@ LibreDCM's behaviour unless stated.
     `wado`, `stow`) and a `limits` block with every rule of
     `plan-schema.md`; a field of another step type is refused even with an
     empty value, and a plan whose steps do not fit the target's protocol is
-    refused before any step runs. Until their engines are built
-    (`associate`/`tls_reject` in card 3, DICOMweb in card 4) these steps
-    fail without sending anything.
+    refused before any step runs. Their engines followed in card 3
+    (`associate`/`tls_reject`) and card 4 (DICOMweb).
   - Production guard extended: `stow`, `qido` and `wado` run only against
     `lab` targets.
   - Protocol-neutral evidence model and one verdict rule

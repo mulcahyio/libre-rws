@@ -33,6 +33,10 @@ type Engines interface {
 	Compare(ctx context.Context, sent []string, dir string) ([]engine.CompareFile, string, error)
 	Associate(ctx context.Context, p engine.Peer, req engine.AssociateRequest) (engine.AssociateResult, string, error)
 	TLSProbe(ctx context.Context, p engine.Peer, mode, version string) (engine.ProbeResult, string, error)
+	Qido(ctx context.Context, w engine.Web, q engine.QidoRequest) (engine.QidoResult, string, error)
+	Wado(ctx context.Context, w engine.Web, q engine.WadoRequest) (engine.WadoResult, string, error)
+	Stow(ctx context.Context, w engine.Web, study string, batchSize int, files []string) (engine.StowResult, string, error)
+	TLSProbeWeb(ctx context.Context, w engine.Web, mode, version string) (engine.ProbeResult, string, error)
 }
 
 // Runner runs plans.
@@ -46,10 +50,26 @@ type Runner struct {
 	SecretsDir string
 }
 
-// sent tracks what earlier store steps sent successfully.
+// sent tracks what earlier store and stow steps sent successfully.
 type sent struct {
 	files     []string            // successfully stored files
 	instances map[string][]string // study UID -> SOP instance UIDs
+	list      []sentInstance      // each stored instance once, in order
+}
+
+// sentInstance is one instance an earlier store or stow step stored
+// (DVT-SRS-135).
+type sentInstance struct {
+	File, Study, Series, SOP, Class string
+}
+
+func (st *sent) add(x sentInstance) {
+	for _, y := range st.list {
+		if y.SOP == x.SOP {
+			return
+		}
+	}
+	st.list = append(st.list, x)
 }
 
 // Run executes p against target t (t may be nil when the plan has no
@@ -175,11 +195,13 @@ func (rn *Runner) preflight(ps plan.Step, t *store.Target, s *result.Step, secre
 		refuse(s, ps.Type, t, result.ProblemConfig, "configuration error, nothing was sent: "+err.Error())
 		return false
 	}
-	// Fail safe until the DICOMweb engine exists (card DVT-0.2/4): never
-	// pass a step that was not performed (DVT-SRS-150).
-	if t.Proto() != store.DIMSE {
-		refuse(s, ps.Type, t, result.ProblemEngine, fmt.Sprintf("engine error: the %s step against a DICOMweb target is not available in this build; nothing was sent", ps.Type))
-		return false
+	// DVT-SRS-112: no bearer token in clear text off the host (second line
+	// after the target schema).
+	if t.Proto() == store.DICOMweb {
+		if err := checkWebPreflight(t); err != nil {
+			refuse(s, ps.Type, t, result.ProblemConfig, "configuration error: "+err.Error())
+			return false
+		}
 	}
 	// DVT-SRS-108: a TLS move needs the Storage SCP's own certificate; it
 	// never falls back to clear text.
@@ -331,6 +353,7 @@ func (rn *Runner) step(ctx context.Context, p *plan.Plan, ps plan.Step, t *store
 			ok++
 			st.files = append(st.files, f.File)
 			st.instances[f.StudyInstanceUID] = appendUnique(st.instances[f.StudyInstanceUID], f.SOPInstanceUID)
+			st.add(sentInstance{File: f.File, Study: f.StudyInstanceUID, Series: f.SeriesInstanceUID, SOP: f.SOPInstanceUID})
 		}
 		s.Messages = append(s.Messages, fmt.Sprintf("%d of %d files stored with status 0x0000", ok, len(files)))
 
@@ -381,7 +404,20 @@ func (rn *Runner) step(ctx context.Context, p *plan.Plan, ps plan.Step, t *store
 		rn.associate(ctx, p, ps, t, s)
 
 	case plan.TLSReject:
-		rn.tlsReject(ctx, p, ps, t, s)
+		if t.Proto() == store.DICOMweb {
+			rn.tlsRejectWeb(ctx, p, ps, t, s)
+		} else {
+			rn.tlsReject(ctx, p, ps, t, s)
+		}
+
+	case plan.Qido:
+		rn.qido(ctx, p, ps, t, st, s)
+
+	case plan.Wado:
+		rn.wado(ctx, p, ps, t, st, s)
+
+	case plan.Stow:
+		rn.stow(ctx, p, ps, t, st, s)
 
 	default: // unreachable: plan.Parse rejects unknown types; fail safe anyway
 		s.Failf("engine error: step type " + ps.Type + " is not supported")
